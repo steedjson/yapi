@@ -168,7 +168,8 @@ class Content extends Component {
     let tabContent = null;
     if (this.state.curtab) {
       let C = InterfaceTabs[this.state.curtab].component;
-      tabContent = <C switchToView={this.switchToView} />;
+      // 路由切换时强制重建当前 Tab，避免复用上一个接口的表单和编辑器状态。
+      tabContent = <C key={this.actionId} switchToView={this.switchToView} />;
     }
 
     return (
