@@ -74,6 +74,20 @@ class interfaceCase extends baseModel {
       .exec();
   }
 
+  // 一次读取多个接口集的用例，避免接口集列表逐项查询产生 N+1 请求。
+  listByColIds(colIds, select) {
+    if (!colIds || colIds.length === 0) {
+      return Promise.resolve([]);
+    }
+    select = select || 'casename uid col_id _id index interface_id project_id';
+    return this.model
+      .find({
+        col_id: { $in: colIds }
+      })
+      .select(select)
+      .exec();
+  }
+
   list(col_id, select) {
     select = select || 'casename uid col_id _id index interface_id project_id';
     if (select === 'all') {

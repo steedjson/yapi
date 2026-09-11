@@ -39,23 +39,32 @@ class interfaceColController extends baseController {
         return a.index - b.index;
       });
 
-      for (let i = 0; i < result.length; i++) {
-        result[i] = result[i].toObject();
-        let caseList = await this.caseModel.list(result[i]._id);
-
-        for(let j=0; j< caseList.length; j++){
-          let item = caseList[j].toObject();
-          let interfaceData = await this.interfaceModel.getBaseinfo(item.interface_id);
-          item.path = interfaceData.path;
-          caseList[j] = item;
+      // 接口集和用例统一批量读取，避免“接口集数量 + 用例数量”次数据库查询。
+      const collectionIds = result.map(item => item._id);
+      const allCases = await this.caseModel.listByColIds(collectionIds);
+      const interfaceIds = allCases.map(item => item.interface_id);
+      const interfaceList = await this.interfaceModel.getBaseinfoByIds(interfaceIds);
+      const interfaceById = {};
+      interfaceList.forEach(item => {
+        interfaceById[item._id] = item;
+      });
+      const casesByCollection = {};
+      allCases.forEach(caseItem => {
+        const interfaceData = interfaceById[caseItem.interface_id];
+        if (!interfaceData) {
+          throw new Error(`用例 ${caseItem._id} 对应的接口不存在`);
         }
+        const item = caseItem.toObject();
+        item.path = interfaceData.path;
+        if (!casesByCollection[item.col_id]) casesByCollection[item.col_id] = [];
+        casesByCollection[item.col_id].push(item);
+      });
 
-        caseList = caseList.sort((a, b) => {
-          return a.index - b.index;
-        });
-        result[i].caseList = caseList;
-        
-      }
+      result = result.map(collection => {
+        const item = collection.toObject();
+        item.caseList = (casesByCollection[item._id] || []).sort((a, b) => a.index - b.index);
+        return item;
+      });
       ctx.body = yapi.commons.resReturn(result);
     } catch (e) {
       ctx.body = yapi.commons.resReturn(null, 402, e.message);

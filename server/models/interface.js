@@ -120,6 +120,19 @@ class interfaceModel extends baseModel {
       .exec();
   }
 
+  // 批量读取用例所需的接口基础信息，避免每条用例单独查询接口。
+  getBaseinfoByIds(ids) {
+    if (!ids || ids.length === 0) {
+      return Promise.resolve([]);
+    }
+    return this.model
+      .find({
+        _id: { $in: ids }
+      })
+      .select('path method uid title project_id cat_id status ')
+      .exec();
+  }
+
   getVar(project_id, method) {
     return this.model
       .find({
