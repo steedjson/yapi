@@ -50,9 +50,15 @@ async function handle(
     for (let i = 0; i < cats.length; i++) {
       const cat = cats[i];
       if (!cat || !cat.name) continue;
-      const existing = categories[cat.path] || categories[cat.name];
+      const existing = categories[cat.path] || (!cat.parent_path && categories[cat.name]);
       if (existing) {
         cat.id = existing._id || existing.id;
+        continue;
+      }
+      const parent = cat.parent_path ? categories[cat.parent_path] : null;
+      if (cat.parent_path && !categoryId(parent)) {
+        // 父分类未找到时禁止降级到根分类，避免多级分类被错误放入公共分类。
+        errors.push('分类「' + cat.name + '」：父分类不存在（' + cat.parent_path + '）');
         continue;
       }
       const apipath = isNode
@@ -62,7 +68,7 @@ async function handle(
         const result = await axios.post(apipath, {
           name: cat.name,
           project_id: projectId,
-          parent_id: cat.parent_path ? categoryId(categories[cat.parent_path]) || 0 : 0,
+          parent_id: categoryId(parent) || 0,
           desc: cat.desc,
           token
         });

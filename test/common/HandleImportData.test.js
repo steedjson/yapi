@@ -39,3 +39,36 @@ test('导入接口应按完整分类路径匹配已有子分类', async t => {
   assert.ok(interfaceRequest);
   t.is(interfaceRequest.data.catid, 11);
 });
+
+
+test('导入多级分类找不到父分类时不得降级到根分类', async t => {
+  const requests = [];
+  const originalPost = axios.post;
+  axios.post = async (url, data) => {
+    requests.push({url, data});
+    return {data: {errcode: 0, data: {_id: 99}}};
+  };
+
+  try {
+    await handleImportData(
+      {
+        cats: [{name: '子分类', path: '不存在/子分类', parent_path: '不存在'}],
+        apis: [{method: 'GET', path: '/health', title: 'health', catname: '不存在/子分类'}]
+      },
+      1,
+      99,
+      [],
+      '',
+      'normal',
+      () => {},
+      () => {},
+      () => {}
+    );
+  } finally {
+    axios.post = originalPost;
+  }
+
+  t.false(requests.some(item => item.url.indexOf('/api/interface/add_cat') > -1));
+  t.is(requests.filter(item => item.url.indexOf('/api/interface/add') > -1).length, 1);
+  t.is(requests[0].data.catid, 99);
+});
