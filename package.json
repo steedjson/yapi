@@ -12,7 +12,7 @@
     "start": " node server/app.js",
     "test": "ava",
     "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s",
-    "build-client": "NODE_ENV=production ykit pack -m",
+    "build-client": "NODE_ENV=production YAPI_DISABLE_HAPPYPACK=1 ykit pack -m",
     "npm-publish": "node ./npm-publish.js",
     "docs": "ydoc build"
   },
