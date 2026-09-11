@@ -1121,9 +1121,16 @@ class interfaceController extends baseController {
           if (cat.parent_id === catIds[i]) catIds.push(cat._id);
         });
       }
+      // 先批量读取待删除分类下的接口，避免每个分类单独查询接口。
+      const interfacesByCatid = await this.Model.listByCatids(catIds);
+      const interfaceGroups = {};
+      interfacesByCatid.forEach(item => {
+        if (!interfaceGroups[item.catid]) interfaceGroups[item.catid] = [];
+        interfaceGroups[item.catid].push(item);
+      });
       let interfaceData = [];
       for (const catId of catIds) {
-        interfaceData = interfaceData.concat(await this.Model.listByCatid(catId));
+        interfaceData = interfaceData.concat(interfaceGroups[catId] || []);
         await this.catModel.del(catId);
         await this.Model.delByCatid(catId);
         categoryCache.clear();

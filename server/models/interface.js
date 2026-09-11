@@ -259,6 +259,22 @@ class interfaceModel extends baseModel {
       .exec();
   }
 
+  // 批量读取多个分类下的接口，供分类删除等场景减少重复查询。
+  listByCatids(catids, select) {
+    if (!catids || catids.length === 0) {
+      return Promise.resolve([]);
+    }
+    select =
+      select || '_id title uid path method project_id catid edit_uid status add_time up_time index tag';
+    return this.model
+      .find({
+        catid: { $in: catids }
+      })
+      .select(select)
+      .sort({ catid: 1, index: 1 })
+      .exec();
+  }
+
   listByCatidWithPage(catid, page, limit) {
     page = parseInt(page);
     limit = parseInt(limit);
