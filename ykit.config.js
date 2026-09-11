@@ -18,6 +18,7 @@ var fs = require('fs');
 var package = require('./package.json');
 var yapi = require('./server/yapi');
 var isWin = require('os').platform() === 'win32'
+var useStandaloneBabel = process.env.YAPI_STANDALONE_BABEL === '1';
 
 var compressPlugin = new CompressionPlugin({
   asset: '[path].gz[query]',
@@ -67,7 +68,8 @@ function initPlugins(configPlugin) {
 initPlugins();
 
 module.exports = {
-  plugins: [
+  // 独立 Babel 模式不加载 YKit 配置插件，避免由插件注入 HappyPack。
+  plugins: useStandaloneBabel ? [] : [
     {
       name: 'antd',
       options: {
@@ -152,6 +154,31 @@ module.exports = {
         baseConfig.output.prd.path = 'static/prd';
         baseConfig.output.prd.publicPath = '';
         baseConfig.output.prd.filename = '[name]@[chunkhash][ext]';
+
+        if (useStandaloneBabel) {
+          // 保留原配置插件的 Babel 规则，且继续转换需要被处理的第三方编辑器模块。
+          baseConfig.module.loaders.push({
+            test: /\.(js|jsx)$/,
+            exclude: isWin
+              ? /(tui-editor|node_modules\\(?!_?(yapi-plugin|json-schema-editor-visual)))/
+              : /(tui-editor|node_modules\/(?!_?(yapi-plugin|json-schema-editor-visual)))/,
+            loader: 'babel-loader',
+            query: {
+              cacheDirectory: true,
+              presets: [
+                ['es2015', { loose: true, modules: false }],
+                'es2017',
+                'stage-0',
+                'react'
+              ],
+              plugins: [
+                'transform-runtime',
+                'transform-decorators-legacy',
+                ['import', { libraryName: 'antd' }]
+              ]
+            }
+          });
+        }
 
         // 允许在不改变默认构建行为的前提下，独立验证去除 HappyPack 后的构建链。
         // 通过环境变量显式开启，验证通过后再决定是否切换默认路径。
