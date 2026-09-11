@@ -569,7 +569,7 @@ YKit 兼容修复
 YAPI_DISABLE_HAPPYPACK=1 npm run build-client
 ```
 
-Node.js `24.21.0` 下构建成功，去除 HappyPack 后仍能完成 Babel、装饰器和 antd 按需加载；当前默认构建路径暂不切换，待开发服务和页面资源完成对比后再决定。
+Node.js `24.21.0` 下构建成功，去除 HappyPack 后仍能完成 Babel、装饰器和 antd 按需加载；使用备用端口 `4001` 启动开发资源服务并访问根页面返回 HTTP `200`。当前默认构建路径暂不切换，待完整页面资源和浏览器行为完成对比后再决定。
 
 ### 不做
 
