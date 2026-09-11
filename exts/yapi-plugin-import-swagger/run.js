@@ -136,12 +136,31 @@ const compareVersions = require('compare-versions');
         });
       });
 
+      const categoryMap = {};
+      interfaceData.cats.forEach(cat => {
+        const parts = String(cat.name).split('/').map(item => item.trim()).filter(Boolean);
+        let fullPath = '';
+        let parentPath = '';
+        parts.forEach(part => {
+          fullPath = fullPath ? fullPath + '/' + part : part;
+          if (!categoryMap[fullPath]) {
+            categoryMap[fullPath] = {
+              name: part,
+              path: fullPath,
+              parent_path: parentPath,
+              desc: fullPath === cat.name ? cat.desc : part
+            };
+          }
+          parentPath = fullPath;
+        });
+      });
+      interfaceData.cats = Object.keys(categoryMap).map(key => categoryMap[key]);
       interfaceData.cats = interfaceData.cats.filter(catData=>{
-        let catName = catData.name;
         return _.find(interfaceData.apis, apiData=>{
-          return apiData.catname === catName
-        })
-      })
+          return apiData.catname === catData.path ||
+            (apiData.catname && apiData.catname.indexOf(catData.path + '/') === 0);
+        });
+      });
 
       return interfaceData;
   }

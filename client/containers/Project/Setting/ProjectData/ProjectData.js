@@ -147,14 +147,26 @@ class ProjectData extends Component {
       let reader = new FileReader();
       reader.readAsText(info.file);
       reader.onload = async res => {
-        res = await importDataModule[this.state.curImportType].run(res.target.result);
-        if (this.state.dataSync === 'merge') {
-          // 开启同步
-          this.showConfirm(res);
-        } else {
-          // 未开启同步
-          await this.handleAddInterface(res);
+        try {
+          res = await importDataModule[this.state.curImportType].run(res.target.result);
+          if (!res || !Array.isArray(res.apis)) {
+            throw new Error('解析数据为空');
+          }
+          if (this.state.dataSync === 'merge') {
+            // 开启同步
+            this.showConfirm(res);
+          } else {
+            // 未开启同步
+            await this.handleAddInterface(res);
+          }
+        } catch (err) {
+          this.setState({ showLoading: false });
+          message.error(err.message || '解析失败');
         }
+      };
+      reader.onerror = () => {
+        this.setState({ showLoading: false });
+        message.error('文件读取失败');
       };
     } else {
       message.error('请选择上传的默认分类');
