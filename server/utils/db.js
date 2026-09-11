@@ -62,11 +62,12 @@ function connect(callback) {
     function() {
       yapi.commons.log('mongodb load success...');
       // 连接成功后补齐查询索引；createIndex 可重复执行，不会改变历史数据。
-      ensureQueryIndexes();
-
-      if (typeof callback === 'function') {
-        callback.call(db);
-      }
+      // 等索引任务完成后再执行回调，避免服务在索引尚未建立时开始处理请求。
+      ensureQueryIndexes().then(() => {
+        if (typeof callback === 'function') {
+          callback.call(db);
+        }
+      });
     },
     function(err) {
       yapi.commons.log(err + 'mongodb connect error', 'error');
@@ -82,22 +83,29 @@ function connect(callback) {
 function ensureQueryIndexes() {
   const indexes = {
     interface: [
-      { catid: 1, index: 1 },
-      { project_id: 1, title: 1 }
+      // 接口菜单按项目筛选后再按分类和排序号排列，使用联合索引避免全表扫描。
+      { project_id: 1, catid: 1, index: 1 },
+      { project_id: 1, title: 1 },
+      // 接口路径判重和详情查询都同时带项目、路径、请求方法条件。
+      { project_id: 1, path: 1, method: 1 }
     ],
     interface_cat: [{ project_id: 1, index: 1 }]
   };
 
+  const tasks = [];
   Object.keys(indexes).forEach(collectionName => {
     indexes[collectionName].forEach(key => {
-      mongoose.connection.db.collection(collectionName).createIndex(key).catch(err => {
-        yapi.commons.log(
-          `ensure ${collectionName} index failed: ${err.message}`,
-          'error'
-        );
-      });
+      tasks.push(
+        mongoose.connection.db.collection(collectionName).createIndex(key).catch(err => {
+          yapi.commons.log(
+            `ensure ${collectionName} index failed: ${err.message}`,
+            'error'
+          );
+        })
+      );
     });
   });
+  return Promise.all(tasks);
 }
 
 yapi.db = model;
