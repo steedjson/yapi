@@ -214,11 +214,17 @@ class ProjectData extends Component {
         path: item.path
       };
     });
-    let result = await this.props.fetchUpdateLogData({
-      type: 'project',
-      typeid,
-      apis: apiCollections
-    });
+    let result;
+    try {
+      result = await this.props.fetchUpdateLogData({
+        type: 'project',
+        typeid,
+        apis: apiCollections
+      });
+    } catch (err) {
+      this.setState({ showLoading: false, dataSync: 'normal' });
+      return message.error('获取同步差异失败：' + err.message);
+    }
     let domainData = result.payload.data.data;
     const ref = confirm({
       title: '您确认要进行数据同步????',
@@ -243,7 +249,14 @@ class ProjectData extends Component {
         </div>
       ),
       async onOk() {
-        await that.handleAddInterface(res);
+        try {
+          await that.handleAddInterface(res);
+        } catch (err) {
+          message.error('数据同步失败：' + err.message);
+        } finally {
+          that.setState({ dataSync: 'normal' });
+          ref.destroy();
+        }
       },
       onCancel() {
         that.setState({ showLoading: false, dataSync: 'normal' });
