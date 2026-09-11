@@ -284,6 +284,7 @@ class interfaceController extends baseController {
     categoryCache.clear();
     yapi.emitHook('interface_add', result).then();
     this.catModel.get(params.catid).then(cate => {
+      if (!cate) return;
       let username = this.getUsername();
       let title = `<a href="/user/profile/${this.getUid()}">${username}</a> 为分类 <a href="/project/${
         params.project_id
@@ -298,7 +299,12 @@ class interfaceController extends baseController {
         username: username,
         typeid: params.project_id
       });
-      this.projectModel.up(params.project_id, { up_time: new Date().getTime() }).then();
+      this.projectModel.up(params.project_id, { up_time: new Date().getTime() }).catch(err => {
+        yapi.commons.log(err, 'error');
+      });
+    }).catch(err => {
+      // 日志分类读取失败不能影响接口新增结果。
+      yapi.commons.log(err, 'error');
     });
 
     await this.autoAddTag(params);
@@ -927,6 +933,7 @@ class interfaceController extends baseController {
       await this.caseModel.delByInterfaceId(id);
       let username = this.getUsername();
       this.catModel.get(data.catid).then(cate => {
+        if (!cate) return;
         yapi.commons.saveLog({
           content: `<a href="/user/profile/${this.getUid()}">${username}</a> 删除了分类 <a href="/project/${
             cate.project_id
@@ -936,6 +943,9 @@ class interfaceController extends baseController {
           username: username,
           typeid: cate.project_id
         });
+      }).catch(err => {
+        // 日志分类读取失败不能影响接口删除结果。
+        yapi.commons.log(err, 'error');
       });
       this.projectModel.up(data.project_id, { up_time: new Date().getTime() }).then();
       ctx.body = yapi.commons.resReturn(result);
