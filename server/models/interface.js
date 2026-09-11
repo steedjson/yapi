@@ -2,6 +2,11 @@ const yapi = require('../yapi.js');
 const baseModel = require('./base.js');
 
 class interfaceModel extends baseModel {
+  // 只统一空批量参数的快速返回，不改变非空参数的原始查询内容。
+  _hasNoIds(ids) {
+    return !ids || ids.length === 0;
+  }
+
   getName() {
     return 'interface';
   }
@@ -113,7 +118,7 @@ class interfaceModel extends baseModel {
 
   // 批量读取测试用例关联的接口详情，避免逐条读取接口。
   getByIds(ids) {
-    if (!ids || ids.length === 0) {
+    if (this._hasNoIds(ids)) {
       return Promise.resolve([]);
     }
     return this.model
@@ -134,7 +139,7 @@ class interfaceModel extends baseModel {
 
   // 批量读取用例所需的接口基础信息，避免每条用例单独查询接口。
   getBaseinfoByIds(ids) {
-    if (!ids || ids.length === 0) {
+    if (this._hasNoIds(ids)) {
       return Promise.resolve([]);
     }
     return this.model
@@ -261,7 +266,7 @@ class interfaceModel extends baseModel {
 
   // 批量读取多个分类下的接口，供分类删除等场景减少重复查询。
   listByCatids(catids, select) {
-    if (!catids || catids.length === 0) {
+    if (this._hasNoIds(catids)) {
       return Promise.resolve([]);
     }
     select =
@@ -326,7 +331,7 @@ class interfaceModel extends baseModel {
 
   // 批量读取多个分类下的开放接口，供开放接口列表减少分类循环查询。
   listOpenByCatids(catids) {
-    if (!catids || catids.length === 0) {
+    if (this._hasNoIds(catids)) {
       return Promise.resolve([]);
     }
     return this.model
@@ -390,7 +395,7 @@ class interfaceModel extends baseModel {
 
   // 批量读取多个项目的自定义字段接口，避免项目循环产生重复查询。
   getcustomFieldValueByProjectIds(ids, value) {
-    if (!ids || ids.length === 0) {
+    if (this._hasNoIds(ids)) {
       return Promise.resolve([]);
     }
     return this.model
