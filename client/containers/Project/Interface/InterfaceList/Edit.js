@@ -3,7 +3,6 @@ import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import InterfaceEditForm from './InterfaceEditForm.js';
 import {
-  updateInterfaceData,
   fetchInterfaceListMenu,
   fetchInterfaceData
 } from '../../../../reducer/modules/interface.js';
@@ -22,7 +21,6 @@ import ProjectTag from '../../Setting/ProjectMessage/ProjectTag.js';
     };
   },
   {
-    updateInterfaceData,
     fetchInterfaceListMenu,
     fetchInterfaceData,
     getProject
@@ -32,7 +30,6 @@ class InterfaceEdit extends Component {
   static propTypes = {
     curdata: PropTypes.object,
     currProject: PropTypes.object,
-    updateInterfaceData: PropTypes.func,
     fetchInterfaceListMenu: PropTypes.func,
     fetchInterfaceData: PropTypes.func,
     match: PropTypes.object,
@@ -75,7 +72,7 @@ class InterfaceEdit extends Component {
         this.props.fetchInterfaceListMenu(this.props.currProject._id),
         this.props.fetchInterfaceData(data.id)
       ]);
-      this.props.updateInterfaceData(data);
+      // 刷新接口详情后直接使用服务端数据，避免用不完整的提交参数覆盖详情字段。
       message.success('保存成功');
       return true;
     } catch (err) {
