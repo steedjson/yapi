@@ -16,3 +16,17 @@ test('分类缓存命中时返回副本并支持主动清理', t => {
   cache.clear();
   t.is(cache.get('menu:1'), null);
 });
+
+// 项目级清理只影响对应项目，避免无关项目缓存失效。
+test('按项目清理分类缓存', t => {
+  cache.clear();
+  cache.set('menu:1', [{ _id: 1 }]);
+  cache.set('tree:1', [{ _id: 1 }]);
+  cache.set('menu:2', [{ _id: 2 }]);
+
+  cache.clearByPrefix('menu:1');
+
+  t.is(cache.get('menu:1'), null);
+  t.deepEqual(cache.get('tree:1'), [{ _id: 1 }]);
+  t.deepEqual(cache.get('menu:2'), [{ _id: 2 }]);
+});

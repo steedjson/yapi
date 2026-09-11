@@ -23,6 +23,16 @@ module.exports = {
     return value;
   },
 
+  /**
+   * 清理指定前缀的缓存，避免一个项目的写操作影响其他项目的缓存。
+   * @param {string} prefix
+   */
+  clearByPrefix(prefix) {
+    for (const key of cache.keys()) {
+      if (key.startsWith(prefix)) cache.delete(key);
+    }
+  },
+
   clear() {
     cache.clear();
   }

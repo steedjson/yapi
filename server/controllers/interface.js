@@ -17,6 +17,16 @@ const fs = require('fs-extra');
 const path = require('path');
 const categoryCache = require('../utils/ttlCache');
 
+// 仅清理当前项目的分类缓存，避免写操作导致其他项目缓存无效。
+const clearProjectCategoryCache = projectId => {
+  if (projectId !== undefined && projectId !== null) {
+    categoryCache.clearByPrefix('menu:' + projectId);
+    categoryCache.clearByPrefix('tree:' + projectId);
+  } else {
+    categoryCache.clear();
+  }
+};
+
 // const annotatedCss = require("jsondiffpatch/public/formatters-styles/annotated.css");
 // const htmlCss = require("jsondiffpatch/public/formatters-styles/html.css");
 
@@ -281,7 +291,7 @@ class interfaceController extends baseController {
     }
 
     let result = await this.Model.save(data);
-    categoryCache.clear();
+    clearProjectCategoryCache(params.project_id);
     yapi.emitHook('interface_add', result).then();
     this.catModel.get(params.catid).then(cate => {
       if (!cate) return;
@@ -781,7 +791,7 @@ class interfaceController extends baseController {
       }
     }
     let result = await this.Model.up(id, data);
-    categoryCache.clear();
+    clearProjectCategoryCache(interfaceData.project_id);
     let username = this.getUsername();
     let CurrentInterfaceData;
     try {
@@ -928,7 +938,7 @@ class interfaceController extends baseController {
 
       // let inter = await this.Model.get(id);
       let result = await this.Model.del(id);
-      categoryCache.clear();
+      clearProjectCategoryCache(data.project_id);
       yapi.emitHook('interface_del', id).then();
       await this.caseModel.delByInterfaceId(id);
       let username = this.getUsername();
@@ -1030,7 +1040,7 @@ class interfaceController extends baseController {
         add_time: yapi.commons.time(),
         up_time: yapi.commons.time()
       });
-      categoryCache.clear();
+      clearProjectCategoryCache(params.project_id);
 
       let username = this.getUsername();
       yapi.commons.saveLog({
@@ -1088,7 +1098,7 @@ class interfaceController extends baseController {
         desc: params.desc,
         up_time: yapi.commons.time()
       });
-      categoryCache.clear();
+      clearProjectCategoryCache(cate.project_id);
 
       yapi.commons.saveLog({
         content: `<a href="/user/profile/${this.getUid()}">${username}</a> 更新了分类 <a href="/project/${
@@ -1151,8 +1161,8 @@ class interfaceController extends baseController {
         interfaceData = interfaceData.concat(interfaceGroups[catId] || []);
         await this.catModel.del(catId);
         await this.Model.delByCatid(catId);
-        categoryCache.clear();
       }
+      clearProjectCategoryCache(catData.project_id);
       for (const item of interfaceData) {
         yapi.emitHook('interface_del', item._id).then();
         await this.caseModel.delByInterfaceId(item._id);
