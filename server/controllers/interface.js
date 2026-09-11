@@ -750,6 +750,9 @@ class interfaceController extends baseController {
     let result = await this.Model.up(id, data);
     let username = this.getUsername();
     let CurrentInterfaceData = await this.Model.get(id);
+    if (!CurrentInterfaceData) {
+      return (ctx.body = yapi.commons.resReturn(null, 402, '接口保存后读取失败'));
+    }
     let logData = {
       interface_id: id,
       cat_id: data.catid,
@@ -758,11 +761,13 @@ class interfaceController extends baseController {
     };
 
     this.catModel.get(interfaceData.catid).then(cate => {
-      let diffView2 = showDiffMsg(jsondiffpatch, formattersHtml, logData);
-      if (diffView2.length <= 0) {
+      if (!cate) return;
+      try {
+        let diffView2 = showDiffMsg(jsondiffpatch, formattersHtml, logData);
+        if (diffView2.length <= 0) {
           return; // 没有变化时，不写日志
-      }
-      yapi.commons.saveLog({
+        }
+        yapi.commons.saveLog({
         content: `<a href="/user/profile/${this.getUid()}">${username}</a> 
                     更新了分类 <a href="/project/${cate.project_id}/interface/api/cat_${
           data.catid
@@ -774,11 +779,16 @@ class interfaceController extends baseController {
         uid: this.getUid(),
         username: username,
         typeid: cate.project_id,
-        data: logData
-      });
+          data: logData
+        });
+      } catch (err) {
+        yapi.commons.log(err, 'error');
+      }
     });
 
-    this.projectModel.up(interfaceData.project_id, { up_time: new Date().getTime() }).then();
+    this.projectModel.up(interfaceData.project_id, { up_time: new Date().getTime() }).catch(err => {
+      yapi.commons.log(err, 'error');
+    });
     if (params.switch_notice === true) {
       let diffView = showDiffMsg(jsondiffpatch, formattersHtml, logData);
       let annotatedCss = fs.readFileSync(
