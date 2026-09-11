@@ -44,3 +44,10 @@ tsconfig.json
 client/plugin-module.js
 .vscode
 /iconfont
+
+.claude
+.codegraph
+.wolf
+CLAUDE.md
+AGENT.md
+AGENTS.md
