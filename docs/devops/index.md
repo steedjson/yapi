@@ -10,8 +10,8 @@ proxy_set_header Connection "upgrade";
 ```
 
 ## 环境要求
-* Node.js（本项目开发环境建议使用 10.24.1）
-* npm（随 Node.js 安装，建议使用 npm 6）
+* Node.js（本项目默认开发环境使用 24.21.0 LTS，历史回滚环境保留 10.24.1）
+* npm（随 Node.js 24.21.0 LTS 安装，使用与 Node.js 兼容的 npm 版本）
 * MongoDB（2.6+；本地开发可使用 Docker 启动 MongoDB 4.4）
 
 
@@ -77,9 +77,11 @@ node server/app.js //启动服务器后，请访问 127.0.0.1:{config.json配置
 source ~/.nvm/nvm.sh
 nvm install
 nvm use
-node -v   # v10.24.1
-npm -v    # 6.x
+node -v   # v24.21.0
+npm -v    # 随 Node.js 24.21.0 安装的版本
 ```
+
+> 如果需要复现历史运行环境，可执行 `nvm use 10.24.1`；该版本仅用于回滚和兼容性排查，日常开发优先使用 Node.js 24.21.0 LTS。
 
 ### 2. 启动本地 MongoDB
 
