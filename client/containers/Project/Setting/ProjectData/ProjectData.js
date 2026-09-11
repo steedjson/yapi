@@ -112,16 +112,24 @@ class ProjectData extends Component {
     swaggerUrlData: PropTypes.string
   };
 
-  componentWillMount() {
-    axios.get(`/api/interface/getCatMenu?project_id=${this.props.match.params.id}`).then(data => {
-      if (data.data.errcode === 0) {
-        let menuList = data.data.data;
-        this.setState({
-          menuList: menuList,
-          selectCatid: menuList.length ? menuList[0]._id : 0
-        });
+  loadCategoryMenu = async () => {
+    try {
+      const data = await axios.get(`/api/interface/getCatMenu?project_id=${this.props.match.params.id}`);
+      if (data.data.errcode !== 0) {
+        return message.error(data.data.errmsg);
       }
-    });
+      const menuList = data.data.data || [];
+      this.setState(prevState => ({
+        menuList,
+        selectCatid: prevState.selectCatid || (menuList.length ? menuList[0]._id : 0)
+      }));
+    } catch (err) {
+      message.error('获取接口分类失败：' + err.message);
+    }
+  };
+
+  componentWillMount() {
+    this.loadCategoryMenu();
     plugin.emitHook('import_data', importDataModule);
     plugin.emitHook('export_data', exportDataModule, this.props.match.params.id);
   }
@@ -145,7 +153,7 @@ class ProjectData extends Component {
   };
 
   handleAddInterface = async res => {
-    return await HandleImportData(
+    const result = await HandleImportData(
       res,
       this.props.match.params.id,
       this.state.selectCatid,
@@ -156,6 +164,9 @@ class ProjectData extends Component {
       message.success,
       () => this.setState({ showLoading: false })
     );
+    // 导入可能新建分类，完成后重新读取菜单，保证页面立即显示最新分类。
+    await this.loadCategoryMenu();
+    return result;
   };
 
   // 本地文件上传
