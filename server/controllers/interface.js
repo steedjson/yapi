@@ -1343,19 +1343,15 @@ class interfaceController extends baseController {
     try {
       let params = ctx.request.body;
       if (!params || !Array.isArray(params)) {
-        ctx.body = yapi.commons.resReturn(null, 400, '请求参数必须是数组');
+        return (ctx.body = yapi.commons.resReturn(null, 400, '请求参数必须是数组'));
       }
+      await Promise.all(
+        params
+          .filter(item => item && item.id !== undefined)
+          .map(item => this.catModel.upCatIndex(item.id, item.index))
+      );
+      // 等待所有排序更新完成后再清理缓存，避免前端刷新时读到旧顺序。
       categoryCache.clear();
-      params.forEach(item => {
-        if (item.id) {
-          this.catModel.upCatIndex(item.id, item.index).then(
-            res => {},
-            err => {
-              yapi.commons.log(err.message, 'error');
-            }
-          );
-        }
-      });
 
       return (ctx.body = yapi.commons.resReturn('成功！'));
     } catch (e) {
