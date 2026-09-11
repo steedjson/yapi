@@ -571,7 +571,7 @@ YKit 兼容修复
 YAPI_STANDALONE_BABEL=1 npm run build-client
 ```
 
-Node.js `24.21.0` 下构建成功，去除 HappyPack 后仍能完成 Babel、装饰器和 antd 按需加载；使用备用端口 `4001` 启动开发资源服务并访问根页面返回 HTTP `200`。当前 YKit 生成的 `static/dev.html` 仍引用 `4000` 开发资源地址，因此备用端口只能验证服务本身，完整浏览器验证仍需在 `4000` 空闲时进行。生产构建和开发资源服务已切换到独立 Babel 配置，不再由 YKit 配置插件注入 HappyPack；同时保留 `npm run build-client-legacy` 和 `npm run dev-client-legacy` 作为显式回退命令。默认 `npm run build-client` 已在 Node.js `18.20.8` 和 `24.21.0` 下分别构建成功，`npm run build-client-legacy` 在 Node.js `24.21.0` 下验证成功。
+Node.js `24.21.0` 下构建成功，去除 HappyPack 后仍能完成 Babel、装饰器和 antd 按需加载；使用备用端口 `4001` 启动开发资源服务并访问根页面返回 HTTP `200`。当前 YKit 生成的 `static/dev.html` 仍引用 `4000` 开发资源地址，因此备用端口只能验证服务本身，完整浏览器验证仍需在 `4000` 空闲时进行。生产构建和开发资源服务已切换到独立 Babel 配置，不再由 YKit 配置插件注入 HappyPack；同时保留 `npm run build-client-legacy` 和 `npm run dev-client-legacy` 作为显式回退命令。已移除项目顶层未直接使用的 `ykit-config-es6`，旧配置仍由 `ykit-config-antd` 的间接依赖提供。默认和回退构建均已在 Node.js `24.21.0` 下验证成功。
 
 ### 不做
 
