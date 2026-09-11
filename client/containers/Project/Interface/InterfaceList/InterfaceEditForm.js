@@ -134,6 +134,8 @@ class InterfaceEditForm extends Component {
 
   initState(curdata) {
     this.startTime = new Date().getTime();
+    // 编辑表单只处理副本，避免初始化时直接修改 Redux 中的历史接口数据。
+    curdata = JSON.parse(JSON.stringify(curdata || {}));
     if (curdata.req_query && curdata.req_query.length === 0) {
       delete curdata.req_query;
     }
@@ -160,7 +162,8 @@ class InterfaceEditForm extends Component {
         headers: 'hide'
       }
     };
-    curdata['hideTabs']['req'][HTTP_METHOD[curdata.method].default_tab] = '';
+    const methodConfig = HTTP_METHOD[curdata.method] || HTTP_METHOD.get;
+    curdata['hideTabs']['req'][methodConfig.default_tab] = '';
     return Object.assign(
       {
         submitStatus: false,
