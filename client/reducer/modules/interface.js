@@ -148,12 +148,13 @@ export async function fetchInterfaceList(params) {
 }
 
 export async function fetchInterfaceCatList(params) {
-  let result = axios.get('/api/interface/list_cat', {
+  // 等待请求完成后再交给 redux-promise，避免分类列表拿到未完成的 Promise。
+  let result = await axios.get('/api/interface/list_cat', {
     params,
     paramsSerializer: params => {
-      return qs.stringify(params, {indices: false})
+      return qs.stringify(params, {indices: false});
     }
-  })
+  });
   return {
     type: FETCH_INTERFACE_CAT_LIST,
     payload: result
