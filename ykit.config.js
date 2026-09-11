@@ -153,6 +153,35 @@ module.exports = {
         baseConfig.output.prd.publicPath = '';
         baseConfig.output.prd.filename = '[name]@[chunkhash][ext]';
 
+        // 允许在不改变默认构建行为的前提下，独立验证去除 HappyPack 后的构建链。
+        // 通过环境变量显式开启，验证通过后再决定是否切换默认路径。
+        if (process.env.YAPI_DISABLE_HAPPYPACK === '1') {
+          baseConfig.module.loaders = baseConfig.module.loaders.map(loader => {
+            if (loader.loader !== 'happypack/loader') return loader;
+            return Object.assign({}, loader, {
+              loader: 'babel-loader',
+              // 复用原 HappyPack 的 Babel 配置，确保装饰器和 antd 按需加载行为不变。
+              query: {
+                cacheDirectory: true,
+                presets: [
+                  ['es2015', { loose: true, modules: false }],
+                  'es2017',
+                  'stage-0',
+                  'react'
+                ],
+                plugins: [
+                  'transform-runtime',
+                  'transform-decorators-legacy',
+                  ['import', { libraryName: 'antd' }]
+                ]
+              }
+            });
+          });
+          baseConfig.plugins = baseConfig.plugins.filter(plugin => {
+            return !(plugin && plugin.constructor && plugin.constructor.name === 'HappyPlugin');
+          });
+        }
+
         baseConfig.module.noParse = /node_modules\/jsondiffpatch\/public\/build\/.*js/;
         baseConfig.module.loaders.push({
           test: /\.less$/,
