@@ -1402,19 +1402,15 @@ class interfaceController extends baseController {
 
     let basepath = project.basepath;
     try {
-      let result = await this.catModel.list(project_id),
-        newResult = [];
-
-      for (let i = 0, item, list; i < result.length; i++) {
-        item = result[i].toObject();
-        list = await this.Model.listByInterStatus(item._id, 'open');
-        for (let j = 0; j < list.length; j++) {
-          list[j] = list[j].toObject();
-          list[j].basepath = basepath;
-        }
-
-        newResult = [].concat(newResult, list);
-      }
+      const result = await this.catModel.list(project_id);
+      const catIds = result.map(item => item._id);
+      // 一次读取项目下所有开放接口，避免按分类逐个查询。
+      const openInterfaces = await this.Model.listOpenByCatids(catIds);
+      const newResult = openInterfaces.map(item => {
+        const data = item.toObject();
+        data.basepath = basepath;
+        return data;
+      });
 
       ctx.body = yapi.commons.resReturn(newResult);
     } catch (err) {

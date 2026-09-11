@@ -324,6 +324,20 @@ class interfaceModel extends baseModel {
       .exec();
   }
 
+  // 批量读取多个分类下的开放接口，供开放接口列表减少分类循环查询。
+  listOpenByCatids(catids) {
+    if (!catids || catids.length === 0) {
+      return Promise.resolve([]);
+    }
+    return this.model
+      .find({
+        catid: { $in: catids },
+        api_opened: true
+      })
+      .sort({ title: 1 })
+      .exec();
+  }
+
   del(id) {
     return this.model.remove({
       _id: id
