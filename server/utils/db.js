@@ -89,7 +89,14 @@ function ensureQueryIndexes() {
       // 接口路径判重和详情查询都同时带项目、路径、请求方法条件。
       { project_id: 1, path: 1, method: 1 }
     ],
-    interface_cat: [{ project_id: 1, index: 1 }]
+    interface_cat: [{ project_id: 1, index: 1 }],
+    // 接口集和测试用例列表、项目删除及接口删除都依赖以下查询条件。
+    interface_col: [{ project_id: 1, index: 1 }],
+    interface_case: [
+      { col_id: 1, index: 1 },
+      { project_id: 1 },
+      { interface_id: 1 }
+    ]
   };
 
   const tasks = [];
