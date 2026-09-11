@@ -309,6 +309,11 @@ let routerConfig = {
       method: 'get'
     },
     {
+      action: 'getCatTree',
+      path: 'get_cat_tree',
+      method: 'get'
+    },
+    {
       action: 'list',
       path: 'list',
       method: 'get'

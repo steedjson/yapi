@@ -46,6 +46,7 @@ class baseController {
 			'/api/interface/get',
 			'/api/interface/list',
 			'/api/interface/list_menu',
+      '/api/interface/get_cat_tree',
 			'/api/interface/add_cat',
       '/api/interface/getCatMenu',
       '/api/interface/list_cat',

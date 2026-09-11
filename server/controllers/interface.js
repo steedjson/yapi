@@ -631,11 +631,13 @@ class interfaceController extends baseController {
 
     try {
       let result = await this.catModel.list(project_id);
-      let categories = result.map(item => Object.assign(item.toObject(), { list: [] }));
-      for (const item of categories) {
+      let newResult = [];
+      for (let i = 0; i < result.length; i++) {
+        let item = result[i].toObject();
         item.list = (await this.Model.listByCatid(item._id)).map(inter => inter.toObject());
+        newResult.push(item);
       }
-      ctx.body = yapi.commons.resReturn(this.buildCategoryTree(categories));
+      ctx.body = yapi.commons.resReturn(newResult);
     } catch (err) {
       ctx.body = yapi.commons.resReturn(null, 402, err.message);
     }
@@ -1142,9 +1144,39 @@ class interfaceController extends baseController {
         }
       }
       let res = await this.catModel.list(project_id);
-      return (ctx.body = yapi.commons.resReturn(this.buildCategoryTree(res)));
+      return (ctx.body = yapi.commons.resReturn(res));
     } catch (e) {
-      yapi.commons.resReturn(null, 400, e.message);
+      ctx.body = yapi.commons.resReturn(null, 400, e.message);
+    }
+  }
+
+  /**
+   * 获取树形接口分类
+   * @interface /interface/get_cat_tree
+   * @method GET
+   */
+  async getCatTree(ctx) {
+    let project_id = ctx.params.project_id;
+    if (!project_id || isNaN(project_id)) {
+      return (ctx.body = yapi.commons.resReturn(null, 400, '项目id不能为空'));
+    }
+
+    try {
+      let project = await this.projectModel.getBaseInfo(project_id);
+      if (!project) {
+        return (ctx.body = yapi.commons.resReturn(null, 407, '不存在的项目'));
+      }
+      if (project.project_type === 'private' && (await this.checkAuth(project._id, 'project', 'view')) !== true) {
+        return (ctx.body = yapi.commons.resReturn(null, 406, '没有权限'));
+      }
+      let res = await this.catModel.list(project_id);
+      let categories = res.map(item => Object.assign(item.toObject(), { list: [] }));
+      for (const item of categories) {
+        item.list = (await this.Model.listByCatid(item._id)).map(inter => inter.toObject());
+      }
+      return (ctx.body = yapi.commons.resReturn(this.buildCategoryTree(categories)));
+    } catch (e) {
+      ctx.body = yapi.commons.resReturn(null, 400, e.message);
     }
   }
 
