@@ -145,23 +145,24 @@ class InterfaceMenu extends Component {
     });
   };
 
-  handleAddInterface = (data, cb) => {
+  handleAddInterface = async (data, cb) => {
     data.project_id = this.props.projectId;
-    axios.post('/api/interface/add', data).then(res => {
+    try {
+      const res = await axios.post('/api/interface/add', data);
       if (res.data.errcode !== 0) {
         return message.error(res.data.errmsg);
       }
       message.success('接口添加成功');
       let interfaceId = res.data.data._id;
       this.props.history.push('/project/' + this.props.projectId + '/interface/api/' + interfaceId);
-      this.getList();
+      await this.getList();
       this.setState({
         visible: false
       });
-      if (cb) {
-        cb();
-      }
-    });
+      if (cb) cb();
+    } catch (err) {
+      message.error('接口添加失败：' + err.message);
+    }
   };
 
   flattenCategories = list => {
@@ -264,17 +265,15 @@ class InterfaceMenu extends Component {
   };
 
   copyInterface = async id => {
-    let interfaceData = await this.props.fetchInterfaceData(id);
-    // let data = JSON.parse(JSON.stringify(interfaceData.payload.data.data));
-    // data.title = data.title + '_copy';
-    // data.path = data.path + '_' + Date.now();
-    let data = interfaceData.payload.data.data;
-    let newData = produce(data, draftData => {
-      draftData.title = draftData.title + '_copy';
-      draftData.path = draftData.path + '_' + Date.now();
-    });
+    try {
+      let interfaceData = await this.props.fetchInterfaceData(id);
+      let data = interfaceData.payload.data.data;
+      let newData = produce(data, draftData => {
+        draftData.title = draftData.title + '_copy';
+        draftData.path = draftData.path + '_' + Date.now();
+      });
 
-    axios.post('/api/interface/add', newData).then(async res => {
+      const res = await axios.post('/api/interface/add', newData);
       if (res.data.errcode !== 0) {
         return message.error(res.data.errmsg);
       }
@@ -285,7 +284,9 @@ class InterfaceMenu extends Component {
       this.setState({
         visible: false
       });
-    });
+    } catch (err) {
+      message.error('接口复制失败：' + err.message);
+    }
   };
 
   enterItem = id => {
