@@ -382,6 +382,8 @@ class interfaceController extends baseController {
       }
       await this.add({ params });
     }
+
+    ctx.body = yapi.commons.resReturn(null);
     // return ctx.body = yapi.commons.resReturn(null, 400, 'path第一位必需为 /, 只允许由 字母数字-/_:.! 组成');
   }
 
@@ -390,6 +392,7 @@ class interfaceController extends baseController {
     let tags = params.tag;
     if (tags && Array.isArray(tags) && tags.length > 0) {
       let projectData = await this.projectModel.get(params.project_id);
+      if (!projectData) return;
       let tagsInProject = projectData.tag;
       let needUpdate = false;
       if (tagsInProject && Array.isArray(tagsInProject) && tagsInProject.length > 0) {
@@ -1056,7 +1059,7 @@ class interfaceController extends baseController {
       let id = ctx.request.body.catid;
       let catData = await this.catModel.get(id);
       if (!catData) {
-        ctx.body = yapi.commons.resReturn(null, 400, '不存在的分类');
+        return (ctx.body = yapi.commons.resReturn(null, 400, '不存在的分类'));
       }
 
       if (catData.uid !== this.getUid()) {
