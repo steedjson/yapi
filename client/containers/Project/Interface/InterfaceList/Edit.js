@@ -55,6 +55,8 @@ class InterfaceEdit extends Component {
       visible: false
       // tag: []
     };
+    this._isMounted = false;
+    this.initTimer = null;
   }
 
   onSubmit = async params => {
@@ -83,24 +85,26 @@ class InterfaceEdit extends Component {
   };
 
   componentWillUnmount() {
+    this._isMounted = false;
+    if (this.initTimer) clearTimeout(this.initTimer);
     try {
-      if (this.state.status === 1) {
-        this.WebSocket.close();
-      }
+      if (this.WebSocket) this.WebSocket.close();
     } catch (e) {
-      return null;
+      // WebSocket 已关闭时无需重复处理。
     }
+    this.WebSocket = null;
   }
 
   componentDidMount() {
+    this._isMounted = true;
     let domain = location.hostname + (location.port !== '' ? ':' + location.port : '');
     let s,
       initData = false;
     //因后端 node 仅支持 ws， 暂不支持 wss
     let wsProtocol = location.protocol === 'https:' ? 'wss' : 'ws';
 
-    setTimeout(() => {
-      if (initData === false) {
+    this.initTimer = setTimeout(() => {
+      if (this._isMounted && initData === false) {
         this.setState({
           curdata: this.props.curdata,
           status: 1
@@ -117,13 +121,18 @@ class InterfaceEdit extends Component {
           '/api/interface/solve_conflict?id=' +
           this.props.match.params.actionId
       );
-      s.onopen = () => {
-        this.WebSocket = s;
-      };
+      this.WebSocket = s;
+      s.onopen = () => {};
 
       s.onmessage = e => {
+        if (!this._isMounted) return;
         initData = true;
-        let result = JSON.parse(e.data);
+        let result;
+        try {
+          result = JSON.parse(e.data);
+        } catch (err) {
+          return console.warn('WebSocket 返回数据解析失败：' + err.message);
+        }
         if (result.errno === 0) {
           this.setState({
             curdata: result.data,
@@ -138,6 +147,7 @@ class InterfaceEdit extends Component {
       };
 
       s.onerror = () => {
+        if (!this._isMounted) return;
         this.setState({
           curdata: this.props.curdata,
           status: 1
@@ -145,6 +155,7 @@ class InterfaceEdit extends Component {
         console.warn('websocket 连接失败，将导致多人编辑同一个接口冲突。');
       };
     } catch (e) {
+      if (!this._isMounted) return;
       this.setState({
         curdata: this.props.curdata,
         status: 1
