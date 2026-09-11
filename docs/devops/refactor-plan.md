@@ -6,9 +6,11 @@
 >
 > 最终运行环境：Node.js `24.21.0 LTS`。
 >
-> 最终语言目标：TypeScript `6.0`，采用 JavaScript/TypeScript 渐进共存。
+> 最终语言目标：TypeScript `7.x`（以验证时可用的稳定版本为准），采用 JavaScript/TypeScript 渐进共存。
 >
 > 最终数据库目标：生产优先 MongoDB `8.0` 最新补丁版本；MongoDB `8.3` 仅作为独立兼容性验证目标。
+
+> 版本校正（2026 年 9 月 12 日）：当前 npm registry 可用的 TypeScript 稳定版本为 `7.0.2`，`6.0.0` 不存在，因此不锁定不存在的版本；最终以验证时可用且兼容项目的稳定版本为准。
 
 ## 一、方案选择
 
@@ -596,7 +598,7 @@ webpack-node-externals
 - 构建产物大小没有异常膨胀；
 - 浏览器控制台没有阻断性错误。
 
-## Phase 14：引入 TypeScript 6.0 并渐进迁移
+## Phase 14：引入 TypeScript 7.x 并渐进迁移
 
 ### 实施内容
 
@@ -885,7 +887,7 @@ MongoDB 8.0 全量回归通过后，才将其作为生产数据库目标。Mongo
 ```text
 Phase 12  替换 YKit/HappyPack
 Phase 13  升级 Webpack
-Phase 14  引入 TypeScript 6.0 并渐进迁移
+Phase 14  引入 TypeScript 7.x 并渐进迁移
 ```
 
 执行目标：现代化构建和类型体系，但不改变业务接口、MongoDB 字段和页面操作。
