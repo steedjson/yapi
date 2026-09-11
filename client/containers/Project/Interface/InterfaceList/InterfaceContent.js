@@ -5,7 +5,7 @@ import { Tabs, Modal, Button } from 'antd';
 import Edit from './Edit.js';
 import View from './View.js';
 import { Prompt } from 'react-router';
-import { fetchInterfaceData } from '../../../../reducer/modules/interface.js';
+import { fetchInterfaceData, changeEditStatus } from '../../../../reducer/modules/interface.js';
 import { withRouter } from 'react-router-dom';
 import Run from './Run/Run.js';
 const plugin = require('client/plugin.js');
@@ -20,7 +20,8 @@ const TabPane = Tabs.TabPane;
     };
   },
   {
-    fetchInterfaceData
+    fetchInterfaceData,
+    changeEditStatus
   }
 )
 class Content extends Component {
@@ -29,6 +30,7 @@ class Content extends Component {
     list: PropTypes.array,
     curdata: PropTypes.object,
     fetchInterfaceData: PropTypes.func,
+    changeEditStatus: PropTypes.func,
     history: PropTypes.object,
     editStatus: PropTypes.bool
   };
@@ -49,6 +51,7 @@ class Content extends Component {
   }
 
   componentWillUnmount() {
+    this.props.changeEditStatus(false);
     document.getElementsByTagName('title')[0].innerText = this.title;
   }
 
@@ -56,6 +59,8 @@ class Content extends Component {
     const params = nextProps.match.params;
     if (params.actionId !== this.actionId) {
       this.actionId = params.actionId;
+      // 路由切换后清除上一个接口的编辑状态，避免旧提示影响新接口。
+      this.props.changeEditStatus(false);
       this.handleRequest(nextProps);
     }
   }
