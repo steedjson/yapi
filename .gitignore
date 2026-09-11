@@ -51,3 +51,5 @@ client/plugin-module.js
 CLAUDE.md
 AGENT.md
 AGENTS.md
+config.json
+init.lock
