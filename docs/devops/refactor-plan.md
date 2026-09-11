@@ -386,7 +386,7 @@ test/server/interface-save.test.js
 
 ### 验证
 
-已在接口分类菜单和分类树上增加 5 秒进程内短缓存，并在接口、分类新增/编辑/删除及排序操作后主动清理。缓存只保存内存副本，不写入 MongoDB；通过 `test/server/interfaceCache.test.js` 验证命中副本和主动清理行为。出现脏数据时优先移除缓存读取逻辑回滚。
+已在接口分类菜单和分类树上增加 5 秒进程内短缓存，并在接口、分类新增/编辑/删除及排序操作后主动清理。缓存只保存内存副本，不写入 MongoDB；项目已改为按项目清理 `menu:{projectId}` 和 `tree:{projectId}`，无关联项目不再被无效化；通过 `test/server/interfaceCache.test.js` 验证命中副本、主动清理和项目级隔离。出现脏数据时优先移除缓存读取逻辑回滚。
 
 ## Phase 8：替换 `node-sass`
 
