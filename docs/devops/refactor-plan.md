@@ -561,6 +561,16 @@ YKit 兼容修复
   -> 再评估移除 YKit
 ```
 
+### 当前验证结果
+
+已增加 `YAPI_DISABLE_HAPPYPACK=1` 的独立验证开关：
+
+```bash
+YAPI_DISABLE_HAPPYPACK=1 npm run build-client
+```
+
+Node.js `24.21.0` 下构建成功，去除 HappyPack 后仍能完成 Babel、装饰器和 antd 按需加载；当前默认构建路径暂不切换，待开发服务和页面资源完成对比后再决定。
+
 ### 不做
 
 - 不同时升级 Webpack、React、Ant Design；
