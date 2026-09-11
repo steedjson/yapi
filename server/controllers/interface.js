@@ -761,9 +761,15 @@ class interfaceController extends baseController {
     }
     let result = await this.Model.up(id, data);
     let username = this.getUsername();
-    let CurrentInterfaceData = await this.Model.get(id);
+    let CurrentInterfaceData;
+    try {
+      CurrentInterfaceData = await this.Model.get(id);
+    } catch (err) {
+      yapi.commons.log(err, 'error');
+    }
+    // 更新已经完成时，读取日志快照失败不能再把成功保存误报成失败。
     if (!CurrentInterfaceData) {
-      return (ctx.body = yapi.commons.resReturn(null, 402, '接口保存后读取失败'));
+      CurrentInterfaceData = Object.assign({}, interfaceData.toObject(), data);
     }
     let logData = {
       interface_id: id,
