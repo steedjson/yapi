@@ -8,11 +8,13 @@
     "dev-server": " nodemon server/app.js dev -L",
     "install-server": " node server/install.js",
     "dev-client": "npm run dev-copy-icon && YAPI_DISABLE_HAPPYPACK=1 ykit s -p 4000",
+    "dev-client-legacy": "npm run dev-copy-icon && env -u YAPI_DISABLE_HAPPYPACK ykit s -p 4000",
     "dev": "npm run dev-server & npm run dev-client",
     "start": " node server/app.js",
     "test": "ava",
     "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s",
     "build-client": "NODE_ENV=production YAPI_DISABLE_HAPPYPACK=1 ykit pack -m",
+    "build-client-legacy": "NODE_ENV=production env -u YAPI_DISABLE_HAPPYPACK ykit pack -m",
     "npm-publish": "node ./npm-publish.js",
     "docs": "ydoc build"
   },
