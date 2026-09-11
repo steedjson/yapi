@@ -1,36 +1,58 @@
-# YApi 重构实施计划
+# YApi 渐进式技术升级与重构计划
 
-> 目标：在不改变现有业务功能、接口行为和数据含义的前提下，逐步稳定接口模块、兼容历史数据、支持 OpenAPI 3.0/3.1，并分阶段升级运行时、依赖和 UI。
+> 目标：在不改变现有业务功能、操作方式、接口契约和历史数据使用方式的前提下，逐步完成性能、运行时、构建工具和 UI 升级。
 >
-> 原则：最少改动、可验证、可回滚；不一次性升级全部依赖；不使用 CI。
+> 原则：最少改动、外围替换、逐阶段验证、随时可回滚；不一次性重写业务层，不使用 CI。
+>
+> 最终运行环境：Node.js `24.21.0 LTS`。
+>
+> 最终语言目标：TypeScript `6.0`，采用 JavaScript/TypeScript 渐进共存。
+>
+> 最终数据库目标：生产优先 MongoDB `8.0` 最新补丁版本；MongoDB `8.3` 仅作为独立兼容性验证目标。
 
-## 一、重构目标与边界
+## 一、方案选择
 
-### 目标
+本计划采用“兼容层 + 外围替换式升级”，而不是一次性重构核心业务。
 
-1. 保持现有 YApi 业务功能和接口行为不变。
-2. 兼容已有 MongoDB 历史数据。
-3. 支持接口分类无限层级。
-4. 稳定接口新增、编辑、导入和保存流程。
-5. 增强 Swagger 2.0、OpenAPI 3.0 和 OpenAPI 3.1 兼容能力。
-6. 改善前端构建和 UI 可维护性。
-7. 后续逐步摆脱 Node.js 10、Webpack 2 和 `node-sass` 的限制。
+```text
+浏览器 / UI
+    ↓
+现有 API 契约
+    ↓
+现有控制器和模型
+    ↓
+现有 MongoDB 数据结构
+```
 
-### 明确不做
+### 保持不变
 
-- 不删除历史字段。
-- 不重建 MongoDB 集合。
-- 不一次性升级所有 npm 依赖。
-- 不直接从 React 16 跳到 React 18。
-- 不直接从 Webpack 2 跳到 Webpack 5。
-- 不修改现有接口响应字段和错误码含义。
-- 不引入 CI。
+- 现有业务功能和操作流程；
+- 现有路由、请求参数、响应字段和错误码含义；
+- 登录、权限、项目、接口、分类和插件行为；
+- MongoDB 现有集合和历史字段；
+- `npm run dev`、`npm run dev-server`、`npm run dev-client`、`npm run build-client` 的使用方式；
+- `3000` 系统页面入口和 `4000` 前端开发资源服务职责。
+
+### 允许的小范围变化
+
+- 修复明确的接口保存和导入错误；
+- 增加数据库索引；
+- 增加不影响旧数据的缓存；
+- 增加边界数据规范化；
+- 逐步替换运行时、构建工具和 UI 实现；
+- 保留旧字段，必要时增加向后兼容字段。
+
+### 分类层级的边界
+
+严格保持数据结构完全不变时，不能使用新的 `interface_cat.parent_id` 实现无限层级，因为新增字段本身属于数据结构变化。
+
+当前已实现的 `parent_id` 应按“向后兼容扩展”管理：旧数据缺少该字段时按 `0` 处理，旧平铺接口继续保留。若最终要求绝对不增加字段，则应冻结或回退无限层级功能。
 
 ## 二、重构前提
 
-### 1. 固定可运行基线
+### 1. 固定当前可运行基线
 
-项目当前开发环境使用 Node.js `10.24.1` 和 npm `6.x`：
+当前项目使用旧依赖，基线环境为 Node.js `10.24.1` 和 npm `6.x`：
 
 ```bash
 source ~/.nvm/nvm.sh
@@ -41,17 +63,25 @@ npm install
 npm run dev
 ```
 
-访问：
+系统访问地址：
 
 ```text
 http://127.0.0.1:3000
 ```
 
-基线至少验证：管理员登录、项目创建、接口新增、接口编辑保存、Swagger 导入、分类新增、子分类新增、分类移动、分类删除和服务重启后的数据读取。
+基线必须验证：
+
+- 管理员登录；
+- 项目创建和打开；
+- 历史接口查看、编辑和保存；
+- 新增接口；
+- Swagger 2.0/3.0 导入；
+- 分类新增、子分类新增、移动和删除；
+- 服务重启后数据仍存在。
 
 ### 2. 备份 MongoDB
 
-重构分类和接口数据前执行：
+执行重构或性能优化前备份：
 
 ```bash
 mongodump \
@@ -59,7 +89,18 @@ mongodump \
   --out="./backup-before-refactor"
 ```
 
-备份必须包含 `user`、`project`、`interface`、`interface_cat`、`interface_col` 和 `interface_case` 等集合，并完成一次恢复验证。
+备份至少包含：
+
+```text
+user
+project
+interface
+interface_cat
+interface_col
+interface_case
+```
+
+完成恢复验证后，才允许对真实数据执行迁移或索引操作。
 
 ### 3. 配置和本地文件约定
 
@@ -68,16 +109,16 @@ config.json        本地配置，不提交 Git
 config_example.json 示例配置，提交 Git
 init.lock          本地初始化标记，不提交 Git
 ykit.config.js     构建配置，提交 Git
-package-lock.json  保留 lockfile v1
+package-lock.json  保留现有 lockfile v1
 ```
 
-## 三、分阶段实施计划
+## 三、最终落地顺序
 
-## Phase 0：建立当前系统基线
+## Phase 1：固定当前基线
 
 ### 实施内容
 
-检查并固定以下关键路径：
+先不升级核心依赖，确认当前代码和本地环境可重复启动。重点检查：
 
 ```text
 server/app.js
@@ -88,253 +129,597 @@ server/models/interface.js
 server/models/interfaceCat.js
 client/reducer/modules/interface.js
 exts/yapi-plugin-import-swagger/run.js
+ykit.config.js
 ```
 
-### 验证
+### 验证命令
 
 ```bash
-node --check server/app.js
-node --check server/router.js
-node --check server/controllers/interface.js
-node --check server/models/interfaceCat.js
-npm test
-npm run build-client
-```
-
-### 通过标准
-
-- 历史项目和接口可以正常打开。
-- 历史接口可以编辑并保存。
-- 分类树和平铺分类都能读取。
-- 保存成功不会被非关键日志异常误判为失败。
-- 服务重启后数据不丢失。
-
-## Phase 1：稳定数据模型和迁移策略
-
-当前无限层级分类使用 `interface_cat.parent_id`：
-
-```text
-parent_id = 0       根分类
-parent_id = 其他ID  子分类
-parent_id 缺失      兼容为 0
-```
-
-### 兼容规则
-
-1. 旧分类缺少 `parent_id` 时按根分类处理。
-2. 保留原有平铺分类接口。
-3. 新增树形接口只作为增强接口。
-4. 不改变接口记录中 `catid` 的含义。
-5. 删除分类时递归处理子分类和关联接口。
-6. 移动分类时阻止移动到自身或后代。
-7. 迁移脚本必须幂等，不能在服务启动时无条件改写全部数据。
-
-必要时执行一次补全：
-
-```javascript
-db.interface_cat.updateMany(
-  { parent_id: { $exists: false } },
-  { $set: { parent_id: 0 } }
-)
-```
-
-## Phase 2：重构接口分类服务层
-
-### 实施内容
-
-在不改变路由的前提下，将分类通用逻辑从控制器中提取到：
-
-```text
-server/utils/interface-category.js
-```
-
-只提取以下逻辑：
-
-- `normalizeParentId`
-- `buildCategoryTree`
-- `collectDescendantIds`
-- `isDescendant`
-- `validateCategoryMove`
-
-保留旧接口：
-
-```text
-GET  /api/interface/getCatMenu
-GET  /api/interface/list_menu
-POST /api/interface/add_cat
-POST /api/interface/up_cat
-POST /api/interface/del_cat
-```
-
-保留并稳定新接口：
-
-```text
-GET /api/interface/get_cat_tree
-```
-
-### 验证
-
-覆盖根分类、一级到三级分类、无限层级、分类移动、自身移动、后代移动、递归删除、空分类树、孤立分类以及旧数据缺失 `parent_id` 的情况。
-
-## Phase 3：稳定接口编辑和保存流程
-
-### 重点文件
-
-```text
-server/controllers/interface.js
-server/models/interface.js
-server/controllers/interfaceCol.js
-```
-
-### 保存流程
-
-统一为：
-
-```text
-读取请求
-  -> 规范化接口数据
-  -> 校验项目和分类
-  -> 保存接口及相关数据
-```
-
-### 必须覆盖
-
-- 新增接口。
-- 编辑现有接口。
-- Swagger 导入后编辑。
-- 缺失 `req_body_form` 和 `req_headers`。
-- JSON、Form、Raw、Mock 数据。
-- 项目或分类不存在。
-- 日志或差异记录失败。
-- 历史字段缺失。
-
-主接口记录保存失败时返回失败；主记录已保存但日志失败时记录服务端日志，不将主保存结果误报为失败。
-
-## Phase 4：统一接口数据规范化
-
-新增轻量规范化模块：
-
-```text
-server/utils/interface-normalizer.js
-```
-
-统一处理手工新增、手工编辑、Swagger 2.0、OpenAPI 3.0、OpenAPI 3.1、Postman 和历史接口数据。
-
-重点字段：
-
-```text
-method
-path
-title
-catid
-project_id
-req_headers
-req_query
-req_params
-req_body_form
-req_body_other
-res_body
-res_body_type
-status
-type
-```
-
-规范化要求：缺失字段使用安全默认值；未知字段不能导致保存失败；旧数据规范化后仍能被旧页面识别；不在此阶段修改 MongoDB 原始结构。
-
-## Phase 5：OpenAPI 3.0/3.1 兼容
-
-现有导入入口：
-
-```text
-exts/yapi-plugin-import-swagger/run.js
-test/swagger.v2.json
-test/swagger.v3.json
-```
-
-### 第一阶段：稳定 Swagger 2.0 和 OpenAPI 3.0
-
-覆盖：`info`、`servers`、`paths`、参数、`requestBody`、`responses`、`components.schemas`、`$ref` 以及 JSON、Form、Multipart 内容类型。
-
-### 第二阶段：增加 OpenAPI 3.1
-
-按以下流程处理：
-
-```text
-识别版本
-  -> OpenAPI 3.1 规范化
-  -> 转换为 YApi 内部接口结构
-  -> 调用现有保存逻辑
-```
-
-优先级：
-
-- P0：普通路径、常见 HTTP 方法、query/path/header、JSON 请求体和响应、基础 `$ref`。
-- P1：`oneOf`、`anyOf`、`allOf`、数组、枚举、默认值、examples、multipart。
-- P2：webhooks、回调、高级 JSON Schema 2020-12、多服务器和非标准扩展。
-
-导入失败不能出现“数据已写入但前端显示失败”。在没有事务的情况下，至少返回已写入数量、失败接口列表、重复接口处理结果，并且不覆盖历史接口。
-
-## Phase 6：依赖和运行时升级
-
-当前核心依赖较旧：
-
-```text
-React 16.2
-Webpack 2.x
-YKit 0.6.2
-Mongoose 5.7.5
-node-sass 4.9.0
-```
-
-### 6.1 低风险升级
-
-先只升级补丁版本和兼容性明确的依赖。每个核心依赖单独提交，保留现有 lockfile v1，不改变业务代码和构建目录。
-
-每次执行：
-
-```bash
+source ~/.nvm/nvm.sh
+nvm use 10.24.1
 npm install
 npm test
 npm run build-client
 npm run dev-server
 ```
 
-### 6.2 替换 `node-sass`
+另开终端时才执行：
 
-后续目标：
+```bash
+npm run dev-client
+```
+
+### 通过标准
+
+- 后端可启动并监听 `3000`；
+- 前端构建成功；
+- 前端开发资源服务可监听 `4000`；
+- 浏览器访问 `3000` 可正常打开系统；
+- 重复启动不会因为端口占用误判为代码故障。
+
+### 不做
+
+- 不升级 Node.js；
+- 不升级 React、Webpack、Mongoose；
+- 不重写控制器和模型；
+- 不改数据库数据。
+
+## Phase 2：备份数据库
+
+### 实施内容
+
+在所有数据库优化和结构兼容验证前完成 MongoDB 备份，并记录：
+
+```text
+当前 Git commit
+Node.js 和 npm 版本
+MongoDB 版本
+数据库连接地址
+数据库名
+config.json 配置摘要
+```
+
+### 验证
+
+确认备份文件存在，并使用独立数据库完成一次恢复检查：
+
+```bash
+mongorestore \
+  --drop \
+  --uri="mongodb://127.0.0.1:27017/yapi_restore" \
+  "./backup-before-refactor/yapi"
+```
+
+### 回滚
+
+任何后续阶段出现数据异常时，停止服务，使用备份恢复，不通过手工删除集合解决问题。
+
+## Phase 3：保留 API 和模型不变
+
+### 实施内容
+
+冻结现有 API 契约和 MongoDB 模型。后续优化只允许在以下位置进行：
+
+```text
+server/utils/
+server/controllers/ 的明确错误修复
+server/app.js 的中间件和性能配置
+```
+
+保持以下接口行为不变：
+
+```text
+/api/user/login
+/api/interface/list
+/api/interface/get
+/api/interface/save
+/api/interface/add_cat
+/api/interface/up_cat
+/api/interface/del_cat
+/api/interface/get_cat_tree
+```
+
+### 兼容要求
+
+- 旧请求仍然可以直接调用；
+- 旧响应字段不删除、不重命名；
+- 旧错误码含义不改变；
+- 缺失历史字段按安全默认值读取；
+- 未知字段不能导致接口保存失败；
+- 新增字段必须是可选字段。
+
+### 验证
+
+保存现有接口响应样例，优化后进行字段级对比，确认只出现明确允许的新增字段。
+
+## Phase 4：补数据库索引
+
+### 实施内容
+
+只增加缺失索引，不修改集合和业务字段。重点检查：
+
+```text
+interface.project_id
+interface.catid
+interface.path + interface.method
+interface_cat.project_id
+interface_cat.uid
+interface_col.project_id
+interface_case.project_id
+```
+
+实际索引以现有数据库和查询条件为准，先使用 `explain('executionStats')` 验证，不盲目添加重复索引。
+
+### 验证
+
+对接口列表、分类菜单、项目接口查询执行：
+
+```javascript
+db.interface.find({ project_id: 1 }).explain('executionStats')
+db.interface_cat.find({ project_id: 1 }).explain('executionStats')
+```
+
+比较索引前后的 `totalDocsExamined`、`executionTimeMillis` 和返回结果数量。
+
+### 回滚
+
+只删除本阶段新增且确认无其他用途的索引，不删除原有索引。
+
+## Phase 5：优化慢查询和重复查询
+
+### 实施内容
+
+在不改变 API 返回格式的情况下：
+
+- 列表查询只读取需要的字段；
+- 详情页再读取完整接口数据；
+- 避免循环中重复读取项目、分类和用户；
+- 避免无条件读取全部接口；
+- 保留现有分页参数和 `limit=all` 兼容行为；
+- 减少分类菜单和接口列表的重复查询；
+- 继续使用现有 Model 和数据库连接方式。
+
+### 重点文件
+
+```text
+server/controllers/interface.js
+server/controllers/interfaceCol.js
+server/controllers/project.js
+server/models/interface.js
+server/models/interfaceCat.js
+```
+
+### 验证
+
+- 历史接口列表结果与优化前一致；
+- 接口总数一致；
+- 分页页数和 `total` 一致；
+- 查询次数减少；
+- 接口详情字段完整；
+- 保存流程没有额外副作用。
+
+## Phase 6：修复接口保存异常
+
+### 实施内容
+
+只修复已经确认的问题，不重新设计接口模型：
+
+```text
+读取请求
+  -> 使用安全默认值补齐缺失字段
+  -> 校验项目和分类
+  -> 保存主接口记录
+  -> 处理日志和差异记录
+  -> 返回原有响应格式
+```
+
+覆盖：
+
+- 新增接口；
+- 编辑历史接口；
+- 导入接口后编辑；
+- 缺失 `req_body_form`；
+- 缺失 `req_headers`；
+- JSON、Form、Raw 和 Mock 数据；
+- 项目或分类不存在；
+- 日志处理失败；
+- 差异记录失败；
+- 历史字段缺失。
+
+### 结果规则
+
+- 主接口保存失败：返回失败；
+- 主接口保存成功、日志失败：主操作返回成功，服务端记录日志；
+- 输入数据不合法：返回明确业务错误；
+- 不允许出现“数据库保存成功但前端显示保存失败”。
+
+### 验证
+
+至少添加：
+
+```text
+test/server/interface-save.test.js
+```
+
+重点验证保存后重新查询的数据，而不是只验证 HTTP 状态码。
+
+## Phase 7：增加短期缓存
+
+### 实施内容
+
+先使用进程内短期缓存，不引入 Redis。适合缓存：
+
+```text
+项目基本信息
+分类平铺菜单
+分类树
+短期权限查询结果
+系统配置
+```
+
+不缓存：
+
+```text
+接口编辑内容
+用户密码
+正在保存的数据
+权限变更结果
+```
+
+写操作后清理对应缓存：
+
+```text
+新增/编辑/删除分类 -> 清理项目分类缓存
+保存接口 -> 清理对应接口缓存
+修改项目权限 -> 清理权限缓存
+```
+
+### 约束
+
+- 必须有过期时间；
+- 缓存未命中时直接走现有查询；
+- 缓存异常不能影响业务请求；
+- 不改变响应内容；
+- 不将缓存数据写入 MongoDB。
+
+### 验证
+
+比较缓存前后的响应内容、查询次数和缓存失效行为。出现脏数据时优先关闭缓存开关回滚。
+
+## Phase 8：替换 `node-sass`
+
+### 实施内容
+
+目标：
 
 ```text
 node-sass -> sass
 ```
 
-先确认 `.sass`、`.scss` 文件和 loader 配置，再验证 CSS 构建产物。Node.js 18 验证通过前，继续保留 Node.js 10.24.1 作为回滚环境。
+先检查 `.sass`、`.scss` 文件和当前 `sass-loader` 配置，再做最小替换。保持 CSS 输出目录和页面入口不变。
 
-### 6.3 构建工具
+### 验证
 
-先修复旧 YKit/HappyPack 在新 Node.js 下的兼容问题，保持：
-
-- `/prd` 资源路径；
-- `3000` 后端和系统页面入口；
-- `4000` 前端开发资源服务；
-- `npm run dev-client` 和 `npm run build-client` 脚本行为。
-
-只有在插件客户端、生产构建和 `/prd/assets.js` 格式都验证稳定后，才评估移除 YKit。
-
-### 6.4 React 和 UI
-
-推荐顺序：
-
-```text
-React 16 patch/minor
-  -> 局部组件整理
-  -> 分类树和接口编辑页重构
-  -> Ant Design 局部升级
-  -> 再评估 React 18
+```bash
+npm install
+npm run build-client
+npm run dev-client
 ```
 
-优先改造登录页、项目列表、接口分类树、接口编辑页和导入弹窗。URL、权限、登录流程、接口字段和插件入口保持不变。
+检查：
 
-## Phase 7：测试和回归
+- 全部 Sass 文件编译成功；
+- 登录、项目、接口、分类页面样式正常；
+- 构建产物没有大规模无关变化；
+- Node.js 10 环境仍可回滚；
+- 新 Node.js 环境可以继续构建。
+
+## Phase 9：过渡验证 Node.js 18
+
+### 实施内容
+
+在 `node-sass` 替换稳定后，单独增加 Node.js 18 过渡验证，不与业务重构混在同一个提交中。Node.js 18 只用于排查旧构建链的兼容问题，不作为最终推荐运行环境。
+
+验证项目：
+
+```text
+后端启动
+前端构建
+前端开发服务
+管理员登录
+历史接口读取
+接口编辑保存
+Swagger 导入
+分类操作
+npm test
+```
+
+### 运行环境策略
+
+升级期间固定使用三套环境：
+
+```text
+当前稳定环境：Node.js 10.24.1
+过渡验证环境：Node.js 18.x
+最终推荐环境：Node.js 24.21.0 LTS
+```
+
+在 Node.js 24.21.0 LTS 完全通过前，继续保留 Node.js 10.24.1 作为回滚环境，暂不修改 `.nvmrc`。
+
+### 通过标准
+
+Node.js 18 下没有阻断性错误，且关键页面和接口行为与 Node.js 10 一致，才进入 Node.js 24.21.0 LTS 验证。Node.js 24.21.0 LTS 下完成全量回归后，才将其设置为项目默认环境。
+
+## Phase 10：验证并升级 MongoDB
+
+### 实施内容
+
+MongoDB 升级与业务代码、TypeScript 和前端构建分开执行。先在独立 Docker 容器中验证，不替换现有 `yapi-mongodb` 容器。
+
+```text
+当前稳定：MongoDB 4.4
+目标生产：MongoDB 8.0 最新补丁版本
+独立验证：MongoDB 8.3
+```
+
+使用备份恢复到新端口的 MongoDB，验证连接、索引、登录、项目、接口、分类和保存流程。MongoDB 升级过程中不删除集合、不重命名字段、不重写历史接口。
+
+### 验证步骤
+
+```bash
+docker run -d --name yapi-mongodb-8 \
+  -p 127.0.0.1:27018:27017 \
+  -v yapi-mongodb-8-data:/data/db \
+  mongo:8.0
+
+mongorestore --drop \
+  --uri="mongodb://127.0.0.1:27018/yapi" \
+  "./backup-before-refactor/yapi"
+```
+
+分别使用旧数据库和新数据库执行相同回归清单，比较数据数量、接口响应、分类结构和保存结果。
+
+### 通过标准
+
+MongoDB 8.0 下全量回归通过，历史数据可读取，现有 API 响应不变，才将 8.0 作为默认生产目标。MongoDB 8.3 只在独立环境通过兼容性验证后记录结果，不直接替换生产目标。
+
+## Phase 11：验证并切换到 Node.js 24.21.0 LTS
+
+### 实施内容
+
+Node.js 18 过渡验证通过后，使用最终目标环境 Node.js `24.21.0 LTS` 完成验证。此阶段仍然不修改业务逻辑和数据库结构。
+
+```bash
+nvm install 24.21.0
+nvm use 24.21.0
+node -v
+npm -v
+npm install
+npm test
+npm run build-client
+```
+
+### 验证项目
+
+```text
+后端启动
+前端生产构建
+前端开发服务
+管理员登录
+历史项目和接口读取
+历史接口编辑保存
+导入接口编辑保存
+分类新增、移动、删除
+插件加载
+数据库查询和缓存
+```
+
+Node.js 24.21.0 LTS 下全量回归通过后，再将 `.nvmrc` 更新为：
+
+```text
+24.21.0
+```
+
+同时更新开发文档中的推荐环境。Node.js `10.24.1` 在切换完成前保留为回滚环境。
+
+### 通过标准
+
+Node.js 24.21.0 LTS 下无阻断性错误，关键页面、接口响应、历史数据和构建产物与基线一致，才允许切换默认开发环境。
+
+## Phase 12：替换 YKit/HappyPack
+
+### 实施内容
+
+先修复或替换前端构建链中对旧 Node.js API 的依赖，再评估是否移除 YKit。内部实现可以变化，但必须继续支持：
+
+```bash
+npm run dev
+npm run dev-server
+npm run dev-client
+npm run build-client
+```
+
+保持：
+
+```text
+static/index.html
+static/dev.html
+static/prd/
+3000 页面入口
+4000 开发资源服务
+```
+
+### 迁移顺序
+
+```text
+YKit 兼容修复
+  -> 旧 HappyPack 问题修复
+  -> 构建产物对比
+  -> 独立构建配置验证
+  -> 再评估移除 YKit
+```
+
+### 不做
+
+- 不同时升级 Webpack、React、Ant Design；
+- 不改变插件加载协议；
+- 不改变 `/prd/assets.js` 的使用方式；
+- 不在构建工具迁移阶段修改业务接口。
+
+## Phase 13：升级 Webpack
+
+### 实施内容
+
+在构建服务独立且产物稳定后，再分阶段升级 Webpack。每次只改变一个主要构建组件：
+
+```text
+Webpack 2 -> 兼容版本
+Webpack 兼容版本 -> 目标版本
+```
+
+同时逐步处理：
+
+```text
+ExtractTextPlugin
+compression-webpack-plugin
+copy-webpack-plugin
+webpack-dev-middleware
+webpack-node-externals
+```
+
+### 验证
+
+- 生产构建成功；
+- 开发服务成功；
+- JS、CSS、图片、字体和插件资源加载成功；
+- `static/prd/assets.js` 内容可用；
+- 构建产物大小没有异常膨胀；
+- 浏览器控制台没有阻断性错误。
+
+## Phase 14：引入 TypeScript 6.0 并渐进迁移
+
+### 实施内容
+
+UI 升级与后端、数据库分离，先做页面级替换，保持接口调用和 Redux 数据结构不变。
+
+优先顺序：
+
+```text
+登录页
+  -> 项目列表
+  -> 接口分类树
+  -> 接口编辑页
+  -> 导入弹窗
+```
+
+保留：
+
+- 页面 URL；
+- 路由；
+- 表单字段；
+- 权限判断；
+- 接口调用；
+- 操作按钮含义；
+- 插件入口。
+
+### 分类树
+
+如果保留 `parent_id` 兼容扩展，则新树组件同时支持：
+
+- 旧平铺数据；
+- `parent_id` 缺失；
+- `parent_id = 0`；
+- 任意层级；
+- 空分类；
+- 删除和移动后的刷新。
+
+### 验证
+
+逐页验证页面操作和接口请求，不做全站一次性替换。
+
+## Phase 15：局部升级 UI
+
+### 实施内容
+
+UI 迁移必须在 TypeScript 和构建工具稳定后进行，优先保持组件输入、输出和业务操作不变。
+
+优先顺序：
+
+```text
+登录页
+  -> 项目列表
+  -> 接口分类树
+  -> 接口编辑页
+  -> 导入弹窗
+```
+
+保留页面 URL、路由、表单字段、权限判断、接口调用、按钮含义和插件入口。
+
+## Phase 16：最后评估 React 和 Ant Design 大版本
+
+### 前提
+
+只有以下内容全部稳定后才评估大版本升级：
+
+- 数据库索引和查询优化稳定；
+- 接口保存稳定；
+- Node.js 18 可运行；
+- 构建工具稳定；
+- 分类树和接口编辑页已经完成局部整理；
+- 现有页面回归结果完整。
+
+### 调查范围
+
+```bash
+rg -n "getFieldDecorator|Modal|Table|Tree|Menu|Icon|Form" client
+```
+
+### 升级原则
+
+- 先升级低风险 patch/minor；
+- 按页面处理破坏性 API；
+- 每次只升级一个 UI 大组件；
+- 不与 React 大版本升级同时修改后端；
+- 不因为 UI 升级删除原有操作。
+
+## 四、数据兼容和迁移原则
+
+### 历史分类
+
+旧数据：
+
+```json
+{
+  "_id": 1,
+  "name": "用户接口",
+  "project_id": 1
+}
+```
+
+读取时等价于：
+
+```json
+{
+  "_id": 1,
+  "name": "用户接口",
+  "project_id": 1,
+  "parent_id": 0
+}
+```
+
+### 通用规则
+
+1. 旧字段永不删除。
+2. 新字段必须可选。
+3. 读取端先兼容旧数据。
+4. 写入端只写当前版本需要的字段。
+5. 迁移脚本必须幂等。
+6. 服务启动不自动执行破坏性迁移。
+7. 升级前必须备份。
+8. 回滚代码后，数据库仍必须可读取。
+9. 迁移失败必须能够恢复备份。
+
+## 五、测试和验收
 
 建议新增或补充：
 
@@ -345,8 +730,6 @@ test/common/interface-normalizer.test.js
 test/common/openapi-normalizer.test.js
 ```
 
-重点验证：旧数据读取、旧接口编辑保存、无限层级分类、循环移动、递归删除、缺失字段、Swagger 2.0、OpenAPI 3.0、OpenAPI 3.1、重复导入和 `$ref`。
-
 每个阶段至少执行：
 
 ```bash
@@ -354,68 +737,89 @@ npm test
 npm run build-client
 ```
 
-涉及页面时，再执行：
+涉及页面时执行：
 
 ```bash
 npm run dev-server
 npm run dev-client
 ```
 
-访问：
+统一访问：
 
 ```text
 http://127.0.0.1:3000
 ```
 
-## Phase 8：发布和升级
+### 关键验收清单
 
-每个阶段单独提交并可回滚。推荐提交类型：
+- 管理员可以登录；
+- 历史项目可以打开；
+- 历史接口可以查看和编辑；
+- 导入接口可以再次编辑并保存；
+- 保存成功不会误报失败；
+- 分类树可以读取旧数据；
+- 分类操作不影响旧接口；
+- OpenAPI 2.0/3.0 现有流程不退化；
+- OpenAPI 3.1 新增能力按支持范围工作；
+- Node.js 10 回滚环境可用；
+- Node.js 18 过渡验证通过；
+- Node.js 24.21.0 LTS 验证通过并作为默认版本；
+- 前端生产构建和开发构建都可用；
+- 数据库恢复流程可执行。
+
+## 六、提交和回滚要求
+
+每个阶段单独提交，使用项目允许的类型：
 
 ```text
-feat: support nested interface categories
 fix: prevent interface save false failure
-fix: normalize imported interface fields
+refactor: optimize interface query path
 test: add legacy category compatibility cases
-docs: add local development setup
-chore: update npm registry configuration
-refactor: extract interface category helpers
-opti: reduce interface tree rendering overhead
+docs: update refactor implementation plan
+chore: replace node-sass with sass
+opti: add category menu cache
 ```
 
-不使用项目不允许的 `build`、`perf` 和 `ci` 类型。
+不使用：
 
-升级前：备份数据库、记录版本和配置、停止旧服务、确认回滚方式。升级后：执行依赖安装、数据库迁移、启动服务、验证管理员登录、历史项目、历史接口、接口编辑保存、导入和分类树。
+```text
+build
+perf
+ci
+```
 
-## 四、推荐实际执行顺序
+每次提交前检查：
+
+```bash
+git diff --check
+git status --short
+npm test
+```
+
+## 七、第一批实际执行范围
+
+第一批只完成低风险内容：
 
 ```text
 1. 固定当前可运行基线
 2. 备份 MongoDB
-3. 补齐接口分类回归测试
-4. 补齐接口保存回归测试
-5. 抽取分类工具函数
-6. 抽取接口数据规范化函数
-7. 稳定 Swagger 2.0/OpenAPI 3.0 导入
-8. 增加 OpenAPI 3.1 核心兼容
-9. 替换 node-sass
-10. 验证 Node.js 18
-11. 升级构建工具
-12. 重构分类树 UI
-13. 重构接口编辑页 UI
-14. 最后评估 React 和 Ant Design 大版本升级
+3. 保留 API 和模型不变
+4. 补数据库索引
+5. 优化慢查询和重复查询
+6. 修复接口保存异常
+7. 增加短期缓存
 ```
 
-## 五、第一批执行范围
-
-第一批不升级核心 npm 依赖，只完成：
+第一批完成并验证后，才进入：
 
 ```text
-接口分类兼容性测试
-接口保存回归测试
-接口数据规范化
-OpenAPI 2.0/3.0 导入回归
-历史数据读取验证
-迁移文档补充
+8. 替换 node-sass
+9. 过渡验证 Node.js 18
+10. 验证并升级 MongoDB
+11. 验证并切换到 Node.js 24.21.0 LTS
+12. 替换 YKit/HappyPack
+13. 升级 Webpack
+14. 引入 TypeScript 6.0 并渐进迁移
+15. 局部升级 UI
+16. 最后评估 React 和 Ant Design 大版本
 ```
-
-完成上述内容后，再处理 `node-sass`、Node.js 18、Webpack/YKit、React 和 UI 升级。
