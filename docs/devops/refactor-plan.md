@@ -601,6 +601,8 @@ webpack-dev-middleware
 webpack-node-externals
 ```
 
+当前审计结果：项目顶层使用 Webpack `2.7.0`，YKit `0.6.2` 自带 Webpack `1.14.0`；`extract-text-webpack-plugin@2.0.0` 依赖 Webpack 2，现有 `sass-loader@7.2.0` 虽可完成构建，但声明的 peer 范围为 Webpack 3/4。由于构建链存在两套 Webpack 和旧插件耦合，暂不直接升级 Webpack，先保持当前可运行组合，后续先完成 YKit 解耦再升级。
+
 ### 验证
 
 - 生产构建成功；
