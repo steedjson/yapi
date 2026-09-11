@@ -2,6 +2,8 @@ const _ = require('underscore');
 const axios = require('axios');
 
 const isNode = typeof global == 'object' && global.global === global;
+// 测试和嵌入式调用可能不传端口，此时使用相对路径，避免拼出 undefined 地址。
+const getApiPrefix = port => (isNode && port !== undefined && port !== null ? 'http://127.0.0.1:' + port : '');
 
 async function handle(
   res,
@@ -61,9 +63,7 @@ async function handle(
         errors.push('分类「' + cat.name + '」：父分类不存在（' + cat.parent_path + '）');
         continue;
       }
-      const apipath = isNode
-        ? 'http://127.0.0.1:' + port + '/api/interface/add_cat'
-        : '/api/interface/add_cat';
+      const apipath = getApiPrefix(port) + '/api/interface/add_cat';
       try {
         const result = await axios.post(apipath, {
           name: cat.name,
@@ -104,9 +104,7 @@ async function handle(
     }
 
     if (info.basePath) {
-      const projectApiPath = isNode
-        ? 'http://127.0.0.1:' + port + '/api/project/up'
-        : '/api/project/up';
+      const projectApiPath = getApiPrefix(port) + '/api/project/up';
       try {
         const result = await axios.post(projectApiPath, {
           id: projectId,
@@ -134,11 +132,8 @@ async function handle(
       // 旧分类来自接口时使用 _id，新建分类使用 id，统一读取避免接口落到默认分类。
       if (categoryId(category)) data.catid = categoryId(category);
 
-      const apipath = isNode
-        ? 'http://127.0.0.1:' + port + (dataSync !== 'normal' ? '/api/interface/save' : '/api/interface/add')
-        : dataSync !== 'normal'
-          ? '/api/interface/save'
-          : '/api/interface/add';
+      const apipath =
+        getApiPrefix(port) + (dataSync !== 'normal' ? '/api/interface/save' : '/api/interface/add');
       try {
         const result = await axios.post(apipath, data);
         if (result.data.errcode) {
