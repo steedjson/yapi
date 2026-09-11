@@ -404,9 +404,24 @@ class interfaceColController extends baseController {
         col_id: params.col_id
       };
 
+      // 先批量读取待导入接口和接口集，避免每个用例重复查询关联数据。
+      const interfaceList = await this.interfaceModel.getByIds(params.interface_list);
+      const interfaceById = {};
+      interfaceList.forEach(interfaceData => {
+        interfaceById[interfaceData._id] = interfaceData;
+      });
+      const col = await this.colModel.get(params.col_id);
+      if (!col) {
+        throw new Error('不存在的接口集');
+      }
+
       for (let i = 0; i < params.interface_list.length; i++) {
-        let interfaceData = await this.interfaceModel.get(params.interface_list[i]);
-        data.interface_id = params.interface_list[i];
+        const interfaceId = params.interface_list[i];
+        const interfaceData = interfaceById[interfaceId];
+        if (!interfaceData) {
+          throw new Error(`不存在的接口 ${interfaceId}`);
+        }
+        data.interface_id = interfaceId;
         data.casename = interfaceData.title;
 
         // 处理json schema 解析
@@ -428,7 +443,9 @@ class interfaceColController extends baseController {
         data.req_body_type = interfaceData.req_body_type;
         let caseResultData = await this.caseModel.save(data);
         let username = this.getUsername();
-        this.colModel.get(params.col_id).then(col => {
+        const caseName = data.casename;
+        const caseId = caseResultData._id;
+        Promise.resolve().then(() => {
           yapi.commons.saveLog({
             content: `<a href="/user/profile/${this.getUid()}">${username}</a> 在接口集 <a href="/project/${
               params.project_id
@@ -440,6 +457,9 @@ class interfaceColController extends baseController {
             username: username,
             typeid: params.project_id
           });
+        }).catch(err => {
+          // 日志失败不能影响已经成功创建的测试用例。
+          yapi.commons.log(err, 'error');
         });
       }
 
