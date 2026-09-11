@@ -300,11 +300,9 @@ async function crossRequest(defaultOptions, preScript, afterScript, commonContex
     axios: axios
   });
 
-  let scriptEnable = false;
-  try {
-    const yapi = require('../server/yapi');
-    scriptEnable = yapi.WEBCONFIG.scriptEnable === true;
-  } catch (err) {}
+  // The browser bundle must not import server/yapi (and its MongoDB/mail dependencies).
+  // The value is injected by ykit.config.js at build time.
+  const scriptEnable = process.env.scriptEnable === 'true';
 
   if (preScript && scriptEnable) {
     context = await sandbox(context, preScript);
