@@ -1414,10 +1414,19 @@ class interfaceController extends baseController {
       const catIds = result.map(item => item._id);
       // 一次读取项目下所有开放接口，避免按分类逐个查询。
       const openInterfaces = await this.Model.listOpenByCatids(catIds);
-      const newResult = openInterfaces.map(item => {
-        const data = item.toObject();
-        data.basepath = basepath;
-        return data;
+      const interfacesByCatid = {};
+      openInterfaces.forEach(item => {
+        if (!interfacesByCatid[item.catid]) interfacesByCatid[item.catid] = [];
+        interfacesByCatid[item.catid].push(item);
+      });
+      // 按原分类顺序拼接，保持批量查询前的响应顺序不变。
+      const newResult = [];
+      catIds.forEach(catid => {
+        (interfacesByCatid[catid] || []).forEach(item => {
+          const data = item.toObject();
+          data.basepath = basepath;
+          newResult.push(data);
+        });
       });
 
       ctx.body = yapi.commons.resReturn(newResult);
