@@ -510,8 +510,11 @@ class interfaceController extends baseController {
     try {
       let result, count;
       if (limit === 'all') {
-        result = await this.Model.list(project_id);
-        count = await this.Model.listCount({project_id});
+        // 列表和总数互不依赖，并行查询可减少接口列表等待时间。
+        [result, count] = await Promise.all([
+          this.Model.list(project_id),
+          this.Model.listCount({project_id})
+        ]);
       } else {
         let option = {project_id};
         if (status) {
@@ -529,8 +532,11 @@ class interfaceController extends baseController {
           }
         }
 
-        result = await this.Model.listByOptionWithPage(option, page, limit);
-        count = await this.Model.listCount(option);
+        // 列表和总数互不依赖，并行查询不改变原有返回结构。
+        [result, count] = await Promise.all([
+          this.Model.listByOptionWithPage(option, page, limit),
+          this.Model.listCount(option)
+        ]);
       }
 
 
@@ -599,9 +605,11 @@ class interfaceController extends baseController {
         }
       }
 
-      let result = await this.Model.listByOptionWithPage(option, page, limit);
-
-      let count = await this.Model.listCount(option);
+      // 分页数据和总数并行读取，避免两个独立查询串行等待。
+      let [result, count] = await Promise.all([
+        this.Model.listByOptionWithPage(option, page, limit),
+        this.Model.listCount(option)
+      ]);
 
       ctx.body = yapi.commons.resReturn({
         count: count,
