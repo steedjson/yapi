@@ -1,4 +1,10 @@
 var path = require('path');
+var nodeUtil = require('util');
+
+// 兼容 Node.js 24：旧版 HappyPack 仍调用已移除的 util.isRegExp。
+if (typeof nodeUtil.isRegExp !== 'function') {
+  nodeUtil.isRegExp = value => value instanceof RegExp;
+}
 var AssetsPlugin = require('assets-webpack-plugin');
 var CompressionPlugin = require('compression-webpack-plugin');
 var commonLib = require('./common/plugin.js');
