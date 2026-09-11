@@ -1161,7 +1161,8 @@ class interfaceController extends baseController {
       let r = { deletedCategories: catIds.length, deletedInterfaces: interfaceData.length };
       return (ctx.body = yapi.commons.resReturn(r));
     } catch (e) {
-      yapi.commons.resReturn(null, 400, e.message);
+      // 删除分类失败时必须写回响应，避免请求悬挂或误返回成功。
+      ctx.body = yapi.commons.resReturn(null, 400, e.message);
     }
   }
 
@@ -1184,6 +1185,9 @@ class interfaceController extends baseController {
 
     try {
       let project = await this.projectModel.getBaseInfo(project_id);
+      if (!project) {
+        return (ctx.body = yapi.commons.resReturn(null, 407, '不存在的项目'));
+      }
       if (project.project_type === 'private') {
         if ((await this.checkAuth(project._id, 'project', 'edit')) !== true) {
           return (ctx.body = yapi.commons.resReturn(null, 406, '没有权限'));
