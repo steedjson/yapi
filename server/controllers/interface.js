@@ -24,19 +24,20 @@ function handleHeaders(values){
   let isfile = false,
   isHaveContentType = false;
   if (values.req_body_type === 'form') {
-    values.req_body_form.forEach(item => {
+    (values.req_body_form || []).forEach(item => {
       if (item.type === 'file') {
         isfile = true;
       }
     });
 
-    values.req_headers.map(item => {
+    (values.req_headers || []).map(item => {
       if (item.name === 'Content-Type') {
         item.value = isfile ? 'multipart/form-data' : 'application/x-www-form-urlencoded';
         isHaveContentType = true;
       }
     });
     if (isHaveContentType === false) {
+      values.req_headers = values.req_headers || [];
       values.req_headers.unshift({
         name: 'Content-Type',
         value: isfile ? 'multipart/form-data' : 'application/x-www-form-urlencoded'
@@ -354,38 +355,33 @@ class interfaceController extends baseController {
     let result = await this.Model.getByPath(params.project_id, params.path, params.method, '_id res_body');
 
     if (result.length > 0) {
-      result.forEach(async item => {
+      for (const item of result) {
         params.id = item._id;
-        // console.log(this.schemaMap['up'])
-        let validParams = Object.assign({}, params)
+        let validParams = Object.assign({}, params);
         let validResult = yapi.commons.validateParams(this.schemaMap['up'], validParams);
-        if (validResult.valid) {
-          let data = Object.assign({}, ctx);
-          data.params = validParams;
-
-          if(params.res_body_is_json_schema && params.dataSync === 'good'){
-            try{
-              let new_res_body = yapi.commons.json_parse(params.res_body)
-              let old_res_body = yapi.commons.json_parse(item.res_body)
-              data.params.res_body = JSON.stringify(mergeJsonSchema(old_res_body, new_res_body),null,2);
-            }catch(err){}
-          }
-          await this.up(data);
-        } else {
+        if (!validResult.valid) {
           return (ctx.body = yapi.commons.resReturn(null, 400, validResult.message));
         }
-      });
+
+        let data = Object.assign({}, ctx);
+        data.params = validParams;
+
+        if (params.res_body_is_json_schema && params.dataSync === 'good') {
+          try {
+            let new_res_body = yapi.commons.json_parse(params.res_body);
+            let old_res_body = yapi.commons.json_parse(item.res_body);
+            data.params.res_body = JSON.stringify(mergeJsonSchema(old_res_body, new_res_body), null, 2);
+          } catch (err) {}
+        }
+        await this.up(data);
+      }
     } else {
       let validResult = yapi.commons.validateParams(this.schemaMap['add'], params);
-      if (validResult.valid) {
-        let data = {};
-        data.params = params;
-        await this.add(data);
-      } else {
+      if (!validResult.valid) {
         return (ctx.body = yapi.commons.resReturn(null, 400, validResult.message));
       }
+      await this.add({ params });
     }
-    ctx.body = yapi.commons.resReturn(result);
     // return ctx.body = yapi.commons.resReturn(null, 400, 'path第一位必需为 /, 只允许由 字母数字-/_:.! 组成');
   }
 
@@ -458,6 +454,9 @@ class interfaceController extends baseController {
       }
       let userinfo = await this.userModel.findById(result.uid);
       let project = await this.projectModel.getBaseInfo(result.project_id);
+      if (!project) {
+        return (ctx.body = yapi.commons.resReturn(null, 407, '不存在的项目'));
+      }
       if (project.project_type === 'private') {
         if ((await this.checkAuth(project._id, 'project', 'view')) !== true) {
           return (ctx.body = yapi.commons.resReturn(null, 406, '没有权限'));
@@ -534,7 +533,7 @@ class interfaceController extends baseController {
 
       ctx.body = yapi.commons.resReturn({
         count: count,
-        total: Math.ceil(count / limit),
+        total: limit === 'all' ? 1 : Math.ceil(count / parseInt(limit, 10)),
         list: result
       });
       yapi.emitHook('interface_list', result).then();
@@ -566,7 +565,14 @@ class interfaceController extends baseController {
     try {
       let catdata = await this.catModel.get(catid);
 
+      if (!catdata) {
+        return (ctx.body = yapi.commons.resReturn(null, 407, '不存在的接口集'));
+      }
+
       let project = await this.projectModel.getBaseInfo(catdata.project_id);
+      if (!project) {
+        return (ctx.body = yapi.commons.resReturn(null, 407, '不存在的项目'));
+      }
       if (project.project_type === 'private') {
         if ((await this.checkAuth(project._id, 'project', 'view')) !== true) {
           return (ctx.body = yapi.commons.resReturn(null, 406, '没有权限'));
@@ -621,19 +627,12 @@ class interfaceController extends baseController {
     }
 
     try {
-      let result = await this.catModel.list(project_id),
-        newResult = [];
-      for (let i = 0, item, list; i < result.length; i++) {
-        item = result[i].toObject();
-        list = await this.Model.listByCatid(item._id);
-        for (let j = 0; j < list.length; j++) {
-          list[j] = list[j].toObject();
-        }
-
-        item.list = list;
-        newResult[i] = item;
+      let result = await this.catModel.list(project_id);
+      let categories = result.map(item => Object.assign(item.toObject(), { list: [] }));
+      for (const item of categories) {
+        item.list = (await this.Model.listByCatid(item._id)).map(inter => inter.toObject());
       }
-      ctx.body = yapi.commons.resReturn(newResult);
+      ctx.body = yapi.commons.resReturn(this.buildCategoryTree(categories));
     } catch (err) {
       ctx.body = yapi.commons.resReturn(null, 402, err.message);
     }
@@ -933,6 +932,7 @@ class interfaceController extends baseController {
       params = yapi.commons.handleParams(params, {
         name: 'string',
         project_id: 'number',
+        parent_id: 'number',
         desc: 'string'
       });
 
@@ -950,9 +950,18 @@ class interfaceController extends baseController {
         return (ctx.body = yapi.commons.resReturn(null, 400, '名称不能为空'));
       }
 
+      let parentId = params.parent_id || 0;
+      if (parentId) {
+        let parent = await this.catModel.get(parentId);
+        if (!parent || parent.project_id !== params.project_id) {
+          return (ctx.body = yapi.commons.resReturn(null, 400, '父分类不存在'));
+        }
+      }
+
       let result = await this.catModel.save({
         name: params.name,
         project_id: params.project_id,
+        parent_id: parentId,
         desc: params.desc,
         uid: this.getUid(),
         add_time: yapi.commons.time(),
@@ -982,14 +991,36 @@ class interfaceController extends baseController {
 
       let username = this.getUsername();
       let cate = await this.catModel.get(params.catid);
+      if (!cate) {
+        return (ctx.body = yapi.commons.resReturn(null, 400, '不存在的分类'));
+      }
 
       let auth = await this.checkAuth(cate.project_id, 'project', 'edit');
       if (!auth) {
         return (ctx.body = yapi.commons.resReturn(null, 400, '没有权限'));
       }
 
+      let parentId = params.parent_id === undefined ? cate.parent_id || 0 : params.parent_id || 0;
+      if (parentId === params.catid) {
+        return (ctx.body = yapi.commons.resReturn(null, 400, '不能将分类设置为自己的父分类'));
+      }
+      if (parentId) {
+        let parent = await this.catModel.get(parentId);
+        if (!parent || parent.project_id !== cate.project_id) {
+          return (ctx.body = yapi.commons.resReturn(null, 400, '父分类不存在'));
+        }
+        let cursor = parent;
+        while (cursor) {
+          if (cursor._id === params.catid) {
+            return (ctx.body = yapi.commons.resReturn(null, 400, '不能移动到自己的子分类下'));
+          }
+          cursor = cursor.parent_id ? await this.catModel.get(cursor.parent_id) : null;
+        }
+      }
+
       let result = await this.catModel.up(params.catid, {
         name: params.name,
+        parent_id: parentId,
         desc: params.desc,
         up_time: yapi.commons.time()
       });
@@ -1036,22 +1067,41 @@ class interfaceController extends baseController {
         typeid: catData.project_id
       });
 
-      let interfaceData = await this.Model.listByCatid(id);
-
-      interfaceData.forEach(async item => {
-        try {
-          yapi.emitHook('interface_del', item._id).then();
-          await this.caseModel.delByInterfaceId(item._id);
-        } catch (e) {
-          yapi.commons.log(e.message, 'error');
-        }
-      });
-      await this.catModel.del(id);
-      let r = await this.Model.delByCatid(id);
+      let allCats = await this.catModel.list(catData.project_id);
+      let catIds = [id];
+      for (let i = 0; i < catIds.length; i++) {
+        allCats.forEach(cat => {
+          if (cat.parent_id === catIds[i]) catIds.push(cat._id);
+        });
+      }
+      let interfaceData = [];
+      for (const catId of catIds) {
+        interfaceData = interfaceData.concat(await this.Model.listByCatid(catId));
+        await this.catModel.del(catId);
+        await this.Model.delByCatid(catId);
+      }
+      for (const item of interfaceData) {
+        yapi.emitHook('interface_del', item._id).then();
+        await this.caseModel.delByInterfaceId(item._id);
+      }
+      let r = { deletedCategories: catIds.length, deletedInterfaces: interfaceData.length };
       return (ctx.body = yapi.commons.resReturn(r));
     } catch (e) {
       yapi.commons.resReturn(null, 400, e.message);
     }
+  }
+
+  buildCategoryTree(categories) {
+    let nodes = categories.map(item => Object.assign({}, item, { children: [] }));
+    let byId = {};
+    nodes.forEach(item => { byId[item._id] = item; });
+    let roots = [];
+    nodes.forEach(item => {
+      let parent = byId[item.parent_id || 0];
+      if (parent) parent.children.push(item);
+      else roots.push(item);
+    });
+    return roots;
   }
 
   /**
@@ -1079,7 +1129,7 @@ class interfaceController extends baseController {
         }
       }
       let res = await this.catModel.list(project_id);
-      return (ctx.body = yapi.commons.resReturn(res));
+      return (ctx.body = yapi.commons.resReturn(this.buildCategoryTree(res)));
     } catch (e) {
       yapi.commons.resReturn(null, 400, e.message);
     }
