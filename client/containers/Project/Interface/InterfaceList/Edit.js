@@ -64,7 +64,8 @@ class InterfaceEdit extends Component {
     try {
       const result = await axios.post('/api/interface/up', data);
       if (result.data.errcode !== 0) {
-        return message.error(result.data.errmsg);
+        message.error(result.data.errmsg);
+        return false;
       }
 
       // 只有保存成功后才刷新分类和接口数据，避免失败响应覆盖当前编辑内容。
@@ -74,8 +75,10 @@ class InterfaceEdit extends Component {
       ]);
       this.props.updateInterfaceData(data);
       message.success('保存成功');
+      return true;
     } catch (err) {
       message.error('保存失败：' + err.message);
+      return false;
     }
   };
 

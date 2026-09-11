@@ -225,7 +225,7 @@ class InterfaceEditForm extends Component {
       submitStatus: true
     });
     try {
-      this.props.form.validateFields((err, values) => {
+      this.props.form.validateFields(async (err, values) => {
         setTimeout(() => {
           if (this._isMounted) {
             this.setState({
@@ -342,8 +342,11 @@ class InterfaceEditForm extends Component {
             }
           }
 
-          this.props.onSubmit(values);
-          EditFormContext.props.changeEditStatus(false);
+          const saved = await this.props.onSubmit(values);
+          // 只有保存成功才清除未保存状态，失败时保留离开页面提示。
+          if (saved !== false) {
+            EditFormContext.props.changeEditStatus(false);
+          }
         }
       });
     } catch (e) {
