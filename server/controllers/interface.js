@@ -1265,31 +1265,36 @@ class interfaceController extends baseController {
         return (ctx.body = yapi.commons.resReturn(null, 404, '没有找到对应自定义接口'));
       }
 
-      // 在每个分组（group）下查找对应project的id值
+      // 先并行读取分组下的项目，再批量读取项目接口，避免项目循环产生 N+1 查询。
+      const projectGroups = await Promise.all(groups.map(group => this.projectModel.list(group._id)));
+      const projects = [].concat(...projectGroups);
+      const projectIds = projects.map(project => project._id);
+      const interfaceList = await this.Model.getcustomFieldValueByProjectIds(
+        projectIds,
+        customFieldValue
+      );
+      const interfacesByProject = {};
+      interfaceList.forEach(item => {
+        if (!interfacesByProject[item.project_id]) interfacesByProject[item.project_id] = [];
+        interfacesByProject[item.project_id].push(item);
+      });
+
       let interfaces = [];
-      for (let i = 0; i < groups.length; i++) {
-        let projects = await this.projectModel.list(groups[i]._id);
-
-        // 在每个项目（project）中查找interface下的custom_field_value
-        for (let j = 0; j < projects.length; j++) {
-          let data = {};
-          let inter = await this.Model.getcustomFieldValue(projects[j]._id, customFieldValue);
-          if (inter.length > 0) {
-            data.project_name = projects[j].name;
-            data.project_id = projects[j]._id;
-            inter = inter.map((item, i) => {
-              item = inter[i] = inter[i].toObject();
-              item.res_body = yapi.commons.json_parse(item.res_body);
-              item.req_body_other = yapi.commons.json_parse(item.req_body_other);
-
-              return item;
-            });
-
-            data.list = inter;
-            interfaces.push(data);
-          }
-        }
-      }
+      projects.forEach(project => {
+        let inter = interfacesByProject[project._id] || [];
+        if (inter.length === 0) return;
+        inter = inter.map(item => {
+          item = item.toObject();
+          item.res_body = yapi.commons.json_parse(item.res_body);
+          item.req_body_other = yapi.commons.json_parse(item.req_body_other);
+          return item;
+        });
+        interfaces.push({
+          project_name: project.name,
+          project_id: project._id,
+          list: inter
+        });
+      });
       return (ctx.body = yapi.commons.resReturn(interfaces));
     } catch (e) {
       yapi.commons.resReturn(null, 400, e.message);
