@@ -21,8 +21,24 @@ async function handle(
   }, 3000);
   const errors = [];
   const categories = {};
+  const categoryId = category => category && (category.id || category._id);
+  const menuById = {};
   (menuList || []).forEach(menu => {
-    categories[menu.name] = menu;
+    if (menu && menu._id !== undefined) menuById[menu._id] = menu;
+  });
+  (menuList || []).forEach(menu => {
+    if (!menu || !menu.name) return;
+    // 按父级拼出完整路径，避免不同父分类下同名子分类匹配错误。
+    const parts = [menu.name];
+    const visited = {};
+    let parent = menuById[menu.parent_id];
+    while (parent && !visited[parent._id]) {
+      visited[parent._id] = true;
+      parts.unshift(parent.name);
+      parent = menuById[parent.parent_id];
+    }
+    categories[parts.join('/')] = menu;
+    if (!categories[menu.name]) categories[menu.name] = menu;
   });
 
   const finish = () => {
@@ -46,7 +62,7 @@ async function handle(
         const result = await axios.post(apipath, {
           name: cat.name,
           project_id: projectId,
-          parent_id: cat.parent_path && categories[cat.parent_path] ? categories[cat.parent_path].id : 0,
+          parent_id: cat.parent_path ? categoryId(categories[cat.parent_path]) || 0 : 0,
           desc: cat.desc,
           token
         });
@@ -108,9 +124,9 @@ async function handle(
       if (basePath && data.path.indexOf(basePath) === 0) {
         data.path = data.path.substr(basePath.length) || '/';
       }
-      if (data.catname && cats[data.catname] && cats[data.catname].id) {
-        data.catid = cats[data.catname].id;
-      }
+      const category = data.catname && cats[data.catname];
+      // 旧分类来自接口时使用 _id，新建分类使用 id，统一读取避免接口落到默认分类。
+      if (categoryId(category)) data.catid = categoryId(category);
 
       const apipath = isNode
         ? 'http://127.0.0.1:' + port + (dataSync !== 'normal' ? '/api/interface/save' : '/api/interface/add')
