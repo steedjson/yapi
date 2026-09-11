@@ -1,7 +1,7 @@
 import React, { PureComponent as Component } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import { Tabs, Modal, Button } from 'antd';
+import { Tabs, Modal, Button, Spin, message } from 'antd';
 import Edit from './Edit.js';
 import View from './View.js';
 import { Prompt } from 'react-router';
@@ -40,7 +40,9 @@ class Content extends Component {
     this.state = {
       curtab: 'view',
       visible: false,
-      nextTab: ''
+      nextTab: '',
+      loading: true,
+      loadError: ''
     };
   }
 
@@ -65,13 +67,24 @@ class Content extends Component {
     }
   }
 
-  handleRequest(nextProps) {
-    const params = nextProps.match.params;
-    this.props.fetchInterfaceData(params.actionId);
+  handleRequest = async nextProps => {
+    const actionId = nextProps.match.params.actionId;
     this.setState({
-      curtab: 'view'
+      curtab: 'view',
+      loading: true,
+      loadError: ''
     });
-  }
+    try {
+      await this.props.fetchInterfaceData(actionId);
+      if (this.actionId === actionId) {
+        this.setState({ loading: false });
+      }
+    } catch (err) {
+      if (this.actionId !== actionId) return;
+      message.error('接口详情加载失败：' + err.message);
+      this.setState({ loading: false, loadError: '接口详情加载失败，请稍后重试' });
+    }
+  };
 
   switchToView = () => {
     this.setState({
@@ -111,6 +124,12 @@ class Content extends Component {
     });
   };
   render() {
+    if (this.state.loading) {
+      return <Spin className="interface-content-loading" tip="正在加载接口详情..." />;
+    }
+    if (this.state.loadError) {
+      return <div className="interface-content-error">{this.state.loadError}</div>;
+    }
     if (this.props.curdata.title) {
       document.getElementsByTagName('title')[0].innerText =
         this.props.curdata.title + '-' + this.title;
