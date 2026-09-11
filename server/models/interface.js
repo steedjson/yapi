@@ -206,6 +206,17 @@ class interfaceModel extends baseModel {
       .exec();
   }
 
+  // 一次读取项目接口，避免分类菜单按分类逐次查询产生 N+1 请求。
+  listByProjectIdForMenu(project_id) {
+    return this.model
+      .find({
+        project_id: project_id
+      })
+      .select('_id title uid path method project_id catid edit_uid status add_time up_time index tag')
+      .sort({ catid: 1, index: 1 })
+      .exec();
+  }
+
   //获取全部接口信息
   getInterfaceListCount() {
     return this.model.countDocuments({});

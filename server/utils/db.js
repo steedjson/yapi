@@ -61,6 +61,8 @@ function connect(callback) {
   db.then(
     function() {
       yapi.commons.log('mongodb load success...');
+      // 连接成功后补齐查询索引；createIndex 可重复执行，不会改变历史数据。
+      ensureQueryIndexes();
 
       if (typeof callback === 'function') {
         callback.call(db);
@@ -73,6 +75,29 @@ function connect(callback) {
 
   autoIncrement.initialize(db);
   return db;
+}
+
+
+// 接口菜单和列表是高频查询，索引只优化查询路径，不参与业务数据迁移。
+function ensureQueryIndexes() {
+  const indexes = {
+    interface: [
+      { catid: 1, index: 1 },
+      { project_id: 1, title: 1 }
+    ],
+    interface_cat: [{ project_id: 1, index: 1 }]
+  };
+
+  Object.keys(indexes).forEach(collectionName => {
+    indexes[collectionName].forEach(key => {
+      mongoose.connection.db.collection(collectionName).createIndex(key).catch(err => {
+        yapi.commons.log(
+          `ensure ${collectionName} index failed: ${err.message}`,
+          'error'
+        );
+      });
+    });
+  });
 }
 
 yapi.db = model;

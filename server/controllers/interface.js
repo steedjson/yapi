@@ -631,12 +631,19 @@ class interfaceController extends baseController {
 
     try {
       let result = await this.catModel.list(project_id);
-      let newResult = [];
-      for (let i = 0; i < result.length; i++) {
-        let item = result[i].toObject();
-        item.list = (await this.Model.listByCatid(item._id)).map(inter => inter.toObject());
-        newResult.push(item);
-      }
+      // 分类和接口分别查询一次，再在内存中按 catid 归组，保持原有返回结构。
+      let interfaces = await this.Model.listByProjectIdForMenu(project_id);
+      let interfacesByCatid = {};
+      interfaces.forEach(inter => {
+        let catid = inter.catid;
+        if (!interfacesByCatid[catid]) interfacesByCatid[catid] = [];
+        interfacesByCatid[catid].push(inter.toObject());
+      });
+      let newResult = result.map(item => {
+        let category = item.toObject();
+        category.list = interfacesByCatid[category._id] || [];
+        return category;
+      });
       ctx.body = yapi.commons.resReturn(newResult);
     } catch (err) {
       ctx.body = yapi.commons.resReturn(null, 402, err.message);
@@ -1170,10 +1177,19 @@ class interfaceController extends baseController {
         return (ctx.body = yapi.commons.resReturn(null, 406, '没有权限'));
       }
       let res = await this.catModel.list(project_id);
-      let categories = res.map(item => Object.assign(item.toObject(), { list: [] }));
-      for (const item of categories) {
-        item.list = (await this.Model.listByCatid(item._id)).map(inter => inter.toObject());
-      }
+      // 分类和接口分别查询一次，再在内存中按 catid 归组，保持原有返回结构。
+      let interfaces = await this.Model.listByProjectIdForMenu(project_id);
+      let interfacesByCatid = {};
+      interfaces.forEach(inter => {
+        let catid = inter.catid;
+        if (!interfacesByCatid[catid]) interfacesByCatid[catid] = [];
+        interfacesByCatid[catid].push(inter.toObject());
+      });
+      let categories = res.map(item => {
+        let category = item.toObject();
+        category.list = interfacesByCatid[category._id] || [];
+        return category;
+      });
       return (ctx.body = yapi.commons.resReturn(this.buildCategoryTree(categories)));
     } catch (e) {
       ctx.body = yapi.commons.resReturn(null, 400, e.message);
