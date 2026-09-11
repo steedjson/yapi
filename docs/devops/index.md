@@ -10,15 +10,16 @@ proxy_set_header Connection "upgrade";
 ```
 
 ## 环境要求
-* nodejs（7.6+)
-* mongodb（2.6+）
+* Node.js（本项目开发环境建议使用 10.24.1）
+* npm（随 Node.js 安装，建议使用 npm 6）
+* MongoDB（2.6+；本地开发可使用 Docker 启动 MongoDB 4.4）
 
 
 ## 安装
 ### 方式一. 可视化部署[推荐]
 执行 yapi server 启动可视化部署程序，输入相应的配置和点击开始部署，就能完成整个网站的部署。部署完成之后，可按照提示信息，执行 node/{网站路径/server/app.js} 启动服务器。在浏览器打开指定url, 点击登录输入您刚才设置的管理员邮箱，默认密码(ymfe.org) 登录系统（默认密码可在个人中心修改）。
 ```bash
-npm install -g yapi-cli --registry https://registry.npm.taobao.org
+npm install -g yapi-cli --registry https://registry.npmmirror.com
 yapi server
 ``` 
 ### 方式二. 命令行部署
@@ -31,7 +32,7 @@ cd yapi
 git clone https://github.com/YMFE/yapi.git vendors //或者下载 zip 包解压到 vendors 目录（clone 整个仓库大概 140+ M，可以通过 `git clone --depth=1 https://github.com/YMFE/yapi.git vendors` 命令减少，大概 10+ M）
 cp vendors/config_example.json ./config.json //复制完成后请修改相关配置
 cd vendors
-npm install --production --registry https://registry.npm.taobao.org
+npm install --production --registry https://registry.npmmirror.com
 npm run install-server //安装程序会初始化数据库索引和管理员账号，管理员账号名可在 config.json 配置
 node server/app.js //启动服务器后，请访问 127.0.0.1:{config.json配置的端口}，初次运行会有个编译的过程，请耐心等候
 ```
@@ -63,6 +64,107 @@ node server/app.js //启动服务器后，请访问 127.0.0.1:{config.json配置
     |-- ydocfile.js
     `-- ykit.config.js
 ```
+
+## 本地开发启动
+
+以下步骤适用于直接在本仓库中进行开发。项目使用根目录下的 `config.json`，该文件包含本地数据库配置，不要提交到 Git。
+
+### 1. 准备 Node.js 环境
+
+项目依赖较旧，建议使用 `nvm` 切换到项目指定版本：
+
+```bash
+source ~/.nvm/nvm.sh
+nvm install
+nvm use
+node -v   # v10.24.1
+npm -v    # 6.x
+```
+
+### 2. 启动本地 MongoDB
+
+已安装 Docker 时，可以使用以下命令启动无认证的本地 MongoDB：
+
+```bash
+docker volume create yapi-mongodb-data
+docker run -d --name yapi-mongodb \
+  -p 127.0.0.1:27017:27017 \
+  -v yapi-mongodb-data:/data/db \
+  mongo:4.4
+```
+
+如果容器已经存在，使用：
+
+```bash
+docker start yapi-mongodb
+```
+
+### 3. 安装依赖并创建配置
+
+在项目根目录执行：
+
+```bash
+npm install
+cp config_example.json config.json
+```
+
+确认 `config.json` 中的数据库配置与本地 MongoDB 一致。无认证 MongoDB 使用空的 `user`、`pass` 和 `authSource`：
+
+```json
+{
+  "db": {
+    "servername": "127.0.0.1",
+    "DATABASE": "yapi",
+    "port": 27017,
+    "user": "",
+    "pass": "",
+    "authSource": ""
+  }
+}
+```
+
+### 4. 初始化数据库
+
+首次运行或数据库为空时执行：
+
+```bash
+npm run install-server
+```
+
+初始化成功后会生成根目录下的 `init.lock`。该文件只是本机初始化标记，不要提交到 Git。
+
+默认管理员账号为：
+
+```text
+账号：admin@admin.com
+密码：ymfe.org
+```
+
+### 5. 启动开发服务
+
+```bash
+npm run dev
+```
+
+启动后访问：
+
+```text
+http://127.0.0.1:3000
+```
+
+开发模式下：
+
+- `3000` 是 YApi 后端和系统页面入口；
+- `4000` 是前端开发资源服务，直接访问可能显示目录列表，不是系统页面。
+
+也可以分别启动前后端：
+
+```bash
+npm run dev-server
+npm run dev-client
+```
+
+停止服务可在对应终端按 `Ctrl+C`。修改 `config.json` 或数据库配置后，需要重启后端服务。
 
 ## 服务器管理
 
