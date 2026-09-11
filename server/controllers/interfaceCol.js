@@ -186,17 +186,10 @@ class interfaceColController extends baseController {
         }
       }
 
-      // 通过col_id 找到 caseList
-      let projectList = await this.caseModel.list(id, 'project_id');
-      // 对projectList 进行去重处理
-      projectList = this.unique(projectList, 'project_id');
-
-      // 遍历projectList 找到项目和env
-      let projectEnvList = [];
-      for (let i = 0; i < projectList.length; i++) {
-        let result = await this.projectModel.getBaseInfo(projectList[i], 'name  env');
-        projectEnvList.push(result);
-      }
+      // 通过col_id 找到 caseList，并批量读取关联项目的环境信息。
+      const projectList = await this.caseModel.list(id, 'project_id');
+      const projectIds = this.unique(projectList, 'project_id');
+      const projectEnvList = await this.projectModel.listBaseInfoByIds(projectIds, 'name env');
       ctx.body = yapi.commons.resReturn(projectEnvList);
     } catch (e) {
       ctx.body = yapi.commons.resReturn(null, 402, e.message);

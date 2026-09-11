@@ -149,6 +149,20 @@ class projectModel extends baseModel {
       .exec().then(this.handleEnvNullData);
   }
 
+  // 批量读取项目基础信息，供接口集环境列表复用，避免逐个项目查询。
+  listBaseInfoByIds(ids, select) {
+    if (!ids || ids.length === 0) {
+      return Promise.resolve([]);
+    }
+    select = select || '_id uid name env';
+    return this.model
+      .find({
+        _id: { $in: ids }
+      })
+      .select(select)
+      .exec();
+  }
+
   getByDomain(domain) {
     return this.model
       .find({
