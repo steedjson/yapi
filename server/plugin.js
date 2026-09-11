@@ -226,6 +226,8 @@ function emitHook(name) {
     }
     return Promise.all(promiseAll);
   }
+  // 未注册的钩子也返回 Promise，避免调用方直接 .then() 时抛出异常。
+  return Promise.resolve([]);
 }
 
 yapi.bindHook = bindHook;
