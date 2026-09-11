@@ -243,6 +243,14 @@ class interfaceColController extends baseController {
         }
       }
 
+      // 一次读取全部关联接口，避免每条用例单独查询接口详情。
+      const interfaceIds = resultList.map(result => result.interface_id);
+      const interfaceList = await this.interfaceModel.getByIds(interfaceIds);
+      const interfaceById = {};
+      interfaceList.forEach(data => {
+        interfaceById[data._id] = data;
+      });
+
       for (let index = 0; index < resultList.length; index++) {
         let result = resultList[index].toObject();
         let item = {},
@@ -250,7 +258,7 @@ class interfaceColController extends baseController {
           query,
           bodyParams,
           pathParams;
-        let data = await this.interfaceModel.get(result.interface_id);
+        let data = interfaceById[result.interface_id];
         if (!data) {
           await this.caseModel.del(result._id);
           continue;

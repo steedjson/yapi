@@ -111,6 +111,18 @@ class interfaceModel extends baseModel {
       .exec();
   }
 
+  // 批量读取测试用例关联的接口详情，避免逐条读取接口。
+  getByIds(ids) {
+    if (!ids || ids.length === 0) {
+      return Promise.resolve([]);
+    }
+    return this.model
+      .find({
+        _id: { $in: ids }
+      })
+      .exec();
+  }
+
   getBaseinfo(id) {
     return this.model
       .findOne({
