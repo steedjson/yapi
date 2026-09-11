@@ -11,3 +11,4 @@
 * [配置LDAP登录](index.md#配置LDAP登录)
 * [禁止注册](index.md#禁止注册)
 * [版本通知](index.md#版本通知)
+* [接口分类层级升级迁移](interface-category-migration.md)
