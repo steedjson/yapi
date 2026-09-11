@@ -11,6 +11,7 @@ const CHANGE_EDIT_STATUS = 'yapi/interface/CHANGE_EDIT_STATUS';
 const FETCH_INTERFACE_LIST = 'yapi/interface/FETCH_INTERFACE_LIST';
 const SAVE_IMPORT_DATA = 'yapi/interface/SAVE_IMPORT_DATA';
 const FETCH_INTERFACE_CAT_LIST = 'yapi/interface/FETCH_INTERFACE_CAT_LIST';
+let interfaceRequestSequence = 0;
 // const SAVE_INTERFACE_PROJECT_ID = 'yapi/interface/SAVE_INTERFACE_PROJECT_ID';
 // const GET_INTERFACE_GROUP_LIST = 'yapi/interface/GET_INTERFACE_GROUP_LIST';
 
@@ -22,7 +23,8 @@ const initialState = {
   totalTableList: [],
   catTableList: [],
   count: 0,
-  totalCount: 0
+  totalCount: 0,
+  interfaceRequestId: 0
 };
 
 export default (state = initialState, action) => {
@@ -35,9 +37,14 @@ export default (state = initialState, action) => {
         curdata: Object.assign({}, state.curdata, action.updata)
       };
     case FETCH_INTERFACE_DATA:
+      // 快速切换接口时，忽略先发后至的旧响应，避免旧详情覆盖当前接口。
+      if (action.requestId && action.requestId < state.interfaceRequestId) {
+        return state;
+      }
       return {
         ...state,
-        curdata: action.payload.data.data
+        curdata: action.payload.data.data,
+        interfaceRequestId: action.requestId || state.interfaceRequestId
       };
     case FETCH_INTERFACE_LIST_MENU:
       return {
@@ -119,10 +126,12 @@ export async function deleteInterfaceCatData(id) {
 
 // Action Creators
 export async function fetchInterfaceData(interfaceId) {
+  const requestId = ++interfaceRequestSequence;
   let result = await axios.get('/api/interface/get?id=' + interfaceId);
   return {
     type: FETCH_INTERFACE_DATA,
-    payload: result
+    payload: result,
+    requestId
   };
 }
 
