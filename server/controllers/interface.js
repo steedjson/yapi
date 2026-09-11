@@ -374,6 +374,10 @@ class interfaceController extends baseController {
           } catch (err) {}
         }
         await this.up(data);
+        // 批量保存必须透传单个接口的错误，避免数据库未完整更新却返回成功。
+        if (data.body && data.body.errcode) {
+          return (ctx.body = data.body);
+        }
       }
     } else {
       let validResult = yapi.commons.validateParams(this.schemaMap['add'], params);
