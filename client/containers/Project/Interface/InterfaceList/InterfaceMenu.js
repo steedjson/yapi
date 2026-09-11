@@ -231,13 +231,21 @@ class InterfaceMenu extends Component {
       okText: '确认',
       cancelText: '取消',
       async onOk() {
-        await that.props.deleteInterfaceData(id, that.props.projectId);
-        await that.getList();
-        await that.props.fetchInterfaceCatList({ catid });
-        ref.destroy();
-        that.props.history.push(
-          '/project/' + that.props.match.params.id + '/interface/api/cat_' + catid
-        );
+        try {
+          const result = await that.props.deleteInterfaceData(id, that.props.projectId);
+          if (result && result.payload && result.payload.data.errcode !== 0) {
+            return message.error(result.payload.data.errmsg);
+          }
+          await that.getList();
+          await that.props.fetchInterfaceCatList({ catid });
+          that.props.history.push(
+            '/project/' + that.props.match.params.id + '/interface/api/cat_' + catid
+          );
+        } catch (err) {
+          message.error('接口删除失败：' + err.message);
+        } finally {
+          ref.destroy();
+        }
       },
       onCancel() {
         ref.destroy();
@@ -253,12 +261,19 @@ class InterfaceMenu extends Component {
       okText: '确认',
       cancelText: '取消',
       async onOk() {
-        await that.props.deleteInterfaceCatData(catid, that.props.projectId);
-        await that.getList();
-        // await that.props.getProject(that.props.projectId)
-        await that.props.fetchInterfaceList({ project_id: that.props.projectId });
-        that.props.history.push('/project/' + that.props.match.params.id + '/interface/api');
-        ref.destroy();
+        try {
+          const result = await that.props.deleteInterfaceCatData(catid, that.props.projectId);
+          if (result && result.payload && result.payload.data.errcode !== 0) {
+            return message.error(result.payload.data.errmsg);
+          }
+          await that.getList();
+          await that.props.fetchInterfaceList({ project_id: that.props.projectId });
+          that.props.history.push('/project/' + that.props.match.params.id + '/interface/api');
+        } catch (err) {
+          message.error('接口分类删除失败：' + err.message);
+        } finally {
+          ref.destroy();
+        }
       },
       onCancel() {}
     });
