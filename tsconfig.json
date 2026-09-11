@@ -8,5 +8,9 @@
     "skipLibCheck": true,
     "noEmit": true
   },
-  "include": ["common/types/**/*.d.ts", "server/utils/ttlCache.js"]
+  "include": [
+    "common/types/**/*.d.ts",
+    "server/utils/ttlCache.js",
+    "server/utils/categoryTree.js"
+  ]
 }

@@ -1,3 +1,4 @@
+const buildCategoryTree = require('../../server/utils/categoryTree');
 import test from 'ava';
 
 const cache = require('../../server/utils/ttlCache');
@@ -29,4 +30,17 @@ test('按项目清理分类缓存', t => {
   t.is(cache.get('menu:1'), null);
   t.deepEqual(cache.get('tree:1'), [{ _id: 1 }]);
   t.deepEqual(cache.get('menu:2'), [{ _id: 2 }]);
+});
+
+// 孤立父节点和循环引用不应让分类树丢失节点。
+test('分类树兼容异常历史层级数据', t => {
+  const tree = buildCategoryTree([
+    { _id: 1, name: '根', parent_id: 0 },
+    { _id: 2, name: '孤立父节点', parent_id: 99 },
+    { _id: 3, name: '循环一', parent_id: 4 },
+    { _id: 4, name: '循环二', parent_id: 3 }
+  ]);
+
+  t.deepEqual(tree.map(item => item._id), [1, 2, 3, 4]);
+  t.deepEqual(tree[0].children, []);
 });

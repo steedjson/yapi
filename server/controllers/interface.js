@@ -16,6 +16,7 @@ const mergeJsonSchema = require('../../common/mergeJsonSchema');
 const fs = require('fs-extra');
 const path = require('path');
 const categoryCache = require('../utils/ttlCache');
+const buildCategoryTree = require('../utils/categoryTree');
 
 // 仅清理当前项目的分类缓存，避免写操作导致其他项目缓存无效。
 const clearProjectCategoryCache = projectId => {
@@ -1174,19 +1175,6 @@ class interfaceController extends baseController {
     }
   }
 
-  buildCategoryTree(categories) {
-    let nodes = categories.map(item => Object.assign({}, item, { children: [] }));
-    let byId = {};
-    nodes.forEach(item => { byId[item._id] = item; });
-    let roots = [];
-    nodes.forEach(item => {
-      let parent = byId[item.parent_id || 0];
-      if (parent) parent.children.push(item);
-      else roots.push(item);
-    });
-    return roots;
-  }
-
   /**
    * 获取分类列表
    * @interface /interface/getCatMenu
@@ -1259,7 +1247,7 @@ class interfaceController extends baseController {
         category.list = interfacesByCatid[category._id] || [];
         return category;
       });
-      const tree = this.buildCategoryTree(categories);
+      const tree = buildCategoryTree(categories);
       categoryCache.set(cacheKey, tree);
       return (ctx.body = yapi.commons.resReturn(tree));
     } catch (e) {
