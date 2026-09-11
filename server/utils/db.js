@@ -85,6 +85,9 @@ function ensureQueryIndexes() {
     interface: [
       // 接口菜单按项目筛选后再按分类和排序号排列，使用联合索引避免全表扫描。
       { project_id: 1, catid: 1, index: 1 },
+      // 分类删除和开放接口列表不带项目条件，保留分类维度的查询索引。
+      { catid: 1, index: 1 },
+      { catid: 1, api_opened: 1, title: 1 },
       { project_id: 1, title: 1 },
       // 接口路径判重和详情查询都同时带项目、路径、请求方法条件。
       { project_id: 1, path: 1, method: 1 }
