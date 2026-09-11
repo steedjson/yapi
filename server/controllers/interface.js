@@ -15,10 +15,7 @@ const showDiffMsg = require('../../common/diff-view.js');
 const mergeJsonSchema = require('../../common/mergeJsonSchema');
 const fs = require('fs-extra');
 const path = require('path');
-
-// 分类菜单变化频率低，使用进程内短缓存减少重复查询；写操作会主动清空缓存。
-const categoryCache = new Map();
-const CATEGORY_CACHE_TTL = 5000;
+const categoryCache = require('../utils/ttlCache');
 
 // const annotatedCss = require("jsondiffpatch/public/formatters-styles/annotated.css");
 // const htmlCss = require("jsondiffpatch/public/formatters-styles/html.css");
@@ -174,26 +171,6 @@ class interfaceController extends baseController {
     };
   }
 
-  getCategoryCache(key) {
-    const cached = categoryCache.get(key);
-    if (!cached || cached.expiresAt <= Date.now()) {
-      categoryCache.delete(key);
-      return null;
-    }
-    return JSON.parse(JSON.stringify(cached.value));
-  }
-
-  setCategoryCache(key, value) {
-    categoryCache.set(key, {
-      value: JSON.parse(JSON.stringify(value)),
-      expiresAt: Date.now() + CATEGORY_CACHE_TTL
-    });
-    return value;
-  }
-
-  clearCategoryCache() {
-    categoryCache.clear();
-  }
 
   /**
    * 添加项目分组
@@ -304,7 +281,7 @@ class interfaceController extends baseController {
     }
 
     let result = await this.Model.save(data);
-    this.clearCategoryCache();
+    categoryCache.clear();
     yapi.emitHook('interface_add', result).then();
     this.catModel.get(params.catid).then(cate => {
       let username = this.getUsername();
@@ -798,7 +775,7 @@ class interfaceController extends baseController {
       }
     }
     let result = await this.Model.up(id, data);
-    this.clearCategoryCache();
+    categoryCache.clear();
     let username = this.getUsername();
     let CurrentInterfaceData;
     try {
@@ -937,7 +914,7 @@ class interfaceController extends baseController {
 
       // let inter = await this.Model.get(id);
       let result = await this.Model.del(id);
-      this.clearCategoryCache();
+      categoryCache.clear();
       yapi.emitHook('interface_del', id).then();
       await this.caseModel.delByInterfaceId(id);
       let username = this.getUsername();
@@ -1035,7 +1012,7 @@ class interfaceController extends baseController {
         add_time: yapi.commons.time(),
         up_time: yapi.commons.time()
       });
-      this.clearCategoryCache();
+      categoryCache.clear();
 
       let username = this.getUsername();
       yapi.commons.saveLog({
@@ -1093,7 +1070,7 @@ class interfaceController extends baseController {
         desc: params.desc,
         up_time: yapi.commons.time()
       });
-      this.clearCategoryCache();
+      categoryCache.clear();
 
       yapi.commons.saveLog({
         content: `<a href="/user/profile/${this.getUid()}">${username}</a> 更新了分类 <a href="/project/${
@@ -1149,7 +1126,7 @@ class interfaceController extends baseController {
         interfaceData = interfaceData.concat(await this.Model.listByCatid(catId));
         await this.catModel.del(catId);
         await this.Model.delByCatid(catId);
-        this.clearCategoryCache();
+        categoryCache.clear();
       }
       for (const item of interfaceData) {
         yapi.emitHook('interface_del', item._id).then();
@@ -1200,11 +1177,11 @@ class interfaceController extends baseController {
         }
       }
       const cacheKey = 'menu:' + project_id;
-      const cached = this.getCategoryCache(cacheKey);
+      const cached = categoryCache.get(cacheKey);
       if (cached) return (ctx.body = yapi.commons.resReturn(cached));
       let res = await this.catModel.list(project_id);
       const menu = res.map(item => item.toObject());
-      this.setCategoryCache(cacheKey, menu);
+      categoryCache.set(cacheKey, menu);
       return (ctx.body = yapi.commons.resReturn(menu));
     } catch (e) {
       ctx.body = yapi.commons.resReturn(null, 400, e.message);
@@ -1231,7 +1208,7 @@ class interfaceController extends baseController {
         return (ctx.body = yapi.commons.resReturn(null, 406, '没有权限'));
       }
       const cacheKey = 'tree:' + project_id;
-      const cached = this.getCategoryCache(cacheKey);
+      const cached = categoryCache.get(cacheKey);
       if (cached) return (ctx.body = yapi.commons.resReturn(cached));
       let res = await this.catModel.list(project_id);
       // 分类和接口分别查询一次，再在内存中按 catid 归组，保持原有返回结构。
@@ -1248,7 +1225,7 @@ class interfaceController extends baseController {
         return category;
       });
       const tree = this.buildCategoryTree(categories);
-      this.setCategoryCache(cacheKey, tree);
+      categoryCache.set(cacheKey, tree);
       return (ctx.body = yapi.commons.resReturn(tree));
     } catch (e) {
       ctx.body = yapi.commons.resReturn(null, 400, e.message);
@@ -1334,7 +1311,7 @@ class interfaceController extends baseController {
       if (!params || !Array.isArray(params)) {
         ctx.body = yapi.commons.resReturn(null, 400, '请求参数必须是数组');
       }
-      this.clearCategoryCache();
+      categoryCache.clear();
       params.forEach(item => {
         if (item.id) {
           this.Model.upIndex(item.id, item.index).then(
@@ -1368,7 +1345,7 @@ class interfaceController extends baseController {
       if (!params || !Array.isArray(params)) {
         ctx.body = yapi.commons.resReturn(null, 400, '请求参数必须是数组');
       }
-      this.clearCategoryCache();
+      categoryCache.clear();
       params.forEach(item => {
         if (item.id) {
           this.catModel.upCatIndex(item.id, item.index).then(
