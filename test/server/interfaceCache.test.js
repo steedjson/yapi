@@ -1,4 +1,4 @@
-const buildCategoryTree = require('../../server/utils/categoryTree');
+const { buildCategoryTree, attachInterfacesToCategories } = require('../../server/utils/categoryTree');
 import test from 'ava';
 
 const cache = require('../../server/utils/ttlCache');
@@ -43,4 +43,17 @@ test('分类树兼容异常历史层级数据', t => {
 
   t.deepEqual(tree.map(item => item._id), [1, 2, 3, 4]);
   t.deepEqual(tree[0].children, []);
+});
+
+// 普通对象和 Mongoose 风格文档都应得到相同的菜单结构。
+test('统一挂载分类接口并保留接口顺序', t => {
+  const result = attachInterfacesToCategories(
+    [{ _id: 1, name: '用户' }, { _id: 2, name: '订单' }],
+    [{ _id: 10, catid: 1, title: '列表' }, { _id: 11, catid: 1, title: '详情' }]
+  );
+
+  t.deepEqual(result, [
+    { _id: 1, name: '用户', list: [{ _id: 10, catid: 1, title: '列表' }, { _id: 11, catid: 1, title: '详情' }] },
+    { _id: 2, name: '订单', list: [] }
+  ]);
 });

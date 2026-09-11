@@ -46,4 +46,27 @@ function createsCycle(node, parent, byId) {
   return false;
 }
 
-module.exports = buildCategoryTree;
+/**
+ * 将接口挂载到对应分类，统一菜单和分类树的数据转换逻辑。
+ * @param {Array<Record<string, any>>} categories
+ * @param {Array<Record<string, any>>} interfaces
+ * @returns {Array<Record<string, any>>}
+ */
+function attachInterfacesToCategories(categories, interfaces) {
+  /** @type {Record<string, Array<Record<string, any>>>} */
+  const interfacesByCatid = {};
+  (Array.isArray(interfaces) ? interfaces : []).forEach(inter => {
+    const catid = inter.catid;
+    if (!interfacesByCatid[catid]) interfacesByCatid[catid] = [];
+    interfacesByCatid[catid].push(
+      typeof inter.toObject === 'function' ? inter.toObject() : inter
+    );
+  });
+
+  return (Array.isArray(categories) ? categories : []).map(category => {
+    const item = typeof category.toObject === 'function' ? category.toObject() : category;
+    return Object.assign({}, item, { list: interfacesByCatid[item._id] || [] });
+  });
+}
+
+module.exports = { buildCategoryTree, attachInterfacesToCategories };

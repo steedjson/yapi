@@ -16,7 +16,7 @@ const mergeJsonSchema = require('../../common/mergeJsonSchema');
 const fs = require('fs-extra');
 const path = require('path');
 const categoryCache = require('../utils/ttlCache');
-const buildCategoryTree = require('../utils/categoryTree');
+const { buildCategoryTree, attachInterfacesToCategories } = require('../utils/categoryTree');
 
 // 仅清理当前项目的分类缓存，避免写操作导致其他项目缓存无效。
 const clearProjectCategoryCache = projectId => {
@@ -663,19 +663,9 @@ class interfaceController extends baseController {
 
     try {
       let result = await this.catModel.list(project_id);
-      // 分类和接口分别查询一次，再在内存中按 catid 归组，保持原有返回结构。
+      // 分类和接口分别查询一次，再统一挂载接口，保持原有返回结构。
       let interfaces = await this.Model.listByProjectIdForMenu(project_id);
-      let interfacesByCatid = {};
-      interfaces.forEach(inter => {
-        let catid = inter.catid;
-        if (!interfacesByCatid[catid]) interfacesByCatid[catid] = [];
-        interfacesByCatid[catid].push(inter.toObject());
-      });
-      let newResult = result.map(item => {
-        let category = item.toObject();
-        category.list = interfacesByCatid[category._id] || [];
-        return category;
-      });
+      let newResult = attachInterfacesToCategories(result, interfaces);
       ctx.body = yapi.commons.resReturn(newResult);
     } catch (err) {
       ctx.body = yapi.commons.resReturn(null, 402, err.message);
@@ -1234,19 +1224,9 @@ class interfaceController extends baseController {
       const cached = categoryCache.get(cacheKey);
       if (cached) return (ctx.body = yapi.commons.resReturn(cached));
       let res = await this.catModel.list(project_id);
-      // 分类和接口分别查询一次，再在内存中按 catid 归组，保持原有返回结构。
+      // 分类和接口分别查询一次，再统一挂载接口，保持原有返回结构。
       let interfaces = await this.Model.listByProjectIdForMenu(project_id);
-      let interfacesByCatid = {};
-      interfaces.forEach(inter => {
-        let catid = inter.catid;
-        if (!interfacesByCatid[catid]) interfacesByCatid[catid] = [];
-        interfacesByCatid[catid].push(inter.toObject());
-      });
-      let categories = res.map(item => {
-        let category = item.toObject();
-        category.list = interfacesByCatid[category._id] || [];
-        return category;
-      });
+      let categories = attachInterfacesToCategories(res, interfaces);
       const tree = buildCategoryTree(categories);
       categoryCache.set(cacheKey, tree);
       return (ctx.body = yapi.commons.resReturn(tree));
