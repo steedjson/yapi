@@ -330,8 +330,9 @@ export async function checkProjectName(name, group_id) {
 }
 
 export async function handleSwaggerUrlData(url) {
+  const result = await axios.get('/api/project/swagger_url?url=' + encodeURI(encodeURI(url)));
   return {
     type: GET_SWAGGER_URL_DATA,
-    payload: axios.get('/api/project/swagger_url?url='+encodeURI(encodeURI(url)))
+    payload: result
   };
 }

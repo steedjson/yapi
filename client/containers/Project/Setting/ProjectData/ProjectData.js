@@ -208,6 +208,10 @@ class ProjectData extends Component {
   showConfirm = async res => {
     let that = this;
     let typeid = this.props.match.params.id;
+    if (!res || !Array.isArray(res.apis)) {
+      this.setState({ showLoading: false, dataSync: 'normal' });
+      return message.error('解析数据为空');
+    }
     let apiCollections = res.apis.map(item => {
       return {
         method: item.method,
@@ -313,9 +317,9 @@ class ProjectData extends Component {
       this.setState({ showLoading: true });
       try {
         // 处理swagger url 导入
-        await this.props.handleSwaggerUrlData(this.state.swaggerUrl);
-        // let result = json5_parse(this.props.swaggerUrlData)
-        let res = await importDataModule[this.state.curImportType].run(this.props.swaggerUrlData);
+        const result = await this.props.handleSwaggerUrlData(this.state.swaggerUrl);
+        const swaggerData = result && result.payload ? result.payload.data.data : this.props.swaggerUrlData;
+        let res = await importDataModule[this.state.curImportType].run(swaggerData);
         if (this.state.dataSync === 'merge') {
           // merge
           this.showConfirm(res);
