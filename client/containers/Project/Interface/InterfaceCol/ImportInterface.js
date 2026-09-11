@@ -41,6 +41,21 @@ export default class ImportInterface extends Component {
     await this.props.fetchInterfaceListMenu(this.props.currProjectId);
   }
 
+  flattenCategories = list => {
+    const result = [];
+    const stack = (list || []).slice().reverse().map(item => ({ item, prefix: '' }));
+    // 导入列表按扁平顺序展示所有层级，但仍保留每个分类的直接接口。
+    while (stack.length) {
+      const current = stack.pop();
+      const item = current.item;
+      if (!item) continue;
+      result.push({ item, label: current.prefix + item.name });
+      const children = (item.children || []).slice().reverse();
+      children.forEach(child => stack.push({ item: child, prefix: current.prefix + '└ ' }));
+    }
+    return result;
+  };
+
   // 切换项目
   onChange = async val => {
     this.setState({
@@ -55,19 +70,20 @@ export default class ImportInterface extends Component {
     const { list, projectList } = this.props;
 
     // const { selectedRowKeys } = this.state;
-    const data = list.map(item => {
+    const data = this.flattenCategories(list).map(category => {
+      const item = category.item;
+      const interfaces = item.list || [];
       return {
         key: 'category_' + item._id,
-        title: item.name,
+        title: category.label,
         isCategory: true,
-        children: item.list
-          ? item.list.map(e => {
-              e.key = e._id;
-              e.categoryKey = 'category_' + item._id;
-              e.categoryLength = item.list.length;
-              return e;
-            })
-          : []
+        children: interfaces.map(e =>
+          Object.assign({}, e, {
+            key: e._id,
+            categoryKey: 'category_' + item._id,
+            categoryLength: interfaces.length
+          })
+        )
       };
     });
     const self = this;
