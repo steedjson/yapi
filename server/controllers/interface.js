@@ -787,10 +787,15 @@ class interfaceController extends baseController {
     if (!CurrentInterfaceData) {
       CurrentInterfaceData = Object.assign({}, interfaceData.toObject(), data);
     }
+    // 查询结果可能是 Mongoose 文档，也可能是保存成功后的普通对象，统一转换为日志快照。
+    const currentData =
+      typeof CurrentInterfaceData.toObject === 'function'
+        ? CurrentInterfaceData.toObject()
+        : CurrentInterfaceData;
     let logData = {
       interface_id: id,
       cat_id: data.catid,
-      current: CurrentInterfaceData.toObject(),
+      current: currentData,
       old: interfaceData.toObject()
     };
 
@@ -818,6 +823,9 @@ class interfaceController extends baseController {
       } catch (err) {
         yapi.commons.log(err, 'error');
       }
+    }).catch(err => {
+      // 日志分类读取失败不能影响已经完成的接口保存，同时记录异常便于排查。
+      yapi.commons.log(err, 'error');
     });
 
     this.projectModel.up(interfaceData.project_id, { up_time: new Date().getTime() }).catch(err => {
