@@ -777,6 +777,8 @@ http://127.0.0.1:3000
 - 分类操作不影响旧接口；
 - OpenAPI 2.0/3.0 现有流程不退化；
 - OpenAPI 3.1 新增能力按支持范围工作；
+  - 已验证 `servers.url` 服务器变量按 `default` 值展开；
+  - 已验证 `application/vnd.api+json` 请求体和 `application/hal+json` 响应体可识别为 JSON；
 - Node.js 10 回滚环境可用；
 - Node.js 18 过渡验证通过；
 - Node.js 24.21.0 LTS 验证通过并作为默认版本；

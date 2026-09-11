@@ -14,33 +14,39 @@ const compareVersions = require('compare-versions');
     return path;
   }
 
+  // OpenAPI 3.x 的响应和请求体都放在 content 中，优先选择 JSON 或兼容的 +json 媒体类型。
+  function getJsonContent(content) {
+    if (!content || typeof content !== 'object') return null;
+    const keys = Object.keys(content);
+    const key = keys.find(item => item === 'application/json' || /\+json$/i.test(item)) || keys[0];
+    return key ? content[key] : null;
+  }
+
+  function getServerBasePath(data) {
+    if (data.basePath || !data.servers || !data.servers[0] || !data.servers[0].url) {
+      return data.basePath || '';
+    }
+    let serverUrl = String(data.servers[0].url);
+    const variables = data.servers[0].variables || {};
+    Object.keys(variables).forEach(name => {
+      const variable = variables[name] || {};
+      const value = variable.default === undefined ? '' : String(variable.default);
+      serverUrl = serverUrl.replace(new RegExp('\\{' + name + '\\}', 'g'), value);
+    });
+    // 没有默认值时移除变量，避免把模板占位符带入接口路径。
+    serverUrl = serverUrl.replace(/\{[^}]+\}/g, '');
+    const match = serverUrl.match(/^(?:https?:\/\/[^/]+)?(\/[^?#]*)/i);
+    return match && match[1] && match[1] !== '/' ? match[1].replace(/\/$/, '') : '';
+  }
+
   function openapi2swagger(data) {
     data.swagger = '2.0';
     _.each(data.paths, apis => {
       _.each(apis, api => {
         _.each(api.responses, res => {
-          if (
-            res.content &&
-            res.content['application/json'] &&
-            typeof res.content['application/json'] === 'object'
-          ) {
-            Object.assign(res, res.content['application/json']);
-            delete res.content;
-          }          
-          if (
-            res.content &&
-            res.content['application/hal+json'] &&
-            typeof res.content['application/hal+json'] === 'object'
-          ) {
-            Object.assign(res, res.content['application/hal+json']);
-            delete res.content;
-          }          
-          if (
-            res.content &&
-            res.content['*/*'] &&
-            typeof res.content['*/*'] === 'object'
-          ) {
-            Object.assign(res, res.content['*/*']);
+          const responseContent = getJsonContent(res.content);
+          if (responseContent && typeof responseContent === 'object') {
+            Object.assign(res, responseContent);
             delete res.content;
           }
         });
@@ -52,7 +58,8 @@ const compareVersions = require('compare-versions');
             in: 'body'
           };
           try {
-            body.schema = api.requestBody.content['application/json'].schema;
+            const requestContent = getJsonContent(api.requestBody.content);
+            body.schema = requestContent && requestContent.schema ? requestContent.schema : {};
           } catch (e) {
             body.schema = {};
           }
@@ -89,10 +96,14 @@ const compareVersions = require('compare-versions');
       }
 
       isOAS3 = res.openapi && compareVersions(res.openapi,'3.0.0') >= 0;
+      let basePath = '';
       if (isOAS3) {
+        basePath = getServerBasePath(res);
         res = openapi2swagger(res);
       }
       res = await handleSwaggerData(res);
+      // swagger-client 可能按 OpenAPI 2.0 规则重算 basePath，恢复 3.x servers 的路径。
+      if (basePath) res.basePath = basePath;
       SwaggerData = res;
 
       interfaceData.basePath = res.basePath || '';
