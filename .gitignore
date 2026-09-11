@@ -53,3 +53,6 @@ AGENT.md
 AGENTS.md
 config.json
 init.lock
+
+# 重构期间的本地数据库备份，不提交到仓库
+backup-before-refactor/
