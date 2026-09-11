@@ -160,7 +160,8 @@ class projectModel extends baseModel {
         _id: { $in: ids }
       })
       .select(select)
-      .exec();
+      .exec()
+      .then(list => list.map(this.handleEnvNullData));
   }
 
   getByDomain(domain) {
