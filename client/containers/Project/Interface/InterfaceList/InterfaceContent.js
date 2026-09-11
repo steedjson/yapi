@@ -75,7 +75,11 @@ class Content extends Component {
       loadError: ''
     });
     try {
-      await this.props.fetchInterfaceData(actionId);
+      const result = await this.props.fetchInterfaceData(actionId);
+      const response = result && result.payload;
+      if (!response || !response.data || response.data.errcode !== 0 || !response.data.data) {
+        throw new Error((response && response.data && response.data.errmsg) || '接口不存在');
+      }
       if (this.actionId === actionId) {
         this.setState({ loading: false });
       }

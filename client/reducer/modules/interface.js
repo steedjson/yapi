@@ -41,6 +41,9 @@ export default (state = initialState, action) => {
       if (action.requestId && action.requestId < state.interfaceRequestId) {
         return state;
       }
+      if (!action.payload || !action.payload.data || action.payload.data.errcode !== 0) {
+        return state;
+      }
       return {
         ...state,
         curdata: action.payload.data.data,
