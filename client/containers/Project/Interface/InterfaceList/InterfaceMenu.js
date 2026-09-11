@@ -164,11 +164,20 @@ class InterfaceMenu extends Component {
     });
   };
 
-  flattenCategories = (list, prefix = '') =>
-    list.reduce((result, item) => {
-      result.push({ _id: item._id, label: prefix + item.name });
-      return result.concat(this.flattenCategories(item.children || [], prefix + '└ '));
-    }, []);
+  flattenCategories = list => {
+    const result = [];
+    const stack = (list || []).slice().reverse().map(item => ({ item, prefix: '' }));
+    // 使用显式栈遍历，避免层级较深时递归调用耗尽调用栈。
+    while (stack.length) {
+      const current = stack.pop();
+      const item = current.item;
+      if (!item) continue;
+      result.push({ _id: item._id, label: current.prefix + item.name });
+      const children = (item.children || []).slice().reverse();
+      children.forEach(child => stack.push({ item: child, prefix: current.prefix + '└ ' }));
+    }
+    return result;
+  };
 
   handleAddInterfaceCat = data => {
     data.project_id = this.props.projectId;
@@ -412,9 +421,9 @@ class InterfaceMenu extends Component {
         </Link>
       }
       key={'cat_' + item._id}
-      className={`interface-item-nav ${item.list.length || item.children.length ? '' : 'cat_switch_hidden'}`}
+      className={`interface-item-nav ${(item.list || []).length || (item.children || []).length ? '' : 'cat_switch_hidden'}`}
     >
-      {item.list.map(itemInterfaceCreate)}
+      {(item.list || []).map(itemInterfaceCreate)}
       {(item.children || []).map(child => this.renderCategory(child, matchParams, itemInterfaceCreate))}
     </TreeNode>
   );
