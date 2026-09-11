@@ -179,22 +179,24 @@ class InterfaceMenu extends Component {
     return result;
   };
 
-  handleAddInterfaceCat = data => {
+  handleAddInterfaceCat = async data => {
     data.project_id = this.props.projectId;
-    axios.post('/api/interface/add_cat', data).then(res => {
+    try {
+      const res = await axios.post('/api/interface/add_cat', data);
       if (res.data.errcode !== 0) {
         return message.error(res.data.errmsg);
       }
       message.success('接口分类添加成功');
-      this.getList();
-      this.props.getProject(data.project_id);
+      await Promise.all([this.getList(), this.props.getProject(data.project_id)]);
       this.setState({
         add_cat_modal_visible: false
       });
-    });
+    } catch (err) {
+      message.error('接口分类添加失败：' + err.message);
+    }
   };
 
-  handleChangeInterfaceCat = data => {
+  handleChangeInterfaceCat = async data => {
     data.project_id = this.props.projectId;
 
     let params = {
@@ -203,17 +205,19 @@ class InterfaceMenu extends Component {
       desc: data.desc
     };
 
-    axios.post('/api/interface/up_cat', params).then(res => {
+    try {
+      const res = await axios.post('/api/interface/up_cat', params);
       if (res.data.errcode !== 0) {
         return message.error(res.data.errmsg);
       }
       message.success('接口分类更新成功');
-      this.getList();
-      this.props.getProject(data.project_id);
+      await Promise.all([this.getList(), this.props.getProject(data.project_id)]);
       this.setState({
         change_cat_modal_visible: false
       });
-    });
+    } catch (err) {
+      message.error('接口分类更新失败：' + err.message);
+    }
   };
 
   showConfirm = data => {
