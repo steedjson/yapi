@@ -58,19 +58,25 @@ class InterfaceEdit extends Component {
   }
 
   onSubmit = async params => {
-    params.id = this.props.match.params.actionId;
-    let result = await axios.post('/api/interface/up', params);
-    if (result.data.errcode !== 0) {
-      return message.error(result.data.errmsg);
-    }
+    const data = Object.assign({}, params, {
+      id: this.props.match.params.actionId
+    });
+    try {
+      const result = await axios.post('/api/interface/up', data);
+      if (result.data.errcode !== 0) {
+        return message.error(result.data.errmsg);
+      }
 
-    // 只有保存成功后才刷新分类和接口数据，避免失败响应覆盖当前编辑内容。
-    await Promise.all([
-      this.props.fetchInterfaceListMenu(this.props.currProject._id),
-      this.props.fetchInterfaceData(params.id)
-    ]);
-    this.props.updateInterfaceData(params);
-    message.success('保存成功');
+      // 只有保存成功后才刷新分类和接口数据，避免失败响应覆盖当前编辑内容。
+      await Promise.all([
+        this.props.fetchInterfaceListMenu(this.props.currProject._id),
+        this.props.fetchInterfaceData(data.id)
+      ]);
+      this.props.updateInterfaceData(data);
+      message.success('保存成功');
+    } catch (err) {
+      message.error('保存失败：' + err.message);
+    }
   };
 
   componentWillUnmount() {
