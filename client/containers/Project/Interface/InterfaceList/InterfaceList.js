@@ -96,22 +96,27 @@ class InterfaceList extends Component {
   };
 
   // 更新分类简介
-  handleChangeInterfaceCat = (desc, name) => {
-    let params = {
+  handleChangeInterfaceCat = async (desc, name) => {
+    const params = {
       catid: this.state.catid,
-      name: name,
-      desc: desc
+      name,
+      desc
     };
 
-    axios.post('/api/interface/up_cat', params).then(async res => {
+    try {
+      const res = await axios.post('/api/interface/up_cat', params);
       if (res.data.errcode !== 0) {
         return message.error(res.data.errmsg);
       }
-      let project_id = this.props.match.params.id;
-      await this.props.getProject(project_id);
-      await this.props.fetchInterfaceListMenu(project_id);
+      const projectId = this.props.match.params.id;
+      await Promise.all([
+        this.props.getProject(projectId),
+        this.props.fetchInterfaceListMenu(projectId)
+      ]);
       message.success('接口集合简介更新成功');
-    });
+    } catch (err) {
+      message.error('接口集合简介更新失败：' + err.message);
+    }
   };
 
   handleChange = (pagination, filters, sorter) => {
@@ -141,31 +146,39 @@ class InterfaceList extends Component {
     }
   }
 
-  handleAddInterface = data => {
+  handleAddInterface = async data => {
     data.project_id = this.props.curProject._id;
-    axios.post('/api/interface/add', data).then(res => {
+    try {
+      const res = await axios.post('/api/interface/add', data);
       if (res.data.errcode !== 0) {
         return message.error(`${res.data.errmsg}, 你可以在左侧的接口列表中对接口进行删改`);
       }
       message.success('接口添加成功');
       let interfaceId = res.data.data._id;
       this.props.history.push('/project/' + data.project_id + '/interface/api/' + interfaceId);
-      this.props.fetchInterfaceListMenu(data.project_id);
-    });
+      await this.props.fetchInterfaceListMenu(data.project_id);
+    } catch (err) {
+      message.error('接口添加失败：' + err.message);
+    }
   };
 
   changeInterfaceCat = async (id, catid) => {
     const params = {
-      id: id,
+      id,
       catid
     };
-    let result = await axios.post('/api/interface/up', params);
-    if (result.data.errcode === 0) {
+    try {
+      const result = await axios.post('/api/interface/up', params);
+      if (result.data.errcode !== 0) {
+        return message.error(result.data.errmsg);
+      }
       message.success('修改成功');
-      this.handleRequest(this.props);
-      this.props.fetchInterfaceListMenu(this.props.curProject._id);
-    } else {
-      message.error(result.data.errmsg);
+      await Promise.all([
+        this.handleRequest(this.props),
+        this.props.fetchInterfaceListMenu(this.props.curProject._id)
+      ]);
+    } catch (err) {
+      message.error('修改分类失败：' + err.message);
     }
   };
 
@@ -174,12 +187,15 @@ class InterfaceList extends Component {
       id: value.split('-')[0],
       status: value.split('-')[1]
     };
-    let result = await axios.post('/api/interface/up', params);
-    if (result.data.errcode === 0) {
+    try {
+      const result = await axios.post('/api/interface/up', params);
+      if (result.data.errcode !== 0) {
+        return message.error(result.data.errmsg);
+      }
       message.success('修改成功');
-      this.handleRequest(this.props);
-    } else {
-      message.error(result.data.errmsg);
+      await this.handleRequest(this.props);
+    } catch (err) {
+      message.error('修改状态失败：' + err.message);
     }
   };
 
