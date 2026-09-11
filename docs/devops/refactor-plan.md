@@ -485,6 +485,28 @@ mongorestore --drop \
 
 MongoDB 8.0 下全量回归通过，历史数据可读取，现有 API 响应不变，才将 8.0 作为默认生产目标。MongoDB 8.3 只在独立环境通过兼容性验证后记录结果，不直接替换生产目标。
 
+### 当前验证记录（2026 年 9 月 11 日）
+
+已从当前 MongoDB 4.4 容器 `yapi-mongodb` 导出备份至被 Git 忽略的目录：
+
+```text
+backup-before-refactor/yapi.archive
+大小：约 5.5 MB
+```
+
+备份已恢复到独立的 MongoDB 8.0 容器 `yapi-mongodb-8`（端口 `27018`），未修改原有 `yapi-mongodb` 容器。恢复后关键集合数量如下：
+
+```text
+interface       1170
+interface_cat    313
+project            3
+user               2
+interface_col      3
+interface_case     0
+```
+
+Node.js `24.21.0` 已成功连接 MongoDB 8.0，并完成查询索引初始化验证。该结果证明驱动连接、历史数据恢复和索引创建可用；管理员登录、接口编辑保存和分类操作仍需按完整验收清单继续验证，因此暂不切换生产数据库目标。
+
 ## Phase 11：验证并切换到 Node.js 24.21.0 LTS
 
 ### 实施内容
