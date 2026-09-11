@@ -80,6 +80,27 @@ class ProjectData extends Component {
       isWiki: false
     };
   }
+  flattenCategories = list => {
+    const byParent = {};
+    (list || []).forEach(item => {
+      const parentId = item.parent_id || 0;
+      if (!byParent[parentId]) byParent[parentId] = [];
+      byParent[parentId].push(item);
+    });
+    const result = [];
+    const stack = (byParent[0] || []).slice().reverse().map(item => ({ item, prefix: '' }));
+    // 导入默认分类下拉框展示完整层级，提交时仍使用原分类 ID。
+    while (stack.length) {
+      const current = stack.pop();
+      const item = current.item;
+      if (!item) continue;
+      result.push({ item, label: current.prefix + item.name });
+      const children = (byParent[item._id] || []).slice().reverse();
+      children.forEach(child => stack.push({ item: child, prefix: current.prefix + '└ ' }));
+    }
+    return result;
+  };
+
   static propTypes = {
     match: PropTypes.object,
     curCatid: PropTypes.number,
@@ -97,7 +118,7 @@ class ProjectData extends Component {
         let menuList = data.data.data;
         this.setState({
           menuList: menuList,
-          selectCatid: menuList[0]._id
+          selectCatid: menuList.length ? menuList[0]._id : 0
         });
       }
     });
@@ -306,6 +327,7 @@ class ProjectData extends Component {
    * @memberof ProjectData
    */
   render() {
+    const categories = this.flattenCategories(this.state.menuList);
     const uploadMess = {
       name: 'interfaceData',
       multiple: true,
@@ -372,10 +394,10 @@ class ProjectData extends Component {
                     option.props.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
                   }
                 >
-                  {this.state.menuList.map((item, key) => {
+                  {categories.map(category => {
                     return (
-                      <Option key={key} value={item._id + ''}>
-                        {item.name}
+                      <Option key={category.item._id} value={category.item._id + ''}>
+                        {category.label}
                       </Option>
                     );
                   })}
