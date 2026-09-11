@@ -399,7 +399,7 @@ class interfaceModel extends baseModel {
         custom_field_value: value
       })
       .select(
-        'title uid path method edit_uid status desc add_time up_time type query_path req_query req_headers req_params req_body_type req_body_form req_body_other res_body_type custom_field_value'
+        'project_id title uid path method edit_uid status desc add_time up_time type query_path req_query req_headers req_params req_body_type req_body_form req_body_other res_body_type custom_field_value'
       )
       .exec();
   }

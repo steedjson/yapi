@@ -1293,6 +1293,8 @@ class interfaceController extends baseController {
         if (inter.length === 0) return;
         inter = inter.map(item => {
           item = item.toObject();
+          // project_id 只用于批量结果归组，移除后保持原接口明细字段不变。
+          delete item.project_id;
           item.res_body = yapi.commons.json_parse(item.res_body);
           item.req_body_other = yapi.commons.json_parse(item.req_body_other);
           return item;
