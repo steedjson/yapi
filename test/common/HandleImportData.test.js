@@ -72,3 +72,39 @@ test('导入多级分类找不到父分类时不得降级到根分类', async t 
   t.is(requests.filter(item => item.url.indexOf('/api/interface/add') > -1).length, 1);
   t.is(requests[0].data.catid, 99);
 });
+
+
+test('导入部分失败时返回准确的结果统计', async t => {
+  const originalPost = axios.post;
+  let apiCount = 0;
+  axios.post = async url => {
+    if (url.indexOf('/api/interface/add') > -1) {
+      apiCount += 1;
+      if (apiCount === 1) return {data: {errcode: 400, errmsg: '接口保存失败'}};
+    }
+    return {data: {errcode: 0, data: {_id: 100 + apiCount}}};
+  };
+
+  try {
+    const result = await handleImportData(
+      {apis: [
+        {method: 'GET', path: '/failed', title: 'failed'},
+        {method: 'GET', path: '/success', title: 'success'}
+      ]},
+      1,
+      99,
+      [],
+      '',
+      'normal',
+      () => {},
+      () => {},
+      () => {}
+    );
+    t.is(result.successNum, 1);
+    t.is(result.existNum, 0);
+    t.is(result.failedNum, 1);
+    t.is(result.errors.length, 1);
+  } finally {
+    axios.post = originalPost;
+  }
+});

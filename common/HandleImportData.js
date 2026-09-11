@@ -90,7 +90,7 @@ async function handle(
     if (!info || !Array.isArray(info.apis)) {
       messageError('解析数据为空');
       finish();
-      return;
+      return { successNum: 0, existNum: 0, failedNum: 0, errors: [] };
     }
     const cats = await handleAddCat(info.cats);
     const res = info.apis;
@@ -100,7 +100,7 @@ async function handle(
     if (len === 0) {
       messageError('解析数据为空');
       finish();
-      return;
+      return { successNum: 0, existNum: 0, failedNum: 0, errors: [] };
     }
 
     if (info.basePath) {
@@ -165,6 +165,7 @@ async function handle(
     } else {
       messageSuccess('成功导入接口 ' + successNum + ' 个，已存在的接口 ' + existNum + ' 个');
     }
+    return { successNum, existNum, failedNum: errors.length, errors };
   };
 
   return handleAddInterface(res);
