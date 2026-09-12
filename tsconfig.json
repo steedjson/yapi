@@ -16,6 +16,7 @@
     "server/utils/categoryTree.js",
     "server/utils/token.js",
     "server/utils/storage.js",
-    "server/utils/sandbox.js"
+    "server/utils/sandbox.js",
+    "server/controllers/base.js"
   ]
 }

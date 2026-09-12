@@ -1,14 +1,25 @@
-const yapi = require('../yapi.js');
-const projectModel = require('../models/project.js');
-const userModel = require('../models/user.js');
-const interfaceModel = require('../models/interface.js');
-const groupModel = require('../models/group.js');
-const tokenModel = require('../models/token.js');
+// @ts-check
+/**
+ * 以非字面量参数调用 require，避免 tsc 静态解析后递归检查未迁移的模型和框架代码。
+ * @param {string} name
+ * @returns {any}
+ */
+const requireAny = name => require(name);
+
+const yapi = requireAny('../yapi.js');
+const projectModel = requireAny('../models/project.js');
+const userModel = requireAny('../models/user.js');
+const interfaceModel = requireAny('../models/interface.js');
+const groupModel = requireAny('../models/group.js');
+const tokenModel = requireAny('../models/token.js');
 const _ = require('underscore');
 const jwt = require('jsonwebtoken');
 const {parseToken} = require('../utils/token')
 
 class baseController {
+  /**
+   * @param {any} ctx Koa 请求上下文
+   */
   constructor(ctx) {
     this.ctx = ctx;
     //网站上线后，role对象key是不能修改的，value可以修改
@@ -18,7 +29,13 @@ class baseController {
     };
   }
 
+  /**
+   * 控制器初始化：统一处理登录态校验与 openapi token 鉴权。
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<void>}
+   */
   async init(ctx) {
+    /** @type {any} 当前登录用户信息，未登录时为 null */
     this.$user = null;
     this.tokenModel = yapi.getInst(tokenModel);
     this.projectModel = yapi.getInst(projectModel);
@@ -113,6 +130,11 @@ class baseController {
     }
   }
 
+  /**
+   * 通过 openapi token 查询对应项目 id。
+   * @param {string} token openapi token
+   * @returns {Promise<any>} 项目 id，未找到时为 undefined
+   */
   async getProjectIdByToken(token) {
     let projectId = await this.tokenModel.findId(token);
     if (projectId) {
@@ -120,10 +142,19 @@ class baseController {
     }
   }
 
+  /**
+   * 获取当前登录用户 uid。
+   * @returns {number}
+   */
   getUid() {
     return parseInt(this.$uid, 10);
   }
 
+  /**
+   * 校验 cookie 登录态，登录成功时写入 $uid / $auth / $user。
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<boolean>}
+   */
   async checkLogin(ctx) {
     let token = ctx.cookies.get('_yapi_token');
     let uid = ctx.cookies.get('_yapi_uid');
@@ -158,6 +189,10 @@ class baseController {
     }
   }
   
+  /**
+   * 是否开放注册。
+   * @returns {Promise<boolean>}
+   */
   async checkRegister() {
     // console.log('config', yapi.WEBCONFIG);
     if (yapi.WEBCONFIG.closeRegister) {
@@ -167,6 +202,10 @@ class baseController {
     }
   }
 
+  /**
+   * 是否启用 LDAP 登录。
+   * @returns {Promise<boolean>}
+   */
   async checkLDAP() {
     // console.log('config', yapi.WEBCONFIG);
     if (!yapi.WEBCONFIG.ldapLogin) {
@@ -176,10 +215,10 @@ class baseController {
     }
   }
   /**
-   *
-   * @param {*} ctx
+   * 获取当前登录状态并写入响应。
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<void>}
    */
-
   async getLoginStatus(ctx) {
     let body;
     if ((await this.checkLogin(ctx)) === true) {
@@ -203,19 +242,38 @@ class baseController {
     ctx.body = body;
   }
 
+  /**
+   * 获取当前登录用户角色。
+   * @returns {any}
+   */
   getRole() {
     return this.$user.role;
   }
 
+  /**
+   * 获取当前登录用户名。
+   * @returns {any}
+   */
   getUsername() {
     return this.$user.username;
   }
 
+  /**
+   * 获取当前登录用户邮箱。
+   * @returns {any}
+   */
   getEmail() {
     return this.$user.email;
   }
 
+  /**
+   * 查询当前用户在接口 / 项目 / 分组下的角色。
+   * @param {any} id type 对应的 id
+   * @param {string} type enum[interface, project, group]
+   * @returns {Promise<string|boolean>} 角色字符串，异常时返回 false
+   */
   async getProjectRole(id, type) {
+    /** @type {any} */
     let result = {};
     try {
       if (this.getRole() === 'admin') {
@@ -291,9 +349,10 @@ class baseController {
   }
   /**
    * 身份验证
-   * @param {*} id type对应的id
-   * @param {*} type enum[interface, project, group]
-   * @param {*} action enum[ danger, edit, view ] danger只有owner或管理员才能操作,edit只要是dev或以上就能执行
+   * @param {any} id type 对应的 id
+   * @param {string} type enum[interface, project, group]
+   * @param {string} action enum[ danger, edit, view ] danger 只有 owner 或管理员才能操作，edit 只要是 dev 或以上就能执行
+   * @returns {Promise<boolean>}
    */
   async checkAuth(id, type, action) {
     let role = await this.getProjectRole(id, type);

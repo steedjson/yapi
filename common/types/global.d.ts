@@ -33,6 +33,18 @@ declare module 'safeify' {
   export default Safeify;
 }
 
+declare module 'jsonwebtoken' {
+  export function verify(token: string, secretOrPublicKey: string | Buffer): any;
+  export function sign(payload: string | Buffer | object, secretOrPrivateKey: string | Buffer, options?: any): string;
+}
+
+declare module 'underscore' {
+  export function find(list: any[], predicate: (item: any) => any): any;
+  export function throttle(fn: Function, wait: number): Function;
+  const _: any;
+  export default _;
+}
+
 declare module 'crypto' {
   export interface Hash {
     update(data: any): Hash;
