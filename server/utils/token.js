@@ -1,4 +1,6 @@
-const yapi = require('../yapi')
+// @ts-check
+/** @type {any} */
+const yapi = require('../yapi');
 
 const crypto = require('crypto');
 
@@ -6,7 +8,11 @@ const crypto = require('crypto');
  下面是使用加密算法
 */
 
-// Node.js 24 已移除 createCipher/createDecipher；这里复现旧版 EVP_BytesToKey，确保历史 token 仍可解密。
+/**
+ * Node.js 24 已移除 createCipher/createDecipher；这里复现旧版 EVP_BytesToKey，确保历史 token 仍可解密。
+ * @param {string} password
+ * @returns {{ key: Buffer, iv: Buffer }}
+ */
 const legacyKeyAndIv = password => {
   const passwordBuffer = Buffer.from(password, 'utf8');
   let previous = Buffer.alloc(0);
@@ -24,7 +30,12 @@ const legacyKeyAndIv = password => {
   };
 };
 
-// 使用与旧版 crypto.createCipher('aes192', password) 相同的 AES-192-CBC 参数。
+/**
+ * 使用与旧版 crypto.createCipher('aes192', password) 相同的 AES-192-CBC 参数。
+ * @param {string} data
+ * @param {string} password
+ * @returns {string}
+ */
 const aseEncode = function(data, password) {
   const {key, iv} = legacyKeyAndIv(password);
   const cipher = crypto.createCipheriv('aes-192-cbc', key, iv);
@@ -33,6 +44,11 @@ const aseEncode = function(data, password) {
   return crypted;
 };
 
+/**
+ * @param {string} data
+ * @param {string} password
+ * @returns {string}
+ */
 const aseDecode = function(data, password) {
   const {key, iv} = legacyKeyAndIv(password);
   const decipher = crypto.createDecipheriv('aes-192-cbc', key, iv);
@@ -43,27 +59,36 @@ const aseDecode = function(data, password) {
 
 const defaultSalt = 'abcde';
 
+/**
+ * @param {string} token
+ * @param {string|number} uid
+ * @returns {string}
+ */
 exports.getToken = function getToken(token, uid){
   if(!token)throw new Error('token 不能为空')
   yapi.WEBCONFIG.passsalt = yapi.WEBCONFIG.passsalt || defaultSalt;
   return aseEncode(uid + '|' + token, yapi.WEBCONFIG.passsalt)
 }
 
+/**
+ * @param {string} token
+ * @returns {{ uid: string, projectToken: string } | false}
+ */
 exports.parseToken = function parseToken(token){
   if(!token)throw new Error('token 不能为空')
   yapi.WEBCONFIG.passsalt = yapi.WEBCONFIG.passsalt || defaultSalt;
+  /** @type {string | undefined} */
   let tokens;
   try{
     tokens = aseDecode(token, yapi.WEBCONFIG.passsalt)
   }catch(e){}  
   if(tokens && typeof tokens === 'string' && tokens.indexOf('|') > 0){
-    tokens = tokens.split('|')
+    const parts = tokens.split('|')
     return {
-      uid: tokens[0],
-      projectToken: tokens[1]
+      uid: parts[0],
+      projectToken: parts[1]
     }
   }
   return false;
-  
 }
 
