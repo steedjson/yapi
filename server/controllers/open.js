@@ -1,22 +1,29 @@
-const projectModel = require('../models/project.js');
-const interfaceColModel = require('../models/interfaceCol.js');
-const interfaceCaseModel = require('../models/interfaceCase.js');
-const interfaceModel = require('../models/interface.js');
-const interfaceCatModel = require('../models/interfaceCat.js');
-const followModel = require('../models/follow.js');
-const userModel = require('../models/user.js');
-const yapi = require('../yapi.js');
+// @ts-check
+/**
+ * @param {string} name
+ * @returns {any}
+ */
+const requireAny = name => require(name);
+
+const projectModel = requireAny('../models/project.js');
+const interfaceColModel = requireAny('../models/interfaceCol.js');
+const interfaceCaseModel = requireAny('../models/interfaceCase.js');
+const interfaceModel = requireAny('../models/interface.js');
+const interfaceCatModel = requireAny('../models/interfaceCat.js');
+const followModel = requireAny('../models/follow.js');
+const userModel = requireAny('../models/user.js');
+const yapi = requireAny('../yapi.js');
 const baseController = require('./base.js');
 const {
   handleParams,
   crossRequest,
   handleCurrDomain,
   checkNameIsExistInArray
-} = require('../../common/postmanLib');
-const { handleParamsValue, ArrayToObject } = require('../../common/utils.js');
+} = requireAny('../../common/postmanLib');
+const { handleParamsValue, ArrayToObject } = requireAny('../../common/utils.js');
 const renderToHtml = require('../utils/reportHtml');
-const axios = require('axios');
-const HanldeImportData = require('../../common/HandleImportData');
+const axios = requireAny('axios');
+const HanldeImportData = requireAny('../../common/HandleImportData');
 const _ = require('underscore');
 const createContex = require('../../common/createContext')
 
@@ -25,10 +32,13 @@ const createContex = require('../../common/createContext')
  *    postman: require('./m')
  * }
  */
-const importDataModule = {};
+const importDataModule = /** @type {any} */ ({});
 yapi.emitHook('import_data', importDataModule);
 
 class openController extends baseController {
+  /**
+   * @param {any} ctx Koa 请求上下文
+   */
   constructor(ctx) {
     super(ctx);
     this.projectModel = yapi.getInst(projectModel);
@@ -72,6 +82,10 @@ class openController extends baseController {
     };
   }
 
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
+   */
   async importData(ctx) {
     let type = ctx.params.type;
     let content = ctx.params.json;
@@ -88,7 +102,7 @@ class openController extends baseController {
         warnMessage = 'importData Api 已废弃 dataSync 传参，请联系管理员将 dataSync 改为 merge.'
         dataSync = ctx.params.dataSync
       }
-    }catch(e){}
+    }catch(/** @type {any} */ e){}
 
     let token = ctx.params.token;
     if (!type || !importDataModule[type]) {
@@ -99,10 +113,10 @@ class openController extends baseController {
       return (ctx.body = yapi.commons.resReturn(null, 40022, 'json 或者 url 参数，不能都为空'));
     }
     try {
-      let request = require("request");// let Promise = require('Promise');
-      let syncGet = function (url){
+      let request = requireAny("request");// let Promise = require('Promise');
+      let syncGet = function (/** @type {any} */ url){
           return new Promise(function(resolve, reject){
-              request.get({url : url}, function(error, response, body){
+              request.get({url : url}, function(/** @type {any} */ error, /** @type {any} */ response, /** @type {any} */ body){
                   if(error){
                       reject(error);
                   }else{
@@ -110,14 +124,14 @@ class openController extends baseController {
                   }
               });
           });
-      } 
+      }
       if(ctx.params.url){
         content = await syncGet(ctx.params.url);
       }else if(content.indexOf('http://') === 0 || content.indexOf('https://') === 0){
         content = await syncGet(content);
       }
       content = JSON.parse(content);
-    } catch (e) {
+    } catch (/** @type {any} */ e) {
       return (ctx.body = yapi.commons.resReturn(null, 40022, 'json 格式有误:' + e));
     }
 
@@ -143,7 +157,7 @@ class openController extends baseController {
     let res = await importDataModule[type](content);
 
     let successMessage;
-    let errorMessage = [];
+    let errorMessage = /** @type {any[]} */ ([]);
     await HanldeImportData(
       res,
       project_id,
@@ -151,10 +165,10 @@ class openController extends baseController {
       menuList,
       projectData.basePath,
       dataSync,
-      err => {
+      (/** @type {any} */ err) => {
         errorMessage.push(err);
       },
-      msg => {
+      (/** @type {any} */ msg) => {
         successMessage = msg;
       },
       () => {},
@@ -168,18 +182,31 @@ class openController extends baseController {
     ctx.body = yapi.commons.resReturn(null, 0, successMessage + warnMessage);
   }
 
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
+   */
   async projectInterfaceData(ctx) {
     ctx.body = 'projectInterfaceData';
   }
 
+  /**
+   * @param {any} val
+   * @param {any} global
+   * @returns {any}
+   */
   handleValue(val, global) {
     let globalValue = ArrayToObject(global);
     let context = Object.assign({}, {global: globalValue}, this.records);
     return handleParamsValue(val, context);
   }
 
+  /**
+   * @param {any} params
+   * @returns {any[]}
+   */
   handleEvnParams(params) {
-    let result = [];
+    let result = /** @type {any[]} */ ([]);
     Object.keys(params).map(item => {
       if (/env_/gi.test(item)) {
         let curEnv = yapi.commons.trim(params[item]);
@@ -189,6 +216,11 @@ class openController extends baseController {
     });
     return result;
   }
+
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
+   */
   async runAutoTest(ctx) {
     if (!this.$tokenAuth) {
       return (ctx.body = yapi.commons.resReturn(null, 40022, 'token 验证失败'));
@@ -198,8 +230,8 @@ class openController extends baseController {
 
     const projectId = ctx.params.project_id;
     const startTime = new Date().getTime();
-    const records = (this.records = {});
-    const reports = (this.reports = {});
+    const records = (this.records = /** @type {any} */ ({}));
+    const reports = (this.reports = /** @type {any} */ ({}));
     const testList = [];
     let id = ctx.params.id;
     let curEnvList = this.handleEvnParams(ctx.params);
@@ -234,7 +266,7 @@ class openController extends baseController {
       // console.log('item',item.case_env)
       try {
         result = await this.handleTest(item);
-      } catch (err) {
+      } catch (/** @type {any} */ err) {
         result = err;
       }
 
@@ -246,7 +278,7 @@ class openController extends baseController {
       testList.push(result);
     }
 
-    function getMessage(testList) {
+    function getMessage(/** @type {any[]} */ testList) {
       let successNum = 0,
         failedNum = 0,
         len = 0,
@@ -312,17 +344,21 @@ class openController extends baseController {
     }
   }
 
+  /**
+   * @param {any} interfaceData
+   * @returns {Promise<any>}
+   */
   async handleTest(interfaceData) {
     let requestParams = {};
     let options;
     options = handleParams(interfaceData, this.handleValue, requestParams);
-    let result = {
+    let result = /** @type {any} */ ({
       id: interfaceData.id,
       name: interfaceData.casename,
       path: interfaceData.path,
       code: 400,
       validRes: []
-    };
+    });
     try {
       options.taskId = this.getUid();
       let data = await crossRequest(options, interfaceData.pre_script, interfaceData.after_script,createContex(
@@ -346,7 +382,7 @@ class openController extends baseController {
         requestParams = Object.assign(requestParams, options.data);
       }
 
-      let validRes = [];
+      let validRes = /** @type {any[]} */ ([]);
 
       let responseData = Object.assign(
         {},
@@ -367,7 +403,7 @@ class openController extends baseController {
         result.code = 1;
         result.validRes = validRes;
       }
-    } catch (data) {
+    } catch (/** @type {any} */ data) {
       result = Object.assign(options, result, {
         res_header: data.header,
         res_body: data.body || data.message,
@@ -380,8 +416,15 @@ class openController extends baseController {
     return result;
   }
 
+  /**
+   * @param {any} interfaceData
+   * @param {any} response
+   * @param {any[]} validRes
+   * @param {any} requestParams
+   * @returns {Promise<any>}
+   */
   async handleScriptTest(interfaceData, response, validRes, requestParams) {
-    
+
     try {
       let test = await yapi.commons.runCaseScript({
         response: response,
@@ -390,24 +433,33 @@ class openController extends baseController {
         params: requestParams
       }, interfaceData.col_id, interfaceData.interface_id, this.getUid());
       if (test.errcode !== 0) {
-        test.data.logs.forEach(item => {
+        test.data.logs.forEach((/** @type {any} */ item) => {
           validRes.push({
             message: item
           });
         });
       }
-    } catch (err) {
+    } catch (/** @type {any} */ err) {
       validRes.push({
         message: 'Error: ' + err.message
       });
     }
   }
 
+  /**
+   * @param {any[]} req_header
+   * @param {any} envData
+   * @param {any} curEnvName
+   * @returns {any[]}
+   */
   handleReqHeader(req_header, envData, curEnvName) {
     let currDomain = handleCurrDomain(envData, curEnvName);
 
-    let header = currDomain.header;
-    header.forEach(item => {
+    req_header = (Array.isArray(req_header) ? req_header : []).filter(item => {
+      return item && typeof item === 'object';
+    });
+    let header = currDomain.header || [];
+    header.forEach((/** @type {any} */ item) => {
       if (!checkNameIsExistInArray(item.name, req_header)) {
         item.abled = true;
         req_header.push(item);
