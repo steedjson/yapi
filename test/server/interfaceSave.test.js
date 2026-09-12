@@ -36,3 +36,22 @@ test('保存文件表单时使用 multipart 请求头', t => {
 
   t.deepEqual(values.req_headers, [{ name: 'Content-Type', value: 'multipart/form-data' }]);
 });
+
+
+test('导入数据携带异常请求头类型时仍可补齐请求头', t => {
+  const values = { req_body_type: 'json', req_headers: {} };
+
+  handleHeaders(values);
+
+  t.deepEqual(values.req_headers, [{ name: 'Content-Type', value: 'application/json' }]);
+});
+
+test('导入数据缺少表单数组时仍可补齐请求头', t => {
+  const values = { req_body_type: 'form', req_body_form: null, req_headers: null };
+
+  handleHeaders(values);
+
+  t.deepEqual(values.req_headers, [
+    { name: 'Content-Type', value: 'application/x-www-form-urlencoded' }
+  ]);
+});
