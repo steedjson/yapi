@@ -82,7 +82,7 @@ module.exports = {
   plugins: [
     new ExtractTextPlugin(isDevelopment ? '[name]@dev.css' : '[name]@[contenthash].css'),
     new webpack.optimize.CommonsChunkPlugin({
-      name: ['lib3', 'lib2', 'lib', 'manifest'],
+      names: ['lib3', 'lib2', 'lib', 'manifest'],
       filename: isDevelopment ? '[name]@dev.js' : '[name]@[chunkhash].js',
       minChunks: 2
     }),
