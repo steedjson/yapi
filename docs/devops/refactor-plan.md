@@ -738,11 +738,19 @@ UI 迁移必须在 TypeScript 和构建工具稳定后进行，优先保持组�
 - 分类树和接口编辑页已经完成局部整理；
 - 现有页面回归结果完整。
 
-### 调查范围
+### 调查范围与当前基准（2026 年 9 月 12 日实测）
 
 ```bash
 rg -n "getFieldDecorator|Modal|Table|Tree|Menu|Icon|Form" client
 ```
+
+实测统计结果：
+- `getFieldDecorator`（antd v3 表单双向绑定）：**84 处**，为未来升级 antd v4+ 的核心破坏性改造点；
+- `Icon type="..."`（antd v3 字符串图标声明）：**94 处**，antd v4 需迁移为 `@ant-design/icons` 独立图标组件；
+- `message.*` / `Modal.*` 命令式调用：**140 处**；
+- 组件使用频次前 5 位：Icon(29), message(28), Button(26), Row(24), Tooltip/Input(各 23)。
+
+结论：由于 `getFieldDecorator` 覆盖了全部核心表单，且当前构建与类型化刚刚稳固，**严格遵循重构计划第四批次门槛，暂不直接升级 React/Antd 大版本**，保持目前 `react@16.2.0` 与 `antd@3.2.2` 的高可用兼容运行状态。
 
 ### 升级原则
 
