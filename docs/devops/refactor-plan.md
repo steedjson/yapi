@@ -556,7 +556,7 @@ Node.js 24.21.0 LTS 下全量回归通过后，将 `.nvmrc` 更新为：
 
 Node.js 24.21.0 LTS 下无阻断性错误，关键页面、接口响应、历史数据和构建产物与基线一致，才允许切换默认开发环境。
 
-当前验证结果：Node.js `10.24.1`、`18.20.8` 和 `24.21.0` 均已完成生产构建验证；Node.js `10.24.1` 和 `18.20.8` 的全量测试均为 `35 passed`，Node.js `24.21.0` 已作为 `.nvmrc` 默认环境。
+当前验证结果：Node.js `10.24.1`、`18.20.8` 和 `24.21.0` 均已完成生产构建验证；Node.js `10.24.1` 和 `18.20.8` 的全量测试均为 `35 passed`，Node.js `24.21.0` 已作为 `.nvmrc` 默认环境。截至 2026 年 9 月 12 日，测试规模已增至 58 个用例，Node.js `24.21.0` 下全量 `58 passed` / `0 failed`。
 
 ## Phase 12：替换 YKit/HappyPack
 
@@ -601,7 +601,7 @@ YAPI_STANDALONE_BABEL=1 npm run build-client
 
 该开关只在现有 YKit 流程内部替换 Babel/HappyPack 注入，不等于独立入口。
 
-2026 年 9 月 12 日已增加 `npm run build-client-standalone`，使用顶层 Webpack `2.7.0` 直接完成生产构建，并在清理旧产物后与默认构建对比：两者均生成 12 个核心产物和 `assets.js`，未发现旧产物残留。 已使用现有 `static/index.html` 解析 `assets.js` 引用，确认 standalone 生成的 `index.js`、`manifest`、`lib3`、`lib2`、`lib` 共 6 个 JS/CSS 资源全部存在。由于 chunk hash 和部分 vendor 内容不同，尚未宣称二者字节级一致；默认 YKit 构建和 legacy 回退仍保留。已增加 `npm run dev-client-standalone`，在备用端口 `4001` 验证页面返回 HTTP `200`、`static/dev.html` 引用的 6 个 CSS/JS 资源全部返回 HTTP `200`，并验证 Webpack HMR 中间件编译成功。固定端口 `4000` 已验证：页面返回 YApi `dev.html`，`static/dev.html` 引用的 6 个 CSS/JS 资源全部 HTTP `200`，Webpack 编译成功。资源清单键名兼容已抽到 `build/clientBuildConfig.normalizeAssets`，并有回归测试锁定 `static/index.html` 的历史键；YKit 默认构建本身已生成 `index.js` 键，不需要改写。2026 年 9 月 12 日再用 `node server/app.js dev` 与 `npm run dev-client-standalone` 在 `3000`/`4000` 联调：页面返回 YApi `dev.html`，6 个开发资源全部 HTTP `200`，管理员登录成功，分组和项目列表读取成功；独立打包含登录文案、`user/login`、`ReactDOM.render` 和 Ant Design 样式。完整浏览器 DOM 交互验收因本机浏览器控制被自动审核拦截，尚未完成；默认 `dev-client` / `build-client` 仍不切换。
+2026 年 9 月 12 日已增加 `npm run build-client-standalone`，使用顶层 Webpack `2.7.0` 直接完成生产构建，并在清理旧产物后与默认构建对比：两者均生成 12 个核心产物和 `assets.js`，未发现旧产物残留。 已使用现有 `static/index.html` 解析 `assets.js` 引用，确认 standalone 生成的 `index.js`、`manifest`、`lib3`、`lib2`、`lib` 共 6 个 JS/CSS 资源全部存在。由于 chunk hash 和部分 vendor 内容不同，尚未宣称二者字节级一致；默认 YKit 构建和 legacy 回退仍保留。已增加 `npm run dev-client-standalone`，在备用端口 `4001` 验证页面返回 HTTP `200`、`static/dev.html` 引用的 6 个 CSS/JS 资源全部返回 HTTP `200`，并验证 Webpack HMR 中间件编译成功。固定端口 `4000` 已验证：页面返回 YApi `dev.html`，`static/dev.html` 引用的 6 个 CSS/JS 资源全部 HTTP `200`，Webpack 编译成功。资源清单键名兼容已抽到 `build/clientBuildConfig.normalizeAssets`，并有回归测试锁定 `static/index.html` 的历史键；YKit 默认构建本身已生成 `index.js` 键，不需要改写。2026 年 9 月 12 日再用 `node server/app.js dev` 与 `npm run dev-client-standalone` 在 `3000`/`4000` 联调：页面返回 YApi `dev.html`，6 个开发资源全部 HTTP `200`，管理员登录成功，分组和项目列表读取成功；独立打包含登录文案、`user/login`、`ReactDOM.render` 和 Ant Design 样式。完整浏览器 DOM 交互验收因本机浏览器控制被自动审核拦截，尚未完成；默认 `dev-client` / `build-client` 仍不切换。同日将 standalone 配置中 CommonsChunkPlugin 的数组键名由 `name` 规范为 `names`，A/B 对比确认两种写法的全部产物 hash 完全一致（Webpack 2 内部对两键做等价归一化），`static/prd/` 已恢复为默认 YKit 构建产物。
 
 ### 不做
 
@@ -788,6 +788,10 @@ test/common/openapi-normalizer.test.js
 ```
 
 已新增 `test/server/interfaceSave.test.js`，覆盖缺失请求头时 JSON、Form 和文件表单的保存前兼容处理；真实 MongoDB HTTP 保存回归仍需继续补充。
+
+### 已修复的失败用例记录（2026 年 9 月 12 日）
+
+`test/common/HandleImportData.test.js` 曾出现 3 个用例稳定失败。排查结论：不是 `common/HandleImportData.js` 源码回归——独立复现脚本验证分类路径匹配（`catid` 落点）与错误统计逻辑均正确；真正原因是该文件 3 个用例都在 monkey-patch 全局 `axios.post`，而 AVA 默认并发执行同文件用例，mock 被相互覆盖/还原后部分请求打到真实 axios 并被业务代码的 `try/catch` 吞入 `errors`。修复方式是将 3 个用例声明改为 `test.serial`（提交 `d7fa1155`），不改动测试体和断言。修复后全量 `58 passed` / `0 failed`。经验：凡 mock 全局对象（`axios.post` 等）的用例必须串行执行。
 
 每个阶段至少执行：
 
