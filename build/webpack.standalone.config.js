@@ -95,13 +95,7 @@ module.exports = {
       new AssetsPlugin({
         filename: 'static/prd/assets.js',
         processOutput: assets => {
-          // 保持 static/index.html 依赖的历史 index.js manifest key。
-          const normalized = Object.assign({}, assets);
-          if (normalized.index && !normalized['index.js']) {
-            normalized['index.js'] = normalized.index;
-            delete normalized.index;
-          }
-          return 'window.WEBPACK_ASSETS = ' + JSON.stringify(normalized);
+          return 'window.WEBPACK_ASSETS = ' + JSON.stringify(clientBuildConfig.normalizeAssets(assets));
         }
       }),
       new CompressionPlugin({
