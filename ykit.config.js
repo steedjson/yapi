@@ -7,14 +7,13 @@ if (typeof nodeUtil.isRegExp !== 'function') {
 }
 var AssetsPlugin = require('assets-webpack-plugin');
 var CompressionPlugin = require('compression-webpack-plugin');
-var commonLib = require('./common/plugin.js');
+var clientPluginModule = require('./build/clientPluginModule');
 var assetsPluginInstance = new AssetsPlugin({
   filename: 'static/prd/assets.js',
   processOutput: function(assets) {
     return 'window.WEBPACK_ASSETS = ' + JSON.stringify(assets);
   }
 });
-var fs = require('fs');
 var package = require('./package.json');
 var yapi = require('./server/yapi');
 var isWin = require('os').platform() === 'win32'
@@ -29,44 +28,7 @@ var compressPlugin = new CompressionPlugin({
   minRatio: 0.8
 });
 
-function createScript(plugin, pathAlias) {
-  let options = plugin.options ? JSON.stringify(plugin.options) : null;
-  if (pathAlias === 'node_modules') {
-    return `"${plugin.name}" : {module: require('yapi-plugin-${
-      plugin.name
-    }/client.js'),options: ${options}}`;
-  }
-  return `"${plugin.name}" : {module: require('${pathAlias}/yapi-plugin-${
-    plugin.name
-  }/client.js'),options: ${options}}`;
-}
-
-function initPlugins(configPlugin) {
-  configPlugin = require('./config.json').plugins;
-  var systemConfigPlugin = require('./common/config.js').exts;
-
-  var scripts = [];
-  if (configPlugin && Array.isArray(configPlugin) && configPlugin.length) {
-    configPlugin = commonLib.initPlugins(configPlugin, 'plugin');
-    configPlugin.forEach(plugin => {
-      if (plugin.client && plugin.enable) {
-        scripts.push(createScript(plugin, 'node_modules'));
-      }
-    });
-  }
-
-  systemConfigPlugin = commonLib.initPlugins(systemConfigPlugin, 'ext');
-  systemConfigPlugin.forEach(plugin => {
-    if (plugin.client && plugin.enable) {
-      scripts.push(createScript(plugin, 'exts'));
-    }
-  });
-
-  scripts = 'module.exports = {' + scripts.join(',') + '}';
-  fs.writeFileSync('client/plugin-module.js', scripts);
-}
-
-initPlugins();
+clientPluginModule.initPlugins(__dirname);
 
 module.exports = {
   // 独立 Babel 模式不加载 YKit 配置插件，避免由插件注入 HappyPack。

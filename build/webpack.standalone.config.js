@@ -8,9 +8,10 @@ const CompressionPlugin = require('compression-webpack-plugin');
 const packageInfo = require('../package.json');
 const yapi = require('../server/yapi');
 const clientBuildConfig = require('./clientBuildConfig');
+const clientPluginModule = require('./clientPluginModule');
 
-// 第一阶段 standalone 入口只替换 YKit 编排，继续使用现有 Webpack 2 和插件版本。
-require('../ykit.config');
+// standalone 入口复用插件发现逻辑，但不加载 YKit 配置文件。
+clientPluginModule.initPlugins(path.resolve(__dirname, '..'));
 
 const root = path.resolve(__dirname, '..');
 const client = path.join(root, 'client');
