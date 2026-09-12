@@ -1,17 +1,27 @@
-const userModel = require('../models/user.js');
-const yapi = require('../yapi.js');
-const baseController = require('./base.js');
-const common = require('../utils/commons.js');
-const ldap = require('../utils/ldap.js');
+// @ts-check
+/**
+ * @param {string} name
+ * @returns {any}
+ */
+const requireAny = name => require(name);
 
-const interfaceModel = require('../models/interface.js');
-const groupModel = require('../models/group.js');
-const projectModel = require('../models/project.js');
-const avatarModel = require('../models/avatar.js');
+const userModel = requireAny('../models/user.js');
+const yapi = requireAny('../yapi.js');
+const baseController = require('./base.js');
+const common = requireAny('../utils/commons.js');
+const ldap = requireAny('../utils/ldap.js');
+
+const interfaceModel = requireAny('../models/interface.js');
+const groupModel = requireAny('../models/group.js');
+const projectModel = requireAny('../models/project.js');
+const avatarModel = requireAny('../models/avatar.js');
 
 const jwt = require('jsonwebtoken');
 
 class userController extends baseController {
+  /**
+   * @param {any} ctx Koa 请求上下文
+   */
   constructor(ctx) {
     super(ctx);
     this.Model = yapi.getInst(userModel);
@@ -26,6 +36,11 @@ class userController extends baseController {
    * @param  {String} password 密码，不能为空
    * @returns {Object}
    * @example ./api/user/login.json
+   */
+
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
    */
   async login(ctx) {
     //登录
@@ -77,6 +92,10 @@ class userController extends baseController {
    * @example ./api/user/logout.json
    */
 
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
+   */
   async logout(ctx) {
     ctx.cookies.set('_yapi_token', null);
     ctx.cookies.set('_yapi_uid', null);
@@ -93,6 +112,10 @@ class userController extends baseController {
    * @example
    */
 
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
+   */
   async upStudy(ctx) {
     let userInst = yapi.getInst(userModel); //创建user实体
     let data = {
@@ -102,11 +125,15 @@ class userController extends baseController {
     try {
       let result = await userInst.update(this.getUid(), data);
       ctx.body = yapi.commons.resReturn(result);
-    } catch (e) {
+    } catch (/** @type {any} */ e) {
       ctx.body = yapi.commons.resReturn(null, 401, e.message);
     }
   }
 
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
+   */
   async loginByToken(ctx) {
     try {
       let ret = await yapi.emitHook('third_login', ctx);
@@ -115,7 +142,7 @@ class userController extends baseController {
         yapi.commons.log('login success');
         ctx.redirect('/group');
       }
-    } catch (e) {
+    } catch (/** @type {any} */ e) {
       yapi.commons.log(e.message, 'error');
       ctx.redirect('/');
     }
@@ -131,6 +158,11 @@ class userController extends baseController {
    * @param  {String} password 密码，不能为空
    * @returns {Object}
    *
+   */
+
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
    */
   async getLdapAuth(ctx) {
     try {
@@ -165,13 +197,18 @@ class userController extends baseController {
           'logout success...'
         ));
       }
-    } catch (e) {
+    } catch (/** @type {any} */ e) {
       yapi.commons.log(e.message, 'error');
       return (ctx.body = yapi.commons.resReturn(null, 401, e.message));
     }
   }
 
   // 处理第三方登录
+  /**
+   * @param {any} email 用户邮箱
+   * @param {any} username 用户名
+   * @returns {Promise<any>}
+   */
   async handleThirdLogin(email, username) {
     let user, data, passsalt;
     let userInst = yapi.getInst(userModel);
@@ -193,7 +230,7 @@ class userController extends baseController {
           type: 'third'
         };
         user = await userInst.save(data);
-        await this.handlePrivateGroup(user._id, username, email);
+        await this.handlePrivateGroup(user._id);
         yapi.commons.sendMail({
           to: email,
           contents: `<h3>亲爱的用户：</h3><p>您好，感谢使用YApi平台，你的邮箱账号是：${email}</p>`
@@ -202,7 +239,7 @@ class userController extends baseController {
 
       this.setLoginCookie(user._id, user.passsalt);
       return true;
-    } catch (e) {
+    } catch (/** @type {any} */ e) {
       console.error('third_login:', e.message); // eslint-disable-line
       throw new Error(`third_login: ${e.message}`);
     }
@@ -218,6 +255,11 @@ class userController extends baseController {
    * @param {Number} password 新密码
    * @return {Object}
    * @example ./api/user/change_password.json
+   */
+
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
    */
   async changePassword(ctx) {
     let params = ctx.request.body;
@@ -255,11 +297,15 @@ class userController extends baseController {
     try {
       let result = await userInst.update(params.uid, data);
       ctx.body = yapi.commons.resReturn(result);
-    } catch (e) {
+    } catch (/** @type {any} */ e) {
       ctx.body = yapi.commons.resReturn(null, 401, e.message);
     }
   }
 
+  /**
+   * @param {any} uid 用户uid
+   * @returns {Promise<any>}
+   */
   async handlePrivateGroup(uid) {
     var groupInst = yapi.getInst(groupModel);
     await groupInst.save({
@@ -271,6 +317,11 @@ class userController extends baseController {
     });
   }
 
+  /**
+   * @param {any} uid 用户uid
+   * @param {any} passsalt 密码盐
+   * @returns {void}
+   */
   setLoginCookie(uid, passsalt) {
     let token = jwt.sign({ uid: uid }, passsalt, { expiresIn: '7 days' });
 
@@ -295,6 +346,11 @@ class userController extends baseController {
    * @param {String} [username] 用户名
    * @returns {Object}
    * @example ./api/user/login.json
+   */
+
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
    */
   async reg(ctx) {
     //注册
@@ -344,7 +400,7 @@ class userController extends baseController {
       let user = await userInst.save(data);
 
       this.setLoginCookie(user._id, user.passsalt);
-      await this.handlePrivateGroup(user._id, user.username, user.email);
+      await this.handlePrivateGroup(user._id);
       ctx.body = yapi.commons.resReturn({
         uid: user._id,
         email: user.email,
@@ -361,7 +417,7 @@ class userController extends baseController {
           params.email
         } 已经注册成功</p>`
       });
-    } catch (e) {
+    } catch (/** @type {any} */ e) {
       ctx.body = yapi.commons.resReturn(null, 401, e.message);
     }
   }
@@ -377,6 +433,11 @@ class userController extends baseController {
    * @returns {Object}
    * @example
    */
+
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
+   */
   async list(ctx) {
     let page = ctx.request.query.page || 1,
       limit = ctx.request.query.limit || 10;
@@ -390,7 +451,7 @@ class userController extends baseController {
         total: Math.ceil(count / limit),
         list: user
       }));
-    } catch (e) {
+    } catch (/** @type {any} */ e) {
       return (ctx.body = yapi.commons.resReturn(null, 402, e.message));
     }
   }
@@ -404,6 +465,11 @@ class userController extends baseController {
    * @foldnumber 10
    * @returns {Object}
    * @example
+   */
+
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
    */
   async findById(ctx) {
     //根据id获取用户信息
@@ -434,7 +500,7 @@ class userController extends baseController {
         add_time: result.add_time,
         up_time: result.up_time
       }));
-    } catch (e) {
+    } catch (/** @type {any} */ e) {
       return (ctx.body = yapi.commons.resReturn(null, 402, e.message));
     }
   }
@@ -448,6 +514,11 @@ class userController extends baseController {
    * @foldnumber 10
    * @returns {Object}
    * @example
+   */
+
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
    */
   async del(ctx) {
     //根据id删除一个用户
@@ -468,7 +539,7 @@ class userController extends baseController {
       let result = await userInst.del(id);
 
       ctx.body = yapi.commons.resReturn(result);
-    } catch (e) {
+    } catch (/** @type {any} */ e) {
       ctx.body = yapi.commons.resReturn(null, 402, e.message);
     }
   }
@@ -485,6 +556,11 @@ class userController extends baseController {
    * @foldnumber 10
    * @returns {Object}
    * @example
+   */
+
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
    */
   async update(ctx) {
     //更新用户信息
@@ -512,6 +588,7 @@ class userController extends baseController {
         return (ctx.body = yapi.commons.resReturn(null, 400, 'uid不存在'));
       }
 
+      /** @type {any} */
       let data = {
         up_time: yapi.commons.time()
       };
@@ -538,7 +615,7 @@ class userController extends baseController {
 
       let result = await userInst.update(id, data);
       ctx.body = yapi.commons.resReturn(result);
-    } catch (e) {
+    } catch (/** @type {any} */ e) {
       ctx.body = yapi.commons.resReturn(null, 402, e.message);
     }
   }
@@ -553,6 +630,10 @@ class userController extends baseController {
    * @example
    */
 
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
+   */
   async uploadAvatar(ctx) {
     try {
       let basecode = ctx.request.body.basecode;
@@ -572,14 +653,14 @@ class userController extends baseController {
         return (ctx.body = yapi.commons.resReturn(null, 400, '仅支持jpeg和png格式的图片'));
       }
       let strLength = basecode.length;
-      if (parseInt(strLength - (strLength / 8) * 2) > 200000) {
+      if (parseInt(/** @type {any} */ (strLength - (strLength / 8) * 2)) > 200000) {
         return (ctx.body = yapi.commons.resReturn(null, 400, '图片大小不能超过200kb'));
       }
 
       let avatarInst = yapi.getInst(avatarModel);
       let result = await avatarInst.up(this.getUid(), basecode, type);
       ctx.body = yapi.commons.resReturn(result);
-    } catch (e) {
+    } catch (/** @type {any} */ e) {
       ctx.body = yapi.commons.resReturn(null, 401, e.message);
     }
   }
@@ -594,6 +675,10 @@ class userController extends baseController {
    * @example
    */
 
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
+   */
   async avatar(ctx) {
     try {
       let uid = ctx.query.uid ? ctx.query.uid : this.getUid();
@@ -610,7 +695,7 @@ class userController extends baseController {
 
       ctx.set('Content-type', type);
       ctx.body = dataBuffer;
-    } catch (err) {
+    } catch (/** @type {any} */ err) {
       ctx.body = 'error:' + err.message;
     }
   }
@@ -624,6 +709,11 @@ class userController extends baseController {
    * @param {String} q
    * @return {Object}
    * @example ./api/user/search.json
+   */
+
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
    */
   async search(ctx) {
     const { q } = ctx.request.query;
@@ -671,8 +761,14 @@ class userController extends baseController {
    * @return {Object}
    * @example
    */
+
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
+   */
   async project(ctx) {
     let { id, type } = ctx.request.query;
+    /** @type {any} */
     let result = {};
     try {
       if (type === 'interface') {
@@ -722,7 +818,7 @@ class userController extends baseController {
       }
 
       return (ctx.body = yapi.commons.resReturn(result));
-    } catch (e) {
+    } catch (/** @type {any} */ e) {
       return (ctx.body = yapi.commons.resReturn(result, 422, e.message));
     }
   }
