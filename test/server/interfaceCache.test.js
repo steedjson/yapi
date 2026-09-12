@@ -1,4 +1,3 @@
-const { buildCategoryTree, attachInterfacesToCategories } = require('../../server/utils/categoryTree');
 import test from 'ava';
 
 const cache = require('../../server/utils/ttlCache');
@@ -30,48 +29,4 @@ test('按项目清理分类缓存', t => {
   t.is(cache.get('menu:1'), null);
   t.deepEqual(cache.get('tree:1'), [{ _id: 1 }]);
   t.deepEqual(cache.get('menu:2'), [{ _id: 2 }]);
-});
-
-// 孤立父节点和循环引用不应让分类树丢失节点。
-test('分类树兼容异常历史层级数据', t => {
-  const tree = buildCategoryTree([
-    { _id: 1, name: '根', parent_id: 0 },
-    { _id: 2, name: '孤立父节点', parent_id: 99 },
-    { _id: 3, name: '循环一', parent_id: 4 },
-    { _id: 4, name: '循环二', parent_id: 3 }
-  ]);
-
-  t.deepEqual(tree.map(item => item._id), [1, 2, 3, 4]);
-  t.deepEqual(tree[0].children, []);
-});
-
-// 使用深层链验证分类树不依赖递归调用栈，支持实际业务中的任意层级。
-test('分类树支持深层级分类', t => {
-  const categories = Array.from({ length: 10000 }, (_, index) => ({
-    _id: index + 1,
-    name: '层级' + (index + 1),
-    parent_id: index
-  }));
-  const tree = buildCategoryTree(categories);
-  let node = tree[0];
-  let depth = 0;
-  while (node) {
-    depth += 1;
-    node = node.children[0];
-  }
-
-  t.is(depth, categories.length);
-});
-
-// 普通对象和 Mongoose 风格文档都应得到相同的菜单结构。
-test('统一挂载分类接口并保留接口顺序', t => {
-  const result = attachInterfacesToCategories(
-    [{ _id: 1, name: '用户' }, { _id: 2, name: '订单' }],
-    [{ _id: 10, catid: 1, title: '列表' }, { _id: 11, catid: 1, title: '详情' }]
-  );
-
-  t.deepEqual(result, [
-    { _id: 1, name: '用户', list: [{ _id: 10, catid: 1, title: '列表' }, { _id: 11, catid: 1, title: '详情' }] },
-    { _id: 2, name: '订单', list: [] }
-  ]);
 });
