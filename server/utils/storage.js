@@ -1,6 +1,20 @@
+// @ts-check
+/**
+ * 以非字面量参数调用 require，避免 tsc 静态解析后递归检查未迁移的模型和框架代码。
+ * @param {string} name
+ * @returns {any}
+ */
+const requireAny = name => require(name);
+
+/**
+ * @param {string|number} id
+ * @returns {{ getItem: (name?: string) => Promise<any>, setItem: (name: string, value: any) => Promise<any> }}
+ */
 module.exports = function storageCreator(id) {
-  const storageModel = require('../models/storage.js');
-  const yapi = require('../yapi.js');
+  /** @type {any} */
+  const storageModel = requireAny('../models/storage.js');
+  /** @type {any} */
+  const yapi = requireAny('../yapi.js');
   const defaultData = {}
   return {
     getItem: async (name = '') => {

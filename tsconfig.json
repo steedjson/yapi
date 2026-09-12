@@ -12,6 +12,7 @@
     "common/types/**/*.d.ts",
     "server/utils/ttlCache.js",
     "server/utils/categoryTree.js",
-    "server/utils/token.js"
+    "server/utils/token.js",
+    "server/utils/storage.js"
   ]
 }
