@@ -1,9 +1,19 @@
-const yapi = require('../yapi.js');
+// @ts-check
+/**
+ * @param {string} name
+ * @returns {any}
+ */
+const requireAny = name => require(name);
+
+const yapi = requireAny('../yapi.js');
 const baseController = require('./base.js');
-const followModel = require('../models/follow');
-const projectModel = require('../models/project');
+const followModel = requireAny('../models/follow');
+const projectModel = requireAny('../models/project');
 
 class followController extends baseController {
+  /**
+   * @param {any} ctx Koa 请求上下文
+   */
   constructor(ctx) {
     super(ctx);
     this.Model = yapi.getInst(followModel);
@@ -22,6 +32,10 @@ class followController extends baseController {
    * @example /follow/list
    */
 
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<void>}
+   */
   async list(ctx) {
     let uid = this.getUid();
     // 关注列表暂时不分页 page & limit 为分页配置
@@ -38,7 +52,7 @@ class followController extends baseController {
       ctx.body = yapi.commons.resReturn({
         list: result
       });
-    } catch (err) {
+    } catch (/** @type {any} */ err) {
       ctx.body = yapi.commons.resReturn(null, 402, err.message);
     }
   }
@@ -54,6 +68,10 @@ class followController extends baseController {
    * @example /follow/del
    */
 
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<void>}
+   */
   async del(ctx) {
     let params = ctx.request.body,
       uid = this.getUid();
@@ -71,7 +89,7 @@ class followController extends baseController {
     try {
       let result = await this.Model.del(params.projectid, this.getUid());
       ctx.body = yapi.commons.resReturn(result);
-    } catch (e) {
+    } catch (/** @type {any} */ e) {
       ctx.body = yapi.commons.resReturn(null, 402, e.message);
     }
   }
@@ -89,6 +107,10 @@ class followController extends baseController {
    * @example /follow/add
    */
 
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<void>}
+   */
   async add(ctx) {
     let params = ctx.request.body;
     params = yapi.commons.handleParams(params, {
@@ -126,7 +148,7 @@ class followController extends baseController {
         'color'
       ]);
       ctx.body = yapi.commons.resReturn(result);
-    } catch (e) {
+    } catch (/** @type {any} */ e) {
       ctx.body = yapi.commons.resReturn(null, 402, e.message);
     }
   }

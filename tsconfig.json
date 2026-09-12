@@ -17,6 +17,8 @@
     "server/utils/token.js",
     "server/utils/storage.js",
     "server/utils/sandbox.js",
-    "server/controllers/base.js"
+    "server/controllers/base.js",
+    "server/controllers/log.js",
+    "server/controllers/follow.js"
   ]
 }

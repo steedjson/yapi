@@ -1,11 +1,21 @@
-const logModel = require('../models/log.js');
-const yapi = require('../yapi.js');
+// @ts-check
+/**
+ * @param {string} name
+ * @returns {any}
+ */
+const requireAny = name => require(name);
+
+const logModel = requireAny('../models/log.js');
+const yapi = requireAny('../yapi.js');
 const baseController = require('./base.js');
-const groupModel = require('../models/group');
-const projectModel = require('../models/project');
-const interfaceModel = require('../models/interface');
+const groupModel = requireAny('../models/group');
+const projectModel = requireAny('../models/project');
+const interfaceModel = requireAny('../models/interface');
 
 class logController extends baseController {
+  /**
+   * @param {any} ctx Koa 请求上下文
+   */
   constructor(ctx) {
     super(ctx);
     this.Model = yapi.getInst(logModel);
@@ -39,6 +49,10 @@ class logController extends baseController {
    * @example /log/list
    */
 
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<void>}
+   */
   async list(ctx) {
     let typeid = ctx.request.query.typeid,
       page = ctx.request.query.page || 1,
@@ -54,8 +68,8 @@ class logController extends baseController {
     try {
       if (type === 'group') {
         let projectList = await this.projectModel.list(typeid);
-        let projectIds = [],
-          projectDatas = {};
+        let /** @type {any} */ projectIds = [],
+          /** @type {any} */ projectDatas = {};
         for (let i in projectList) {
           projectDatas[projectList[i]._id] = projectList[i];
           projectIds[i] = projectList[i]._id;
@@ -66,7 +80,7 @@ class logController extends baseController {
           page,
           limit
         );
-        projectLogList.forEach((item, index) => {
+        projectLogList.forEach((/** @type {any} */ item, /** @type {any} */ index) => {
           item = item.toObject();
           if (item.type === 'project') {
             item.content =
@@ -89,7 +103,7 @@ class logController extends baseController {
           list: result
         });
       }
-    } catch (err) {
+    } catch (/** @type {any} */ err) {
       ctx.body = yapi.commons.resReturn(null, 402, err.message);
     }
   }
@@ -104,11 +118,16 @@ class logController extends baseController {
    * @example /log/list
    */
 
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<void>}
+   */
   async listByUpdate(ctx) {
     let params = ctx.params;
 
     try {
       let { typeid, type, apis } = params;
+      /** @type {any[]} */
       let list = [];
       let projectDatas = await this.projectModel.getBaseInfo(typeid, 'basepath');
       let basePath = projectDatas.toObject().basepath;
@@ -136,7 +155,7 @@ class logController extends baseController {
 
       // let result = await this.Model.listWithCatid(typeid, type, catId);
       ctx.body = yapi.commons.resReturn(list);
-    } catch (err) {
+    } catch (/** @type {any} */ err) {
       ctx.body = yapi.commons.resReturn(null, 402, err.message);
     }
   }
