@@ -1,3 +1,12 @@
+// @ts-check
+
+/**
+ * @typedef {Object} FormatItem
+ * @property {string} name
+ * @property {string} [title]
+ */
+
+/** @type {FormatItem[]} */
 const formats = [
   {
     name: 'url',
