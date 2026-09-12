@@ -15,11 +15,12 @@ require('../ykit.config');
 const root = path.resolve(__dirname, '..');
 const client = path.join(root, 'client');
 const isProduction = process.env.NODE_ENV === 'production';
+const isDevelopment = !isProduction;
 
 module.exports = {
   context: client,
   entry: {
-    index: ['./index.js'],
+    index: [ ...(isDevelopment ? ['webpack-hot-middleware/client?path=/__webpack_hmr&reload=true'] : []), './index.js' ],
     lib: ['react', 'react-dom', 'redux', 'redux-promise', 'react-router', 'react-router-dom', 'prop-types', 'react-dnd-html5-backend', 'react-dnd', 'reactabular-table', 'reactabular-dnd', 'table-resolver'],
     lib2: ['brace', 'json5', 'url', 'axios'],
     lib3: ['mockjs', 'moment', 'recharts']
@@ -27,9 +28,9 @@ module.exports = {
   devtool: isProduction ? false : 'cheap-module-eval-source-map',
   output: {
     path: path.join(root, 'static/prd'),
-    publicPath: '',
-    filename: '[name]@[chunkhash].js',
-    chunkFilename: '[id]@[chunkhash].js'
+    publicPath: isDevelopment ? '/prd/' : '',
+    filename: isDevelopment ? '[name]@dev.js' : '[name]@[chunkhash].js',
+    chunkFilename: isDevelopment ? '[id]@dev.js' : '[id]@[chunkhash].js'
   },
   resolve: {
     extensions: ['.js', '.jsx', '.css', '.json', '.string', '.tpl'],
@@ -78,12 +79,13 @@ module.exports = {
     ]
   },
   plugins: [
-    new ExtractTextPlugin('[name]@[contenthash].css'),
+    new ExtractTextPlugin(isDevelopment ? '[name]@dev.css' : '[name]@[contenthash].css'),
     new webpack.optimize.CommonsChunkPlugin({
       name: ['lib3', 'lib2', 'lib', 'manifest'],
-      filename: '[name]@[chunkhash].js',
+      filename: isDevelopment ? '[name]@dev.js' : '[name]@[chunkhash].js',
       minChunks: 2
     }),
+    ...(isDevelopment ? [new webpack.HotModuleReplacementPlugin()] : []),
     new webpack.DefinePlugin({
       'process.env.NODE_ENV': JSON.stringify(isProduction ? 'production' : 'dev'),
       'process.env.version': JSON.stringify(packageInfo.version),
