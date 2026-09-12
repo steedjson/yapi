@@ -601,7 +601,7 @@ YAPI_STANDALONE_BABEL=1 npm run build-client
 
 该开关只在现有 YKit 流程内部替换 Babel/HappyPack 注入，不等于独立入口。
 
-2026 年 9 月 12 日已增加 `npm run build-client-standalone`，使用顶层 Webpack `2.7.0` 直接完成生产构建，并在清理旧产物后与默认构建对比：两者均生成 12 个核心产物和 `assets.js`，未发现旧产物残留。由于 chunk hash 和部分 vendor 内容不同，尚未宣称二者字节级一致；默认 YKit 构建和 legacy 回退仍保留。standalone 开发服务、浏览器完整验收和正式替换默认入口尚未完成。
+2026 年 9 月 12 日已增加 `npm run build-client-standalone`，使用顶层 Webpack `2.7.0` 直接完成生产构建，并在清理旧产物后与默认构建对比：两者均生成 12 个核心产物和 `assets.js`，未发现旧产物残留。由于 chunk hash 和部分 vendor 内容不同，尚未宣称二者字节级一致；默认 YKit 构建和 legacy 回退仍保留。已增加 `npm run dev-client-standalone`，在备用端口 `4001` 验证页面返回 HTTP `200`、`/prd/index@dev.js` 返回 HTTP `200`，并验证 Webpack HMR 中间件编译成功。完整浏览器验收、固定 `4000` 端口验收和正式替换默认入口尚未完成。
 
 ### 不做
 
