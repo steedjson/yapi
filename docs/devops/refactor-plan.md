@@ -704,7 +704,7 @@ UI 升级与后端、数据库分离，先做页面级替换，保持接口调�
 - 补充接口保存参数、请求头和表单字段的兼容类型声明，`npm run typecheck` 已通过；
 - 补充接口详情、分类菜单和 OpenAPI/Swagger 导入结果的兼容类型声明，未改变运行时模块和数据结构；
 - 对 `common/HandleImportData.js` 做了独立 `checkJs` 可行性检查；由于旧依赖缺少类型声明且函数参数长期为动态结构，当前不直接开启全文件严格检查，避免用大量 `any` 掩盖真实类型问题。
-- 通过 `npm run typecheck` 后，再逐步将无行为变化的模块迁移为 TypeScript；当前已对 `server/utils/ttlCache.js` 和 `server/utils/categoryTree.js` 开启 `checkJs`，不改变运行时模块格式。
+- 通过 `npm run typecheck` 后，再逐步将无行为变化的模块迁移为 TypeScript；当前已对 `server/utils/ttlCache.js`、`server/utils/categoryTree.js` 和 `server/utils/token.js` 开启 `checkJs`，并补充了轻量 Node 运行时与加密模块的 JSDoc/d.ts 类型声明，不改变运行时模块格式与 CommonJS 导出。
 - 当前迁移门槛：在前端构建链完成可回滚的独立入口前，不把客户端 `.js` 直接改为 `.ts/.tsx`，避免类型编译器和旧 Babel 链同时变化。分类树已从控制器中提取为独立工具，并保留历史平铺、缺失父节点和异常循环数据兼容；分类列表与分类树共用接口挂载逻辑，避免两条读取路径行为分叉。接口模型的批量读取方法已统一空 ID 列表的快速返回判断，但保留非空参数原样传递，避免改变历史查询行为。
 
 ## Phase 15：局部升级 UI
