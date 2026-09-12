@@ -57,3 +57,38 @@ export interface InterfaceFormField {
   desc?: string;
   required?: boolean | string;
 }
+
+/** 接口详情在保存参数基础上的完整兼容视图。 */
+export interface InterfaceDetail extends InterfaceSaveParams {
+  _id: number;
+  add_time?: number;
+  up_time?: number;
+  query_path?: {
+    path: string;
+    params: Array<{ name: string; value?: string }>;
+  };
+}
+
+/** 分类菜单返回项，兼容平铺菜单和带子分类的树节点。 */
+export interface CategoryMenuItem extends InterfaceCategory {
+  list?: InterfaceSummary[];
+  children?: CategoryMenuItem[];
+}
+
+/** 导入结果中的单个接口最小结构。 */
+export interface ImportedApi extends Partial<InterfaceSaveParams> {
+  title: string;
+  path: string;
+  method: string;
+}
+
+/** OpenAPI/Swagger 导入结果的兼容结构。 */
+export interface ImportResult {
+  basePath?: string;
+  apis: ImportedApi[];
+  categories?: Array<{
+    name: string;
+    path?: string;
+    parent_path?: string;
+  }>;
+}
