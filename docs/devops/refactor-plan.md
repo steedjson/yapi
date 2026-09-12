@@ -599,7 +599,9 @@ YKit 兼容修复
 YAPI_STANDALONE_BABEL=1 npm run build-client
 ```
 
-该开关只在现有 YKit 流程内部替换 Babel/HappyPack 注入，**不等于已经建立独立 Webpack 构建入口**。Node.js `24.21.0` 下现有默认构建和 legacy 回退构建均已验证成功；`build/` standalone 配置的试验结果未达到配置复用、产物一致性和错误隔离要求，未合入仓库。Phase 12 的“脱离 YKit 配置注入”仍未完成，后续必须先由主 Agent 完成方案审查，再以最小改动实现并验证。
+该开关只在现有 YKit 流程内部替换 Babel/HappyPack 注入，不等于独立入口。
+
+2026 年 9 月 12 日已增加 `npm run build-client-standalone`，使用顶层 Webpack `2.7.0` 直接完成生产构建，并在清理旧产物后与默认构建对比：两者均生成 12 个核心产物和 `assets.js`，未发现旧产物残留。由于 chunk hash 和部分 vendor 内容不同，尚未宣称二者字节级一致；默认 YKit 构建和 legacy 回退仍保留。standalone 开发服务、浏览器完整验收和正式替换默认入口尚未完成。
 
 ### 不做
 
