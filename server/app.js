@@ -58,12 +58,23 @@ app.use(async (ctx, next) => {
 app.use(koaStatic(yapi.path.join(yapi.WEBROOT, 'static'), { index: indexFile, gzip: true }));
 
 
-const server = app.listen(yapi.WEBCONFIG.port);
+function startServer() {
+  const server = app.listen(yapi.WEBCONFIG.port);
 
-server.setTimeout(yapi.WEBCONFIG.timeout);
+  server.setTimeout(yapi.WEBCONFIG.timeout);
 
-commons.log(
-  `服务已启动，请打开下面链接访问: \nhttp://127.0.0.1${
-    yapi.WEBCONFIG.port == '80' ? '' : ':' + yapi.WEBCONFIG.port
-  }/`
-);
+  commons.log(
+    `服务已启动，请打开下面链接访问: \nhttp://127.0.0.1${
+      yapi.WEBCONFIG.port == '80' ? '' : ':' + yapi.WEBCONFIG.port
+    }/`
+  );
+
+  return server;
+}
+
+// 允许测试和工具复用完整 Koa 应用，但直接执行文件时保持原有启动行为。
+if (require.main === module) {
+  startServer();
+}
+
+module.exports = app;
