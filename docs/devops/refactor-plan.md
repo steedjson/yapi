@@ -614,7 +614,7 @@ YAPI_STANDALONE_BABEL=1 npm run build-client
 2. 在通过 CDP 驱动的纯净 Chrome（`--disable-extensions`、全新 `--user-data-dir`）中复测，SPA 导航同样秒级完成、表格渲染完整、`FINAL wsClosed = false`、无任何异常；
 3. 业务代码静态审查确认 `Interface.js` 仅为 141 行简单分发组件，`InterfaceList.js` 具有严格的 `actionId` 守卫，不存在无界递归。
 
-至此，独立前端构建（standalone）在生产构建、开发服务、DOM 渲染、登录授权、项目分组与 585 接口大列表的全部核心链路在 Node 24 下均已闭环验证通过，Phase 12 研发与验证工作已全部达成。默认 `dev-client` / `build-client` 仍保持双轨，待整体评估后再决定是否切换。
+至此，独立前端构建（standalone）在生产构建、开发服务、DOM 渲染、登录授权、项目分组与 585 接口大列表的全部核心链路在 Node 24 下均已闭环验证通过。2026 年 9 月 13 日已正式将 `package.json` 中的默认 `build-client` 和 `dev-client` 命令切换为 standalone 方案，原有 YKit 方案同步保留为 `build-client-ykit` 与 `dev-client-ykit`，全面实现向后兼容与平滑双轨回滚，Phase 12 目标圆满闭环。
 
 ### 不做
 
@@ -816,7 +816,7 @@ test/common/openapi-normalizer.test.js
 
 ### 独立开发页 DOM 验收记录（2026 年 9 月 12 日）
 
-`npm run dev-client-standalone` 与 `node server/app.js dev` 联调后，浏览器打开 `http://127.0.0.1:3000/` 曾得到空白页。提交 `f8412656` 修复 CommonsChunk 加载顺序后，首页、登录页、分组项目列表及 585 项接口大列表已在纯净浏览器环境（IAB 与禁用扩展的系统 Chrome）下全部通过 DOM 交互验收；此前观察到的标签崩溃已证实为宿主 Chrome 扩展干扰，YApi 本身无路由死循环或内存泄露。默认构建命令仍不切换。
+`npm run dev-client-standalone` 与 `node server/app.js dev` 联调后，浏览器打开 `http://127.0.0.1:3000/` 曾得到空白页。提交 `f8412656` 修复 CommonsChunk 加载顺序后，首页、登录页、分组项目列表及 585 项接口大列表已在纯净浏览器环境（IAB 与禁用扩展的系统 Chrome）下全部通过 DOM 交互验收；此前观察到的标签崩溃已证实为宿主 Chrome 扩展干扰，YApi 本身无路由死循环或内存泄露。2026 年 9 月 13 日已正式完成默认 `build-client` 与 `dev-client` 命令向 standalone 的平滑切换，YKit 方案保留为 `*-ykit` 备份。
 
 每个阶段至少执行：
 
