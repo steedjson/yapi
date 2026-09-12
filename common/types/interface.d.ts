@@ -7,7 +7,7 @@
 export interface InterfaceCategory {
   _id: number;
   name: string;
-  project_id: number;
+  project_id?: number;
   parent_id?: number;
   desc?: string;
   index?: number;
