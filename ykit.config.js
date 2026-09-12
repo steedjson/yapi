@@ -19,6 +19,7 @@ var package = require('./package.json');
 var yapi = require('./server/yapi');
 var isWin = require('os').platform() === 'win32'
 var useStandaloneBabel = process.env.YAPI_STANDALONE_BABEL === '1';
+var clientBuildConfig = require('./build/clientBuildConfig');
 
 var compressPlugin = new CompressionPlugin({
   asset: '[path].gz[query]',
@@ -87,7 +88,7 @@ module.exports = {
           defaultQuery.plugins.push(['import', { libraryName: 'antd' }]);
           return defaultQuery;
         },
-        exclude: isWin ? /(tui-editor|node_modules\\(?!_?(yapi-plugin|json-schema-editor-visual)))/ : /(tui-editor|node_modules\/(?!_?(yapi-plugin|json-schema-editor-visual)))/
+        exclude: clientBuildConfig.getPluginExclude(isWin)
       }
     }
   ],
@@ -159,24 +160,9 @@ module.exports = {
           // 保留原配置插件的 Babel 规则，且继续转换需要被处理的第三方编辑器模块。
           baseConfig.module.loaders.push({
             test: /\.(js|jsx)$/,
-            exclude: isWin
-              ? /(tui-editor|node_modules\\(?!_?(yapi-plugin|json-schema-editor-visual)))/
-              : /(tui-editor|node_modules\/(?!_?(yapi-plugin|json-schema-editor-visual)))/,
+            exclude: clientBuildConfig.getPluginExclude(isWin),
             loader: 'babel-loader',
-            query: {
-              cacheDirectory: true,
-              presets: [
-                ['es2015', { loose: true, modules: false }],
-                'es2017',
-                'stage-0',
-                'react'
-              ],
-              plugins: [
-                'transform-runtime',
-                'transform-decorators-legacy',
-                ['import', { libraryName: 'antd' }]
-              ]
-            }
+            query: clientBuildConfig.getBabelQuery()
           });
         }
 
@@ -188,20 +174,7 @@ module.exports = {
             return Object.assign({}, loader, {
               loader: 'babel-loader',
               // 复用原 HappyPack 的 Babel 配置，确保装饰器和 antd 按需加载行为不变。
-              query: {
-                cacheDirectory: true,
-                presets: [
-                  ['es2015', { loose: true, modules: false }],
-                  'es2017',
-                  'stage-0',
-                  'react'
-                ],
-                plugins: [
-                  'transform-runtime',
-                  'transform-decorators-legacy',
-                  ['import', { libraryName: 'antd' }]
-                ]
-              }
+              query: clientBuildConfig.getBabelQuery()
             });
           });
           baseConfig.plugins = baseConfig.plugins.filter(plugin => {
