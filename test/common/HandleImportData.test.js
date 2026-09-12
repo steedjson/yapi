@@ -3,7 +3,7 @@ import assert from 'assert';
 import axios from 'axios';
 import handleImportData from '../../common/HandleImportData';
 
-test('导入接口应按完整分类路径匹配已有子分类', async t => {
+test.serial('导入接口应按完整分类路径匹配已有子分类', async t => {
   const requests = [];
   const originalPost = axios.post;
   axios.post = async (url, data) => {
@@ -41,7 +41,7 @@ test('导入接口应按完整分类路径匹配已有子分类', async t => {
 });
 
 
-test('导入多级分类找不到父分类时不得降级到根分类', async t => {
+test.serial('导入多级分类找不到父分类时不得降级到根分类', async t => {
   const requests = [];
   const originalPost = axios.post;
   axios.post = async (url, data) => {
@@ -74,7 +74,7 @@ test('导入多级分类找不到父分类时不得降级到根分类', async t 
 });
 
 
-test('导入部分失败时返回准确的结果统计', async t => {
+test.serial('导入部分失败时返回准确的结果统计', async t => {
   const originalPost = axios.post;
   let apiCount = 0;
   axios.post = async url => {
