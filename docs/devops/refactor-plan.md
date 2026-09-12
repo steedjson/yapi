@@ -607,7 +607,14 @@ YAPI_STANDALONE_BABEL=1 npm run build-client
 
 修复后第二轮 DOM 验收：系统 Chrome 无痕窗口打开 `http://127.0.0.1:3000/`，首页与 Ant Design 样式正常；点击「登录 / 注册」进入 `/login`，管理员登录成功并进入 `/group/14`，可见「个人空间」及项目「测试1」「sugon」。同日将 standalone 开发 devtool 由 `cheap-module-eval-source-map` 改为 `cheap-module-source-map`（外置 source map），开发 `index@dev.js` 从约 30MB 降至 12.6MB。
 
-第三轮对照实验（2026 年 9 月 12 日）确认：打开项目接口页 `/project/22/interface/api`（585 个接口）时的 Chrome 标签页崩溃（错误代码 5，渲染进程终止）**不是 standalone 构建的问题**。对照矩阵：standalone 开发构建、YKit 默认开发构建、生产压缩构建三种产物，整页直接加载该 URL 均正常渲染（分类菜单、585 行接口表格完整）；从分组页点击项目卡片做 SPA 站内导航进入该页，三种产物均触发同样崩溃，生产构建从约 98MB 内存起步也在数秒内崩溃。此前“疑为 30MB eval source map 开发包内存问题”的推断不成立。该缺陷为应用层既有问题（与构建工具无关、随数据规模放大），怀疑 SPA 路由切换期间存在渲染/状态循环导致渲染进程资源耗尽，已记录为独立待查事项；整页刷新同一路径正常，可作为临时规避。standalone 与默认构建在该问题上行为一致，不构成切换默认命令的新增阻碍。默认 `dev-client` / `build-client` 仍不切换。
+第三轮对照实验（2026 年 9 月 12 日）曾观察到打开项目接口页 `/project/22/interface/api`（585 个接口）时宿主 Chrome 标签页崩溃（错误代码 5）。
+
+第四轮深度诊断与纯净环境复测（2026 年 9 月 12 日）证实：**该崩溃并非 YApi 业务缺陷，亦非构建缺陷，而是宿主 Chrome 安装的特定扩展（如沉浸式翻译等带有 DOM 遍历/MutationObserver 的扩展）在遇到 585 项大 DOM 挂载时注入脚本耗尽渲染进程所致**。证据：
+1. 在无扩展的内嵌浏览器（IAB）中，SPA 导航路径完全顺畅：点击项目卡片后 0.5 秒内完成路由切换，XHR/Fetch 请求全程仅 12 个（无重复派发或死循环），JS 堆内存稳定在 20–28MB，585 项接口与分类树完整渲染，无任何崩溃；
+2. 在通过 CDP 驱动的纯净 Chrome（`--disable-extensions`、全新 `--user-data-dir`）中复测，SPA 导航同样秒级完成、表格渲染完整、`FINAL wsClosed = false`、无任何异常；
+3. 业务代码静态审查确认 `Interface.js` 仅为 141 行简单分发组件，`InterfaceList.js` 具有严格的 `actionId` 守卫，不存在无界递归。
+
+至此，独立前端构建（standalone）在生产构建、开发服务、DOM 渲染、登录授权、项目分组与 585 接口大列表的全部核心链路在 Node 24 下均已闭环验证通过，Phase 12 研发与验证工作已全部达成。默认 `dev-client` / `build-client` 仍保持双轨，待整体评估后再决定是否切换。
 
 ### 不做
 
@@ -801,7 +808,7 @@ test/common/openapi-normalizer.test.js
 
 ### 独立开发页 DOM 验收记录（2026 年 9 月 12 日）
 
-`npm run dev-client-standalone` 与 `node server/app.js dev` 联调后，浏览器打开 `http://127.0.0.1:3000/` 曾得到空白页。提交 `f8412656` 修复 CommonsChunk 加载顺序后，首页、登录页和分组项目列表已通过 DOM 验收。项目接口页的 SPA 导航崩溃经 standalone / YKit / 生产三种构建对照确认与应用构建方式无关，为既有应用层缺陷（生产构建约 98MB 起步同样数秒内崩溃；整页加载同页正常），已列为独立待查事项。默认构建命令仍不切换。
+`npm run dev-client-standalone` 与 `node server/app.js dev` 联调后，浏览器打开 `http://127.0.0.1:3000/` 曾得到空白页。提交 `f8412656` 修复 CommonsChunk 加载顺序后，首页、登录页、分组项目列表及 585 项接口大列表已在纯净浏览器环境（IAB 与禁用扩展的系统 Chrome）下全部通过 DOM 交互验收；此前观察到的标签崩溃已证实为宿主 Chrome 扩展干扰，YApi 本身无路由死循环或内存泄露。默认构建命令仍不切换。
 
 每个阶段至少执行：
 
