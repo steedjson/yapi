@@ -1,5 +1,37 @@
+// @ts-check
 const defaultTheme = require('./defaultTheme.js');
 
+/**
+ * @typedef {Object} ReportItem
+ * @property {string} [name]
+ * @property {string} [path]
+ * @property {string|number} [status]
+ * @property {Array<{ message?: string }>} [validRes]
+ * @property {string} [url]
+ * @property {any} [headers]
+ * @property {any} [data]
+ * @property {any} [res_header]
+ * @property {any} [res_body]
+ * @property {number} [code]
+ */
+
+/**
+ * @typedef {Object} ReportMessage
+ * @property {number} [failedNum]
+ * @property {number} [successNum]
+ * @property {number} [len]
+ */
+
+/**
+ * @typedef {Object} ReportData
+ * @property {ReportItem[]} list
+ * @property {ReportMessage} message
+ * @property {string|number} [runTime]
+ */
+
+/**
+ * @type {(json: any, arg1?: any, arg2?: string) => any}
+ */
 function json_format(json) {
   if (json && typeof json === 'object') {
     return JSON.stringify(json, null, '   ');
@@ -7,11 +39,20 @@ function json_format(json) {
   return json;
 }
 
+/**
+ * 将测试报告数据渲染为 HTML5 文档字符串
+ * @param {ReportData} reports
+ * @returns {string}
+ */
 module.exports = function renderToHtml(reports) {
   let tp = createHtml(reports);
   return tp;
 };
 
+/**
+ * @param {ReportData} reports
+ * @returns {string}
+ */
 function createHtml(reports) {
   let mdTemplate = ``;
   let left = ``;
@@ -26,6 +67,13 @@ function createHtml(reports) {
   return createHtml5(left, mdTemplate, reports.message, reports.runTime);
 }
 
+/**
+ * @param {string} left
+ * @param {string} tp
+ * @param {ReportMessage} msg
+ * @param {string|number} [runTime]
+ * @returns {string}
+ */
 function createHtml5(left, tp, msg, runTime) {
   let message = ``;
   if (msg.failedNum === 0) {
@@ -73,6 +121,12 @@ function createHtml5(left, tp, msg, runTime) {
   return html;
 }
 
+/**
+ * @param {string} [url]
+ * @param {any} [headers]
+ * @param {any} [params]
+ * @returns {string}
+ */
 function requestHtml(url, headers, params) {
   headers = json_format(headers, null, '   ');
   params = json_format(params);
@@ -106,6 +160,11 @@ function requestHtml(url, headers, params) {
   return html;
 }
 
+/**
+ * @param {any} [res_header]
+ * @param {any} [res_body]
+ * @returns {string}
+ */
 function reponseHtml(res_header, res_body) {
   res_header = json_format(res_header, null, '   ');
   res_body = json_format(res_body, null, '   ');
@@ -136,6 +195,10 @@ function reponseHtml(res_header, res_body) {
   return html;
 }
 
+/**
+ * @param {any} validRes
+ * @returns {string}
+ */
 function validHtml(validRes) {
   if (validRes && Array.isArray(validRes)) {
     validRes = validRes.map((item, index) => {
@@ -157,6 +220,13 @@ function validHtml(validRes) {
   return html;
 }
 
+/**
+ * @param {number|string} index
+ * @param {string} [name]
+ * @param {string} [path]
+ * @param {string|number} [status]
+ * @returns {string}
+ */
 function baseHtml(index, name, path, status) {
   let html = `
   <div>
@@ -176,6 +246,12 @@ function baseHtml(index, name, path, status) {
   return html;
 }
 
+/**
+ * @param {number|string} index
+ * @param {string} [name]
+ * @param {number} [code]
+ * @returns {string}
+ */
 function leftHtml(index, name, code) {
   let html = `
   <div class="list-content">
@@ -187,6 +263,10 @@ function leftHtml(index, name, code) {
   return html;
 }
 
+/**
+ * @param {number} [code]
+ * @returns {string}
+ */
 function codeHtml(code) {
   let codeHtml = ``;
   switch (code) {

@@ -23,6 +23,7 @@
     "server/controllers/follow.js",
     "server/controllers/test.js",
     "common/createContext.js",
-    "server/utils/reportHtml/defaultTheme.js"
+    "server/utils/reportHtml/defaultTheme.js",
+    "server/utils/reportHtml/index.js"
   ]
 }
