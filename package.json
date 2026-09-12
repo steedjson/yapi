@@ -17,7 +17,8 @@
     "build-client": "NODE_ENV=production YAPI_STANDALONE_BABEL=1 ykit pack -m",
     "build-client-legacy": "NODE_ENV=production env -u YAPI_DISABLE_HAPPYPACK -u YAPI_STANDALONE_BABEL ykit pack -m",
     "npm-publish": "node ./npm-publish.js",
-    "docs": "ydoc build"
+    "docs": "ydoc build",
+    "build-client-standalone": "NODE_ENV=production node build/webpack-standalone.js"
   },
   "scripts-info": {
     "start": "运行生产环境服务器",
