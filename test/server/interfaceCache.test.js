@@ -45,6 +45,24 @@ test('分类树兼容异常历史层级数据', t => {
   t.deepEqual(tree[0].children, []);
 });
 
+// 使用深层链验证分类树不依赖递归调用栈，支持实际业务中的任意层级。
+test('分类树支持深层级分类', t => {
+  const categories = Array.from({ length: 10000 }, (_, index) => ({
+    _id: index + 1,
+    name: '层级' + (index + 1),
+    parent_id: index
+  }));
+  const tree = buildCategoryTree(categories);
+  let node = tree[0];
+  let depth = 0;
+  while (node) {
+    depth += 1;
+    node = node.children[0];
+  }
+
+  t.is(depth, categories.length);
+});
+
 // 普通对象和 Mongoose 风格文档都应得到相同的菜单结构。
 test('统一挂载分类接口并保留接口顺序', t => {
   const result = attachInterfacesToCategories(
