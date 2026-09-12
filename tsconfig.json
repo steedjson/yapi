@@ -10,6 +10,7 @@
   },
   "include": [
     "common/types/**/*.d.ts",
+    "common/mergeJsonSchema.js",
     "server/utils/ttlCache.js",
     "server/utils/categoryTree.js",
     "server/utils/token.js",
