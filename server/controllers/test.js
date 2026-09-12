@@ -1,9 +1,19 @@
-const yapi = require('../yapi.js');
+// @ts-check
+/**
+ * @param {string} name
+ * @returns {any}
+ */
+const requireAny = name => require(name);
+
+const yapi = requireAny('../yapi.js');
 const baseController = require('./base.js');
-const fs = require('fs'); //引入文件模块
-const path = require('path');
+const fs = requireAny('fs'); //引入文件模块
+const path = requireAny('path');
 
 class interfaceColController extends baseController {
+  /**
+   * @param {any} ctx Koa 请求上下文
+   */
   constructor(ctx) {
     super(ctx);
   }
@@ -15,6 +25,11 @@ class interfaceColController extends baseController {
    * @returns {Object}
    * @example
    */
+
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<void>}
+   */
   async testGet(ctx) {
     try {
       let query = ctx.query;
@@ -24,7 +39,7 @@ class interfaceColController extends baseController {
         httpOnly: true
       });
       ctx.body = yapi.commons.resReturn(query);
-    } catch (e) {
+    } catch (/** @type {any} */ e) {
       ctx.body = yapi.commons.resReturn(null, 402, e.message);
     }
   }
@@ -37,12 +52,16 @@ class interfaceColController extends baseController {
    * @example
    */
 
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<void>}
+   */
   async testHttpCode(ctx) {
     try {
       let params = ctx.request.body;
       ctx.status = +ctx.query.code || 200;
       ctx.body = yapi.commons.resReturn(params);
-    } catch(e) {
+    } catch (/** @type {any} */ e) {
       ctx.body = yapi.commons.resReturn(null, 402, e.message);
     }
   }
@@ -54,11 +73,16 @@ class interfaceColController extends baseController {
    * @returns {Object}
    * @example
    */
+
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<void>}
+   */
   async testPost(ctx) {
     try {
       let params = ctx.request.body;
       ctx.body = yapi.commons.resReturn(params);
-    } catch (e) {
+    } catch (/** @type {any} */ e) {
       ctx.body = yapi.commons.resReturn(null, 402, e.message);
     }
   }
@@ -70,14 +94,19 @@ class interfaceColController extends baseController {
    * @returns {Object}
    * @example
    */
+
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<void>}
+   */
   async testSingleUpload(ctx) {
     try {
       // let params = ctx.request.body;
       let req = ctx.req;
 
-      let chunks = [],
+      let chunks = /** @type {any[]} */ ([]),
         size = 0;
-      req.on('data', function(chunk) {
+      req.on('data', function(/** @type {any} */ chunk) {
         chunks.push(chunk);
         size += chunk.length;
       });
@@ -93,13 +122,17 @@ class interfaceColController extends baseController {
           chunk.copy(data, pos);
           pos += chunk.length;
         }
-        fs.writeFileSync(path.join(yapi.WEBROOT_RUNTIME, 'test.text'), data, function(err) {
-          return (ctx.body = yapi.commons.resReturn(null, 402, '写入失败'));
-        });
+        fs.writeFileSync(
+          path.join(yapi.WEBROOT_RUNTIME, 'test.text'),
+          data,
+          function(/** @type {any} */ err) {
+            return (ctx.body = yapi.commons.resReturn(null, 402, '写入失败'));
+          }
+        );
       });
 
       ctx.body = yapi.commons.resReturn({ res: '上传成功' });
-    } catch (e) {
+    } catch (/** @type {any} */ e) {
       ctx.body = yapi.commons.resReturn(null, 402, e.message);
     }
   }
@@ -111,13 +144,18 @@ class interfaceColController extends baseController {
    * @returns {Object}
    * @example
    */
+
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<void>}
+   */
   async testFilesUpload(ctx) {
     try {
       let file = ctx.request.body.files.file;
       let newPath = path.join(yapi.WEBROOT_RUNTIME, 'test.text');
       fs.renameSync(file.path, newPath);
       ctx.body = yapi.commons.resReturn({ res: '上传成功' });
-    } catch (e) {
+    } catch (/** @type {any} */ e) {
       ctx.body = yapi.commons.resReturn(null, 402, e.message);
     }
   }
@@ -129,11 +167,16 @@ class interfaceColController extends baseController {
    * @returns {Object}
    * @example
    */
+
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<void>}
+   */
   async testPut(ctx) {
     try {
       let params = ctx.request.body;
       ctx.body = yapi.commons.resReturn(params);
-    } catch (e) {
+    } catch (/** @type {any} */ e) {
       ctx.body = yapi.commons.resReturn(null, 402, e.message);
     }
   }
@@ -145,11 +188,16 @@ class interfaceColController extends baseController {
    * @returns {Object}
    * @example
    */
+
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<void>}
+   */
   async testDelete(ctx) {
     try {
       let body = ctx.request.body;
       ctx.body = yapi.commons.resReturn(body);
-    } catch (e) {
+    } catch (/** @type {any} */ e) {
       ctx.body = yapi.commons.resReturn(null, 402, e.message);
     }
   }
@@ -161,11 +209,16 @@ class interfaceColController extends baseController {
    * @returns {Object}
    * @example
    */
+
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<void>}
+   */
   async testHead(ctx) {
     try {
       let query = ctx.query;
       ctx.body = yapi.commons.resReturn(query);
-    } catch (e) {
+    } catch (/** @type {any} */ e) {
       ctx.body = yapi.commons.resReturn(null, 402, e.message);
     }
   }
@@ -177,11 +230,16 @@ class interfaceColController extends baseController {
    * @returns {Object}
    * @example
    */
+
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<void>}
+   */
   async testOptions(ctx) {
     try {
       let query = ctx.query;
       ctx.body = yapi.commons.resReturn(query);
-    } catch (e) {
+    } catch (/** @type {any} */ e) {
       ctx.body = yapi.commons.resReturn(null, 402, e.message);
     }
   }
@@ -193,11 +251,16 @@ class interfaceColController extends baseController {
    * @returns {Object}
    * @example
    */
+
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<void>}
+   */
   async testPatch(ctx) {
     try {
       let params = ctx.request.body;
       ctx.body = yapi.commons.resReturn(params);
-    } catch (e) {
+    } catch (/** @type {any} */ e) {
       ctx.body = yapi.commons.resReturn(null, 402, e.message);
     }
   }
@@ -208,11 +271,16 @@ class interfaceColController extends baseController {
    * @return {Object}
    * @example
    */
+
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<void>}
+   */
   async testRaw(ctx) {
     try {
       let params = ctx.request.body;
       ctx.body = yapi.commons.resReturn(params);
-    } catch (e) {
+    } catch (/** @type {any} */ e) {
       ctx.body = yapi.commons.resReturn(null, 402, e.message);
     }
   }
@@ -224,6 +292,11 @@ class interfaceColController extends baseController {
    * @return {Object}
    * @example
    */
+
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<void>}
+   */
   async testResponse(ctx) {
     try {
       // let result = `<div><h2>12222222</h2></div>`;
@@ -233,7 +306,7 @@ class interfaceColController extends baseController {
       ctx.set('Content-Type', 'text');
       console.log(ctx.response);
       ctx.body = result;
-    } catch (e) {
+    } catch (/** @type {any} */ e) {
       ctx.body = yapi.commons.resReturn(null, 402, e.message);
     }
   }

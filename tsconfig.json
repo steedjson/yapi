@@ -19,6 +19,7 @@
     "server/utils/sandbox.js",
     "server/controllers/base.js",
     "server/controllers/log.js",
-    "server/controllers/follow.js"
+    "server/controllers/follow.js",
+    "server/controllers/test.js"
   ]
 }
