@@ -26,7 +26,7 @@ module.exports = {
     lib2: ['brace', 'json5', 'url', 'axios'],
     lib3: ['mockjs', 'moment', 'recharts']
   },
-  devtool: isProduction ? false : 'cheap-module-eval-source-map',
+  devtool: isProduction ? false : 'cheap-module-source-map',
   output: {
     path: path.join(root, 'static/prd'),
     publicPath: isDevelopment ? '/prd/' : '',
