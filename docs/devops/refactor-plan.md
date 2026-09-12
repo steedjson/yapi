@@ -347,6 +347,10 @@ test/server/interface-save.test.js
 
 当前进度：已完成请求参数、控制器保存流程和完整 Koa HTTP 应用链路的回归验证。2026 年 9 月 12 日在独立 MongoDB 8.0 容器（端口 27018）中完成管理员登录、`/api/interface/save` 真实新增，以及 `/api/interface/up` 历史接口编辑、回读、恢复和缺失可选字段保存验证；所有响应成功，测试标题已恢复，未留下临时数据。
 
+## Phase 6.1：分类接口专门回归
+
+已新增 `test/server/interface-category.test.js`，覆盖多级和历史平铺分类、孤立父节点、循环引用、10000 层深度分类，以及接口挂载顺序；相关缓存边界测试保留在 `test/server/interfaceCache.test.js`。验证不依赖数据库和 HTTP 服务。
+
 ## Phase 7：增加短期缓存
 
 ### 实施内容
