@@ -1,13 +1,22 @@
-const groupModel = require('../models/group.js');
-const yapi = require('../yapi.js');
+// @ts-check
+/**
+ * 以非字面量参数调用 require，避免 tsc 静态解析后递归检查未迁移的模型和框架代码。
+ * @param {string} name
+ * @returns {any}
+ */
+const requireAny = name => require(name);
+
+const groupModel = requireAny('../models/group.js');
+const yapi = requireAny('../yapi.js');
 const baseController = require('./base.js');
-const projectModel = require('../models/project.js');
-const userModel = require('../models/user.js');
-const interfaceModel = require('../models/interface.js');
-const interfaceColModel = require('../models/interfaceCol.js');
-const interfaceCaseModel = require('../models/interfaceCase.js');
+const projectModel = requireAny('../models/project.js');
+const userModel = requireAny('../models/user.js');
+const interfaceModel = requireAny('../models/interface.js');
+const interfaceColModel = requireAny('../models/interfaceCol.js');
+const interfaceCaseModel = requireAny('../models/interfaceCase.js');
 const _ = require('underscore')
 
+/** @type {{ [key: string]: string }} */
 const rolename = {
   owner: '组长',
   dev: '开发者',
@@ -15,6 +24,9 @@ const rolename = {
 };
 
 class groupController extends baseController {
+  /**
+   * @param {any} ctx Koa 请求上下文
+   */
   constructor(ctx) {
     super(ctx);
 
@@ -95,6 +107,11 @@ class groupController extends baseController {
    * @returns {Object}
    * @example
    */
+
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<void>}
+   */
   async get(ctx) {
     let params = ctx.params;
 
@@ -122,6 +139,11 @@ class groupController extends baseController {
    * @param {String} [owner_uids]  组长[uid]
    * @returns {Object}
    * @example ./api/group/add.json
+   */
+
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<void>}
    */
   async add(ctx) {
     let params = ctx.params;
@@ -196,6 +218,11 @@ class groupController extends baseController {
    * @returns {Promise.<*>}
    */
 
+  /**
+   * @param {any} uid 用户uid
+   * @param {any} [role] 成员角色
+   * @returns {Promise<any>}
+   */
   async getUserdata(uid, role) {
     role = role || 'dev';
     let userInst = yapi.getInst(userModel);
@@ -212,6 +239,10 @@ class groupController extends baseController {
     };
   }
 
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<void>}
+   */
   async getMyGroup(ctx){
     var groupInst = yapi.getInst(groupModel);
     let privateGroup = await groupInst.getByPrivateUid(this.getUid());
@@ -243,6 +274,11 @@ class groupController extends baseController {
    * @returns {Object}
    * @example
    */
+
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<void>}
+   */
   async addMember(ctx) {
     let params = ctx.params;
     let groupInst = yapi.getInst(groupModel);
@@ -268,7 +304,7 @@ class groupController extends baseController {
     let result = await groupInst.addMember(params.id, add_members);
     let username = this.getUsername();
     if (add_members.length) {
-      let members = add_members.map(item => {
+      let /** @type {any} */ members = add_members.map(item => {
         return `<a href = "/user/profile/${item.uid}">${item.username}</a>`;
       });
       members = members.join('、');
@@ -301,6 +337,11 @@ class groupController extends baseController {
    * @param {String} role 权限 ['owner'|'dev']
    * @returns {Object}
    * @example
+   */
+
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<void>}
    */
   async changeMemberRole(ctx) {
     let params = ctx.request.body;
@@ -343,6 +384,10 @@ class groupController extends baseController {
    * @example
    */
 
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<void>}
+   */
   async getMemberList(ctx) {
     let params = ctx.params;
     let groupInst = yapi.getInst(groupModel);
@@ -362,6 +407,10 @@ class groupController extends baseController {
    * @example
    */
 
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<void>}
+   */
   async delMember(ctx) {
     let params = ctx.params;
     let groupInst = yapi.getInst(groupModel);
@@ -398,6 +447,11 @@ class groupController extends baseController {
    * @returns {Object}
    * @example ./api/group/list.json
    */
+
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<void>}
+   */
   async list(ctx) {
     var groupInst = yapi.getInst(groupModel);
     let projectInst = yapi.getInst(projectModel);
@@ -433,11 +487,12 @@ class groupController extends baseController {
       }
 
       const groupIds = newResult.map(item=> item._id);
+      /** @type {any[]} */
       const newGroupIds = [];
 
       let groupByProject = await projectInst.getAuthList(this.getUid());
       if(groupByProject && groupByProject.length > 0){
-        groupByProject.forEach( _data=>{
+        groupByProject.forEach(( /** @type {any} */ _data)=>{
           const _temp = [...groupIds, ...newGroupIds];
           if(!_.find(_temp, id=> id === _data.group_id)){
             newGroupIds.push(_data.group_id)
@@ -445,7 +500,7 @@ class groupController extends baseController {
         })
       }
       let newData = await groupInst.findByGroups(newGroupIds)
-      newData.forEach(_data=>{
+      newData.forEach(( /** @type {any} */ _data)=>{
         _data = _data.toObject();
         newResult.push(_data);
       })
@@ -470,6 +525,11 @@ class groupController extends baseController {
    * @returns {Object}
    * @example ./api/group/del.json
    */
+
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<void>}
+   */
   async del(ctx) {
     if (this.getRole() !== 'admin') {
       return (ctx.body = yapi.commons.resReturn(null, 401, '没有权限'));
@@ -483,7 +543,7 @@ class groupController extends baseController {
     let id = ctx.params.id;
 
     let projectList = await projectInst.list(id, true);
-    projectList.forEach(async p => {
+    projectList.forEach(async ( /** @type {any} */ p) => {
       await interfaceInst.delByProjectId(p._id);
       await interfaceCaseInst.delByProjectId(p._id);
       await interfaceColInst.delByProjectId(p._id);
@@ -507,6 +567,11 @@ class groupController extends baseController {
    * @foldnumber 10
    * @returns {Object}
    * @example ./api/group/up.json
+   */
+
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<void>}
    */
   async up(ctx) {
     let groupInst = yapi.getInst(groupModel);
