@@ -605,7 +605,9 @@ YAPI_STANDALONE_BABEL=1 npm run build-client
 
 同日完成独立开发服务的浏览器 DOM 验收。第一轮结论为登录页白屏。根因不是资源 404，也不是数组空洞覆盖：HTML 脚本顺序为 `manifest → lib3 → lib2 → lib → index`，`lib3` 中的 `moment` 会在 `webpack/buildin/module.js`（webpackPolyfill）注册前执行，触发 `TypeError: __webpack_require__(...) is not a function`。提交 `f8412656` 后将 webpack buildin polyfill 抽进最先加载的 `manifest`，并限制 vendor 抽取只发生在 `lib` 内部，避免 `index` 与 `lib3` 共享的 `react` 被抽进后加载的 `lib2`。
 
-修复后第二轮 DOM 验收：系统 Chrome 无痕窗口打开 `http://127.0.0.1:3000/`，首页与 Ant Design 样式正常；点击「登录 / 注册」进入 `/login`，管理员登录成功并进入 `/group/14`，可见「个人空间」及项目「测试1」「sugon」。打开项目接口页 `/project/22/interface/api` 时标签页崩溃（Chrome 错误代码 5）。开发 `index@dev.js` 约 30MB，使用 `cheap-module-eval-source-map`；该崩溃与登录白屏不是同一问题。默认 `dev-client` / `build-client` 仍不切换。
+修复后第二轮 DOM 验收：系统 Chrome 无痕窗口打开 `http://127.0.0.1:3000/`，首页与 Ant Design 样式正常；点击「登录 / 注册」进入 `/login`，管理员登录成功并进入 `/group/14`，可见「个人空间」及项目「测试1」「sugon」。同日将 standalone 开发 devtool 由 `cheap-module-eval-source-map` 改为 `cheap-module-source-map`（外置 source map），开发 `index@dev.js` 从约 30MB 降至 12.6MB。
+
+第三轮对照实验（2026 年 9 月 12 日）确认：打开项目接口页 `/project/22/interface/api`（585 个接口）时的 Chrome 标签页崩溃（错误代码 5，渲染进程终止）**不是 standalone 构建的问题**。对照矩阵：standalone 开发构建、YKit 默认开发构建、生产压缩构建三种产物，整页直接加载该 URL 均正常渲染（分类菜单、585 行接口表格完整）；从分组页点击项目卡片做 SPA 站内导航进入该页，三种产物均触发同样崩溃，生产构建从约 98MB 内存起步也在数秒内崩溃。此前“疑为 30MB eval source map 开发包内存问题”的推断不成立。该缺陷为应用层既有问题（与构建工具无关、随数据规模放大），怀疑 SPA 路由切换期间存在渲染/状态循环导致渲染进程资源耗尽，已记录为独立待查事项；整页刷新同一路径正常，可作为临时规避。standalone 与默认构建在该问题上行为一致，不构成切换默认命令的新增阻碍。默认 `dev-client` / `build-client` 仍不切换。
 
 ### 不做
 
@@ -799,7 +801,7 @@ test/common/openapi-normalizer.test.js
 
 ### 独立开发页 DOM 验收记录（2026 年 9 月 12 日）
 
-`npm run dev-client-standalone` 与 `node server/app.js dev` 联调后，浏览器打开 `http://127.0.0.1:3000/` 曾得到空白页。提交 `f8412656` 修复 CommonsChunk 加载顺序后，首页、登录页和分组项目列表已通过 DOM 验收。打开项目接口页时 Chrome 标签页崩溃（错误代码 5），疑为 30MB 的 `eval` source map 开发包内存问题，尚未修复。默认构建命令仍不切换。
+`npm run dev-client-standalone` 与 `node server/app.js dev` 联调后，浏览器打开 `http://127.0.0.1:3000/` 曾得到空白页。提交 `f8412656` 修复 CommonsChunk 加载顺序后，首页、登录页和分组项目列表已通过 DOM 验收。项目接口页的 SPA 导航崩溃经 standalone / YKit / 生产三种构建对照确认与应用构建方式无关，为既有应用层缺陷（生产构建约 98MB 起步同样数秒内崩溃；整页加载同页正常），已列为独立待查事项。默认构建命令仍不切换。
 
 每个阶段至少执行：
 
