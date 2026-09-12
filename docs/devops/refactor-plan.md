@@ -601,7 +601,7 @@ YAPI_STANDALONE_BABEL=1 npm run build-client
 
 该开关只在现有 YKit 流程内部替换 Babel/HappyPack 注入，不等于独立入口。
 
-2026 年 9 月 12 日已增加 `npm run build-client-standalone`，使用顶层 Webpack `2.7.0` 直接完成生产构建，并在清理旧产物后与默认构建对比：两者均生成 12 个核心产物和 `assets.js`，未发现旧产物残留。 已使用现有 `static/index.html` 解析 `assets.js` 引用，确认 standalone 生成的 `index.js`、`manifest`、`lib3`、`lib2`、`lib` 共 6 个 JS/CSS 资源全部存在。由于 chunk hash 和部分 vendor 内容不同，尚未宣称二者字节级一致；默认 YKit 构建和 legacy 回退仍保留。已增加 `npm run dev-client-standalone`，在备用端口 `4001` 验证页面返回 HTTP `200`、`static/dev.html` 引用的 6 个 CSS/JS 资源全部返回 HTTP `200`，并验证 Webpack HMR 中间件编译成功。固定端口 `4000` 已验证：页面返回 YApi `dev.html`，`static/dev.html` 引用的 6 个 CSS/JS 资源全部 HTTP `200`，Webpack 编译成功。完整浏览器交互验收和正式替换默认入口尚未完成。资源清单键名兼容已抽到 `build/clientBuildConfig.normalizeAssets`，并有回归测试；YKit 默认构建本身已生成 `index.js` 键，不需要改写。
+2026 年 9 月 12 日已增加 `npm run build-client-standalone`，使用顶层 Webpack `2.7.0` 直接完成生产构建，并在清理旧产物后与默认构建对比：两者均生成 12 个核心产物和 `assets.js`，未发现旧产物残留。 已使用现有 `static/index.html` 解析 `assets.js` 引用，确认 standalone 生成的 `index.js`、`manifest`、`lib3`、`lib2`、`lib` 共 6 个 JS/CSS 资源全部存在。由于 chunk hash 和部分 vendor 内容不同，尚未宣称二者字节级一致；默认 YKit 构建和 legacy 回退仍保留。已增加 `npm run dev-client-standalone`，在备用端口 `4001` 验证页面返回 HTTP `200`、`static/dev.html` 引用的 6 个 CSS/JS 资源全部返回 HTTP `200`，并验证 Webpack HMR 中间件编译成功。固定端口 `4000` 已验证：页面返回 YApi `dev.html`，`static/dev.html` 引用的 6 个 CSS/JS 资源全部 HTTP `200`，Webpack 编译成功。资源清单键名兼容已抽到 `build/clientBuildConfig.normalizeAssets`，并有回归测试锁定 `static/index.html` 的历史键；YKit 默认构建本身已生成 `index.js` 键，不需要改写。2026 年 9 月 12 日再用 `node server/app.js dev` 与 `npm run dev-client-standalone` 在 `3000`/`4000` 联调：页面返回 YApi `dev.html`，6 个开发资源全部 HTTP `200`，管理员登录成功，分组和项目列表读取成功；独立打包含登录文案、`user/login`、`ReactDOM.render` 和 Ant Design 样式。完整浏览器 DOM 交互验收因本机浏览器控制被自动审核拦截，尚未完成；默认 `dev-client` / `build-client` 仍不切换。
 
 ### 不做
 
