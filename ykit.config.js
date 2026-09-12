@@ -183,45 +183,28 @@ module.exports = {
         }
 
         baseConfig.module.noParse = /node_modules\/jsondiffpatch\/public\/build\/.*js/;
-        baseConfig.module.loaders.push({
-          test: /\.less$/,
-          loader: ykit.ExtractTextPlugin.extract(
+        baseConfig.module.loaders.push(
+          clientBuildConfig.getStyleRule(
+            /\.less$/,
+            ykit.ExtractTextPlugin,
             require.resolve('style-loader'),
-            require.resolve('css-loader') +
-              '?sourceMap!' +
-              require.resolve('less-loader') +
-              '?sourceMap'
+            require.resolve('css-loader') + '?sourceMap!' + require.resolve('less-loader') + '?sourceMap'
           )
-        });
+        );
 
-        baseConfig.module.loaders.push({
-          test: /.(gif|jpg|jpeg|png|woff|woff2|eot|ttf|svg)$/,
-          loader: 'url-loader',
-          options: {
-            limit: 8192,
-            name: ['[path][name].[ext]?[sha256#base64:8]']
-          }
-        });
+        baseConfig.module.loaders.push(clientBuildConfig.getAssetRule());
 
-        baseConfig.module.loaders.push({
-          test: /\.(sass|scss)$/,
-          loader: ykit.ExtractTextPlugin.extract(
-            require.resolve('css-loader') +
-              '?sourceMap!' +
-              require.resolve('sass-loader') +
-              '?sourceMap'
+        baseConfig.module.loaders.push(
+          clientBuildConfig.getStyleRule(
+            /\.(sass|scss)$/,
+            ykit.ExtractTextPlugin,
+            require.resolve('css-loader') + '?sourceMap!' + require.resolve('sass-loader') + '?sourceMap',
+            undefined
           )
-        });
+        );
 
-        baseConfig.module.preLoaders.push({
-          test: /\.(js|jsx)$/,
-          exclude: /tui-editor|node_modules|google-diff.js/,
-          loader: 'eslint-loader'
-        });
-
-        baseConfig.module.preLoaders.push({
-          test: /\.json$/,
-          loader: 'json-loader'
+        clientBuildConfig.getPreLoaders().forEach(loader => {
+          baseConfig.module.preLoaders.push(loader);
         });
 
         if (this.env == 'prd') {
