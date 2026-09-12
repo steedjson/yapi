@@ -1,5 +1,12 @@
+// @ts-check
 const Safeify = require('safeify').default;
 
+/**
+ * 执行沙箱隔离动态脚本
+ * @param {Record<string, any>} context
+ * @param {string} script
+ * @returns {Promise<any>}
+ */
 module.exports = async function sandboxFn(context, script) {
     // 创建 safeify 实例
     const safeVm = new Safeify({

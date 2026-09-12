@@ -13,6 +13,7 @@
     "server/utils/ttlCache.js",
     "server/utils/categoryTree.js",
     "server/utils/token.js",
-    "server/utils/storage.js"
+    "server/utils/storage.js",
+    "server/utils/sandbox.js"
   ]
 }

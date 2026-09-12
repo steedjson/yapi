@@ -28,6 +28,11 @@ declare module '*/yapi.js' {
   export = yapi;
 }
 
+declare module 'safeify' {
+  const Safeify: any;
+  export default Safeify;
+}
+
 declare module 'crypto' {
   export interface Hash {
     update(data: any): Hash;
