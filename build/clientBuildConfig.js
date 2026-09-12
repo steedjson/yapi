@@ -24,7 +24,14 @@ function getPluginExclude(isWin) {
     : /(tui-editor|node_modules\/(?!_?(yapi-plugin|json-schema-editor-visual)))/;
 }
 
-module.exports = { getBabelQuery, getPluginExclude };
+function getDefineValues(packageInfo, webConfig, environment) {
+  return {
+    'process.env.NODE_ENV': JSON.stringify(environment === 'prd' ? 'production' : 'dev'),
+    'process.env.version': JSON.stringify(packageInfo.version),
+    'process.env.versionNotify': webConfig.versionNotify,
+    'process.env.scriptEnable': JSON.stringify(webConfig.scriptEnable === true)
+  };
+}
 
 function getStyleRule(test, extractTextPlugin, fallback, use) {
   return {
@@ -60,6 +67,7 @@ function getPreLoaders() {
 module.exports = {
   getBabelQuery,
   getPluginExclude,
+  getDefineValues,
   getStyleRule,
   getAssetRule,
   getPreLoaders

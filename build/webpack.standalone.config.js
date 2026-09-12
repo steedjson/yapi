@@ -87,12 +87,9 @@ module.exports = {
       minChunks: 2
     }),
     ...(isDevelopment ? [new webpack.HotModuleReplacementPlugin()] : []),
-    new webpack.DefinePlugin({
-      'process.env.NODE_ENV': JSON.stringify(isProduction ? 'production' : 'dev'),
-      'process.env.version': JSON.stringify(packageInfo.version),
-      'process.env.versionNotify': yapi.WEBCONFIG.versionNotify,
-      'process.env.scriptEnable': JSON.stringify(yapi.WEBCONFIG.scriptEnable === true)
-    }),
+    new webpack.DefinePlugin(
+      clientBuildConfig.getDefineValues(packageInfo, yapi.WEBCONFIG, isProduction ? 'prd' : 'dev')
+    ),
     ...(isProduction ? [
       new webpack.optimize.UglifyJsPlugin({ compress: { warnings: false } }),
       new AssetsPlugin({
