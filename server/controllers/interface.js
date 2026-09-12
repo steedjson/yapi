@@ -1,25 +1,36 @@
-const interfaceModel = require('../models/interface.js');
-const interfaceCatModel = require('../models/interfaceCat.js');
-const interfaceCaseModel = require('../models/interfaceCase.js');
-const followModel = require('../models/follow.js');
-const groupModel = require('../models/group.js');
+// @ts-check
+/**
+ * @param {string} name
+ * @returns {any}
+ */
+const requireAny = name => require(name);
+
+const interfaceModel = requireAny('../models/interface.js');
+const interfaceCatModel = requireAny('../models/interfaceCat.js');
+const interfaceCaseModel = requireAny('../models/interfaceCase.js');
+const followModel = requireAny('../models/follow.js');
+const groupModel = requireAny('../models/group.js');
 const _ = require('underscore');
-const url = require('url');
+const url = requireAny('url');
 const baseController = require('./base.js');
-const yapi = require('../yapi.js');
-const userModel = require('../models/user.js');
-const projectModel = require('../models/project.js');
-const jsondiffpatch = require('jsondiffpatch');
-const formattersHtml = jsondiffpatch.formatters.html;
-const showDiffMsg = require('../../common/diff-view.js');
+const yapi = requireAny('../yapi.js');
+const userModel = requireAny('../models/user.js');
+const projectModel = requireAny('../models/project.js');
+const jsondiffpatch = requireAny('jsondiffpatch');
+const formattersHtml = jsondiffpatch.formatters && jsondiffpatch.formatters.html;
+const showDiffMsg = requireAny('../../common/diff-view.js');
 const mergeJsonSchema = require('../../common/mergeJsonSchema');
-const fs = require('fs-extra');
-const path = require('path');
+const fs = requireAny('fs-extra');
+const path = requireAny('path');
 const categoryCache = require('../utils/ttlCache');
 const { buildCategoryTree, attachInterfacesToCategories } = require('../utils/categoryTree');
 const handleHeaders = require('../utils/interfaceNormalizer.js');
 
-// 仅清理当前项目的分类缓存，避免写操作导致其他项目缓存无效。
+/**
+ * 仅清理当前项目的分类缓存，避免写操作导致其他项目缓存无效。
+ * @param {any} [projectId]
+ * @returns {void}
+ */
 const clearProjectCategoryCache = projectId => {
   if (projectId !== undefined && projectId !== null) {
     categoryCache.clearByPrefix('menu:' + projectId);
@@ -34,6 +45,9 @@ const clearProjectCategoryCache = projectId => {
 
 
 class interfaceController extends baseController {
+  /**
+   * @param {any} ctx Koa 请求上下文
+   */
   constructor(ctx) {
     super(ctx);
     this.Model = yapi.getInst(interfaceModel);
@@ -169,6 +183,11 @@ class interfaceController extends baseController {
    * @returns {Object}
    * @example ./api/interface/add.json
    */
+
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
+   */
   async add(ctx) {
     let params = ctx.params;
 
@@ -180,10 +199,10 @@ class interfaceController extends baseController {
       }
     }
     params.method = params.method || 'GET';
-    params.res_body_is_json_schema = _.isUndefined(params.res_body_is_json_schema)
+    params.res_body_is_json_schema = params.res_body_is_json_schema === undefined
       ? false
       : params.res_body_is_json_schema;
-    params.req_body_is_json_schema = _.isUndefined(params.req_body_is_json_schema)
+    params.req_body_is_json_schema = params.req_body_is_json_schema === undefined
       ? false
       : params.req_body_is_json_schema;
     params.method = params.method.toUpperCase();
@@ -252,7 +271,7 @@ class interfaceController extends baseController {
     let result = await this.Model.save(data);
     clearProjectCategoryCache(params.project_id);
     yapi.emitHook('interface_add', result).then();
-    this.catModel.get(params.catid).then(cate => {
+    this.catModel.get(params.catid).then((/** @type {any} */ cate) => {
       if (!cate) return;
       let username = this.getUsername();
       let title = `<a href="/user/profile/${this.getUid()}">${username}</a> 为分类 <a href="/project/${
@@ -268,10 +287,10 @@ class interfaceController extends baseController {
         username: username,
         typeid: params.project_id
       });
-      this.projectModel.up(params.project_id, { up_time: new Date().getTime() }).catch(err => {
+      this.projectModel.up(params.project_id, { up_time: new Date().getTime() }).catch((/** @type {any} */ err) => {
         yapi.commons.log(err, 'error');
       });
-    }).catch(err => {
+    }).catch((/** @type {any} */ err) => {
       // 日志分类读取失败不能影响接口新增结果。
       yapi.commons.log(err, 'error');
     });
@@ -307,6 +326,11 @@ class interfaceController extends baseController {
    * @param {String} [res_body] 响应信息，可填写任意字符串，如果res_body_type是json,则会调用mock功能
    * @param  {String} [desc] 接口描述
    * @returns {Object}
+   */
+
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
    */
   async save(ctx) {
     let params = ctx.params;
@@ -349,7 +373,7 @@ class interfaceController extends baseController {
             let new_res_body = yapi.commons.json_parse(params.res_body);
             let old_res_body = yapi.commons.json_parse(item.res_body);
             data.params.res_body = JSON.stringify(mergeJsonSchema(old_res_body, new_res_body), null, 2);
-          } catch (err) {}
+          } catch (/** @type {any} */ err) {}
         }
         await this.up(data);
         // 批量保存必须透传单个接口的错误，避免数据库未完整更新却返回成功。
@@ -369,6 +393,10 @@ class interfaceController extends baseController {
     // return ctx.body = yapi.commons.resReturn(null, 400, 'path第一位必需为 /, 只允许由 字母数字-/_:.! 组成');
   }
 
+  /**
+   * @param {any} params 接口保存参数
+   * @returns {Promise<any>}
+   */
   async autoAddTag(params) {
     //检查是否提交了目前不存在的tag
     let tags = params.tag;
@@ -419,6 +447,11 @@ class interfaceController extends baseController {
    * @returns {Object}
    * @example ./api/interface/get.json
    */
+
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
+   */
   async get(ctx) {
     let params = ctx.params;
     if (!params.id) {
@@ -453,7 +486,7 @@ class interfaceController extends baseController {
         result.username = userinfo.username;
       }
       ctx.body = yapi.commons.resReturn(result);
-    } catch (e) {
+    } catch (/** @type {any} */ e) {
       ctx.body = yapi.commons.resReturn(null, 402, e.message);
     }
   }
@@ -469,6 +502,11 @@ class interfaceController extends baseController {
    * @param {Number}   limit 每一页限制条数
    * @returns {Object}
    * @example ./api/interface/list.json
+   */
+
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
    */
   async list(ctx) {
     let project_id = ctx.params.project_id;
@@ -498,6 +536,7 @@ class interfaceController extends baseController {
           this.Model.listCount({project_id})
         ]);
       } else {
+        /** @type {any} */
         let option = {project_id};
         if (status) {
           if (Array.isArray(status)) {
@@ -528,11 +567,15 @@ class interfaceController extends baseController {
         list: result
       });
       yapi.emitHook('interface_list', result).then();
-    } catch (err) {
+    } catch (/** @type {any} */ err) {
       ctx.body = yapi.commons.resReturn(null, 402, err.message);
     }
   }
 
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
+   */
   async downloadCrx(ctx) {
     let filename = 'crossRequest.zip';
     let dataBuffer = yapi.fs.readFileSync(
@@ -543,6 +586,10 @@ class interfaceController extends baseController {
     ctx.body = dataBuffer;
   }
 
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
+   */
   async listByCat(ctx) {
     let catid = ctx.request.query.catid;
     let page = ctx.request.query.page || 1,
@@ -571,6 +618,7 @@ class interfaceController extends baseController {
       }
 
 
+      /** @type {any} */
       let option = {catid}
       if (status) {
         if (Array.isArray(status)) {
@@ -598,11 +646,15 @@ class interfaceController extends baseController {
         total: Math.ceil(count / limit),
         list: result
       });
-    } catch (err) {
+    } catch (/** @type {any} */ err) {
       ctx.body = yapi.commons.resReturn(null, 402, err.message + '1');
     }
   }
 
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
+   */
   async listByMenu(ctx) {
     let project_id = ctx.params.project_id;
     if (!project_id) {
@@ -625,7 +677,7 @@ class interfaceController extends baseController {
       let interfaces = await this.Model.listByProjectIdForMenu(project_id);
       let newResult = attachInterfacesToCategories(result, interfaces);
       ctx.body = yapi.commons.resReturn(newResult);
-    } catch (err) {
+    } catch (/** @type {any} */ err) {
       ctx.body = yapi.commons.resReturn(null, 402, err.message);
     }
   }
@@ -656,10 +708,15 @@ class interfaceController extends baseController {
    * @returns {Object}
    * @example ./api/interface/up.json
    */
+
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
+   */
   async up(ctx) {
     let params = ctx.params;
 
-    if (!_.isUndefined(params.method)) {
+    if (params.method !== undefined) {
       params.method = params.method || 'GET';
       params.method = params.method.toUpperCase();
     }
@@ -731,7 +788,7 @@ class interfaceController extends baseController {
       }
     }
 
-    if (!_.isUndefined(data.req_params)) {
+    if (data.req_params !== undefined) {
       if (Array.isArray(data.req_params) && data.req_params.length > 0) {
         data.type = 'var';
       } else {
@@ -745,7 +802,7 @@ class interfaceController extends baseController {
     let CurrentInterfaceData;
     try {
       CurrentInterfaceData = await this.Model.get(id);
-    } catch (err) {
+    } catch (/** @type {any} */ err) {
       yapi.commons.log(err, 'error');
     }
     // 更新已经完成时，读取日志快照失败不能再把成功保存误报成失败。
@@ -764,7 +821,7 @@ class interfaceController extends baseController {
       old: interfaceData.toObject()
     };
 
-    this.catModel.get(interfaceData.catid).then(cate => {
+    this.catModel.get(interfaceData.catid).then((/** @type {any} */ cate) => {
       if (!cate) return;
       try {
         let diffView2 = showDiffMsg(jsondiffpatch, formattersHtml, logData);
@@ -785,15 +842,15 @@ class interfaceController extends baseController {
         typeid: cate.project_id,
           data: logData
         });
-      } catch (err) {
+      } catch (/** @type {any} */ err) {
         yapi.commons.log(err, 'error');
       }
-    }).catch(err => {
+    }).catch((/** @type {any} */ err) => {
       // 日志分类读取失败不能影响已经完成的接口保存，同时记录异常便于排查。
       yapi.commons.log(err, 'error');
     });
 
-    this.projectModel.up(interfaceData.project_id, { up_time: new Date().getTime() }).catch(err => {
+    this.projectModel.up(interfaceData.project_id, { up_time: new Date().getTime() }).catch((/** @type {any} */ err) => {
       yapi.commons.log(err, 'error');
     });
     if (params.switch_notice === true) {
@@ -844,12 +901,16 @@ class interfaceController extends baseController {
     return 1;
   }
 
+  /**
+   * @param {any} html 差异视图数据
+   * @returns {any}
+   */
   diffHTML(html) {
     if (html.length === 0) {
       return `<span style="color: #555">没有改动，该操作未改动Api数据</span>`;
     }
 
-    return html.map(item => {
+    return html.map((/** @type {any} */ item) => {
       return `<div>
       <h4 class="title">${item.title}</h4>
       <div>${item.content}</div>
@@ -868,6 +929,10 @@ class interfaceController extends baseController {
    * @example ./api/interface/del.json
    */
 
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
+   */
   async del(ctx) {
     try {
       let id = ctx.request.body.id;
@@ -891,7 +956,7 @@ class interfaceController extends baseController {
       yapi.emitHook('interface_del', id).then();
       await this.caseModel.delByInterfaceId(id);
       let username = this.getUsername();
-      this.catModel.get(data.catid).then(cate => {
+      this.catModel.get(data.catid).then((/** @type {any} */ cate) => {
         if (!cate) return;
         yapi.commons.saveLog({
           content: `<a href="/user/profile/${this.getUid()}">${username}</a> 删除了分类 <a href="/project/${
@@ -902,17 +967,21 @@ class interfaceController extends baseController {
           username: username,
           typeid: cate.project_id
         });
-      }).catch(err => {
+      }).catch((/** @type {any} */ err) => {
         // 日志分类读取失败不能影响接口删除结果。
         yapi.commons.log(err, 'error');
       });
       this.projectModel.up(data.project_id, { up_time: new Date().getTime() }).then();
       ctx.body = yapi.commons.resReturn(result);
-    } catch (err) {
+    } catch (/** @type {any} */ err) {
       ctx.body = yapi.commons.resReturn(null, 402, err.message);
     }
   }
   // 处理编辑冲突
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
+   */
   async solveConflict(ctx) {
     try {
       let id = parseInt(ctx.query.id, 10),
@@ -943,11 +1012,15 @@ class interfaceController extends baseController {
       ctx.websocket.on('close', () => {
         this.Model.upEditUid(id, 0).then();
       });
-    } catch (err) {
+    } catch (/** @type {any} */ err) {
       yapi.commons.log(err, 'error');
     }
   }
 
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
+   */
   async addCat(ctx) {
     try {
       let params = ctx.request.body;
@@ -1003,11 +1076,15 @@ class interfaceController extends baseController {
       });
 
       ctx.body = yapi.commons.resReturn(result);
-    } catch (e) {
+    } catch (/** @type {any} */ e) {
       ctx.body = yapi.commons.resReturn(null, 402, e.message);
     }
   }
 
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
+   */
   async upCat(ctx) {
     try {
       let params = ctx.request.body;
@@ -1060,11 +1137,15 @@ class interfaceController extends baseController {
       });
 
       ctx.body = yapi.commons.resReturn(result);
-    } catch (e) {
+    } catch (/** @type {any} */ e) {
       ctx.body = yapi.commons.resReturn(null, 400, e.message);
     }
   }
 
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
+   */
   async delCat(ctx) {
     try {
       let id = ctx.request.body.catid;
@@ -1094,17 +1175,19 @@ class interfaceController extends baseController {
       let allCats = await this.catModel.list(catData.project_id);
       let catIds = [id];
       for (let i = 0; i < catIds.length; i++) {
-        allCats.forEach(cat => {
+        allCats.forEach((/** @type {any} */ cat) => {
           if (cat.parent_id === catIds[i]) catIds.push(cat._id);
         });
       }
       // 先批量读取待删除分类下的接口，避免每个分类单独查询接口。
       const interfacesByCatid = await this.Model.listByCatids(catIds);
+      /** @type {any} */
       const interfaceGroups = {};
-      interfacesByCatid.forEach(item => {
+      interfacesByCatid.forEach((/** @type {any} */ item) => {
         if (!interfaceGroups[item.catid]) interfaceGroups[item.catid] = [];
         interfaceGroups[item.catid].push(item);
       });
+      /** @type {any[]} */
       let interfaceData = [];
       for (const catId of catIds) {
         interfaceData = interfaceData.concat(interfaceGroups[catId] || []);
@@ -1118,7 +1201,7 @@ class interfaceController extends baseController {
       }
       let r = { deletedCategories: catIds.length, deletedInterfaces: interfaceData.length };
       return (ctx.body = yapi.commons.resReturn(r));
-    } catch (e) {
+    } catch (/** @type {any} */ e) {
       // 删除分类失败时必须写回响应，避免请求悬挂或误返回成功。
       ctx.body = yapi.commons.resReturn(null, 400, e.message);
     }
@@ -1133,6 +1216,11 @@ class interfaceController extends baseController {
    * @param {Number}   project_id 项目id，不能为空
    * @returns {Object}
    * @example ./api/interface/getCatMenu
+   */
+
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
    */
   async getCatMenu(ctx) {
     let project_id = ctx.params.project_id;
@@ -1155,10 +1243,10 @@ class interfaceController extends baseController {
       const cached = categoryCache.get(cacheKey);
       if (cached) return (ctx.body = yapi.commons.resReturn(cached));
       let res = await this.catModel.list(project_id);
-      const menu = res.map(item => item.toObject());
+      const menu = res.map((/** @type {any} */ item) => item.toObject());
       categoryCache.set(cacheKey, menu);
       return (ctx.body = yapi.commons.resReturn(menu));
-    } catch (e) {
+    } catch (/** @type {any} */ e) {
       ctx.body = yapi.commons.resReturn(null, 400, e.message);
     }
   }
@@ -1167,6 +1255,11 @@ class interfaceController extends baseController {
    * 获取树形接口分类
    * @interface /interface/get_cat_tree
    * @method GET
+   */
+
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
    */
   async getCatTree(ctx) {
     let project_id = ctx.params.project_id;
@@ -1192,7 +1285,7 @@ class interfaceController extends baseController {
       const tree = buildCategoryTree(categories);
       categoryCache.set(cacheKey, tree);
       return (ctx.body = yapi.commons.resReturn(tree));
-    } catch (e) {
+    } catch (/** @type {any} */ e) {
       ctx.body = yapi.commons.resReturn(null, 400, e.message);
     }
   }
@@ -1206,6 +1299,11 @@ class interfaceController extends baseController {
    * @param {String}   app_code = '111'
    * @returns {Object}
    *
+   */
+
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
    */
   async getCustomField(ctx) {
     let params = ctx.request.query;
@@ -1224,24 +1322,29 @@ class interfaceController extends baseController {
       }
 
       // 先并行读取分组下的项目，再批量读取项目接口，避免项目循环产生 N+1 查询。
-      const projectGroups = await Promise.all(groups.map(group => this.projectModel.list(group._id)));
+      const projectGroups = await Promise.all(
+        groups.map((/** @type {any} */ group) => this.projectModel.list(group._id))
+      );
+      /** @type {any[]} */
       const projects = [].concat(...projectGroups);
       const projectIds = projects.map(project => project._id);
       const interfaceList = await this.Model.getcustomFieldValueByProjectIds(
         projectIds,
         customFieldValue
       );
+      /** @type {any} */
       const interfacesByProject = {};
-      interfaceList.forEach(item => {
+      interfaceList.forEach((/** @type {any} */ item) => {
         if (!interfacesByProject[item.project_id]) interfacesByProject[item.project_id] = [];
         interfacesByProject[item.project_id].push(item);
       });
 
+      /** @type {any[]} */
       let interfaces = [];
       projects.forEach(project => {
         let inter = interfacesByProject[project._id] || [];
         if (inter.length === 0) return;
-        inter = inter.map(item => {
+        inter = inter.map((/** @type {any} */ item) => {
           item = item.toObject();
           // project_id 只用于批量结果归组，移除后保持原接口明细字段不变。
           delete item.project_id;
@@ -1256,13 +1359,17 @@ class interfaceController extends baseController {
         });
       });
       return (ctx.body = yapi.commons.resReturn(interfaces));
-    } catch (e) {
+    } catch (/** @type {any} */ e) {
       yapi.commons.resReturn(null, 400, e.message);
     }
   }
 
+  /**
+   * @param {any} params 排序参数数组
+   * @returns {any}
+   */
   requiredSort(params) {
-    return params.sort((item1, item2) => {
+    return params.sort((/** @type {any} */ item1, /** @type {any} */ item2) => {
       return item2.required - item1.required;
     });
   }
@@ -1273,9 +1380,14 @@ class interfaceController extends baseController {
    * @method POST
    * @category col
    * @foldnumber 10
-   * @param {Array}  [id, index]
+   * @param {Array}  idIndexList [id, index]
    * @returns {Object}
    * @example
+   */
+
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
    */
   async upIndex(ctx) {
     try {
@@ -1284,11 +1396,11 @@ class interfaceController extends baseController {
         ctx.body = yapi.commons.resReturn(null, 400, '请求参数必须是数组');
       }
       categoryCache.clear();
-      params.forEach(item => {
+      params.forEach((/** @type {any} */ item) => {
         if (item.id) {
           this.Model.upIndex(item.id, item.index).then(
-            res => {},
-            err => {
+            (/** @type {any} */ res) => {},
+            (/** @type {any} */ err) => {
               yapi.commons.log(err.message, 'error');
             }
           );
@@ -1296,7 +1408,7 @@ class interfaceController extends baseController {
       });
 
       return (ctx.body = yapi.commons.resReturn('成功！'));
-    } catch (e) {
+    } catch (/** @type {any} */ e) {
       ctx.body = yapi.commons.resReturn(null, 400, e.message);
     }
   }
@@ -1307,9 +1419,14 @@ class interfaceController extends baseController {
    * @method POST
    * @category col
    * @foldnumber 10
-   * @param {Array}  [id, index]
+   * @param {Array}  idIndexList [id, index]
    * @returns {Object}
    * @example
+   */
+
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
    */
   async upCatIndex(ctx) {
     try {
@@ -1326,23 +1443,31 @@ class interfaceController extends baseController {
       categoryCache.clear();
 
       return (ctx.body = yapi.commons.resReturn('成功！'));
-    } catch (e) {
+    } catch (/** @type {any} */ e) {
       ctx.body = yapi.commons.resReturn(null, 400, e.message);
     }
   }
 
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
+   */
   async schema2json(ctx) {
     let schema = ctx.request.body.schema;
     let required = ctx.request.body.required;
 
     let res = yapi.commons.schemaToJson(schema, {
-      alwaysFakeOptionals: _.isUndefined(required) ? true : required
+      alwaysFakeOptionals: required === undefined ? true : required
     });
     // console.log('res',res)
     return (ctx.body = res);
   }
 
   // 获取开放接口数据
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
+   */
   async listByOpen(ctx) {
     let project_id = ctx.request.query.project_id;
 
@@ -1363,18 +1488,20 @@ class interfaceController extends baseController {
     let basepath = project.basepath;
     try {
       const result = await this.catModel.list(project_id);
-      const catIds = result.map(item => item._id);
+      const catIds = result.map((/** @type {any} */ item) => item._id);
       // 一次读取项目下所有开放接口，避免按分类逐个查询。
       const openInterfaces = await this.Model.listOpenByCatids(catIds);
+      /** @type {any} */
       const interfacesByCatid = {};
-      openInterfaces.forEach(item => {
+      openInterfaces.forEach((/** @type {any} */ item) => {
         if (!interfacesByCatid[item.catid]) interfacesByCatid[item.catid] = [];
         interfacesByCatid[item.catid].push(item);
       });
       // 按原分类顺序拼接，保持批量查询前的响应顺序不变。
+      /** @type {any[]} */
       const newResult = [];
-      catIds.forEach(catid => {
-        (interfacesByCatid[catid] || []).forEach(item => {
+      catIds.forEach((/** @type {any} */ catid) => {
+        (interfacesByCatid[catid] || []).forEach((/** @type {any} */ item) => {
           const data = item.toObject();
           data.basepath = basepath;
           newResult.push(data);
@@ -1382,7 +1509,7 @@ class interfaceController extends baseController {
       });
 
       ctx.body = yapi.commons.resReturn(newResult);
-    } catch (err) {
+    } catch (/** @type {any} */ err) {
       ctx.body = yapi.commons.resReturn(null, 402, err.message);
     }
   }

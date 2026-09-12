@@ -29,6 +29,7 @@
     "server/controllers/open.js",
     "server/controllers/user.js",
     "server/controllers/interfaceCol.js",
-    "server/controllers/project.js"
+    "server/controllers/project.js",
+    "server/controllers/interface.js"
   ]
 }
