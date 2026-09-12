@@ -1,12 +1,22 @@
-const interfaceColModel = require('../models/interfaceCol.js');
-const interfaceCaseModel = require('../models/interfaceCase.js');
-const interfaceModel = require('../models/interface.js');
-const projectModel = require('../models/project.js');
+// @ts-check
+/**
+ * @param {string} name
+ * @returns {any}
+ */
+const requireAny = name => require(name);
+
+const interfaceColModel = requireAny('../models/interfaceCol.js');
+const interfaceCaseModel = requireAny('../models/interfaceCase.js');
+const interfaceModel = requireAny('../models/interface.js');
+const projectModel = requireAny('../models/project.js');
 const baseController = require('./base.js');
-const yapi = require('../yapi.js');
+const yapi = requireAny('../yapi.js');
 const _ = require('underscore');
 
 class interfaceColController extends baseController {
+  /**
+   * @param {any} ctx Koa 请求上下文
+   */
   constructor(ctx) {
     super(ctx);
     this.colModel = yapi.getInst(interfaceColModel);
@@ -25,6 +35,11 @@ class interfaceColController extends baseController {
    * @returns {Object}
    * @example
    */
+
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
+   */
   async list(ctx) {
     try {
       let id = ctx.query.project_id;
@@ -35,21 +50,23 @@ class interfaceColController extends baseController {
         }
       }
       let result = await this.colModel.list(id);
-      result = result.sort((a, b) => {
+      result = result.sort((/** @type {any} */ a, /** @type {any} */ b) => {
         return a.index - b.index;
       });
 
       // 接口集和用例统一批量读取，避免“接口集数量 + 用例数量”次数据库查询。
-      const collectionIds = result.map(item => item._id);
+      const collectionIds = result.map((/** @type {any} */ item) => item._id);
       const allCases = await this.caseModel.listByColIds(collectionIds);
-      const interfaceIds = allCases.map(item => item.interface_id);
+      const interfaceIds = allCases.map((/** @type {any} */ item) => item.interface_id);
       const interfaceList = await this.interfaceModel.getBaseinfoByIds(interfaceIds);
+      /** @type {Record<string, any>} */
       const interfaceById = {};
-      interfaceList.forEach(item => {
+      interfaceList.forEach((/** @type {any} */ item) => {
         interfaceById[item._id] = item;
       });
+      /** @type {Record<string, any>} */
       const casesByCollection = {};
-      allCases.forEach(caseItem => {
+      allCases.forEach((/** @type {any} */ caseItem) => {
         const interfaceData = interfaceById[caseItem.interface_id];
         if (!interfaceData) {
           throw new Error(`用例 ${caseItem._id} 对应的接口不存在`);
@@ -60,13 +77,15 @@ class interfaceColController extends baseController {
         casesByCollection[item.col_id].push(item);
       });
 
-      result = result.map(collection => {
+      result = result.map((/** @type {any} */ collection) => {
         const item = collection.toObject();
-        item.caseList = (casesByCollection[item._id] || []).sort((a, b) => a.index - b.index);
+        item.caseList = (casesByCollection[item._id] || []).sort(
+          (/** @type {any} */ a, /** @type {any} */ b) => a.index - b.index
+        );
         return item;
       });
       ctx.body = yapi.commons.resReturn(result);
-    } catch (e) {
+    } catch (/** @type {any} */ e) {
       ctx.body = yapi.commons.resReturn(null, 402, e.message);
     }
   }
@@ -84,6 +103,10 @@ class interfaceColController extends baseController {
    * @example
    */
 
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
+   */
   async addCol(ctx) {
     try {
       let params = ctx.request.body;
@@ -125,7 +148,7 @@ class interfaceColController extends baseController {
       });
       // this.projectModel.up(params.project_id,{up_time: new Date().getTime()}).then();
       ctx.body = yapi.commons.resReturn(result);
-    } catch (e) {
+    } catch (/** @type {any} */ e) {
       ctx.body = yapi.commons.resReturn(null, 402, e.message);
     }
   }
@@ -139,6 +162,11 @@ class interfaceColController extends baseController {
    * @param {String} col_id 接口集id
    * @returns {Object}
    * @example
+   */
+
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
    */
   async getCaseList(ctx) {
     try {
@@ -156,7 +184,7 @@ class interfaceColController extends baseController {
       }
 
       ctx.body = await yapi.commons.getCaseList(id);
-    } catch (e) {
+    } catch (/** @type {any} */ e) {
       ctx.body = yapi.commons.resReturn(null, 402, e.message);
     }
   }
@@ -170,6 +198,11 @@ class interfaceColController extends baseController {
    * @param {String} col_id 接口集id
    * @returns {Object}
    * @example
+   */
+
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
    */
   async getCaseEnvList(ctx) {
     try {
@@ -191,15 +224,20 @@ class interfaceColController extends baseController {
       const projectIds = this.unique(projectList, 'project_id');
       const projectEnvList = await this.projectModel.listBaseInfoByIds(projectIds, 'name env');
       ctx.body = yapi.commons.resReturn(projectEnvList);
-    } catch (e) {
+    } catch (/** @type {any} */ e) {
       ctx.body = yapi.commons.resReturn(null, 402, e.message);
     }
   }
 
+  /**
+   * @param {any} arr 请求参数数组
+   * @returns {any}
+   */
   requestParamsToObj(arr) {
     if (!arr || !Array.isArray(arr) || arr.length === 0) {
       return {};
     }
+    /** @type {Record<string, any>} */
     let obj = {};
     arr.forEach(item => {
       obj[item.name] = '';
@@ -218,6 +256,10 @@ class interfaceColController extends baseController {
    * @example
    */
 
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
+   */
   async getCaseListByVariableParams(ctx) {
     try {
       let id = ctx.query.col_id;
@@ -237,15 +279,17 @@ class interfaceColController extends baseController {
       }
 
       // 一次读取全部关联接口，避免每条用例单独查询接口详情。
-      const interfaceIds = resultList.map(result => result.interface_id);
+      const interfaceIds = resultList.map((/** @type {any} */ result) => result.interface_id);
       const interfaceList = await this.interfaceModel.getByIds(interfaceIds);
+      /** @type {Record<string, any>} */
       const interfaceById = {};
-      interfaceList.forEach(data => {
+      interfaceList.forEach((/** @type {any} */ data) => {
         interfaceById[data._id] = data;
       });
 
       for (let index = 0; index < resultList.length; index++) {
         let result = resultList[index].toObject();
+        /** @type {any} */
         let item = {},
           body,
           query,
@@ -285,7 +329,7 @@ class interfaceColController extends baseController {
       }
 
       ctx.body = yapi.commons.resReturn(resultList);
-    } catch (e) {
+    } catch (/** @type {any} */ e) {
       ctx.body = yapi.commons.resReturn(null, 402, e.message);
     }
   }
@@ -311,6 +355,10 @@ class interfaceColController extends baseController {
    * @example
    */
 
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
+   */
   async addCase(ctx) {
     try {
       let params = ctx.request.body;
@@ -350,7 +398,7 @@ class interfaceColController extends baseController {
       let result = await this.caseModel.save(params);
       let username = this.getUsername();
 
-      this.colModel.get(params.col_id).then(col => {
+      this.colModel.get(params.col_id).then((/** @type {any} */ col) => {
         yapi.commons.saveLog({
           content: `<a href="/user/profile/${this.getUid()}">${username}</a> 在接口集 <a href="/project/${
             params.project_id
@@ -366,11 +414,15 @@ class interfaceColController extends baseController {
       this.projectModel.up(params.project_id, { up_time: new Date().getTime() }).then();
 
       ctx.body = yapi.commons.resReturn(result);
-    } catch (e) {
+    } catch (/** @type {any} */ e) {
       ctx.body = yapi.commons.resReturn(null, 402, e.message);
     }
   }
 
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
+   */
   async addCaseList(ctx) {
     try {
       let params = ctx.request.body;
@@ -395,6 +447,7 @@ class interfaceColController extends baseController {
         return (ctx.body = yapi.commons.resReturn(null, 400, '接口集id不能为空'));
       }
 
+      /** @type {any} */
       let data = {
         uid: this.getUid(),
         index: 0,
@@ -406,8 +459,9 @@ class interfaceColController extends baseController {
 
       // 先批量读取待导入接口和接口集，避免每个用例重复查询关联数据。
       const interfaceList = await this.interfaceModel.getByIds(params.interface_list);
+      /** @type {Record<string, any>} */
       const interfaceById = {};
-      interfaceList.forEach(interfaceData => {
+      interfaceList.forEach((/** @type {any} */ interfaceData) => {
         interfaceById[interfaceData._id] = interfaceData;
       });
       const col = await this.colModel.get(params.col_id);
@@ -466,11 +520,15 @@ class interfaceColController extends baseController {
       this.projectModel.up(params.project_id, { up_time: new Date().getTime() }).then();
 
       ctx.body = yapi.commons.resReturn('ok');
-    } catch (e) {
+    } catch (/** @type {any} */ e) {
       ctx.body = yapi.commons.resReturn(null, 402, e.message);
     }
   }
 
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
+   */
   async cloneCaseList(ctx) {
     try {
       let params = ctx.request.body;
@@ -502,22 +560,27 @@ class interfaceColController extends baseController {
 
       let oldColCaselistData = await this.caseModel.list(col_id, 'all');
 
-      oldColCaselistData = oldColCaselistData.sort((a, b) => {
-        return a.index - b.index;
-      });
+      oldColCaselistData = oldColCaselistData.sort(
+        (/** @type {any} */ a, /** @type {any} */ b) => {
+          return a.index - b.index;
+        }
+      );
 
+      /** @type {any[]} */
       const newCaseList = [];
+      /** @type {Record<string, any>} */
       const oldCaseObj = {};
+      /** @type {any} */
       let obj = {};
 
-      const handleTypeParams = (data, name) => {
+      const handleTypeParams = (/** @type {any} */ data, /** @type {any} */ name) => {
         let res = data[name];
         const type = Object.prototype.toString.call(res);
         if (type === '[object Array]' && res.length) {
           res = JSON.stringify(res);
           try {
             res = JSON.parse(handleReplaceStr(res));
-          } catch (e) {
+          } catch (/** @type {any} */ e) {
             console.log('e ->', e);
           }
         } else if (type === '[object String]' && data[name]) {
@@ -526,9 +589,9 @@ class interfaceColController extends baseController {
         return res;
       };
 
-      const handleReplaceStr = str => {
+      const handleReplaceStr = (/** @type {any} */ str) => {
         if (str.indexOf('$') !== -1) {
-          str = str.replace(/\$\.([0-9]+)\./g, function(match, p1) {
+          str = str.replace(/\$\.([0-9]+)\./g, function(/** @type {any} */ match, /** @type {any} */ p1) {
             p1 = p1.toString();
             return `$.${newCaseList[oldCaseObj[p1]]}.` || '';
           });
@@ -537,7 +600,7 @@ class interfaceColController extends baseController {
       };
 
       // 处理数据里面的$id;
-      const handleParams = data => {
+      const handleParams = (/** @type {any} */ data) => {
         data.col_id = new_col_id;
         delete data._id;
         delete data.add_time;
@@ -561,7 +624,7 @@ class interfaceColController extends baseController {
 
       this.projectModel.up(params.project_id, { up_time: new Date().getTime() }).then();
       ctx.body = yapi.commons.resReturn('ok');
-    } catch (e) {
+    } catch (/** @type {any} */ e) {
       ctx.body = yapi.commons.resReturn(null, 402, e.message);
     }
   }
@@ -586,6 +649,10 @@ class interfaceColController extends baseController {
    * @example
    */
 
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
+   */
   async upCase(ctx) {
     try {
       let params = ctx.request.body;
@@ -615,7 +682,7 @@ class interfaceColController extends baseController {
       delete params.project_id;
       let result = await this.caseModel.up(params.id, params);
       let username = this.getUsername();
-      this.colModel.get(caseData.col_id).then(col => {
+      this.colModel.get(caseData.col_id).then((/** @type {any} */ col) => {
         yapi.commons.saveLog({
           content: `<a href="/user/profile/${this.getUid()}">${username}</a> 在接口集 <a href="/project/${
             caseData.project_id
@@ -632,7 +699,7 @@ class interfaceColController extends baseController {
       this.projectModel.up(caseData.project_id, { up_time: new Date().getTime() }).then();
 
       ctx.body = yapi.commons.resReturn(result);
-    } catch (e) {
+    } catch (/** @type {any} */ e) {
       ctx.body = yapi.commons.resReturn(null, 402, e.message);
     }
   }
@@ -648,6 +715,10 @@ class interfaceColController extends baseController {
    * @example
    */
 
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
+   */
   async getCase(ctx) {
     try {
       let id = ctx.query.caseid;
@@ -679,7 +750,7 @@ class interfaceColController extends baseController {
       result.req_body_is_json_schema = data.req_body_is_json_schema;
       result.res_body_is_json_schema = data.res_body_is_json_schema;
       ctx.body = yapi.commons.resReturn(result);
-    } catch (e) {
+    } catch (/** @type {any} */ e) {
       ctx.body = yapi.commons.resReturn(null, 400, e.message);
     }
   }
@@ -696,6 +767,10 @@ class interfaceColController extends baseController {
    * @example
    */
 
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
+   */
   async upCol(ctx) {
     try {
       let params = ctx.request.body;
@@ -725,7 +800,7 @@ class interfaceColController extends baseController {
       });
 
       ctx.body = yapi.commons.resReturn(result);
-    } catch (e) {
+    } catch (/** @type {any} */ e) {
       ctx.body = yapi.commons.resReturn(null, 400, e.message);
     }
   }
@@ -736,22 +811,26 @@ class interfaceColController extends baseController {
    * @method POST
    * @category col
    * @foldnumber 10
-   * @param {Array}  [id, index]
+   * @param {Array}  \[id, index\]
    * @returns {Object}
    * @example
    */
 
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
+   */
   async upCaseIndex(ctx) {
     try {
       let params = ctx.request.body;
       if (!params || !Array.isArray(params)) {
         ctx.body = yapi.commons.resReturn(null, 400, '请求参数必须是数组');
       }
-      params.forEach(item => {
+      params.forEach((/** @type {any} */ item) => {
         if (item.id) {
           this.caseModel.upCaseIndex(item.id, item.index).then(
-            res => {},
-            err => {
+            (/** @type {any} */ res) => {},
+            (/** @type {any} */ err) => {
               yapi.commons.log(err.message, 'error');
             }
           );
@@ -759,7 +838,7 @@ class interfaceColController extends baseController {
       });
 
       return (ctx.body = yapi.commons.resReturn('成功！'));
-    } catch (e) {
+    } catch (/** @type {any} */ e) {
       ctx.body = yapi.commons.resReturn(null, 400, e.message);
     }
   }
@@ -770,22 +849,26 @@ class interfaceColController extends baseController {
    * @method POST
    * @category col
    * @foldnumber 10
-   * @param {Array}  [id, index]
+   * @param {Array}  \[id, index\]
    * @returns {Object}
    * @example
    */
 
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
+   */
   async upColIndex(ctx) {
     try {
       let params = ctx.request.body;
       if (!params || !Array.isArray(params)) {
         ctx.body = yapi.commons.resReturn(null, 400, '请求参数必须是数组');
       }
-      params.forEach(item => {
+      params.forEach((/** @type {any} */ item) => {
         if (item.id) {
           this.colModel.upColIndex(item.id, item.index).then(
-            res => {},
-            err => {
+            (/** @type {any} */ res) => {},
+            (/** @type {any} */ err) => {
               yapi.commons.log(err.message, 'error');
             }
           );
@@ -793,7 +876,7 @@ class interfaceColController extends baseController {
       });
 
       return (ctx.body = yapi.commons.resReturn('成功！'));
-    } catch (e) {
+    } catch (/** @type {any} */ e) {
       ctx.body = yapi.commons.resReturn(null, 400, e.message);
     }
   }
@@ -809,6 +892,10 @@ class interfaceColController extends baseController {
    * @example
    */
 
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
+   */
   async delCol(ctx) {
     try {
       let id = ctx.query.col_id;
@@ -836,7 +923,7 @@ class interfaceColController extends baseController {
         typeid: colData.project_id
       });
       return (ctx.body = yapi.commons.resReturn(result));
-    } catch (e) {
+    } catch (/** @type {any} */ e) {
       yapi.commons.resReturn(null, 400, e.message);
     }
   }
@@ -846,6 +933,10 @@ class interfaceColController extends baseController {
    * @param {*} ctx
    */
 
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
+   */
   async delCase(ctx) {
     try {
       let caseid = ctx.query.caseid;
@@ -864,7 +955,7 @@ class interfaceColController extends baseController {
       let result = await this.caseModel.del(caseid);
 
       let username = this.getUsername();
-      this.colModel.get(caseData.col_id).then(col => {
+      this.colModel.get(caseData.col_id).then((/** @type {any} */ col) => {
         yapi.commons.saveLog({
           content: `<a href="/user/profile/${this.getUid()}">${username}</a> 删除了接口集 <a href="/project/${
             caseData.project_id
@@ -878,26 +969,36 @@ class interfaceColController extends baseController {
 
       this.projectModel.up(caseData.project_id, { up_time: new Date().getTime() }).then();
       return (ctx.body = yapi.commons.resReturn(result));
-    } catch (e) {
+    } catch (/** @type {any} */ e) {
       yapi.commons.resReturn(null, 400, e.message);
     }
   }
 
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
+   */
   async runCaseScript(ctx) {
     let params = ctx.request.body;
     ctx.body = await yapi.commons.runCaseScript(params, params.col_id, params.interface_id, this.getUid());
   }
 
   // 数组去重
+  /**
+   * @param {any} array 待去重数组
+   * @param {any} compare 去重字段名
+   * @returns {any}
+   */
   unique(array, compare) {
+    /** @type {Record<string, any>} */
     let hash = {};
-    let arr = array.reduce(function(item, next) {
+    let arr = array.reduce(function(/** @type {any} */ item, /** @type {any} */ next) {
       hash[next[compare]] ? '' : (hash[next[compare]] = true && item.push(next));
       // console.log('item',item.project_id)
       return item;
     }, []);
     // 输出去重以后的project_id
-    return arr.map(item => {
+    return arr.map((/** @type {any} */ item) => {
       return item[compare];
     });
   }

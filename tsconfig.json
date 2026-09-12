@@ -27,6 +27,7 @@
     "server/utils/reportHtml/defaultTheme.js",
     "server/utils/reportHtml/index.js",
     "server/controllers/open.js",
-    "server/controllers/user.js"
+    "server/controllers/user.js",
+    "server/controllers/interfaceCol.js"
   ]
 }
