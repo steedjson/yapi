@@ -603,7 +603,9 @@ YAPI_STANDALONE_BABEL=1 npm run build-client
 
 2026 年 9 月 12 日已增加 `npm run build-client-standalone`，使用顶层 Webpack `2.7.0` 直接完成生产构建，并在清理旧产物后与默认构建对比：两者均生成 12 个核心产物和 `assets.js`，未发现旧产物残留。 已使用现有 `static/index.html` 解析 `assets.js` 引用，确认 standalone 生成的 `index.js`、`manifest`、`lib3`、`lib2`、`lib` 共 6 个 JS/CSS 资源全部存在。由于 chunk hash 和部分 vendor 内容不同，尚未宣称二者字节级一致；默认 YKit 构建和 legacy 回退仍保留。已增加 `npm run dev-client-standalone`，在备用端口 `4001` 验证页面返回 HTTP `200`、`static/dev.html` 引用的 6 个 CSS/JS 资源全部返回 HTTP `200`，并验证 Webpack HMR 中间件编译成功。固定端口 `4000` 已验证：页面返回 YApi `dev.html`，`static/dev.html` 引用的 6 个 CSS/JS 资源全部 HTTP `200`，Webpack 编译成功。资源清单键名兼容已抽到 `build/clientBuildConfig.normalizeAssets`，并有回归测试锁定 `static/index.html` 的历史键；YKit 默认构建本身已生成 `index.js` 键，不需要改写。2026 年 9 月 12 日再用 `node server/app.js dev` 与 `npm run dev-client-standalone` 在 `3000`/`4000` 联调：页面返回 YApi `dev.html`，6 个开发资源全部 HTTP `200`，管理员登录成功，分组和项目列表读取成功；独立打包含登录文案、`user/login`、`ReactDOM.render` 和 Ant Design 样式。同日将 standalone 配置中 CommonsChunkPlugin 的数组键名由 `name` 规范为 `names`，A/B 对比确认两种写法的全部产物 hash 完全一致（Webpack 2 内部对两键做等价归一化），`static/prd/` 已恢复为默认 YKit 构建产物。
 
-同日完成独立开发服务的浏览器 DOM 验收，结论为**未通过**。系统 Chrome 无痕窗口打开 `http://127.0.0.1:3000/` 后，标题为 YApi，地址栏正确，但登录表单未渲染，页面保持空白；因此登录、项目列表和接口导航后续路径均未执行。根因不是资源 404：`/prd/manifest@dev.js`、`lib3@dev.js`、`lib2@dev.js`、`lib@dev.js`、`index@dev.js` 均 HTTP `200`。运行时错误为 `TypeError: __webpack_require__(...) is not a function`，发生在 `antd/lib/locale-provider` 加载 `moment`（模块 `7`）时；`moment` 末尾的 webpack 注入调用 `__webpack_require__(111)(module)`，而模块 `111`（`module.webpackPolyfill`）实际导出为空对象。原因是 `lib@dev.js` 先注册模块 `111`，随后 `index@dev.js` 使用数组形式的 `webpackJsonp` 并在该位置留下空洞 `/* 111 */,`；Webpack 2 运行时用 `for (moduleId in moreModules)` 遍历数组时会把这个空洞写成 `undefined`，覆盖已注册的 polyfill。默认 `dev-client` / `build-client` 仍不切换，修复前不进入默认命令切换评估。
+同日完成独立开发服务的浏览器 DOM 验收。第一轮结论为登录页白屏。根因不是资源 404，也不是数组空洞覆盖：HTML 脚本顺序为 `manifest → lib3 → lib2 → lib → index`，`lib3` 中的 `moment` 会在 `webpack/buildin/module.js`（webpackPolyfill）注册前执行，触发 `TypeError: __webpack_require__(...) is not a function`。提交 `f8412656` 后将 webpack buildin polyfill 抽进最先加载的 `manifest`，并限制 vendor 抽取只发生在 `lib` 内部，避免 `index` 与 `lib3` 共享的 `react` 被抽进后加载的 `lib2`。
+
+修复后第二轮 DOM 验收：系统 Chrome 无痕窗口打开 `http://127.0.0.1:3000/`，首页与 Ant Design 样式正常；点击「登录 / 注册」进入 `/login`，管理员登录成功并进入 `/group/14`，可见「个人空间」及项目「测试1」「sugon」。打开项目接口页 `/project/22/interface/api` 时标签页崩溃（Chrome 错误代码 5）。开发 `index@dev.js` 约 30MB，使用 `cheap-module-eval-source-map`；该崩溃与登录白屏不是同一问题。默认 `dev-client` / `build-client` 仍不切换。
 
 ### 不做
 
@@ -797,7 +799,7 @@ test/common/openapi-normalizer.test.js
 
 ### 独立开发页 DOM 验收记录（2026 年 9 月 12 日）
 
-`npm run dev-client-standalone` 与 `node server/app.js dev` 联调后，浏览器打开 `http://127.0.0.1:3000/` 得到空白页。证据：系统 Chrome 无痕窗口截图显示 YApi 标题和 `127.0.0.1:3000` 地址栏，页面主体无登录表单。该缺陷阻断 Phase 12 的完整 DOM 交互验收，下一步应修复 standalone 开发 chunk 的模块空洞覆盖，而不是继续切换默认构建命令。
+`npm run dev-client-standalone` 与 `node server/app.js dev` 联调后，浏览器打开 `http://127.0.0.1:3000/` 曾得到空白页。提交 `f8412656` 修复 CommonsChunk 加载顺序后，首页、登录页和分组项目列表已通过 DOM 验收。打开项目接口页时 Chrome 标签页崩溃（错误代码 5），疑为 30MB 的 `eval` source map 开发包内存问题，尚未修复。默认构建命令仍不切换。
 
 每个阶段至少执行：
 
