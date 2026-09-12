@@ -82,9 +82,22 @@ module.exports = {
   plugins: [
     new ExtractTextPlugin(isDevelopment ? '[name]@dev.css' : '[name]@[contenthash].css'),
     new webpack.optimize.CommonsChunkPlugin({
-      names: ['lib3', 'lib2', 'lib', 'manifest'],
+      names: ['lib3', 'lib2', 'lib'],
+      // 限定抽取只发生在 lib 内部，避免把 index 与 lib3 共享的模块
+      // （如 react/prop-types）抽进 lib2，导致 lib3 在 HTML 脚本顺序中
+      // 先于 lib/lib2 执行时缺少依赖而白屏。
+      chunks: ['lib'],
+      filename: isDevelopment ? '[name]@dev.js' : '[name]@[chunkhash].js'
+    }),
+    new webpack.optimize.CommonsChunkPlugin({
+      name: 'manifest',
       filename: isDevelopment ? '[name]@dev.js' : '[name]@[chunkhash].js',
-      minChunks: 2
+      // 把 webpack runtime 依赖的 buildin polyfill（如 webpack/buildin/module.js）
+      // 抽进最先加载的 manifest chunk，避免后续 chunk 依赖它时出现
+      // "__webpack_require__(...) is not a function" 的加载顺序问题。
+      minChunks: function(module) {
+        return module.resource && /[\\/]node_modules[\\/]webpack[\\/]buildin[\\/]/.test(module.resource);
+      }
     }),
     ...(isDevelopment ? [new webpack.HotModuleReplacementPlugin()] : []),
     new webpack.DefinePlugin(
