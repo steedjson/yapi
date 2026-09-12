@@ -15,6 +15,7 @@ require('./utils/notice')
 
 const Koa = require('koa');
 const koaStatic = require('koa-static');
+const mime = require('mime');
 // const bodyParser = require('koa-bodyparser');
 const koaBody = require('koa-body');
 const router = require('./router.js');
@@ -55,6 +56,15 @@ app.use(async (ctx, next) => {
 });
 
 
+// Koa 2.0 reads res._headers, which Node 15+ dropped, so ctx.type is empty and streams become octet-stream.
+app.use(async (ctx, next) => {
+  await next();
+  const current = ctx.res.getHeader('content-type');
+  if (current && current !== 'application/octet-stream') return;
+  const ext = ctx.path === '/' ? '.html' : yapi.path.extname(String(ctx.path).replace(/\.gz$/, ''));
+  const type = mime.lookup(ext);
+  if (type && type !== 'application/octet-stream') ctx.set('Content-Type', type);
+});
 app.use(koaStatic(yapi.path.join(yapi.WEBROOT, 'static'), { index: indexFile, gzip: true }));
 
 
