@@ -556,7 +556,7 @@ Node.js 24.21.0 LTS 下全量回归通过后，将 `.nvmrc` 更新为：
 
 Node.js 24.21.0 LTS 下无阻断性错误，关键页面、接口响应、历史数据和构建产物与基线一致，才允许切换默认开发环境。
 
-当前验证结果：Node.js `10.24.1`、`18.20.8` 和 `24.21.0` 均已完成生产构建验证；Node.js `10.24.1` 和 `18.20.8` 的全量测试均为 `35 passed`，Node.js `24.21.0` 已作为 `.nvmrc` 默认环境。截至 2026 年 9 月 12 日，测试规模已增至 215 个用例，Node.js `24.21.0` 下全量 `215 passed` / `0 failed`。
+当前验证结果：Node.js `10.24.1`、`18.20.8` 和 `24.21.0` 均已完成生产构建验证；Node.js `10.24.1` 和 `18.20.8` 的全量测试均为 `35 passed`，Node.js `24.21.0` 已作为 `.nvmrc` 默认环境。截至 2026 年 9 月 12 日，测试规模已增至 229 个用例，Node.js `24.21.0` 下全量 `229 passed` / `0 failed`。
 
 ## Phase 12：替换 YKit/HappyPack
 
@@ -704,7 +704,7 @@ UI 升级与后端、数据库分离，先做页面级替换，保持接口调�
 - 补充接口保存参数、请求头和表单字段的兼容类型声明，`npm run typecheck` 已通过；
 - 补充接口详情、分类菜单和 OpenAPI/Swagger 导入结果的兼容类型声明，未改变运行时模块和数据结构；
 - 对 `common/HandleImportData.js` 做了独立 `checkJs` 可行性检查；由于旧依赖缺少类型声明且函数参数长期为动态结构，当前不直接开启全文件严格检查，避免用大量 `any` 掩盖真实类型问题。
-- 通过 `npm run typecheck` 后，再逐步将无行为变化的模块迁移为 TypeScript；当前已对 `server/controllers/project.js`、`server/controllers/interfaceCol.js`、`server/controllers/user.js`、`server/controllers/open.js`、`server/controllers/group.js`、`server/utils/reportHtml/index.js`、`server/utils/interfaceNormalizer.js`、`common/createContext.js`、`server/utils/reportHtml/defaultTheme.js`、`server/controllers/base.js`、`server/controllers/test.js`、`server/controllers/log.js`、`server/controllers/follow.js`、`common/formats.js`、`common/mergeJsonSchema.js`、`server/utils/ttlCache.js`、`server/utils/categoryTree.js`、`server/utils/token.js`、`server/utils/storage.js` 和 `server/utils/sandbox.js` 开启 `checkJs`，并补充了轻量 Node 运行时与控制器/测试报告/接口规范化/格式/加密/存储/沙箱/JSON-Schema 模块的 JSDoc/d.ts 类型声明，不改变运行时模块格式与 CommonJS 导出。新增 `test/server/project.test.js` 单元测试，全量测试已扩充至 215 项。
+- 通过 `npm run typecheck` 后，再逐步将无行为变化的模块迁移为 TypeScript；当前已对全量核心控制器（`server/controllers/interface.js`、`server/controllers/project.js`、`server/controllers/interfaceCol.js`、`server/controllers/user.js`、`server/controllers/open.js`、`server/controllers/group.js`、`server/controllers/base.js`、`server/controllers/test.js`、`server/controllers/log.js`、`server/controllers/follow.js`）以及全部核心服务端工具与通用模块（`server/utils/reportHtml/index.js`、`server/utils/interfaceNormalizer.js`、`common/createContext.js`、`server/utils/reportHtml/defaultTheme.js`、`common/formats.js`、`common/mergeJsonSchema.js`、`server/utils/ttlCache.js`、`server/utils/categoryTree.js`、`server/utils/token.js`、`server/utils/storage.js` 和 `server/utils/sandbox.js`）开启 `checkJs`，并补充了轻量 Node 运行时与全部控制器/测试报告/接口规范化/格式/加密/存储/沙箱/JSON-Schema 模块的 JSDoc/d.ts 类型声明，不改变运行时模块格式与 CommonJS 导出。新增 `test/server/interfaceController.test.js` 单元测试，全量测试已扩充至 229 项。服务端核心业务逻辑与控制器层已全面完成严格静态类型化覆盖。
 - 当前迁移门槛：在前端构建链完成可回滚的独立入口前，不把客户端 `.js` 直接改为 `.ts/.tsx`，避免类型编译器和旧 Babel 链同时变化。分类树已从控制器中提取为独立工具，并保留历史平铺、缺失父节点和异常循环数据兼容；分类列表与分类树共用接口挂载逻辑，避免两条读取路径行为分叉。接口模型的批量读取方法已统一空 ID 列表的快速返回判断，但保留非空参数原样传递，避免改变历史查询行为。
 
 ## Phase 15：局部升级 UI
