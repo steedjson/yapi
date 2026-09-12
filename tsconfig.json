@@ -28,6 +28,7 @@
     "server/utils/reportHtml/index.js",
     "server/controllers/open.js",
     "server/controllers/user.js",
-    "server/controllers/interfaceCol.js"
+    "server/controllers/interfaceCol.js",
+    "server/controllers/project.js"
   ]
 }

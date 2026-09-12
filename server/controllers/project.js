@@ -1,22 +1,32 @@
-const projectModel = require('../models/project.js');
-const yapi = require('../yapi.js');
+// @ts-check
+/**
+ * @param {string} name
+ * @returns {any}
+ */
+const requireAny = name => require(name);
+
+const projectModel = requireAny('../models/project.js');
+const yapi = requireAny('../yapi.js');
 const _ = require('underscore');
 const baseController = require('./base.js');
-const interfaceModel = require('../models/interface.js');
-const interfaceColModel = require('../models/interfaceCol.js');
-const interfaceCaseModel = require('../models/interfaceCase.js');
-const interfaceCatModel = require('../models/interfaceCat.js');
-const groupModel = require('../models/group');
-const commons = require('../utils/commons.js');
-const userModel = require('../models/user.js');
-const logModel = require('../models/log.js');
-const followModel = require('../models/follow.js');
-const tokenModel = require('../models/token.js');
-const {getToken} = require('../utils/token')
-const sha = require('sha.js');
-const axios = require('axios').default;
+const interfaceModel = requireAny('../models/interface.js');
+const interfaceColModel = requireAny('../models/interfaceCol.js');
+const interfaceCaseModel = requireAny('../models/interfaceCase.js');
+const interfaceCatModel = requireAny('../models/interfaceCat.js');
+const groupModel = requireAny('../models/group');
+const commons = requireAny('../utils/commons.js');
+const userModel = requireAny('../models/user.js');
+const logModel = requireAny('../models/log.js');
+const followModel = requireAny('../models/follow.js');
+const tokenModel = requireAny('../models/token.js');
+const {getToken} = require('../utils/token');
+const sha = requireAny('sha.js');
+const axios = requireAny('axios').default;
 
 class projectController extends baseController {
+  /**
+   * @param {any} ctx Koa 请求上下文
+   */
   constructor(ctx) {
     super(ctx);
     this.Model = yapi.getInst(projectModel);
@@ -116,6 +126,10 @@ class projectController extends baseController {
     };
   }
 
+  /**
+   * @param {string} basepath
+   * @returns {string|boolean}
+   */
   handleBasepath(basepath) {
     if (!basepath) {
       return '';
@@ -135,6 +149,10 @@ class projectController extends baseController {
     return basepath;
   }
 
+  /**
+   * @param {string} domain
+   * @returns {boolean}
+   */
   verifyDomain(domain) {
     if (!domain) {
       return false;
@@ -151,6 +169,10 @@ class projectController extends baseController {
    * @method get
    */
 
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
+   */
   async checkProjectName(ctx) {
     try {
       let name = ctx.request.query.name;
@@ -166,7 +188,7 @@ class projectController extends baseController {
       }
 
       ctx.body = yapi.commons.resReturn({});
-    } catch (err) {
+    } catch (/** @type {any} */ err) {
       ctx.body = yapi.commons.resReturn(null, 402, err.message);
     }
   }
@@ -185,6 +207,11 @@ class projectController extends baseController {
    * @param  {String} [desc] 项目描述
    * @returns {Object}
    * @example ./api/project/add.json
+   */
+
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
    */
   async add(ctx) {
     let params = ctx.params;
@@ -277,6 +304,11 @@ class projectController extends baseController {
    * @param  {String} [desc] 项目描述
    * @returns {Object}
    * @example ./api/project/add.json
+   */
+
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
    */
   async copy(ctx) {
     try {
@@ -376,7 +408,7 @@ class projectController extends baseController {
         typeid: result._id
       });
       ctx.body = yapi.commons.resReturn(result);
-    } catch (err) {
+    } catch (/** @type {any} */ err) {
       ctx.body = yapi.commons.resReturn(null, 402, err.message);
     }
   }
@@ -392,6 +424,11 @@ class projectController extends baseController {
    * @returns {Object}
    * @example ./api/project/add_member.json
    */
+
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
+   */
   async addMember(ctx) {
     let params = ctx.params;
     if ((await this.checkAuth(params.id, 'project', 'edit')) !== true) {
@@ -399,8 +436,11 @@ class projectController extends baseController {
     }
 
     params.role = ['owner', 'dev', 'guest'].find(v => v === params.role) || 'dev';
+    /** @type {any[]} */
     let add_members = [];
+    /** @type {any[]} */
     let exist_members = [];
+    /** @type {any[]} */
     let no_members = [];
     for (let i = 0, len = params.member_uids.length; i < len; i++) {
       let id = params.member_uids[i];
@@ -417,6 +457,7 @@ class projectController extends baseController {
 
     let result = await this.Model.addMember(params.id, add_members);
     if (add_members.length) {
+      /** @type {any} */
       let members = add_members.map(item => {
         return `<a href = "/user/profile/${item.uid}">${item.username}</a>`;
       });
@@ -449,6 +490,10 @@ class projectController extends baseController {
    * @example ./api/project/del_member.json
    */
 
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
+   */
   async delMember(ctx) {
     try {
       let params = ctx.params;
@@ -467,7 +512,7 @@ class projectController extends baseController {
       yapi
         .getInst(userModel)
         .findById(params.member_uid)
-        .then(member => {
+        .then((/** @type {any} */ member) => {
           yapi.commons.saveLog({
             content: `<a href="/user/profile/${this.getUid()}">${username}</a> 删除了项目中的成员 <a href="/user/profile/${
               params.member_uid
@@ -479,7 +524,7 @@ class projectController extends baseController {
           });
         });
       ctx.body = yapi.commons.resReturn(result);
-    } catch (e) {
+    } catch (/** @type {any} */ e) {
       ctx.body = yapi.commons.resReturn(null, 402, e.message);
     }
   }
@@ -495,6 +540,10 @@ class projectController extends baseController {
    * @example ./api/project/get_member_list.json
    */
 
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
+   */
   async getMemberList(ctx) {
     let params = ctx.params;
     if (!params.id) {
@@ -516,6 +565,10 @@ class projectController extends baseController {
    * @example ./api/project/get.json
    */
 
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
+   */
   async get(ctx) {
     let params = ctx.params;
     let projectId= params.id || params.project_id; // 通过 token 访问
@@ -553,8 +606,13 @@ class projectController extends baseController {
    * @example ./api/project/list.json
    */
 
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
+   */
   async list(ctx) {
     let group_id = ctx.params.group_id,
+      /** @type {any[]} */
       project_list = [];
 
     let groupData = await this.groupModel.get(group_id);
@@ -588,13 +646,16 @@ class projectController extends baseController {
         }
       }
     } else {
-      follow = follow.map(item => {
+      follow = follow.map((/** @type {any} */ item) => {
         item = item.toObject();
         item._id = item.projectid
         item.follow = true;
         return item;
       });
-      project_list = _.uniq(follow.concat(result), item => item._id);
+      project_list = /** @type {any} */ (_).uniq(
+        follow.concat(result),
+        (/** @type {any} */ item) => item._id
+      );
     }
 
     ctx.body = yapi.commons.resReturn({
@@ -613,6 +674,10 @@ class projectController extends baseController {
    * @example ./api/project/del.json
    */
 
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
+   */
   async del(ctx) {
     let id = ctx.params.id;
 
@@ -644,6 +709,11 @@ class projectController extends baseController {
    * @returns {Object}
    * @example
    */
+
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
+   */
   async changeMemberRole(ctx) {
     let params = ctx.request.body;
     let projectInst = yapi.getInst(projectModel);
@@ -657,6 +727,7 @@ class projectController extends baseController {
     }
 
     params.role = ['owner', 'dev', 'guest'].find(v => v === params.role) || 'dev';
+    /** @type {Record<string, string>} */
     let rolename = {
       owner: '组长',
       dev: '开发者',
@@ -669,7 +740,7 @@ class projectController extends baseController {
     yapi
       .getInst(userModel)
       .findById(params.member_uid)
-      .then(member => {
+      .then((/** @type {any} */ member) => {
         yapi.commons.saveLog({
           content: `<a href="/user/profile/${this.getUid()}">${username}</a> 修改了项目中的成员 <a href="/user/profile/${
             params.member_uid
@@ -695,6 +766,11 @@ class projectController extends baseController {
    * @returns {Object}
    * @example
    */
+
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
+   */
   async changeMemberEmailNotice(ctx) {
     try {
       let params = ctx.request.body;
@@ -710,7 +786,7 @@ class projectController extends baseController {
         params.notice
       );
       ctx.body = yapi.commons.resReturn(result);
-    } catch (e) {
+    } catch (/** @type {any} */ e) {
       ctx.body = yapi.commons.resReturn(null, 402, e.message);
     }
   }
@@ -727,8 +803,14 @@ class projectController extends baseController {
    * @returns {Object}
    * @example ./api/project/upset
    */
+
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
+   */
   async upSet(ctx) {
     let id = ctx.request.body.id;
+    /** @type {any} */
     let data = {};
     if ((await this.checkAuth(id, 'project', 'danger')) !== true) {
       return (ctx.body = yapi.commons.resReturn(null, 405, '没有权限'));
@@ -741,7 +823,7 @@ class projectController extends baseController {
     try {
       let result = await this.Model.up(id, data);
       ctx.body = yapi.commons.resReturn(result);
-    } catch (e) {
+    } catch (/** @type {any} */ e) {
       ctx.body = yapi.commons.resReturn(null, 402, e.message);
     }
     try {
@@ -755,7 +837,7 @@ class projectController extends baseController {
           typeid: id
         });
       });
-    } catch (e) {
+    } catch (/** @type {any} */ e) {
       yapi.commons.log(e, 'error'); // eslint-disable-line
     }
   }
@@ -772,6 +854,11 @@ class projectController extends baseController {
    * @param {String} [desc] 项目描述
    * @returns {Object}
    * @example ./api/project/up.json
+   */
+
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
    */
   async up(ctx) {
     try {
@@ -834,7 +921,7 @@ class projectController extends baseController {
       });
       yapi.emitHook('project_up', result).then();
       ctx.body = yapi.commons.resReturn(result);
-    } catch (e) {
+    } catch (/** @type {any} */ e) {
       ctx.body = yapi.commons.resReturn(null, 402, e.message);
     }
   }
@@ -853,6 +940,11 @@ class projectController extends baseController {
    * @returns {Object}
    * @example
    */
+
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
+   */
   async upEnv(ctx) {
     try {
       let id = ctx.request.body.id;
@@ -870,6 +962,7 @@ class projectController extends baseController {
       }
 
       let projectData = await this.Model.get(id);
+      /** @type {any} */
       let data = {
         up_time: yapi.commons.time()
       };
@@ -891,7 +984,7 @@ class projectController extends baseController {
         typeid: id
       });
       ctx.body = yapi.commons.resReturn(result);
-    } catch (e) {
+    } catch (/** @type {any} */ e) {
       ctx.body = yapi.commons.resReturn(null, 402, e.message);
     }
   }
@@ -908,6 +1001,11 @@ class projectController extends baseController {
    * @param {String} [tag[].desc] tag描述
    * @returns {Object}
    * @example
+   */
+
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
    */
   async upTag(ctx) {
     try {
@@ -926,6 +1024,7 @@ class projectController extends baseController {
       }
 
       let projectData = await this.Model.get(id);
+      /** @type {any} */
       let data = {
         up_time: yapi.commons.time()
       };
@@ -943,7 +1042,7 @@ class projectController extends baseController {
         typeid: id
       });
       ctx.body = yapi.commons.resReturn(result);
-    } catch (e) {
+    } catch (/** @type {any} */ e) {
       ctx.body = yapi.commons.resReturn(null, 402, e.message);
     }
   }
@@ -958,6 +1057,11 @@ class projectController extends baseController {
 
    * @returns {Object}
    * @example
+   */
+
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
    */
   async getEnv(ctx) {
     try {
@@ -976,11 +1080,16 @@ class projectController extends baseController {
       let env = await this.Model.getByEnv(project_id);
 
       ctx.body = yapi.commons.resReturn(env);
-    } catch (e) {
+    } catch (/** @type {any} */ e) {
       ctx.body = yapi.commons.resReturn(null, 402, e.message);
     }
   }
 
+  /**
+   * @param {any[]} arr
+   * @param {string} key
+   * @returns {boolean}
+   */
   arrRepeat(arr, key) {
     const s = new Set();
     arr.forEach(item => s.add(item[key]));
@@ -996,6 +1105,11 @@ class projectController extends baseController {
    * @param {Number} id 项目id，不能为空
    * @param {String} q
    * @return {Object}
+   */
+
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
    */
   async token(ctx) {
     try {
@@ -1017,7 +1131,7 @@ class projectController extends baseController {
       token = getToken(token, this.getUid())
 
       ctx.body = yapi.commons.resReturn(token);
-    } catch (err) {
+    } catch (/** @type {any} */ err) {
       ctx.body = yapi.commons.resReturn(null, 402, err.message);
     }
   }
@@ -1032,6 +1146,11 @@ class projectController extends baseController {
    * @param {String} q
    * @return {Object}
    */
+
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
+   */
   async updateToken(ctx) {
     try {
       let project_id = ctx.params.project_id;
@@ -1044,14 +1163,15 @@ class projectController extends baseController {
           .digest('hex')
           .substr(0, 20);
         result = await this.tokenModel.up(project_id, token);
-        token = getToken(token);
+        // 存量调用缺第二个参数 uid，运行时行为保持不变
+        token = /** @type {any} */ (getToken)(token);
         result.token = token;
       } else {
         ctx.body = yapi.commons.resReturn(null, 402, '没有查到token信息');
       }
 
       ctx.body = yapi.commons.resReturn(result);
-    } catch (err) {
+    } catch (/** @type {any} */ err) {
       ctx.body = yapi.commons.resReturn(null, 402, err.message);
     }
   }
@@ -1065,6 +1185,11 @@ class projectController extends baseController {
    * @param {String} q
    * @return {Object}
    * @example ./api/project/search.json
+   */
+
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
    */
   async search(ctx) {
     const { q } = ctx.request.query;
@@ -1122,6 +1247,10 @@ class projectController extends baseController {
   }
 
   // 输入 swagger url 的时候 node 端请求数据
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
+   */
   async swaggerUrl(ctx) {
     try {
       const { url } = ctx.request.query;
@@ -1130,7 +1259,7 @@ class projectController extends baseController {
         throw new Error('返回数据格式不是 JSON');
       }
       ctx.body = yapi.commons.resReturn(data);
-    } catch (err) {
+    } catch (/** @type {any} */ err) {
       ctx.body = yapi.commons.resReturn(null, 402, String(err));
     }
   }
