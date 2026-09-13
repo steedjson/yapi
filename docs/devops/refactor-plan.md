@@ -653,6 +653,17 @@ webpack-node-externals
 - compression-webpack-plugin `1.1.10` 和 assets-webpack-plugin `3.5.1` peer 范围已覆盖 webpack 3，无需变更
 - standalone 生产构建/开发服务/全量测试（236 passed）均验证通过
 
+同日完成 Webpack 3.12 → 4.47 的第二步大版本升级：
+
+- webpack: `3.12.0` → `4.47.0`，`mode` 按 production/development 设置
+- extract-text-webpack-plugin → mini-css-extract-plugin `0.9.0`
+- CommonsChunkPlugin → `optimization.splitChunks`（`cacheGroups` 按原 lib3/lib2/lib vendor 分组映射，`enforce: true` 绕过 webpack 4 的 maxInitialRequests 限制）+ `optimization.runtimeChunk`（manifest）
+- compression-webpack-plugin → `1.1.12`（peer 支持 webpack 2/3/4，同时兼容 ykit legacy 旧 `.asset` API 和 standalone 新 `.filename` API）
+- webpack-dev-middleware: `^1.12.0` → `^3.7.3`；webpack-hot-middleware 显式声明
+- 移除 json-loader（webpack 4 内置 JSON 支持）；移除 `webpack.optimize.UglifyJsPlugin`（webpack 4 内置 `optimization.minimize`）
+- 添加 babel-loader@6 loaderContext 兼容 shim（`compiler.hooks.compilation → normalModuleLoader → loaderContext.options = compiler.options`），避免同时升级 Babel 核心
+- standalone 生产构建（3.3s）/开发服务（Compiled successfully）/iconfont（200）/全量测试（236 passed）均验证通过
+
 ### 验证
 
 - 生产构建成功；
