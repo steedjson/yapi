@@ -646,6 +646,13 @@ webpack-node-externals
 
 当前审计结果：项目顶层使用 Webpack `2.7.0`，YKit `0.6.2` 自带 Webpack `1.14.0`；`extract-text-webpack-plugin@2.0.0` 依赖 Webpack 2，现有 `sass-loader@7.2.0` 虽可完成构建，但声明的 peer 范围为 Webpack 3/4。由于构建链存在两套 Webpack 和旧插件耦合，暂不直接升级 Webpack，先保持当前可运行组合，后续先完成 YKit 解耦再升级。
 
+2026 年 9 月 13 日，YKit 解耦完成（默认 `build-client`/`dev-client` 已切换为 standalone）后，执行了 Webpack 2.7 → 3.12 的第一步小版本升级：
+
+- webpack: `2.7.0` → `3.12.0`（3.x 最后稳定版本）
+- extract-text-webpack-plugin: `2.0.0` → `3.0.2`（webpack 3 配套）
+- compression-webpack-plugin `1.1.10` 和 assets-webpack-plugin `3.5.1` peer 范围已覆盖 webpack 3，无需变更
+- standalone 生产构建/开发服务/全量测试（236 passed）均验证通过
+
 ### 验证
 
 - 生产构建成功；
