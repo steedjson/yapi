@@ -1,3 +1,4 @@
+// @ts-check
 import React, { PureComponent as Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
@@ -14,7 +15,7 @@ import { withRouter, Link } from 'react-router-dom';
 import ProjectTag from '../../Setting/ProjectMessage/ProjectTag.js';
 
 @connect(
-  state => {
+  (/** @type {any} */ state) => {
     return {
       curdata: state.inter.curdata,
       currProject: state.project.currProject
@@ -37,10 +38,10 @@ class InterfaceEdit extends Component {
     getProject: PropTypes.func
   };
 
-  constructor(props) {
+  constructor(/** @type {any} */ props) {
     super(props);
     const { curdata, currProject } = this.props;
-    this.state = {
+    this.state = /** @type {any} */ ({
       mockUrl:
         location.protocol +
         '//' +
@@ -51,11 +52,15 @@ class InterfaceEdit extends Component {
       status: 0,
       visible: false
       // tag: []
-    };
+    });
     this._isMounted = false;
     this.initTimer = null;
   }
 
+  /**
+   * @param {any} params
+   * @returns {Promise<any>}
+   */
   onSubmit = async params => {
     const data = Object.assign({}, params, {
       id: this.props.match.params.actionId
@@ -75,23 +80,29 @@ class InterfaceEdit extends Component {
       // 刷新接口详情后直接使用服务端数据，避免用不完整的提交参数覆盖详情字段。
       message.success('保存成功');
       return true;
-    } catch (err) {
+    } catch (/** @type {any} */ err) {
       message.error('保存失败：' + err.message);
       return false;
     }
   };
 
+  /**
+   * @returns {void}
+   */
   componentWillUnmount() {
     this._isMounted = false;
     if (this.initTimer) clearTimeout(this.initTimer);
     try {
       if (this.WebSocket) this.WebSocket.close();
-    } catch (e) {
+    } catch (/** @type {any} */ e) {
       // WebSocket 已关闭时无需重复处理。
     }
     this.WebSocket = null;
   }
 
+  /**
+   * @returns {void}
+   */
   componentDidMount() {
     this._isMounted = true;
     let domain = location.hostname + (location.port !== '' ? ':' + location.port : '');
@@ -127,7 +138,7 @@ class InterfaceEdit extends Component {
         let result;
         try {
           result = JSON.parse(e.data);
-        } catch (err) {
+        } catch (/** @type {any} */ err) {
           return console.warn('WebSocket 返回数据解析失败：' + err.message);
         }
         if (result.errno === 0) {
@@ -151,7 +162,7 @@ class InterfaceEdit extends Component {
         });
         console.warn('websocket 连接失败，将导致多人编辑同一个接口冲突。');
       };
-    } catch (e) {
+    } catch (/** @type {any} */ e) {
       if (!this._isMounted) return;
       this.setState({
         curdata: this.props.curdata,
@@ -161,15 +172,21 @@ class InterfaceEdit extends Component {
     }
   }
 
+  /**
+   * @returns {void}
+   */
   onTagClick = () => {
     this.setState({
       visible: true
     });
   };
 
+  /**
+   * @returns {Promise<any>}
+   */
   handleOk = async () => {
     let { tag } = this.tag.state;
-    tag = tag.filter(val => {
+    tag = tag.filter((/** @type {any} */ val) => {
       return val.name !== '';
     });
 
@@ -192,18 +209,28 @@ class InterfaceEdit extends Component {
     });
   };
 
+  /**
+   * @returns {void}
+   */
   handleCancel = () => {
     this.setState({
       visible: false
     });
   };
 
+  /**
+   * @param {any} tagRef
+   * @returns {void}
+   */
   tagSubmit = tagRef => {
     this.tag = tagRef;
 
     // this.setState({tag})
   };
 
+  /**
+   * @returns {any}
+   */
   render() {
     const { cat, basepath, switch_notice, tag } = this.props.currProject;
     return (

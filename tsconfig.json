@@ -49,6 +49,8 @@
     "client/containers/Login/LoginContainer.js",
     "client/containers/Group/ProjectList/ProjectList.js",
     "client/containers/Group/Group.js",
-    "client/containers/Project/Interface/InterfaceList/InterfaceMenu.js"
+    "client/containers/Project/Interface/InterfaceList/InterfaceMenu.js",
+    "client/containers/Project/Interface/InterfaceList/Edit.js",
+    "client/containers/Project/Interface/InterfaceList/InterfaceEditForm.js"
   ]
 }

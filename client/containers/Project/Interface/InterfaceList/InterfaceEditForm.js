@@ -1,3 +1,4 @@
+// @ts-check
 import React, { PureComponent as Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
@@ -24,6 +25,10 @@ require('common/tui-editor/dist/tui-editor-contents.min.css'); // editor content
 require('./editor.css');
 
 
+/**
+ * @param {any} json
+ * @returns {any}
+ */
 function checkIsJsonSchema(json) {
   try {
     json = json5.parse(json);
@@ -47,7 +52,12 @@ function checkIsJsonSchema(json) {
   }
 }
 
+/** @type {any} */
 let EditFormContext;
+/**
+ * @param {any} json
+ * @returns {boolean}
+ */
 const validJson = json => {
   try {
     json5.parse(json);
@@ -88,6 +98,9 @@ const Option = Select.Option;
 const InputGroup = Input.Group;
 const RadioButton = Radio.Button;
 const RadioGroup = Radio.Group;
+/**
+ * @type {any}
+ */
 const dataTpl = {
   req_query: { name: '', required: '1', desc: '', example: '' },
   req_headers: { name: '', required: '1', desc: '', example: '' },
@@ -101,12 +114,12 @@ const dataTpl = {
   }
 };
 
-const HTTP_METHOD = constants.HTTP_METHOD;
+const HTTP_METHOD = /** @type {any} */ (constants.HTTP_METHOD);
 const HTTP_METHOD_KEYS = Object.keys(HTTP_METHOD);
 const HTTP_REQUEST_HEADER = constants.HTTP_REQUEST_HEADER;
 
 @connect(
-  state => {
+  (/** @type {any} */ state) => {
     return {
       custom_field: state.group.field,
       projectMsg: state.project.currProject
@@ -132,6 +145,10 @@ class InterfaceEditForm extends Component {
     onTagClick: PropTypes.func
   };
 
+  /**
+   * @param {any} curdata
+   * @returns {any}
+   */
   initState(curdata) {
     this.startTime = new Date().getTime();
     // 编辑表单只处理副本，避免初始化时直接修改 Redux 中的历史接口数据。
@@ -149,7 +166,7 @@ class InterfaceEditForm extends Component {
       delete curdata.req_params;
     }
     if (curdata.req_body_form) {
-      curdata.req_body_form = curdata.req_body_form.map(item => {
+      curdata.req_body_form = curdata.req_body_form.map((/** @type {any} */ item) => {
         item.type = item.type === 'text' ? 'text' : 'file';
         return item;
       });
@@ -215,20 +232,24 @@ class InterfaceEditForm extends Component {
     );
   }
 
-  constructor(props) {
+  constructor(/** @type {any} */ props) {
     super(props);
     const { curdata } = this.props;
     // console.log('custom_field1', this.props.custom_field);
     this.state = this.initState(curdata);
   }
 
+  /**
+   * @param {any} e
+   * @returns {void}
+   */
   handleSubmit = e => {
     e.preventDefault();
     this.setState({
       submitStatus: true
     });
     try {
-      this.props.form.validateFields(async (err, values) => {
+      this.props.form.validateFields(async (/** @type {any} */ err, /** @type {any} */ values) => {
         setTimeout(() => {
           if (this._isMounted) {
             this.setState({
@@ -271,13 +292,13 @@ class InterfaceEditForm extends Component {
           let isfile = false,
             isHaveContentType = false;
           if (values.req_body_type === 'form') {
-            values.req_body_form.forEach(item => {
+            values.req_body_form.forEach((/** @type {any} */ item) => {
               if (item.type === 'file') {
                 isfile = true;
               }
             });
 
-            values.req_headers.map(item => {
+            values.req_headers.map((/** @type {any} */ item) => {
               if (item.name === 'Content-Type') {
                 item.value = isfile ? 'multipart/form-data' : 'application/x-www-form-urlencoded';
                 isHaveContentType = true;
@@ -291,7 +312,7 @@ class InterfaceEditForm extends Component {
             }
           } else if (values.req_body_type === 'json') {
             values.req_headers
-              ? values.req_headers.map(item => {
+              ? values.req_headers.map((/** @type {any} */ item) => {
                   if (item.name === 'Content-Type') {
                     item.value = 'application/json';
                     isHaveContentType = true;
@@ -307,17 +328,17 @@ class InterfaceEditForm extends Component {
             }
           }
           values.req_headers = values.req_headers
-            ? values.req_headers.filter(item => item.name !== '')
+            ? values.req_headers.filter((/** @type {any} */ item) => item.name !== '')
             : [];
 
           values.req_body_form = values.req_body_form
-            ? values.req_body_form.filter(item => item.name !== '')
+            ? values.req_body_form.filter((/** @type {any} */ item) => item.name !== '')
             : [];
           values.req_params = values.req_params
-            ? values.req_params.filter(item => item.name !== '')
+            ? values.req_params.filter((/** @type {any} */ item) => item.name !== '')
             : [];
           values.req_query = values.req_query
-            ? values.req_query.filter(item => item.name !== '')
+            ? values.req_query.filter((/** @type {any} */ item) => item.name !== '')
             : [];
 
           if (HTTP_METHOD[values.method].request_body !== true) {
@@ -352,7 +373,7 @@ class InterfaceEditForm extends Component {
           }
         }
       });
-    } catch (e) {
+    } catch (/** @type {any} */ e) {
       console.error(e.message);
       this.setState({
         submitStatus: false
@@ -360,6 +381,10 @@ class InterfaceEditForm extends Component {
     }
   };
 
+  /**
+   * @param {any} val
+   * @returns {void}
+   */
   onChangeMethod = val => {
     let radio = [];
     if (HTTP_METHOD[val].request_body) {
@@ -376,6 +401,9 @@ class InterfaceEditForm extends Component {
     });
   };
 
+  /**
+   * @returns {void}
+   */
   componentDidMount() {
     EditFormContext = this;
     this._isMounted = true;
@@ -397,29 +425,45 @@ class InterfaceEditForm extends Component {
     });
   }
 
+  /**
+   * @returns {void}
+   */
   componentWillUnmount() {
     EditFormContext.props.changeEditStatus(false);
     EditFormContext = null;
     this._isMounted = false;
   }
 
+  /**
+   * @param {any} name
+   * @param {any} [data]
+   * @returns {void}
+   */
   addParams = (name, data) => {
-    let newValue = {};
+    let newValue = /** @type {any} */ ({});
     data = data || dataTpl[name];
     newValue[name] = [].concat(this.state[name], data);
     this.setState(newValue);
   };
 
+  /**
+   * @param {any} key
+   * @param {any} name
+   * @returns {void}
+   */
   delParams = (key, name) => {
     let curValue = this.props.form.getFieldValue(name);
-    let newValue = {};
-    newValue[name] = curValue.filter((val, index) => {
+    let newValue = /** @type {any} */ ({});
+    newValue[name] = curValue.filter((/** @type {any} */ val, /** @type {any} */ index) => {
       return index !== key;
     });
     this.props.form.setFieldsValue(newValue);
     this.setState(newValue);
   };
 
+  /**
+   * @returns {Promise<any>}
+   */
   handleMockPreview = async () => {
     let str = '';
 
@@ -436,12 +480,16 @@ class InterfaceEditForm extends Component {
       } else {
         str = '解析出错: ' + this.resBodyEditor.editor.curData.format;
       }
-    } catch (err) {
+    } catch (/** @type {any} */ err) {
       str = '解析出错: ' + err.message;
     }
     this.mockPreview.setValue(str);
   };
 
+  /**
+   * @param {any} key
+   * @returns {void}
+   */
   handleJsonType = key => {
     key = key || 'tpl';
     if (key === 'preview') {
@@ -452,10 +500,17 @@ class InterfaceEditForm extends Component {
     });
   };
 
+  /**
+   * @param {any} e
+   * @returns {void}
+   */
   handlePath = e => {
     let val = e.target.value,
-      queue = [];
+      queue = /** @type {any[]} */ ([]);
 
+    /**
+     * @param {any} name
+     */
     let insertParams = name => {
       let findExist = _.find(this.state.req_params, { name: name });
       if (findExist) {
@@ -481,7 +536,7 @@ class InterfaceEditForm extends Component {
     }
 
     if (val && val.length > 3) {
-      val.replace(/\{(.+?)\}/g, function(str, match) {
+      val.replace(/\{(.+?)\}/g, function(/** @type {any} */ str, /** @type {any} */ match) {
         insertParams(match);
       });
     }
@@ -492,6 +547,10 @@ class InterfaceEditForm extends Component {
   };
 
   // 点击切换radio
+  /**
+   * @param {any} e
+   * @returns {void}
+   */
   changeRadioGroup = e => {
     const res = e.target.value.split('-');
     if (res[0] === 'req') {
@@ -502,8 +561,13 @@ class InterfaceEditForm extends Component {
     this._changeRadioGroup(res[0], res[1]);
   };
 
+  /**
+   * @param {any} group
+   * @param {any} item
+   * @returns {void}
+   */
   _changeRadioGroup = (group, item) => {
-    const obj = {};
+    const obj = /** @type {any} */ ({});
     // 先全部隐藏
     for (let key in this.state.hideTabs[group]) {
       obj[key] = 'hide';
@@ -518,8 +582,12 @@ class InterfaceEditForm extends Component {
     });
   };
 
+  /**
+   * @param {any} name
+   * @returns {any}
+   */
   handleDragMove = name => {
-    return data => {
+    return (/** @type {any} */ data) => {
       let newValue = {
         [name]: data
       };
@@ -529,6 +597,10 @@ class InterfaceEditForm extends Component {
   };
 
   // 处理res_body Editor
+  /**
+   * @param {any} d
+   * @returns {void}
+   */
   handleResBody = d => {
     const initResBody = this.state.res_body;
     this.setState({
@@ -538,6 +610,10 @@ class InterfaceEditForm extends Component {
   };
 
   // 处理 req_body_other Editor
+  /**
+   * @param {any} d
+   * @returns {void}
+   */
   handleReqBody = d => {
     const initReqBody = this.state.req_body_other;
     this.setState({
@@ -547,20 +623,25 @@ class InterfaceEditForm extends Component {
   };
 
   // 处理批量导入参数
+  /**
+   * @returns {void}
+   */
   handleBulkOk = () => {
     let curValue = this.props.form.getFieldValue(this.state.bulkName)||[];
     // { name: '', required: '1', desc: '', example: '' }
-    let newValue = [];
+    let newValue = /** @type {any[]} */ ([]);
 
-    this.state.bulkValue.split('\n').forEach((item, index) => {
-      let valueItem = Object.assign({}, curValue[index] || dataTpl[this.state.bulkName]);
-      let indexOfColon = item.indexOf(':');
-      if (indexOfColon!==-1) {
-        valueItem.name = item.substring(0, indexOfColon);
-        valueItem.example = item.substring(indexOfColon + 1) || '';
-        newValue.push(valueItem);
+    this.state.bulkValue.split('\n').forEach(
+      (/** @type {any} */ item, /** @type {any} */ index) => {
+        let valueItem = Object.assign({}, curValue[index] || dataTpl[this.state.bulkName]);
+        let indexOfColon = item.indexOf(':');
+        if (indexOfColon!==-1) {
+          valueItem.name = item.substring(0, indexOfColon);
+          valueItem.example = item.substring(indexOfColon + 1) || '';
+          newValue.push(valueItem);
+        }
       }
-    });
+    );
 
     this.props.form.setFieldsValue({[this.state.bulkName]: newValue});
     this.setState({
@@ -572,6 +653,9 @@ class InterfaceEditForm extends Component {
   };
 
   // 取消批量导入参数
+  /**
+   * @returns {void}
+   */
   handleBulkCancel = () => {
     this.setState({
       visible: false,
@@ -580,12 +664,16 @@ class InterfaceEditForm extends Component {
     });
   };
 
+  /**
+   * @param {any} name
+   * @returns {void}
+   */
   showBulk = name => {
     let value = this.props.form.getFieldValue(name);
 
     let bulkValue = ``;
     if(value) {
-      value.forEach(item => {
+      value.forEach((/** @type {any} */ item) => {
         return (bulkValue += item.name ? `${item.name}:${item.example || ''}\n` : '');
       });
     }
@@ -597,12 +685,19 @@ class InterfaceEditForm extends Component {
     });
   };
 
+  /**
+   * @param {any} e
+   * @returns {void}
+   */
   handleBulkValueInput = e => {
     this.setState({
       bulkValue: e.target.value
     });
   };
 
+  /**
+   * @returns {any}
+   */
   render() {
     const { getFieldDecorator } = this.props.form;
     const { custom_field, projectMsg } = this.props;
@@ -616,6 +711,11 @@ class InterfaceEditForm extends Component {
 
     const req_body_other_use_schema_editor = checkIsJsonSchema(this.state.req_body_other) || '';
 
+    /**
+     * @param {any} data
+     * @param {any} index
+     * @returns {any}
+     */
     const queryTpl = (data, index) => {
       return (
         <Row key={index} className="interface-edit-item-content">
@@ -662,6 +762,11 @@ class InterfaceEditForm extends Component {
       );
     };
 
+    /**
+     * @param {any} data
+     * @param {any} index
+     * @returns {any}
+     */
     const headerTpl = (data, index) => {
       return (
         <Row key={index} className="interface-edit-item-content">
@@ -678,7 +783,7 @@ class InterfaceEditForm extends Component {
             })(
               <AutoComplete
                 dataSource={HTTP_REQUEST_HEADER}
-                filterOption={(inputValue, option) =>
+                filterOption={(/** @type {any} */ inputValue, /** @type {any} */ option) =>
                   option.props.children.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
                 }
                 placeholder="参数名称"
@@ -711,6 +816,11 @@ class InterfaceEditForm extends Component {
       );
     };
 
+    /**
+     * @param {any} data
+     * @param {any} index
+     * @returns {any}
+     */
     const requestBodyTpl = (data, index) => {
       return (
         <Row key={index} className="interface-edit-item-content">
@@ -767,6 +877,11 @@ class InterfaceEditForm extends Component {
       );
     };
 
+    /**
+     * @param {any} data
+     * @param {any} index
+     * @returns {any}
+     */
     const paramsTpl = (data, index) => {
       return (
         <Row key={index} className="interface-edit-item-content">
@@ -789,23 +904,29 @@ class InterfaceEditForm extends Component {
       );
     };
 
-    const paramsList = this.state.req_params.map((item, index) => {
-      return paramsTpl(item, index);
-    });
+    const paramsList = this.state.req_params.map(
+      (/** @type {any} */ item, /** @type {any} */ index) => {
+        return paramsTpl(item, index);
+      }
+    );
 
-    const QueryList = this.state.req_query.map((item, index) => {
-      return queryTpl(item, index);
-    });
+    const QueryList = this.state.req_query.map(
+      (/** @type {any} */ item, /** @type {any} */ index) => {
+        return queryTpl(item, index);
+      }
+    );
 
     const headerList = this.state.req_headers
-      ? this.state.req_headers.map((item, index) => {
+      ? this.state.req_headers.map((/** @type {any} */ item, /** @type {any} */ index) => {
           return headerTpl(item, index);
         })
       : [];
 
-    const requestBodyList = this.state.req_body_form.map((item, index) => {
-      return requestBodyTpl(item, index);
-    });
+    const requestBodyList = this.state.req_body_form.map(
+      (/** @type {any} */ item, /** @type {any} */ index) => {
+        return requestBodyTpl(item, index);
+      }
+    );
 
     const DEMOPATH = '/api/user/{id}';
 
@@ -846,7 +967,7 @@ class InterfaceEditForm extends Component {
                 rules: [{ required: true, message: '请选择一个分类' }]
               })(
                 <Select placeholder="请选择一个分类">
-                  {this.props.cat.map(item => {
+                  {this.props.cat.map((/** @type {any} */ item) => {
                     return (
                       <Option key={item._id} value={item._id + ''}>
                         {item.name}
@@ -932,7 +1053,7 @@ class InterfaceEditForm extends Component {
             <FormItem className="interface-edit-item" {...formItemLayout} label="Tag">
               {getFieldDecorator('tag', { initialValue: this.state.tag })(
                 <Select placeholder="请选择 tag " mode="multiple">
-                  {projectMsg.tag.map(item => {
+                  {projectMsg.tag.map((/** @type {any} */ item) => {
                     return (
                       <Option value={item.name} key={item._id}>
                         {item.name}
@@ -1120,12 +1241,12 @@ class InterfaceEditForm extends Component {
                   </span>
                 ) : (
                   <ReqBodySchema
-                    onChange={text => {
+                    onChange={(/** @type {any} */ text) => {
                       this.setState({
                         req_body_other: text
                       });
 
-                      if (new Date().getTime() - this.startTime > 1000) {
+                      if (new Date().getTime() - /** @type {any} */ (this.startTime) > 1000) {
                         EditFormContext.props.changeEditStatus(true);
                       }
                     }}
@@ -1234,11 +1355,11 @@ class InterfaceEditForm extends Component {
                   ) : (
                     <div style={{ display: this.state.jsonType === 'tpl' ? 'block' : 'none' }}>
                       <ResBodySchema
-                        onChange={text => {
+                        onChange={(/** @type {any} */ text) => {
                           this.setState({
                             res_body: text
                           });
-                          if (new Date().getTime() - this.startTime > 1000) {
+                          if (new Date().getTime() - /** @type {any} */ (this.startTime) > 1000) {
                             EditFormContext.props.changeEditStatus(true);
                           }
                         }}
@@ -1253,7 +1374,7 @@ class InterfaceEditForm extends Component {
                         className="interface-editor"
                         data={this.state.res_body}
                         onChange={this.handleResBody}
-                        ref={editor => (this.resBodyEditor = editor)}
+                        ref={(/** @type {any} */ editor) => (this.resBodyEditor = editor)}
                         fullScreen={true}
                       />
                     )}

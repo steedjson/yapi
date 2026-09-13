@@ -15,6 +15,8 @@ declare function require(id: string): any;
 
 declare module '*.scss';
 
+declare module '*.css';
+
 declare var exports: any;
 declare var module: { exports: any };
 declare var __dirname: string;
@@ -145,6 +147,10 @@ declare module 'antd' {
   export const Tree: any;
   export const Modal: any;
   export const Tooltip: any;
+  export const Affix: any;
+  export const Select: any;
+  export const AutoComplete: any;
+  export const Switch: any;
 }
 
 /**
@@ -189,4 +195,24 @@ declare module 'react-router-dom' {
 
 declare module 'client/plugin.js' {
   export function emitHook(name: string, ...args: any[]): any;
+}
+
+declare module 'json-schema-editor-visual' {
+  const createSchemaEditor: (...args: any[]) => any;
+  export = createSchemaEditor;
+}
+
+declare module '*/mockEditor' {
+  const mockEditor: any;
+  export default mockEditor;
+}
+
+declare module '*/AceEditor' {
+  const AceEditor: any;
+  export default AceEditor;
+}
+
+declare module '*/tui-editor-Editor-all.min.js' {
+  const Editor: any;
+  export default Editor;
 }
