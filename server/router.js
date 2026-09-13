@@ -188,6 +188,26 @@ let routerConfig = {
       action: 'uploadAvatar',
       path: 'upload_avatar',
       method: 'post'
+    },
+    {
+      action: 'add',
+      path: 'add',
+      method: 'post'
+    },
+    {
+      action: 'resetPassword',
+      path: 'reset_password',
+      method: 'post'
+    },
+    {
+      action: 'changeStatus',
+      path: 'change_status',
+      method: 'post'
+    },
+    {
+      action: 'changeRole',
+      path: 'change_role',
+      method: 'post'
     }
   ],
   project: [

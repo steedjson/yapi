@@ -152,6 +152,7 @@ class baseController {
 
   /**
    * 校验 cookie 登录态，登录成功时写入 $uid / $auth / $user。
+   * 被禁用的账号复用本次 findById 结果拦截, 返回 false 并在响应上输出 401。
    * @param {any} ctx Koa 请求上下文
    * @returns {Promise<boolean>}
    */
@@ -164,6 +165,12 @@ class baseController {
       }
       let userInst = yapi.getInst(userModel); //创建user实体
       let result = await userInst.findById(uid);
+      //被禁用的账号拦截登录态, 复用本次 findById 结果判断, 不新增每请求查询
+      if (result && result.disabled === true) {
+        this.$auth = false;
+        ctx.body = yapi.commons.resReturn(null, 401, '账号已被禁用，请联系管理员');
+        return false;
+      }
       if (!result) {
         return false;
       }

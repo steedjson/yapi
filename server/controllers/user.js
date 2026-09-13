@@ -60,6 +60,9 @@ class userController extends baseController {
 
     if (!result) {
       return (ctx.body = yapi.commons.resReturn(null, 404, '该用户不存在'));
+    } else if (result.disabled === true) {
+      //被禁用的账号不允许登录
+      return (ctx.body = yapi.commons.resReturn(null, 403, '账号已被禁用，请联系管理员'));
     } else if (yapi.commons.generatePassword(password, result.passsalt) === result.password) {
       this.setLoginCookie(result._id, result.passsalt);
 
@@ -235,6 +238,11 @@ class userController extends baseController {
           to: email,
           contents: `<h3>亲爱的用户：</h3><p>您好，感谢使用YApi平台，你的邮箱账号是：${email}</p>`
         });
+      }
+
+      //已存在的用户需校验禁用状态, 新注册用户不受影响
+      if (user.disabled === true) {
+        throw new Error('账号已被禁用，请联系管理员');
       }
 
       this.setLoginCookie(user._id, user.passsalt);
@@ -430,6 +438,7 @@ class userController extends baseController {
    * @foldnumber 10
    * @param {Number} [page] 分页页码
    * @param {Number} [limit] 分页大小,默认为10条
+   * @param {String} [keyword] 可选过滤关键词,按email/username不区分大小写匹配
    * @returns {Object}
    * @example
    */
@@ -441,11 +450,15 @@ class userController extends baseController {
   async list(ctx) {
     let page = ctx.request.query.page || 1,
       limit = ctx.request.query.limit || 10;
+    let keyword = ctx.request.query.keyword;
 
     const userInst = yapi.getInst(userModel);
     try {
-      let user = await userInst.listWithPaging(page, limit);
-      let count = await userInst.listCount();
+      if (keyword && !yapi.commons.validateSearchKeyword(keyword)) {
+        return (ctx.body = yapi.commons.resReturn(null, 400, 'Bad query.'));
+      }
+      let user = await userInst.listWithPaging(page, limit, keyword);
+      let count = await userInst.listCount(keyword);
       return (ctx.body = yapi.commons.resReturn({
         count: count,
         total: Math.ceil(count / limit),
@@ -539,6 +552,243 @@ class userController extends baseController {
       let result = await userInst.del(id);
 
       ctx.body = yapi.commons.resReturn(result);
+    } catch (/** @type {any} */ e) {
+      ctx.body = yapi.commons.resReturn(null, 402, e.message);
+    }
+  }
+
+  /**
+   * 管理员添加用户,只有admin用户才有此权限
+   * @interface /user/add
+   * @method POST
+   * @category user
+   * @foldnumber 10
+   * @param {String} username 用户名，不能为空
+   * @param {String} email email名称，不能为空
+   * @param  {String} password 密码，不能为空
+   * @param {String} [role] 用户角色,仅允许admin|member,默认member
+   * @returns {Object}
+   * @example
+   */
+
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
+   */
+  async add(ctx) {
+    //管理员创建用户
+    try {
+      if (this.getRole() !== 'admin') {
+        return (ctx.body = yapi.commons.resReturn(null, 401, '没有权限'));
+      }
+
+      let userInst = yapi.getInst(userModel);
+      let params = ctx.request.body;
+
+      params = yapi.commons.handleParams(params, {
+        username: 'string',
+        password: 'string',
+        email: 'string'
+      });
+
+      if (!params.username) {
+        return (ctx.body = yapi.commons.resReturn(null, 400, '用户名不能为空'));
+      }
+
+      if (!params.email) {
+        return (ctx.body = yapi.commons.resReturn(null, 400, '邮箱不能为空'));
+      }
+
+      if (!params.password) {
+        return (ctx.body = yapi.commons.resReturn(null, 400, '密码不能为空'));
+      }
+
+      if (params.role && params.role !== 'admin' && params.role !== 'member') {
+        return (ctx.body = yapi.commons.resReturn(null, 400, 'role仅允许admin或member'));
+      }
+
+      let checkRepeat = await userInst.checkRepeat(params.email); //然后检查是否已经存在该用户
+
+      if (checkRepeat > 0) {
+        return (ctx.body = yapi.commons.resReturn(null, 401, '该email已经注册'));
+      }
+
+      let passsalt = yapi.commons.randStr();
+      let data = {
+        username: params.username,
+        password: yapi.commons.generatePassword(params.password, passsalt), //加密
+        email: params.email,
+        passsalt: passsalt,
+        role: params.role || 'member',
+        add_time: yapi.commons.time(),
+        up_time: yapi.commons.time(),
+        type: 'site'
+      };
+
+      let user = await userInst.save(data);
+      await this.handlePrivateGroup(user._id);
+      //与reg不同, 这里不调用setLoginCookie: 管理员创建的是其他用户, 不应替其建立登录态
+      return (ctx.body = yapi.commons.resReturn({
+        uid: user._id,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+        type: user.type,
+        add_time: user.add_time,
+        up_time: user.up_time,
+        study: user.study,
+        disabled: user.disabled
+      }));
+    } catch (/** @type {any} */ e) {
+      ctx.body = yapi.commons.resReturn(null, 401, e.message);
+    }
+  }
+
+  /**
+   * 管理员重置指定用户密码,只有admin用户才有此权限,重置后原密码与旧登录态失效
+   * @interface /user/reset_password
+   * @method POST
+   * @category user
+   * @foldnumber 10
+   * @param {Number} uid 用户uid
+   * @param  {String} password 新密码，不能为空
+   * @returns {Object}
+   * @example
+   */
+
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
+   */
+  async resetPassword(ctx) {
+    try {
+      if (this.getRole() !== 'admin') {
+        return (ctx.body = yapi.commons.resReturn(null, 401, '没有权限'));
+      }
+
+      let params = ctx.request.body;
+      if (!params.uid) {
+        return (ctx.body = yapi.commons.resReturn(null, 400, 'uid不能为空'));
+      }
+      if (!params.password) {
+        return (ctx.body = yapi.commons.resReturn(null, 400, '密码不能为空'));
+      }
+
+      let userInst = yapi.getInst(userModel);
+      let userData = await userInst.findById(params.uid);
+      if (!userData) {
+        return (ctx.body = yapi.commons.resReturn(null, 400, 'uid不存在'));
+      }
+
+      let passsalt = yapi.commons.randStr();
+      let data = {
+        up_time: yapi.commons.time(),
+        password: yapi.commons.generatePassword(params.password, passsalt),
+        passsalt: passsalt
+      };
+
+      let result = await userInst.update(params.uid, data);
+      return (ctx.body = yapi.commons.resReturn(result));
+    } catch (/** @type {any} */ e) {
+      ctx.body = yapi.commons.resReturn(null, 402, e.message);
+    }
+  }
+
+  /**
+   * 管理员禁用/启用用户,只有admin用户才有此权限,不能禁用自己
+   * @interface /user/change_status
+   * @method POST
+   * @category user
+   * @foldnumber 10
+   * @param {Number} uid 用户uid
+   * @param {Boolean} disabled true为禁用,false为启用
+   * @returns {Object}
+   * @example
+   */
+
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
+   */
+  async changeStatus(ctx) {
+    try {
+      if (this.getRole() !== 'admin') {
+        return (ctx.body = yapi.commons.resReturn(null, 401, '没有权限'));
+      }
+
+      let params = ctx.request.body;
+      if (!params.uid) {
+        return (ctx.body = yapi.commons.resReturn(null, 400, 'uid不能为空'));
+      }
+      if (typeof params.disabled !== 'boolean') {
+        return (ctx.body = yapi.commons.resReturn(null, 400, 'disabled参数需要为布尔值'));
+      }
+      if (params.uid == this.getUid()) {
+        return (ctx.body = yapi.commons.resReturn(null, 403, '不能禁用自己'));
+      }
+
+      let userInst = yapi.getInst(userModel);
+      let userData = await userInst.findById(params.uid);
+      if (!userData) {
+        return (ctx.body = yapi.commons.resReturn(null, 400, 'uid不存在'));
+      }
+
+      let data = {
+        up_time: yapi.commons.time(),
+        disabled: params.disabled
+      };
+      let result = await userInst.update(params.uid, data);
+      return (ctx.body = yapi.commons.resReturn(result));
+    } catch (/** @type {any} */ e) {
+      ctx.body = yapi.commons.resReturn(null, 402, e.message);
+    }
+  }
+
+  /**
+   * 管理员修改用户角色,只有admin用户才有此权限,不能修改自己的角色
+   * @interface /user/change_role
+   * @method POST
+   * @category user
+   * @foldnumber 10
+   * @param {Number} uid 用户uid
+   * @param {String} role 用户角色,仅允许admin|member
+   * @returns {Object}
+   * @example
+   */
+
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
+   */
+  async changeRole(ctx) {
+    try {
+      if (this.getRole() !== 'admin') {
+        return (ctx.body = yapi.commons.resReturn(null, 401, '没有权限'));
+      }
+
+      let params = ctx.request.body;
+      if (!params.uid) {
+        return (ctx.body = yapi.commons.resReturn(null, 400, 'uid不能为空'));
+      }
+      if (params.role !== 'admin' && params.role !== 'member') {
+        return (ctx.body = yapi.commons.resReturn(null, 400, 'role仅允许admin或member'));
+      }
+      if (params.uid == this.getUid()) {
+        return (ctx.body = yapi.commons.resReturn(null, 403, '不能修改自己的角色'));
+      }
+
+      let userInst = yapi.getInst(userModel);
+      let userData = await userInst.findById(params.uid);
+      if (!userData) {
+        return (ctx.body = yapi.commons.resReturn(null, 400, 'uid不存在'));
+      }
+
+      let data = {
+        up_time: yapi.commons.time(),
+        role: params.role
+      };
+      let result = await userInst.update(params.uid, data);
+      return (ctx.body = yapi.commons.resReturn(result));
     } catch (/** @type {any} */ e) {
       ctx.body = yapi.commons.resReturn(null, 402, e.message);
     }

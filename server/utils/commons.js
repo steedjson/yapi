@@ -434,7 +434,8 @@ exports.createAction = (router, baseurl, routerController, action, path, method,
       }
       if (inst.$auth === true) {
         await inst[action].call(inst, ctx);
-      } else {
+      } else if (!ctx.body) {
+        //auth 层(init/checkLogin)已写入错误响应时(如账号禁用401、token无效42014)透传, 不覆盖
         if (ws === true) {
           ctx.ws.send('请登录...');
         } else {

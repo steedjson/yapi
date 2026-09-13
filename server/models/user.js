@@ -22,6 +22,7 @@ class userModel extends baseModel {
       passsalt: String,
       study: { type: Boolean, default: false },
       role: String,
+      disabled: { type: Boolean, default: false }, //账号是否被禁用, 旧数据无此字段视为启用
       add_time: Number,
       up_time: Number,
       type: { type: String, enum: ['site', 'third'], default: 'site' } //site用户是网站注册用户, third是第三方登录过来的用户
@@ -55,20 +56,33 @@ class userModel extends baseModel {
       .exec();
   }
 
-  listWithPaging(page, limit) {
+  listWithPaging(page, limit, keyword) {
     page = parseInt(page);
     limit = parseInt(limit);
+    let query = {};
+    if (keyword) {
+      //参照 search(): 按 email/username 不区分大小写正则过滤
+      query = {
+        $or: [{ email: new RegExp(keyword, 'i') }, { username: new RegExp(keyword, 'i') }]
+      };
+    }
     return this.model
-      .find()
+      .find(query)
       .sort({ _id: -1 })
       .skip((page - 1) * limit)
       .limit(limit)
-      .select('_id username email role type  add_time up_time study')
+      .select('_id username email role type  add_time up_time study disabled')
       .exec();
   }
 
-  listCount() {
-    return this.model.countDocuments();
+  listCount(keyword) {
+    let query = {};
+    if (keyword) {
+      query = {
+        $or: [{ email: new RegExp(keyword, 'i') }, { username: new RegExp(keyword, 'i') }]
+      };
+    }
+    return this.model.countDocuments(query);
   }
 
   findByEmail(email) {
