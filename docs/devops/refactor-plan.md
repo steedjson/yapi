@@ -745,7 +745,13 @@ UI 迁移必须在 TypeScript 和构建工具稳定后进行，优先保持组�
 
 保留页面 URL、路由、表单字段、权限判断、接口调用、按钮含义和插件入口。
 
-当前进度（2026 年 9 月 13 日）：登录页已完成 UI 升级（提交 `1331510f`）。Login.js、Reg.js、LoginWrap.js、LoginContainer.js 四个组件纳入 TypeScript 严格类型检查（`@ts-check` opt-in 模式），补充 React/antd/prop-types/JSX 环境声明到 `global.d.ts`，tsconfig 切换为 opt-in 模式（已有 `@ts-check` 文件的检查范围不变）。移除登录页调试 `console.log`。页面 URL、路由、表单字段、权限判断、接口调用、按钮含义和插件入口均未改动。剩余页面（项目列表→接口分类树→接口编辑页→导入弹窗）按相同模式逐页推进。
+当前进度（2026 年 9 月 13 日）：前三页已完成 UI 升级。
+
+- 登录页（提交 `1331510f`）：Login.js、Reg.js、LoginWrap.js、LoginContainer.js 四个组件纳入 TypeScript 严格类型检查（`@ts-check` opt-in 模式），补充 React/antd/prop-types/JSX 环境声明到 `global.d.ts`，tsconfig 切换为 opt-in 模式（已有 `@ts-check` 文件的检查范围不变）。移除登录页调试 `console.log`。
+- 项目列表与分组页（提交 `af7ca4cd`）：ProjectList.js、Group.js 纳入严格检查，antd Tooltip/Layout/Spin 与 core-decorators 等缺失声明补齐，无逻辑变更。
+- 接口分类树（提交 `dc692124`）：InterfaceMenu.js（661 行）纳入严格检查，全部方法补充 JSDoc 注解，`global.d.ts` 的 antd 声明追加 Tree/Modal/Tooltip，零 `@ts-ignore`；经 AST 前后等价对比验证无运行时语义变更。验证：`tsc --noEmit` 0 错误、Node 24.21.0（`.nvmrc`）下 `npm test` 236 pass/0 fail、`build-client` 退出码 0。注意 Node 25 下 server 侧测试因存量依赖 `buffer-equal-constant-time`（jsonwebtoken 传递依赖）访问已移除的 `SlowBuffer` 而崩溃，与页面改动无关，测试须用 `.nvmrc` 声明版本执行。
+
+页面 URL、路由、表单字段、权限判断、接口调用、按钮含义和插件入口均未改动。剩余页面（接口编辑页→导入弹窗）按相同模式逐页推进。
 
 ## Phase 16：最后评估 React 和 Ant Design 大版本
 
