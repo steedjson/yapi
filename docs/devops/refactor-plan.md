@@ -745,6 +745,8 @@ UI 迁移必须在 TypeScript 和构建工具稳定后进行，优先保持组�
 
 保留页面 URL、路由、表单字段、权限判断、接口调用、按钮含义和插件入口。
 
+当前进度（2026 年 9 月 13 日）：登录页已完成 UI 升级（提交 `1331510f`）。Login.js、Reg.js、LoginWrap.js、LoginContainer.js 四个组件纳入 TypeScript 严格类型检查（`@ts-check` opt-in 模式），补充 React/antd/prop-types/JSX 环境声明到 `global.d.ts`，tsconfig 切换为 opt-in 模式（已有 `@ts-check` 文件的检查范围不变）。移除登录页调试 `console.log`。页面 URL、路由、表单字段、权限判断、接口调用、按钮含义和插件入口均未改动。剩余页面（项目列表→接口分类树→接口编辑页→导入弹窗）按相同模式逐页推进。
+
 ## Phase 16：最后评估 React 和 Ant Design 大版本
 
 ### 前提
