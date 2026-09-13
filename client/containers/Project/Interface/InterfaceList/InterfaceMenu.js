@@ -1,3 +1,4 @@
+// @ts-check
 import React, { PureComponent as Component } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
@@ -26,7 +27,7 @@ const TreeNode = Tree.TreeNode;
 const headHeight = 240; // menu顶部到网页顶部部分的高度
 
 @connect(
-  state => {
+  (/** @type {any} */ state) => {
     return {
       list: state.inter.list,
       inter: state.inter.curdata,
@@ -67,22 +68,30 @@ class InterfaceMenu extends Component {
   /**
    * @param {String} key
    */
+  /**
+   * @param {any} key
+   * @param {any} status
+   * @returns {void}
+   */
   changeModal = (key, status) => {
     //visible add_cat_modal_visible change_cat_modal_visible del_cat_modal_visible
-    let newState = {};
+    let newState = /** @type {any} */ ({});
     newState[key] = status;
     this.setState(newState);
   };
 
+  /**
+   * @returns {void}
+   */
   handleCancel = () => {
     this.setState({
       visible: false
     });
   };
 
-  constructor(props) {
+  constructor(/** @type {any} */ props) {
     super(props);
-    this.state = {
+    this.state = /** @type {any} */ ({
       curKey: null,
       visible: false,
       delIcon: null,
@@ -93,14 +102,20 @@ class InterfaceMenu extends Component {
       curCatdata: {},
       expands: null,
       list: []
-    };
+    });
   }
 
+  /**
+   * @returns {void}
+   */
   handleRequest() {
     this.props.initInterface();
     this.getList();
   }
 
+  /**
+   * @returns {Promise<void>}
+   */
   async getList() {
     let r = await this.props.fetchInterfaceListMenu(this.props.projectId);
     this.setState({
@@ -108,10 +123,17 @@ class InterfaceMenu extends Component {
     });
   }
 
+  /**
+   * @returns {void}
+   */
   componentWillMount() {
     this.handleRequest();
   }
 
+  /**
+   * @param {any} nextProps
+   * @returns {void}
+   */
   componentWillReceiveProps(nextProps) {
     if (this.props.list !== nextProps.list) {
       // console.log('next', nextProps.list)
@@ -121,6 +143,10 @@ class InterfaceMenu extends Component {
     }
   }
 
+  /**
+   * @param {any} selectedKeys
+   * @returns {any}
+   */
   onSelect = selectedKeys => {
     const { history, match } = this.props;
     let curkey = selectedKeys[0];
@@ -139,12 +165,20 @@ class InterfaceMenu extends Component {
     });
   };
 
+  /**
+   * @returns {void}
+   */
   changeExpands = () => {
     this.setState({
       expands: null
     });
   };
 
+  /**
+   * @param {any} data
+   * @param {any} cb
+   * @returns {Promise<any>}
+   */
   handleAddInterface = async (data, cb) => {
     data.project_id = this.props.projectId;
     try {
@@ -160,14 +194,18 @@ class InterfaceMenu extends Component {
         visible: false
       });
       if (cb) cb();
-    } catch (err) {
+    } catch (/** @type {any} */ err) {
       message.error('接口添加失败：' + err.message);
     }
   };
 
+  /**
+   * @param {any} list
+   * @returns {any[]}
+   */
   flattenCategories = list => {
     const result = [];
-    const stack = (list || []).slice().reverse().map(item => ({ item, prefix: '' }));
+    const stack = (list || []).slice().reverse().map((/** @type {any} */ item) => ({ item, prefix: '' }));
     // 使用显式栈遍历，避免层级较深时递归调用耗尽调用栈。
     while (stack.length) {
       const current = stack.pop();
@@ -175,11 +213,15 @@ class InterfaceMenu extends Component {
       if (!item) continue;
       result.push({ _id: item._id, label: current.prefix + item.name });
       const children = (item.children || []).slice().reverse();
-      children.forEach(child => stack.push({ item: child, prefix: current.prefix + '└ ' }));
+      children.forEach((/** @type {any} */ child) => stack.push({ item: child, prefix: current.prefix + '└ ' }));
     }
     return result;
   };
 
+  /**
+   * @param {any} data
+   * @returns {Promise<any>}
+   */
   handleAddInterfaceCat = async data => {
     data.project_id = this.props.projectId;
     try {
@@ -192,11 +234,15 @@ class InterfaceMenu extends Component {
       this.setState({
         add_cat_modal_visible: false
       });
-    } catch (err) {
+    } catch (/** @type {any} */ err) {
       message.error('接口分类添加失败：' + err.message);
     }
   };
 
+  /**
+   * @param {any} data
+   * @returns {Promise<any>}
+   */
   handleChangeInterfaceCat = async data => {
     data.project_id = this.props.projectId;
 
@@ -216,11 +262,15 @@ class InterfaceMenu extends Component {
       this.setState({
         change_cat_modal_visible: false
       });
-    } catch (err) {
+    } catch (/** @type {any} */ err) {
       message.error('接口分类更新失败：' + err.message);
     }
   };
 
+  /**
+   * @param {any} data
+   * @returns {void}
+   */
   showConfirm = data => {
     let that = this;
     let id = data._id;
@@ -241,7 +291,7 @@ class InterfaceMenu extends Component {
           that.props.history.push(
             '/project/' + that.props.match.params.id + '/interface/api/cat_' + catid
           );
-        } catch (err) {
+        } catch (/** @type {any} */ err) {
           message.error('接口删除失败：' + err.message);
         } finally {
           ref.destroy();
@@ -253,6 +303,10 @@ class InterfaceMenu extends Component {
     });
   };
 
+  /**
+   * @param {any} catid
+   * @returns {void}
+   */
   showDelCatConfirm = catid => {
     let that = this;
     const ref = confirm({
@@ -269,7 +323,7 @@ class InterfaceMenu extends Component {
           await that.getList();
           await that.props.fetchInterfaceList({ project_id: that.props.projectId });
           that.props.history.push('/project/' + that.props.match.params.id + '/interface/api');
-        } catch (err) {
+        } catch (/** @type {any} */ err) {
           message.error('接口分类删除失败：' + err.message);
         } finally {
           ref.destroy();
@@ -279,6 +333,10 @@ class InterfaceMenu extends Component {
     });
   };
 
+  /**
+   * @param {any} id
+   * @returns {Promise<any>}
+   */
   copyInterface = async id => {
     try {
       let interfaceData = await this.props.fetchInterfaceData(id);
@@ -299,19 +357,30 @@ class InterfaceMenu extends Component {
       this.setState({
         visible: false
       });
-    } catch (err) {
+    } catch (/** @type {any} */ err) {
       message.error('接口复制失败：' + err.message);
     }
   };
 
+  /**
+   * @param {any} id
+   * @returns {void}
+   */
   enterItem = id => {
     this.setState({ delIcon: id });
   };
 
+  /**
+   * @returns {void}
+   */
   leaveItem = () => {
     this.setState({ delIcon: null });
   };
 
+  /**
+   * @param {any} e
+   * @returns {void}
+   */
   onFilter = e => {
     this.setState({
       filter: e.target.value,
@@ -319,12 +388,20 @@ class InterfaceMenu extends Component {
     });
   };
 
+  /**
+   * @param {any} e
+   * @returns {void}
+   */
   onExpand = e => {
     this.setState({
       expands: e
     });
   };
 
+  /**
+   * @param {any} e
+   * @returns {Promise<void>}
+   */
   onDrop = async e => {
     try {
       const dropCatIndex = e.node.props.pos.split('-')[1] - 1;
@@ -367,20 +444,24 @@ class InterfaceMenu extends Component {
         await axios.post('/api/interface/up_cat_index', changes);
         await this.props.fetchInterfaceListMenu(projectId);
       }
-    } catch (err) {
+    } catch (/** @type {any} */ err) {
       message.error('拖拽排序失败：' + err.message);
     }
   };
   // 数据过滤
+  /**
+   * @param {any} list
+   * @returns {any}
+   */
   filterList = list => {
     let that = this;
-    let arr = [];
+    let arr = /** @type {any[]} */ ([]);
     let menuList = produce(list, draftList => {
-      draftList.filter(item => {
-        let interfaceFilter = false;
+      draftList.filter((/** @type {any} */ item) => {
+        let interfaceFilter = /** @type {any} */ (false);
         // arr = [];
         if (item.name.indexOf(that.state.filter) === -1) {
-          item.list = item.list.filter(inter => {
+          item.list = item.list.filter((/** @type {any} */ inter) => {
             if (
               inter.title.indexOf(that.state.filter) === -1 &&
               inter.path.indexOf(that.state.filter) === -1
@@ -402,12 +483,18 @@ class InterfaceMenu extends Component {
     return { menuList, arr };
   };
 
+  /**
+   * @param {any} item
+   * @param {any} matchParams
+   * @param {any} itemInterfaceCreate
+   * @returns {any}
+   */
   renderCategory = (item, matchParams, itemInterfaceCreate) => (
     <TreeNode
       title={
         <Link
           className="interface-item"
-          onClick={e => {
+          onClick={(/** @type {any} */ e) => {
             e.stopPropagation();
             this.changeExpands();
           }}
@@ -418,7 +505,7 @@ class InterfaceMenu extends Component {
           <Icon
             type="delete"
             className="interface-delete-icon"
-            onClick={e => {
+            onClick={(/** @type {any} */ e) => {
               e.preventDefault();
               e.stopPropagation();
               this.showDelCatConfirm(item._id);
@@ -427,7 +514,7 @@ class InterfaceMenu extends Component {
           <Icon
             type="edit"
             className="interface-delete-icon"
-            onClick={e => {
+            onClick={(/** @type {any} */ e) => {
               e.preventDefault();
               e.stopPropagation();
               this.changeModal('change_cat_modal_visible', true);
@@ -437,7 +524,7 @@ class InterfaceMenu extends Component {
           <Icon
             type="folder-add"
             className="interface-delete-icon"
-            onClick={e => {
+            onClick={(/** @type {any} */ e) => {
               e.preventDefault();
               e.stopPropagation();
               this.changeModal('add_cat_modal_visible', true);
@@ -450,10 +537,13 @@ class InterfaceMenu extends Component {
       className={`interface-item-nav ${(item.list || []).length || (item.children || []).length ? '' : 'cat_switch_hidden'}`}
     >
       {(item.list || []).map(itemInterfaceCreate)}
-      {(item.children || []).map(child => this.renderCategory(child, matchParams, itemInterfaceCreate))}
+      {(item.children || []).map((/** @type {any} */ child) => this.renderCategory(child, matchParams, itemInterfaceCreate))}
     </TreeNode>
   );
 
+  /**
+   * @returns {any}
+   */
   render() {
     const matchParams = this.props.match.params;
     // let menuList = this.state.list;
@@ -554,6 +644,10 @@ class InterfaceMenu extends Component {
       }
     };
 
+    /**
+     * @param {any} item
+     * @returns {any}
+     */
     const itemInterfaceCreate = item => {
       return (
         <TreeNode
@@ -565,7 +659,7 @@ class InterfaceMenu extends Component {
             >
               <Link
                 className="interface-item"
-                onClick={e => e.stopPropagation()}
+                onClick={(/** @type {any} */ e) => e.stopPropagation()}
                 to={'/project/' + matchParams.id + '/interface/api/' + item._id}
               >
                 {item.title}
@@ -575,9 +669,9 @@ class InterfaceMenu extends Component {
                   <Icon
                     type="delete"
                     className="interface-delete-icon"
-                    onClick={e => {
-                      e.stopPropagation();
-                      this.showConfirm(item);
+                  onClick={(/** @type {any} */ e) => {
+                    e.stopPropagation();
+                    this.showConfirm(item);
                     }}
                     style={{ display: this.state.delIcon == item._id ? 'block' : 'none' }}
                   />
@@ -586,9 +680,9 @@ class InterfaceMenu extends Component {
                   <Icon
                     type="copy"
                     className="interface-delete-icon"
-                    onClick={e => {
-                      e.stopPropagation();
-                      this.copyInterface(item._id);
+                  onClick={(/** @type {any} */ e) => {
+                    e.stopPropagation();
+                    this.copyInterface(item._id);
                     }}
                     style={{ display: this.state.delIcon == item._id ? 'block' : 'none' }}
                   />
@@ -620,7 +714,7 @@ class InterfaceMenu extends Component {
         {menuList.length > 0 ? (
           <div
             className="tree-wrappper"
-            style={{ maxHeight: parseInt(document.body.clientHeight) - headHeight + 'px' }}
+            style={{ maxHeight: parseInt(/** @type {any} */ (document.body.clientHeight)) - headHeight + 'px' }}
           >
             <Tree
               className="interface-list"
@@ -637,7 +731,7 @@ class InterfaceMenu extends Component {
                 className="item-all-interface"
                 title={
                   <Link
-                    onClick={e => {
+                    onClick={(/** @type {any} */ e) => {
                       e.stopPropagation();
                       this.changeExpands();
                     }}
@@ -649,7 +743,7 @@ class InterfaceMenu extends Component {
                 }
                 key="root"
               />
-              {menuList.map(item => this.renderCategory(item, matchParams, itemInterfaceCreate))}
+              {menuList.map((/** @type {any} */ item) => this.renderCategory(item, matchParams, itemInterfaceCreate))}
             </Tree>
           </div>
         ) : null}

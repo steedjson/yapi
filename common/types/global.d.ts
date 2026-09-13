@@ -142,6 +142,9 @@ declare module 'antd' {
   export const Row: any;
   export const Col: any;
   export const Card: any;
+  export const Tree: any;
+  export const Modal: any;
+  export const Tooltip: any;
 }
 
 /**
