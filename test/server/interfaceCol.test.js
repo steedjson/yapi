@@ -508,8 +508,7 @@ test.serial('upCol 校验通过后更新接口集且更新数据不含 col_id', 
 });
 
 // 实现中 body 本身必须为数组（参数名并非 cancels）；
-// 非数组时虽进入 '请求参数必须是数组' 分支，但缺少 return，
-// 随后 forEach 抛出 TypeError 被 catch 覆盖响应，最终 errcode 仍为 400
+// 修复后：非数组时进入 '请求参数必须是数组' 分支并直接 return 400
 test.serial('upCaseIndex body 非数组返回 400，空数组直接成功，合法数组逐项更新 index', async t => {
   const bad = createTestEnv({ id: 101, index: 2 });
   await bad.inst.upCaseIndex(bad.ctx);
@@ -542,8 +541,8 @@ test.serial('upColIndex body 非数组返回 400，合法数组逐项更新 inde
   t.deepEqual(ok.calls.colUpColIndex, [{ id: 201, index: 1 }, { id: 202, index: 3 }]);
 });
 
-// 实现中缺失 col_id 时 colModel.get 查不到数据返回 '不存在的id'（该分支无 return，
-// 后续读取 colData.uid 抛错但 catch 未回写 ctx.body），历史描述 '缺少col_id' 不存在
+// 修复后：缺失 col_id 时 colModel.get 查不到数据直接 return 400 '不存在的id'，
+// 历史描述 '缺少col_id' 不存在
 test.serial('delCol 接口集不存在时返回 400 不存在的id 且不执行删除', async t => {
   const { ctx, inst, calls } = createTestEnv({}, {});
 
