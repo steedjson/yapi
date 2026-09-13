@@ -1,8 +1,13 @@
+// @ts-check
 import { createStore as _createStore, applyMiddleware } from 'redux';
 import promiseMiddleware from 'redux-promise';
 import messageMiddleware from './middleware/messageMiddleware';
 import reducer from './modules/reducer';
 
+/**
+ * @param {Record<string, any>} [initialState]
+ * @returns {any}
+ */
 export default function createStore(initialState = {}) {
   const middleware = [promiseMiddleware, messageMiddleware];
 

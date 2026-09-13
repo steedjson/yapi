@@ -1,3 +1,4 @@
+// @ts-check
 import axios from 'axios';
 import qs from 'qs';
 // Actions
@@ -27,6 +28,10 @@ const initialState = {
   interfaceRequestId: 0
 };
 
+/**
+ * @param {Record<string, any>} [state]
+ * @param {any} [action]
+ */
 export default (state = initialState, action) => {
   switch (action.type) {
     case INIT_INTERFACE_DATA:
@@ -82,6 +87,10 @@ export default (state = initialState, action) => {
 };
 
 // 记录编辑页面是否有编辑
+/**
+ * @param {any} status
+ * @returns {{ type: string, status: any }}
+ */
 export function changeEditStatus(status) {
   return {
     type: CHANGE_EDIT_STATUS,
@@ -89,12 +98,19 @@ export function changeEditStatus(status) {
   };
 }
 
+/**
+ * @returns {{ type: string }}
+ */
 export function initInterface() {
   return {
     type: INIT_INTERFACE_DATA
   };
 }
 
+/**
+ * @param {any} updata
+ * @returns {{ type: string, updata: any, payload: boolean }}
+ */
 export function updateInterfaceData(updata) {
   return {
     type: UPDATE_INTERFACE_DATA,
@@ -103,6 +119,10 @@ export function updateInterfaceData(updata) {
   };
 }
 
+/**
+ * @param {any} id
+ * @returns {Promise<{ type: string, payload: any }>}
+ */
 export async function deleteInterfaceData(id) {
   let result = await axios.post('/api/interface/del', {id: id});
   return {
@@ -111,6 +131,10 @@ export async function deleteInterfaceData(id) {
   };
 }
 
+/**
+ * @param {any} data
+ * @returns {Promise<{ type: string, payload: any }>}
+ */
 export async function saveImportData(data) {
   let result = await axios.post('/api/interface/save', data);
   return {
@@ -119,6 +143,10 @@ export async function saveImportData(data) {
   };
 }
 
+/**
+ * @param {any} id
+ * @returns {Promise<{ type: string, payload: any }>}
+ */
 export async function deleteInterfaceCatData(id) {
   let result = await axios.post('/api/interface/del_cat', {catid: id});
   return {
@@ -128,6 +156,10 @@ export async function deleteInterfaceCatData(id) {
 }
 
 // Action Creators
+/**
+ * @param {any} interfaceId
+ * @returns {Promise<{ type: string, payload: any, requestId: number }>}
+ */
 export async function fetchInterfaceData(interfaceId) {
   const requestId = ++interfaceRequestSequence;
   let result = await axios.get('/api/interface/get?id=' + interfaceId);
@@ -138,6 +170,10 @@ export async function fetchInterfaceData(interfaceId) {
   };
 }
 
+/**
+ * @param {any} projectId
+ * @returns {Promise<{ type: string, payload: any }>}
+ */
 export async function fetchInterfaceListMenu(projectId) {
   let result = await axios.get('/api/interface/get_cat_tree?project_id=' + projectId);
   return {
@@ -146,10 +182,14 @@ export async function fetchInterfaceListMenu(projectId) {
   };
 }
 
+/**
+ * @param {any} params
+ * @returns {Promise<{ type: string, payload: any }>}
+ */
 export async function fetchInterfaceList(params) {
   let result = await axios.get('/api/interface/list', {
     params,
-    paramsSerializer: params => {
+    paramsSerializer: (/** @type {any} */ params) => {
       return qs.stringify(params, {indices: false})
     }
   })
@@ -159,11 +199,15 @@ export async function fetchInterfaceList(params) {
   };
 }
 
+/**
+ * @param {any} params
+ * @returns {Promise<{ type: string, payload: any }>}
+ */
 export async function fetchInterfaceCatList(params) {
   // 等待请求完成后再交给 redux-promise，避免分类列表拿到未完成的 Promise。
   let result = await axios.get('/api/interface/list_cat', {
     params,
-    paramsSerializer: params => {
+    paramsSerializer: (/** @type {any} */ params) => {
       return qs.stringify(params, {indices: false});
     }
   });

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { message } from 'antd';
 
 export default () => next => action => {

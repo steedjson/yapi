@@ -1,3 +1,4 @@
+// @ts-check
 import axios from 'axios';
 // Actions
 const FETCH_INTERFACE_COL_LIST = 'yapi/interfaceCol/FETCH_INTERFACE_COL_LIST';
@@ -30,6 +31,10 @@ const initialState = {
   envList: []
 };
 
+/**
+ * @param {Record<string, any>} [state]
+ * @param {any} [action]
+ */
 export default (state = initialState, action) => {
   switch (action.type) {
     case FETCH_INTERFACE_COL_LIST: {
@@ -75,6 +80,10 @@ export default (state = initialState, action) => {
 };
 
 // Action Creators
+/**
+ * @param {any} projectId
+ * @returns {{ type: string, payload: any }}
+ */
 export function fetchInterfaceColList(projectId) {
   return {
     type: FETCH_INTERFACE_COL_LIST,
@@ -82,6 +91,10 @@ export function fetchInterfaceColList(projectId) {
   };
 }
 
+/**
+ * @param {any} caseId
+ * @returns {{ type: string, payload: any }}
+ */
 export function fetchCaseData(caseId) {
   return {
     type: FETCH_CASE_DATA,
@@ -89,6 +102,10 @@ export function fetchCaseData(caseId) {
   };
 }
 
+/**
+ * @param {any} colId
+ * @returns {{ type: string, payload: any }}
+ */
 export function fetchCaseList(colId) {
   return {
     type: FETCH_CASE_LIST,
@@ -96,6 +113,10 @@ export function fetchCaseList(colId) {
   };
 }
 
+/**
+ * @param {any} col_id
+ * @returns {{ type: string, payload: any }}
+ */
 export function fetchCaseEnvList(col_id) {
   return {
     type: FETCH_CASE_ENV_LIST,
@@ -105,6 +126,10 @@ export function fetchCaseEnvList(col_id) {
   };
 }
 
+/**
+ * @param {any} colId
+ * @returns {{ type: string, payload: any }}
+ */
 export function fetchVariableParamsList(colId) {
   return {
     type: FETCH_VARIABLE_PARAMS_LIST,
@@ -112,6 +137,10 @@ export function fetchVariableParamsList(colId) {
   };
 }
 
+/**
+ * @param {any} data
+ * @returns {{ type: string, payload: any }}
+ */
 export function setColData(data) {
   return {
     type: SET_COL_DATA,

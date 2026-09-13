@@ -1,3 +1,4 @@
+// @ts-check
 import axios from 'axios';
 
 // Actions
@@ -39,6 +40,10 @@ const initialState = {
   imageUrl: ''
 };
 
+/**
+ * @param {Record<string, any>} [state]
+ * @param {any} [action]
+ */
 export default (state = initialState, action) => {
   switch (action.type) {
     case GET_LOGIN_STATE: {
@@ -131,6 +136,9 @@ export default (state = initialState, action) => {
 };
 
 // Action Creators
+/**
+ * @returns {{ type: string, payload: any }}
+ */
 export function checkLoginState() {
   return {
     type: GET_LOGIN_STATE,
@@ -138,6 +146,10 @@ export function checkLoginState() {
   };
 }
 
+/**
+ * @param {any} data
+ * @returns {{ type: string, payload: any }}
+ */
 export function loginActions(data) {
   return {
     type: LOGIN,
@@ -145,6 +157,10 @@ export function loginActions(data) {
   };
 }
 
+/**
+ * @param {any} data
+ * @returns {{ type: string, payload: any }}
+ */
 export function loginLdapActions(data) {
   return {
     type: LOGIN,
@@ -152,6 +168,10 @@ export function loginLdapActions(data) {
   };
 }
 
+/**
+ * @param {any} data
+ * @returns {{ type: string, payload: any }}
+ */
 export function regActions(data) {
   const { email, password, userName } = data;
   const param = {
@@ -165,6 +185,9 @@ export function regActions(data) {
   };
 }
 
+/**
+ * @returns {{ type: string, payload: any }}
+ */
 export function logoutActions() {
   return {
     type: LOGIN_OUT,
@@ -172,6 +195,10 @@ export function logoutActions() {
   };
 }
 
+/**
+ * @param {any} index
+ * @returns {{ type: string, index: any }}
+ */
 export function loginTypeAction(index) {
   return {
     type: LOGIN_TYPE,
@@ -179,6 +206,10 @@ export function loginTypeAction(index) {
   };
 }
 
+/**
+ * @param {any} data
+ * @returns {{ type: string, data: any }}
+ */
 export function setBreadcrumb(data) {
   return {
     type: SET_BREADCRUMB,
@@ -186,6 +217,10 @@ export function setBreadcrumb(data) {
   };
 }
 
+/**
+ * @param {any} data
+ * @returns {{ type: string, data: any }}
+ */
 export function setImageUrl(data) {
   return {
     type: SET_IMAGE_URL,
@@ -193,12 +228,18 @@ export function setImageUrl(data) {
   };
 }
 
+/**
+ * @returns {{ type: string }}
+ */
 export function changeStudyTip() {
   return {
     type: CHANGE_STUDY_TIP
   };
 }
 
+/**
+ * @returns {{ type: string, payload: any }}
+ */
 export function finishStudy() {
   return {
     type: FINISH_STUDY,

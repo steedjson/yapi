@@ -1,3 +1,4 @@
+// @ts-check
 // Actions
 const FETCH_ADD_INTERFACE_INPUT = 'yapi/addInterface/FETCH_ADD_INTERFACE_INPUT';
 const FETCH_ADD_INTERFACE_TAG_VALUE = 'yapi/addInterface/FETCH_ADD_INTERFACE_TAG_VALUE';
@@ -30,6 +31,10 @@ const initialState = {
   clipboard: () => {}
 };
 
+/**
+ * @param {Record<string, any>} [state]
+ * @param {any} [action]
+ */
 export default (state = initialState, action) => {
   switch (action.type) {
     case FETCH_ADD_INTERFACE_INPUT:
@@ -95,6 +100,10 @@ export default (state = initialState, action) => {
 // Action Creators
 import axios from 'axios';
 
+/**
+ * @param {any} value
+ * @returns {{ type: string, payload: any }}
+ */
 export function pushInputValue(value) {
   return {
     type: FETCH_ADD_INTERFACE_INPUT,
@@ -102,6 +111,10 @@ export function pushInputValue(value) {
   };
 }
 
+/**
+ * @param {any} value
+ * @returns {{ type: string, payload: any }}
+ */
 export function reqTagValue(value) {
   return {
     type: FETCH_ADD_INTERFACE_TAG_VALUE,
@@ -109,6 +122,10 @@ export function reqTagValue(value) {
   };
 }
 
+/**
+ * @param {any} value
+ * @returns {{ type: string, payload: any }}
+ */
 export function reqHeaderValue(value) {
   return {
     type: FETCH_ADD_INTERFACE_HEADER_VALUE,
@@ -116,6 +133,10 @@ export function reqHeaderValue(value) {
   };
 }
 
+/**
+ * @param {any} value
+ * @returns {{ type: string, payload: any }}
+ */
 export function addReqHeader(value) {
   return {
     type: ADD_INTERFACE_SEQ_HEADER,
@@ -123,6 +144,10 @@ export function addReqHeader(value) {
   };
 }
 
+/**
+ * @param {any} value
+ * @returns {{ type: string, payload: any }}
+ */
 export function deleteReqHeader(value) {
   return {
     type: DELETE_INTERFACE_SEQ_HEADER,
@@ -130,6 +155,10 @@ export function deleteReqHeader(value) {
   };
 }
 
+/**
+ * @param {any} value
+ * @returns {{ type: string, payload: any }}
+ */
 export function getReqParams(value) {
   return {
     type: GET_INTERFACE_REQ_PARAMS,
@@ -137,6 +166,10 @@ export function getReqParams(value) {
   };
 }
 
+/**
+ * @param {any} value
+ * @returns {{ type: string, payload: any }}
+ */
 export function getResParams(value) {
   return {
     type: GET_INTERFACE_RES_PARAMS,
@@ -144,6 +177,10 @@ export function getResParams(value) {
   };
 }
 
+/**
+ * @param {any} value
+ * @returns {{ type: string, payload: any }}
+ */
 export function pushInterfaceName(value) {
   return {
     type: PUSH_INTERFACE_NAME,
@@ -151,6 +188,10 @@ export function pushInterfaceName(value) {
   };
 }
 
+/**
+ * @param {any} value
+ * @returns {{ type: string, payload: any }}
+ */
 export function pushInterfaceMethod(value) {
   return {
     type: PUSH_INTERFACE_METHOD,
@@ -158,6 +199,10 @@ export function pushInterfaceMethod(value) {
   };
 }
 
+/**
+ * @param {any} id
+ * @returns {{ type: string, payload: any }}
+ */
 export function fetchInterfaceProject(id) {
   return {
     type: FETCH_INTERFACE_PROJECT,
@@ -165,6 +210,10 @@ export function fetchInterfaceProject(id) {
   };
 }
 
+/**
+ * @param {any} func
+ * @returns {{ type: string, payload: any }}
+ */
 export function addInterfaceClipboard(func) {
   return {
     type: ADD_INTERFACE_CLIPBOARD,

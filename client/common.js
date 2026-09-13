@@ -1,3 +1,4 @@
+// @ts-nocheck
 const moment = require('moment');
 const constants = require('./constants/variable');
 const Mock = require('mockjs');

@@ -1,3 +1,4 @@
+// @ts-check
 import axios from 'axios';
 
 // Actions
@@ -31,6 +32,10 @@ const initialState = {
   role: ''
 };
 
+/**
+ * @param {Record<string, any>} [state]
+ * @param {any} [action]
+ */
 export default (state = initialState, action) => {
   switch (action.type) {
     case FETCH_GROUP_LIST: {
@@ -77,6 +82,10 @@ export default (state = initialState, action) => {
 };
 
 // 获取 group 信息 (权限信息)
+/**
+ * @param {any} id
+ * @returns {{ type: string, payload: any }}
+ */
 export function fetchGroupMsg(id) {
   return {
     type: FETCH_GROUP_MSG,
@@ -87,6 +96,10 @@ export function fetchGroupMsg(id) {
 }
 
 // 添加分组成员
+/**
+ * @param {any} param
+ * @returns {{ type: string, payload: any }}
+ */
 export function addMember(param) {
   return {
     type: ADD_GROUP_MEMBER,
@@ -95,6 +108,10 @@ export function addMember(param) {
 }
 
 // 删除分组成员
+/**
+ * @param {any} param
+ * @returns {{ type: string, payload: any }}
+ */
 export function delMember(param) {
   return {
     type: DEL_GROUP_MEMBER,
@@ -103,6 +120,10 @@ export function delMember(param) {
 }
 
 // 修改分组成员权限
+/**
+ * @param {any} param
+ * @returns {{ type: string, payload: any }}
+ */
 export function changeMemberRole(param) {
   return {
     type: CHANGE_GROUP_MEMBER,
@@ -111,6 +132,10 @@ export function changeMemberRole(param) {
 }
 
 // 修改分组信息
+/**
+ * @param {any} param
+ * @returns {{ type: string, payload: any }}
+ */
 export function changeGroupMsg(param) {
   return {
     type: CHANGE_GROUP_MESSAGE,
@@ -119,6 +144,10 @@ export function changeGroupMsg(param) {
 }
 
 // 更新左侧的分组列表
+/**
+ * @param {any} param
+ * @returns {{ type: string, payload: any }}
+ */
 export function updateGroupList(param) {
   return {
     type: UPDATE_GROUP_LIST,
@@ -127,6 +156,10 @@ export function updateGroupList(param) {
 }
 
 // 删除分组
+/**
+ * @param {any} param
+ * @returns {{ type: string, payload: any }}
+ */
 export function deleteGroup(param) {
   return {
     type: DEL_GROUP,
@@ -135,6 +168,10 @@ export function deleteGroup(param) {
 }
 
 // 获取分组成员列表
+/**
+ * @param {any} id
+ * @returns {{ type: string, payload: any }}
+ */
 export function fetchGroupMemberList(id) {
   return {
     type: FETCH_GROUP_MEMBER,
@@ -145,6 +182,9 @@ export function fetchGroupMemberList(id) {
 }
 
 // Action Creators
+/**
+ * @returns {{ type: string, payload: any }}
+ */
 export function fetchGroupList() {
   return {
     type: FETCH_GROUP_LIST,
@@ -152,6 +192,10 @@ export function fetchGroupList() {
   };
 }
 
+/**
+ * @param {any} group
+ * @returns {{ type: string, payload: any }}
+ */
 export function setCurrGroup(group) {
   return {
     type: SET_CURR_GROUP,

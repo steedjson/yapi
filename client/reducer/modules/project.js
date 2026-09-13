@@ -1,3 +1,4 @@
+// @ts-check
 import axios from 'axios';
 import variable from '../../constants/variable';
 import {htmlFilter} from '../../common';
@@ -44,6 +45,10 @@ const initialState = {
   swaggerUrlData: ''
 };
 
+/**
+ * @param {Record<string, any>} [state]
+ * @param {any} [action]
+ */
 export default (state = initialState, action) => {
   switch (action.type) {
     case GET_CURR_PROJECT: {
@@ -112,6 +117,11 @@ export default (state = initialState, action) => {
 };
 
 // 获取某分组下的项目列表
+/**
+ * @param {any} id
+ * @param {any} pageNum
+ * @returns {{ type: string, payload: any }}
+ */
 export function fetchProjectList(id, pageNum) {
   return {
     type: FETCH_PROJECT_LIST,
@@ -126,6 +136,10 @@ export function fetchProjectList(id, pageNum) {
 }
 
 // 复制项目
+/**
+ * @param {any} params
+ * @returns {{ type: string, payload: any }}
+ */
 export function copyProjectMsg(params) {
   return {
     type: COPY_PROJECT_MSG,
@@ -134,6 +148,10 @@ export function copyProjectMsg(params) {
 }
 
 // 添加项目成员
+/**
+ * @param {any} param
+ * @returns {{ type: string, payload: any }}
+ */
 export function addMember(param) {
   return {
     type: ADD_PROJECT_MEMBER,
@@ -142,6 +160,10 @@ export function addMember(param) {
 }
 
 // 删除项目成员
+/**
+ * @param {any} param
+ * @returns {{ type: string, payload: any }}
+ */
 export function delMember(param) {
   return {
     type: DEL_PROJECT_MEMBER,
@@ -150,6 +172,10 @@ export function delMember(param) {
 }
 
 // 修改项目成员权限
+/**
+ * @param {any} param
+ * @returns {{ type: string, payload: any }}
+ */
 export function changeMemberRole(param) {
   return {
     type: CHANGE_PROJECT_MEMBER,
@@ -157,6 +183,10 @@ export function changeMemberRole(param) {
   };
 }
 // 修改项目成员是否收到消息通知
+/**
+ * @param {any} param
+ * @returns {{ type: string, payload: any }}
+ */
 export function changeMemberEmailNotice(param) {
   return {
     type: CHANGE_MEMBER_EMAIL_NOTICE,
@@ -165,6 +195,10 @@ export function changeMemberEmailNotice(param) {
 }
 
 // 获取项目成员列表
+/**
+ * @param {any} id
+ * @returns {{ type: string, payload: any }}
+ */
 export function getProjectMemberList(id) {
   return {
     type: GET_PEOJECT_MEMBER,
@@ -181,6 +215,10 @@ export function getProjectMemberList(id) {
 //   };
 // }
 
+/**
+ * @param {any} data
+ * @returns {{ type: string, payload: any }}
+ */
 export function addProject(data) {
   let {
     name,
@@ -216,6 +254,10 @@ export function addProject(data) {
 }
 
 // 修改项目
+/**
+ * @param {any} data
+ * @returns {{ type: string, payload: any }}
+ */
 export function updateProject(data) {
   let { name, project_type, basepath, desc, _id, env, group_id, switch_notice, strice, is_json5, tag } = data;
   
@@ -241,6 +283,10 @@ export function updateProject(data) {
 }
 
 // 修改项目脚本
+/**
+ * @param {any} data
+ * @returns {{ type: string, payload: any }}
+ */
 export function updateProjectScript(data) {
   return {
     type: PROJECT_UPDATE,
@@ -249,6 +295,10 @@ export function updateProjectScript(data) {
 }
 
 // 修改全局mock
+/**
+ * @param {any} data
+ * @returns {{ type: string, payload: any }}
+ */
 export function updateProjectMock(data) {
   return {
     type: PROJECT_UPDATE,
@@ -257,6 +307,10 @@ export function updateProjectMock(data) {
 }
 
 // 修改项目环境配置
+/**
+ * @param {any} data
+ * @returns {{ type: string, payload: any }}
+ */
 export function updateEnv(data) {
   const { env, _id } = data;
   const param = {
@@ -270,6 +324,10 @@ export function updateEnv(data) {
 }
 
 // 获取项目环境配置
+/**
+ * @param {any} project_id
+ * @returns {{ type: string, payload: any }}
+ */
 export function getEnv(project_id) {
   return {
     type: PROJECT_GET_ENV,
@@ -278,6 +336,10 @@ export function getEnv(project_id) {
 }
 
 // 修改项目头像
+/**
+ * @param {any} param
+ * @returns {{ type: string, payload: any }}
+ */
 export function upsetProject(param) {
   return {
     type: PROJECT_UPSET,
@@ -286,6 +348,10 @@ export function upsetProject(param) {
 }
 
 // 删除项目
+/**
+ * @param {any} id
+ * @returns {{ type: string, payload: any }}
+ */
 export function delProject(id) {
   const param = { id };
   return {
@@ -294,6 +360,10 @@ export function delProject(id) {
   };
 }
 
+/**
+ * @param {any} id
+ * @returns {Promise<{ type: string, payload: any }>}
+ */
 export async function getProject(id) {
   let result = await axios.get('/api/project/get?id=' + id);
   return {
@@ -302,6 +372,10 @@ export async function getProject(id) {
   };
 }
 
+/**
+ * @param {any} project_id
+ * @returns {Promise<{ type: string, payload: any }>}
+ */
 export async function getToken(project_id) {
   return {
     type: GET_TOKEN,
@@ -311,6 +385,10 @@ export async function getToken(project_id) {
   };
 }
 
+/**
+ * @param {any} project_id
+ * @returns {Promise<{ type: string, payload: any }>}
+ */
 export async function updateToken(project_id) {
   return {
     type: UPDATE_TOKEN,
@@ -320,6 +398,11 @@ export async function updateToken(project_id) {
   };
 }
 
+/**
+ * @param {any} name
+ * @param {any} group_id
+ * @returns {Promise<{ type: string, payload: any }>}
+ */
 export async function checkProjectName(name, group_id) {
   return {
     type: CHECK_PROJECT_NAME,
@@ -329,6 +412,10 @@ export async function checkProjectName(name, group_id) {
   };
 }
 
+/**
+ * @param {any} url
+ * @returns {Promise<{ type: string, payload: any }>}
+ */
 export async function handleSwaggerUrlData(url) {
   const result = await axios.get('/api/project/swagger_url?url=' + encodeURI(encodeURI(url)));
   return {

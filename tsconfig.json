@@ -30,6 +30,17 @@
     "server/controllers/user.js",
     "server/controllers/interfaceCol.js",
     "server/controllers/project.js",
-    "server/controllers/interface.js"
+    "server/controllers/interface.js",
+    "client/reducer/modules/menu.js",
+    "client/reducer/modules/follow.js",
+    "client/reducer/modules/mockCol.js",
+    "client/reducer/modules/news.js",
+    "client/reducer/modules/group.js",
+    "client/reducer/modules/interface.js",
+    "client/reducer/modules/interfaceCol.js",
+    "client/reducer/modules/addInterface.js",
+    "client/reducer/modules/project.js",
+    "client/reducer/modules/user.js",
+    "client/reducer/create.js"
   ]
 }

@@ -62,3 +62,55 @@ declare module 'crypto' {
   export function createCipheriv(algorithm: string, key: any, iv: any): Cipher;
   export function createDecipheriv(algorithm: string, key: any, iv: any): Decipher;
 }
+
+declare module 'axios' {
+  const axios: any;
+  export default axios;
+}
+
+declare module 'mockjs' {
+  const Mock: any;
+  export default Mock;
+}
+
+declare module 'json5' {
+  const JSON5: { parse(text: string): any };
+  export default JSON5;
+}
+
+declare module 'qs' {
+  function stringify(obj: any, options?: any): string;
+  export default { stringify };
+}
+
+declare module 'redux' {
+  export function combineReducers(reducers: Record<string, any>): any;
+  export function createStore(reducer: any, preloadedState?: any, enhancer?: any): any;
+  export function applyMiddleware(...middleware: any[]): any;
+}
+
+declare module 'redux-promise' {
+  const reduxPromise: any;
+  export default reduxPromise;
+}
+
+declare module 'immer' {
+  export default function produce(base: any, recipe: (draft: any) => void): any;
+}
+
+declare module 'react-router' {
+  export function withRouter(component: any): any;
+  export const Link: any;
+}
+
+declare module 'react-router-dom' {
+  export function withRouter(component: any): any;
+  export const Link: any;
+  export const Route: any;
+  export const Switch: any;
+  export const Redirect: any;
+}
+
+declare module 'client/plugin.js' {
+  export function emitHook(name: string, ...args: any[]): any;
+}

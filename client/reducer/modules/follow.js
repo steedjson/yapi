@@ -1,3 +1,4 @@
+// @ts-check
 import axios from 'axios';
 
 // Actions
@@ -10,6 +11,10 @@ const initialState = {
   data: []
 };
 
+/**
+ * @param {Record<string, any>} [state]
+ * @param {any} [action]
+ */
 export default (state = initialState, action) => {
   if (action.type === GET_FOLLOW_LIST) {
     return {
@@ -22,6 +27,10 @@ export default (state = initialState, action) => {
 };
 
 // 获取关注列表
+/**
+ * @param {any} uid
+ * @returns {{ type: string, payload: any }}
+ */
 export function getFollowList(uid) {
   return {
     type: GET_FOLLOW_LIST,
@@ -32,6 +41,10 @@ export function getFollowList(uid) {
 }
 
 // 添加关注
+/**
+ * @param {any} param
+ * @returns {{ type: string, payload: any }}
+ */
 export function addFollow(param) {
   return {
     type: ADD_FOLLOW,
@@ -40,6 +53,10 @@ export function addFollow(param) {
 }
 
 // 删除关注
+/**
+ * @param {any} id
+ * @returns {{ type: string, payload: any }}
+ */
 export function delFollow(id) {
   return {
     type: DEL_FOLLOW,
