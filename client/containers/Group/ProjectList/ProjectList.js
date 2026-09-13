@@ -1,23 +1,30 @@
+// @ts-check
 import React, { PureComponent as Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
+// common/types/global.d.ts 的 antd 声明未包含 Tooltip，且 common/ 不在本次可修改范围内
+// @ts-ignore
 import { Row, Col, Button, Tooltip } from 'antd';
 import { Link } from 'react-router-dom';
 import {
   addProject,
   fetchProjectList,
   delProject,
+  // project.js 实际未导出 changeUpdateModal（运行时为 undefined，保持现状不改逻辑）
+  // @ts-ignore
   changeUpdateModal
 } from '../../../reducer/modules/project';
 import ProjectCard from '../../../components/ProjectCard/ProjectCard.js';
 import ErrMsg from '../../../components/ErrMsg/ErrMsg.js';
+// core-decorators 无类型声明，按 any 处理
+// @ts-ignore
 import { autobind } from 'core-decorators';
 import { setBreadcrumb } from '../../../reducer/modules/user';
 
 import './ProjectList.scss';
 
 @connect(
-  state => {
+  (/** @type {any} */ state) => {
     return {
       projectList: state.project.projectList,
       userInfo: state.project.userInfo,
@@ -35,7 +42,7 @@ import './ProjectList.scss';
   }
 )
 class ProjectList extends Component {
-  constructor(props) {
+  constructor(/** @type {any} */ props) {
     super(props);
     this.state = {
       visible: false,
@@ -60,6 +67,9 @@ class ProjectList extends Component {
   };
 
   // 取消修改
+  /**
+   * @returns {void}
+   */
   @autobind
   handleCancel() {
     this.props.form.resetFields();
@@ -69,6 +79,9 @@ class ProjectList extends Component {
   }
 
   // 修改线上域名的协议类型 (http/https)
+  /**
+   * @param {any} value
+   */
   @autobind
   protocolChange(value) {
     this.setState({
@@ -78,10 +91,16 @@ class ProjectList extends Component {
 
   // 获取 ProjectCard 组件的关注事件回调，收到后更新数据
 
+  /**
+   * @returns {void}
+   */
   receiveRes = () => {
     this.props.fetchProjectList(this.props.currGroup._id, this.props.currPage);
   };
 
+  /**
+   * @param {any} nextProps
+   */
   componentWillReceiveProps(nextProps) {
     this.props.setBreadcrumb([{ name: '' + (nextProps.currGroup.group_name || '') }]);
 
@@ -93,7 +112,7 @@ class ProjectList extends Component {
     // 切换项目列表
     if (this.props.projectList !== nextProps.projectList) {
       // console.log(nextProps.projectList);
-      const data = nextProps.projectList.map((item, index) => {
+      const data = nextProps.projectList.map((/** @type {any} */ item, /** @type {any} */ index) => {
         item.key = index;
         return item;
       });
@@ -103,8 +122,11 @@ class ProjectList extends Component {
     }
   }
 
+  /**
+   * @returns {any}
+   */
   render() {
-    let projectData = this.state.projectData;
+    let projectData = /** @type {any} */ (this.state.projectData);
     let noFollow = [];
     let followProject = [];
     for (var i in projectData) {
@@ -194,7 +216,7 @@ class ProjectList extends Component {
           {this.props.currGroup.type === 'private' ? (
             <OwnerSpace />
           ) : projectData.length ? (
-            projectData.map((item, index) => {
+            projectData.map((/** @type {any} */ item, /** @type {any} */ index) => {
               return (
                 <Col xs={8} lg={6} xxl={4} key={index}>
                   <ProjectCard

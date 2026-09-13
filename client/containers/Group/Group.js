@@ -1,3 +1,4 @@
+// @ts-check
 import React, { PureComponent as Component } from 'react';
 import GroupList from './GroupList/GroupList.js';
 import ProjectList from './ProjectList/ProjectList.js';
@@ -7,6 +8,8 @@ import GroupSetting from './GroupSetting/GroupSetting.js';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { Route, Switch, Redirect } from 'react-router-dom';
+// common/types/global.d.ts 的 antd 声明未包含 Layout/Spin，且 common/ 不在本次可修改范围内
+// @ts-ignore
 import { Tabs, Layout, Spin } from 'antd';
 const { Content, Sider } = Layout;
 const TabPane = Tabs.TabPane;
@@ -18,7 +21,7 @@ import './Group.scss';
 import axios from 'axios'
 
 @connect(
-  state => {
+  (/** @type {any} */ state) => {
     return {
       curGroupId: state.group.currGroup._id,
       curUserRole: state.user.role,
@@ -32,6 +35,9 @@ import axios from 'axios'
   }
 )
 export default class Group extends Component {
+  /**
+   * @param {any} props
+   */
   constructor(props) {
     super(props);
 
@@ -66,6 +72,9 @@ export default class Group extends Component {
   //   //   this.props.fetchNewsData(this.props.curGroupId, "group", 1, 10)
   //   // }
   // }
+  /**
+   * @returns {any}
+   */
   render() {
     if(this.state.groupId === -1)return <Spin />
     const GroupContent = (
