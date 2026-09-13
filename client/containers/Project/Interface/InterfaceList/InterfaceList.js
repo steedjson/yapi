@@ -14,6 +14,7 @@ import { Link } from 'react-router-dom';
 import variable from '../../../../constants/variable';
 import './Edit.scss';
 import Label from '../../../../components/Label/Label.js';
+import { flattenCatList } from 'common/utils.js';
 
 const Option = Select.Option;
 const limit = 20;
@@ -271,9 +272,9 @@ class InterfaceList extends Component {
               className="select path"
               onChange={catid => this.changeInterfaceCat(record._id, catid)}
             >
-              {this.props.catList.map(cat => {
+              {flattenCatList(this.props.catList).map(cat => {
                 return (
-                  <Option key={cat.id + ''} value={cat._id + ''}>
+                  <Option key={cat._id + ''} value={cat._id + ''}>
                     <span>{cat.name}</span>
                   </Option>
                 );

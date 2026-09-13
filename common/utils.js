@@ -286,3 +286,29 @@ exports.schemaValidator = function(schema, params) {
     };
   }
 };
+
+/**
+ * 将树形分类列表拍平为一维数组，供下拉框等需要全量分类的场景使用。
+ * 带环保护，避免异常数据导致死循环；保持深度优先的原有顺序。
+ * @param {Array} list 树形分类数组
+ * @returns {Array} 拍平后的分类数组
+ */
+function flattenCatList(list) {
+  const result = [];
+  const stack = Array.isArray(list) ? list.slice() : [];
+  const visited = new Set();
+  while (stack.length) {
+    const item = stack.shift();
+    if (!item || visited.has(item._id)) continue;
+    visited.add(item._id);
+    result.push(item);
+    const children = item.children;
+    if (Array.isArray(children) && children.length) {
+      for (let i = children.length - 1; i >= 0; i--) {
+        stack.unshift(children[i]);
+      }
+    }
+  }
+  return result;
+}
+exports.flattenCatList = flattenCatList;
