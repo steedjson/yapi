@@ -1360,7 +1360,7 @@ class interfaceController extends baseController {
       });
       return (ctx.body = yapi.commons.resReturn(interfaces));
     } catch (/** @type {any} */ e) {
-      yapi.commons.resReturn(null, 400, e.message);
+      return (ctx.body = yapi.commons.resReturn(null, 400, e.message));
     }
   }
 
@@ -1393,7 +1393,7 @@ class interfaceController extends baseController {
     try {
       let params = ctx.request.body;
       if (!params || !Array.isArray(params)) {
-        ctx.body = yapi.commons.resReturn(null, 400, '请求参数必须是数组');
+        return (ctx.body = yapi.commons.resReturn(null, 400, '请求参数必须是数组'));
       }
       categoryCache.clear();
       params.forEach((/** @type {any} */ item) => {

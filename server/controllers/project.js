@@ -1167,7 +1167,7 @@ class projectController extends baseController {
         token = /** @type {any} */ (getToken)(token);
         result.token = token;
       } else {
-        ctx.body = yapi.commons.resReturn(null, 402, '没有查到token信息');
+        return (ctx.body = yapi.commons.resReturn(null, 402, '没有查到token信息'));
       }
 
       ctx.body = yapi.commons.resReturn(result);

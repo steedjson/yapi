@@ -824,7 +824,7 @@ class interfaceColController extends baseController {
     try {
       let params = ctx.request.body;
       if (!params || !Array.isArray(params)) {
-        ctx.body = yapi.commons.resReturn(null, 400, '请求参数必须是数组');
+        return (ctx.body = yapi.commons.resReturn(null, 400, '请求参数必须是数组'));
       }
       params.forEach((/** @type {any} */ item) => {
         if (item.id) {
@@ -862,7 +862,7 @@ class interfaceColController extends baseController {
     try {
       let params = ctx.request.body;
       if (!params || !Array.isArray(params)) {
-        ctx.body = yapi.commons.resReturn(null, 400, '请求参数必须是数组');
+        return (ctx.body = yapi.commons.resReturn(null, 400, '请求参数必须是数组'));
       }
       params.forEach((/** @type {any} */ item) => {
         if (item.id) {
@@ -901,7 +901,7 @@ class interfaceColController extends baseController {
       let id = ctx.query.col_id;
       let colData = await this.colModel.get(id);
       if (!colData) {
-        ctx.body = yapi.commons.resReturn(null, 400, '不存在的id');
+        return (ctx.body = yapi.commons.resReturn(null, 400, '不存在的id'));
       }
 
       if (colData.uid !== this.getUid()) {
@@ -924,7 +924,7 @@ class interfaceColController extends baseController {
       });
       return (ctx.body = yapi.commons.resReturn(result));
     } catch (/** @type {any} */ e) {
-      yapi.commons.resReturn(null, 400, e.message);
+      return (ctx.body = yapi.commons.resReturn(null, 400, e.message));
     }
   }
 
@@ -942,7 +942,7 @@ class interfaceColController extends baseController {
       let caseid = ctx.query.caseid;
       let caseData = await this.caseModel.get(caseid);
       if (!caseData) {
-        ctx.body = yapi.commons.resReturn(null, 400, '不存在的caseid');
+        return (ctx.body = yapi.commons.resReturn(null, 400, '不存在的caseid'));
       }
 
       if (caseData.uid !== this.getUid()) {
@@ -970,7 +970,7 @@ class interfaceColController extends baseController {
       this.projectModel.up(caseData.project_id, { up_time: new Date().getTime() }).then();
       return (ctx.body = yapi.commons.resReturn(result));
     } catch (/** @type {any} */ e) {
-      yapi.commons.resReturn(null, 400, e.message);
+      return (ctx.body = yapi.commons.resReturn(null, 400, e.message));
     }
   }
 

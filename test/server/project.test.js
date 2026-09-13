@@ -392,14 +392,14 @@ test.serial('token: 已存在 token 时不新建，返回加密后的 token', as
 
 // —— updateToken(ctx) ——
 
-// 存量缺陷：先写入 402 '没有查到token信息'，但缺少 return，被末尾 resReturn(result=undefined) 覆盖
-test.serial('updateToken: 缺失 project_id 时 402 响应被覆盖为 errcode 0', async t => {
+// 修复后：缺失 project_id 时正确返回 402 '没有查到token信息'，不再被覆盖
+test.serial('updateToken: 缺失 project_id 时返回 402 没有查到token信息', async t => {
   const inst = new projectController({});
   const ctx = makeCtx({});
   await inst.updateToken(ctx);
-  // 实现先写入 402 '没有查到token信息'，但缺少 return，随后被 resReturn(result=undefined) 覆盖
-  t.is(ctx.body.errcode, 0);
-  t.is(ctx.body.data, undefined);
+  t.is(ctx.body.errcode, 402);
+  t.is(ctx.body.errmsg, '没有查到token信息');
+  t.is(ctx.body.data, null);
 });
 
 test.serial('updateToken: 已存在 token 时更新并返回加密 token', async t => {
