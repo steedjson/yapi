@@ -8,8 +8,20 @@ const devMiddleware = require('webpack-dev-middleware');
 const hotMiddleware = require('webpack-hot-middleware');
 const config = require('./webpack.standalone.config');
 
+// babel-loader@6 依赖 webpack 2/3 的 loaderContext.options 获取 babel 配置，
+// webpack 4 已从 loader context 移除该属性；5 行兼容 shim 将 compiler.options
+// 挂回 loaderContext，保持 babel-loader@6 不升级（避免同时变更 Babel 核心）。
+function makeBabelLoader6Compatible(compiler) {
+  compiler.hooks.compilation.tap('BabelLoader6Compat', compilation => {
+    compilation.hooks.normalModuleLoader.tap('BabelLoader6Compat', loaderContext => {
+      loaderContext.options = compiler.options;
+    });
+  });
+}
+
 // standalone 开发服务保留现有 4000 端口和 static/dev.html 页面入口。
 const compiler = webpack(config);
+makeBabelLoader6Compatible(compiler);
 const middleware = devMiddleware(compiler, { publicPath: '/prd/', quiet: false });
 const hot = hotMiddleware(compiler, { path: '/__webpack_hmr' });
 const html = fs.readFileSync(path.resolve(__dirname, '../static/dev.html'));

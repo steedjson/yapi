@@ -2,7 +2,7 @@
 
 const path = require('path');
 const webpack = require('webpack');
-const ExtractTextPlugin = require('extract-text-webpack-plugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const AssetsPlugin = require('assets-webpack-plugin');
 const CompressionPlugin = require('compression-webpack-plugin');
 const packageInfo = require('../package.json');
@@ -18,7 +18,19 @@ const client = path.join(root, 'client');
 const isProduction = process.env.NODE_ENV === 'production';
 const isDevelopment = !isProduction;
 
-module.exports = {
+// babel-loader@6 依赖 webpack 2/3 的 loaderContext.options 获取 babel 配置，
+// webpack 4 已从 loader context 移除该属性；5 行兼容 shim 将 compiler.options
+// 挂回 loaderContext，保持 babel-loader@6 不升级（避免同时变更 Babel 核心）。
+function makeBabelLoader6Compatible(compiler) {
+  compiler.hooks.compilation.tap('BabelLoader6Compat', compilation => {
+    compilation.hooks.normalModuleLoader.tap('BabelLoader6Compat', loaderContext => {
+      loaderContext.options = compiler.options;
+    });
+  });
+}
+
+const config = {
+  mode: isProduction ? 'production' : 'development',
   context: client,
   entry: {
     index: [ ...(isDevelopment ? ['webpack-hot-middleware/client?path=/__webpack_hmr&reload=true'] : []), './index.js' ],
@@ -31,7 +43,10 @@ module.exports = {
     path: path.join(root, 'static/prd'),
     publicPath: isDevelopment ? '/prd/' : '',
     filename: isDevelopment ? '[name]@dev.js' : '[name]@[chunkhash].js',
-    chunkFilename: isDevelopment ? '[id]@dev.js' : '[id]@[chunkhash].js'
+    // webpack 4 下使用 runtimeChunk 后，index 等 entry chunk 的运行时被移入
+    // manifest，其文件改走 chunkFilename；需按 [name] 命名以保持原产物文件名
+    // （webpack 3 下 entry chunk 走 output.filename，不受此影响）。
+    chunkFilename: isDevelopment ? '[name]@dev.js' : '[name]@[chunkhash].js'
   },
   resolve: {
     extensions: ['.js', '.jsx', '.css', '.json', '.string', '.tpl'],
@@ -43,7 +58,7 @@ module.exports = {
   },
   module: {
     noParse: /node_modules\/jsondiffpatch\/public\/build\/.*js/,
-    loaders: [
+    rules: [
       {
         test: /\.(js|jsx)$/,
         exclude: clientBuildConfig.getPluginExclude(process.platform === 'win32'),
@@ -51,26 +66,16 @@ module.exports = {
         query: clientBuildConfig.getBabelQuery()
       },
       {
-        test: /\.json$/,
-        loader: 'json-loader'
-      },
-      {
         test: /\.css$/,
-        loader: ExtractTextPlugin.extract({ fallback: 'style-loader', use: 'css-loader?sourceMap' })
+        use: [MiniCssExtractPlugin.loader, 'css-loader?sourceMap']
       },
       {
         test: /\.less$/,
-        loader: ExtractTextPlugin.extract({
-          fallback: 'style-loader',
-          use: 'css-loader?sourceMap!less-loader?sourceMap'
-        })
+        use: [MiniCssExtractPlugin.loader, 'css-loader?sourceMap', 'less-loader?sourceMap']
       },
       {
         test: /\.(sass|scss)$/,
-        loader: ExtractTextPlugin.extract({
-          fallback: 'style-loader',
-          use: 'css-loader?sourceMap!sass-loader?sourceMap'
-        })
+        use: [MiniCssExtractPlugin.loader, 'css-loader?sourceMap', 'sass-loader?sourceMap']
       },
       {
         test: /.(gif|jpg|jpeg|png|woff|woff2|eot|ttf|svg)$/,
@@ -79,32 +84,60 @@ module.exports = {
       }
     ]
   },
-  plugins: [
-    new ExtractTextPlugin(isDevelopment ? '[name]@dev.css' : '[name]@[contenthash].css'),
-    new webpack.optimize.CommonsChunkPlugin({
-      names: ['lib3', 'lib2', 'lib'],
-      // 限定抽取只发生在 lib 内部，避免把 index 与 lib3 共享的模块
-      // （如 react/prop-types）抽进 lib2，导致 lib3 在 HTML 脚本顺序中
-      // 先于 lib/lib2 执行时缺少依赖而白屏。
-      chunks: ['lib'],
-      filename: isDevelopment ? '[name]@dev.js' : '[name]@[chunkhash].js'
-    }),
-    new webpack.optimize.CommonsChunkPlugin({
-      name: 'manifest',
-      filename: isDevelopment ? '[name]@dev.js' : '[name]@[chunkhash].js',
-      // 把 webpack runtime 依赖的 buildin polyfill（如 webpack/buildin/module.js）
-      // 抽进最先加载的 manifest chunk，避免后续 chunk 依赖它时出现
-      // "__webpack_require__(...) is not a function" 的加载顺序问题。
-      minChunks: function(module) {
-        return module.resource && /[\\/]node_modules[\\/]webpack[\\/]buildin[\\/]/.test(module.resource);
+  optimization: {
+    runtimeChunk: { name: 'manifest' },
+    splitChunks: {
+      chunks: 'all',
+      cacheGroups: {
+        lib3: {
+          test: /[\\/]node_modules[\\/](mockjs|moment|recharts)[\\/]/,
+          name: 'lib3',
+          chunks: 'initial',
+          priority: 30,
+          // 绕过 webpack 4 的 minSize/maxInitialRequests 限制，保证固定 vendor 分组
+          // （index 入口需要 manifest+lib3+lib2+lib 共 4 个伴随 chunk）不被默认值阻断。
+          enforce: true,
+          // split 后 chunk 不再是 entry chunk，需显式指定文件名模板，
+          // 否则生产模式会退回 chunkFilename（[id]@...）产出数字文件名。
+          filename: isDevelopment ? '[name]@dev.js' : '[name]@[chunkhash].js'
+        },
+        lib2: {
+          test: /[\\/]node_modules[\\/](brace|json5|url|axios)[\\/]/,
+          name: 'lib2',
+          chunks: 'initial',
+          priority: 20,
+          enforce: true,
+          filename: isDevelopment ? '[name]@dev.js' : '[name]@[chunkhash].js'
+        },
+        lib: {
+          // 排除 CSS 类资源，样式必须全部留在 index chunk：
+          // dev.html 与 static/index.html 只引用 index 的 CSS，多出的 lib*.css 不会被加载。
+          test: module => {
+            const resource = module.resource || '';
+            return /[\\/]node_modules[\\/]/.test(resource) && !/\.(css|less|sass|scss)$/.test(resource);
+          },
+          name: 'lib',
+          chunks: 'initial',
+          priority: 10,
+          enforce: true,
+          filename: isDevelopment ? '[name]@dev.js' : '[name]@[chunkhash].js'
+        },
+        // 关闭 webpack 4 默认注入的 vendors cacheGroup，避免把已分好组的
+        // node_modules 模块再次拆出 vendors~* 杂散 chunk。
+        vendors: false,
+        default: { minChunks: 2, priority: -20, reuseExistingChunk: true }
       }
+    }
+  },
+  plugins: [
+    new MiniCssExtractPlugin({
+      filename: isDevelopment ? '[name]@dev.css' : '[name]@[contenthash].css'
     }),
     ...(isDevelopment ? [new webpack.HotModuleReplacementPlugin()] : []),
     new webpack.DefinePlugin(
       clientBuildConfig.getDefineValues(packageInfo, yapi.WEBCONFIG, isProduction ? 'prd' : 'dev')
     ),
     ...(isProduction ? [
-      new webpack.optimize.UglifyJsPlugin({ compress: { warnings: false } }),
       new AssetsPlugin({
         filename: 'static/prd/assets.js',
         processOutput: assets => {
@@ -112,6 +145,7 @@ module.exports = {
         }
       }),
       new CompressionPlugin({
+        // cwp@1.1.12 peer 支持 webpack 2/3/4；ykit legacy 同样使用此版本（旧 .asset API）。
         asset: '[path].gz[query]',
         algorithm: 'gzip',
         test: /\.(js|css)$/,
@@ -122,3 +156,5 @@ module.exports = {
     ] : [])
   ]
 };
+
+module.exports = config;
