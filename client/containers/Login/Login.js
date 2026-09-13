@@ -1,3 +1,4 @@
+// @ts-check
 import React, { PureComponent as Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
@@ -18,7 +19,7 @@ const changeHeight = {
 };
 
 @connect(
-  state => {
+  (/** @type {any} */ state) => {
     return {
       loginData: state.user,
       isLDAP: state.user.isLDAP
@@ -31,7 +32,7 @@ const changeHeight = {
 )
 @withRouter
 class Login extends Component {
-  constructor(props) {
+  constructor(/** @type {any} */ props) {
     super(props);
     this.state = {
       loginType: 'ldap'
@@ -46,20 +47,23 @@ class Login extends Component {
     isLDAP: PropTypes.bool
   };
 
+  /**
+   * @param {React.SyntheticEvent} e
+   */
   handleSubmit = e => {
     e.preventDefault();
     const form = this.props.form;
-    form.validateFields((err, values) => {
+    form.validateFields((/** @type {any} */ err, /** @type {any} */ values) => {
       if (!err) {
         if (this.props.isLDAP && this.state.loginType === 'ldap') {
-          this.props.loginLdapActions(values).then(res => {
+          this.props.loginLdapActions(values).then((/** @type {any} */ res) => {
             if (res.payload.data.errcode == 0) {
               this.props.history.replace('/group');
               message.success('登录成功! ');
             }
           });
         } else {
-          this.props.loginActions(values).then(res => {
+          this.props.loginActions(values).then((/** @type {any} */ res) => {
             if (res.payload.data.errcode == 0) {
               this.props.history.replace('/group');
               message.success('登录成功! ');
@@ -72,8 +76,10 @@ class Login extends Component {
 
   componentDidMount() {
     //Qsso.attach('qsso-login','/api/user/login_by_token')
-    console.log('isLDAP', this.props.isLDAP);
   }
+  /**
+   * @param {any} e
+   */
   handleFormLayoutChange = e => {
     this.setState({ loginType: e.target.value });
   };

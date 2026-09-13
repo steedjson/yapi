@@ -1,3 +1,4 @@
+// @ts-check
 import React, { PureComponent as Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
@@ -14,7 +15,7 @@ const changeHeight = {
 };
 
 @connect(
-  state => {
+  (/** @type {any} */ state) => {
     return {
       loginData: state.user
     };
@@ -25,7 +26,7 @@ const changeHeight = {
 )
 @withRouter
 class Reg extends Component {
-  constructor(props) {
+  constructor(/** @type {any} */ props) {
     super(props);
     this.state = {
       confirmDirty: false
@@ -38,12 +39,15 @@ class Reg extends Component {
     regActions: PropTypes.func
   };
 
+  /**
+   * @param {React.SyntheticEvent} e
+   */
   handleSubmit = e => {
     e.preventDefault();
     const form = this.props.form;
-    form.validateFieldsAndScroll((err, values) => {
+    form.validateFieldsAndScroll((/** @type {any} */ err, /** @type {any} */ values) => {
       if (!err) {
-        this.props.regActions(values).then(res => {
+        this.props.regActions(values).then((/** @type {any} */ res) => {
           if (res.payload.data.errcode == 0) {
             this.props.history.replace('/group');
             message.success('注册成功! ');
@@ -53,6 +57,11 @@ class Reg extends Component {
     });
   };
 
+  /**
+   * @param {any} rule
+   * @param {any} value
+   * @param {Function} callback
+   */
   checkPassword = (rule, value, callback) => {
     const form = this.props.form;
     if (value && value !== form.getFieldValue('password')) {
@@ -62,6 +71,11 @@ class Reg extends Component {
     }
   };
 
+  /**
+   * @param {any} rule
+   * @param {any} value
+   * @param {Function} callback
+   */
   checkConfirm = (rule, value, callback) => {
     const form = this.props.form;
     if (value && this.state.confirmDirty) {

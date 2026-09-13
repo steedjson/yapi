@@ -1,3 +1,4 @@
+// @ts-check
 import React, { PureComponent as Component } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
@@ -7,12 +8,12 @@ import RegForm from './Reg';
 import './Login.scss';
 const TabPane = Tabs.TabPane;
 
-@connect(state => ({
+@connect((/** @type {any} */ state) => ({
   loginWrapActiveKey: state.user.loginWrapActiveKey,
   canRegister: state.user.canRegister
 }))
 export default class LoginWrap extends Component {
-  constructor(props) {
+  constructor(/** @type {any} */ props) {
     super(props);
   }
 

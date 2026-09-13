@@ -3,7 +3,8 @@
     "target": "ES2018",
     "module": "commonjs",
     "allowJs": true,
-    "checkJs": true,
+    "checkJs": false,
+    "jsx": "preserve",
     "strict": true,
     "skipLibCheck": true,
     "noEmit": true
@@ -41,6 +42,10 @@
     "client/reducer/modules/addInterface.js",
     "client/reducer/modules/project.js",
     "client/reducer/modules/user.js",
-    "client/reducer/create.js"
+    "client/reducer/create.js",
+    "client/containers/Login/Login.js",
+    "client/containers/Login/LoginWrap.js",
+    "client/containers/Login/Reg.js",
+    "client/containers/Login/LoginContainer.js"
   ]
 }

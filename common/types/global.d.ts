@@ -13,6 +13,8 @@ interface Buffer extends Uint8Array {
 
 declare function require(id: string): any;
 
+declare module '*.scss';
+
 declare var exports: any;
 declare var module: { exports: any };
 declare var __dirname: string;
@@ -96,6 +98,77 @@ declare module 'redux-promise' {
 
 declare module 'immer' {
   export default function produce(base: any, recipe: (draft: any) => void): any;
+}
+
+declare module 'react' {
+  export class Component<P = any, S = any> {
+    constructor(props?: P, context?: any);
+    props: P;
+    state: S;
+    setState(
+      state: Partial<S> | ((prevState: S, props: P) => Partial<S> | null),
+      callback?: () => void
+    ): void;
+    forceUpdate(callback?: () => void): void;
+    render(): any;
+  }
+  export class PureComponent<P = any, S = any> extends Component<P, S> {}
+  const React: any;
+  export default React;
+}
+
+declare module 'prop-types' {
+  const PropTypes: any;
+  export default PropTypes;
+}
+
+declare module 'react-redux' {
+  export function connect(
+    mapStateToProps?: any,
+    mapDispatchToProps?: any,
+    mergeProps?: any,
+    options?: any
+  ): any;
+}
+
+declare module 'antd' {
+  export const Form: any;
+  export const Button: any;
+  export const Input: any;
+  export const Icon: any;
+  export const message: any;
+  export const Radio: any;
+  export const Tabs: any;
+  export const Row: any;
+  export const Col: any;
+  export const Card: any;
+}
+
+/**
+ * React 16 运行时的微量类型声明（项目未安装 @types/react，
+ * 仅覆盖登录页等 @ts-check 组件用到的最小子集）
+ */
+declare namespace React {
+  interface SyntheticEvent<T = any> {
+    bubbles: boolean;
+    cancelable: boolean;
+    target: T;
+    currentTarget: T;
+    preventDefault(): void;
+    stopPropagation(): void;
+    [key: string]: any;
+  }
+}
+
+/**
+ * JSX 检查的最小声明：内置元素统一按 any 处理，
+ * 组件属性不校验（与 React 16 + Babel 6 的宽松运行时行为保持一致）
+ */
+declare namespace JSX {
+  interface Element {}
+  interface IntrinsicElements {
+    [elemName: string]: any;
+  }
 }
 
 declare module 'react-router' {
