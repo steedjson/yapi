@@ -1,3 +1,4 @@
+// @ts-check
 import React, { PureComponent as Component } from 'react';
 import PropTypes from 'prop-types';
 import { Table, Select, Tooltip, Icon } from 'antd';
@@ -7,7 +8,7 @@ const Option = Select.Option;
 import { fetchInterfaceListMenu } from '../../../../reducer/modules/interface.js';
 
 @connect(
-  state => {
+  (/** @type {any} */ state) => {
     return {
       projectList: state.project.projectList,
       list: state.inter.list
@@ -18,15 +19,15 @@ import { fetchInterfaceListMenu } from '../../../../reducer/modules/interface.js
   }
 )
 export default class ImportInterface extends Component {
-  constructor(props) {
+  constructor(/** @type {any} */ props) {
     super(props);
   }
 
-  state = {
+  state = /** @type {any} */ ({
     selectedRowKeys: [],
     categoryCount: {},
     project: this.props.currProjectId
-  };
+  });
 
   static propTypes = {
     list: PropTypes.array,
@@ -41,9 +42,12 @@ export default class ImportInterface extends Component {
     await this.props.fetchInterfaceListMenu(this.props.currProjectId);
   }
 
-  flattenCategories = list => {
+  flattenCategories = (/** @type {any} */ list) => {
     const result = [];
-    const stack = (list || []).slice().reverse().map(item => ({ item, prefix: '' }));
+    const stack = (list || [])
+      .slice()
+      .reverse()
+      .map((/** @type {any} */ item) => ({ item, prefix: '' }));
     // 导入列表按扁平顺序展示所有层级，但仍保留每个分类的直接接口。
     while (stack.length) {
       const current = stack.pop();
@@ -51,13 +55,15 @@ export default class ImportInterface extends Component {
       if (!item) continue;
       result.push({ item, label: current.prefix + item.name });
       const children = (item.children || []).slice().reverse();
-      children.forEach(child => stack.push({ item: child, prefix: current.prefix + '└ ' }));
+      children.forEach((/** @type {any} */ child) =>
+        stack.push({ item: child, prefix: current.prefix + '└ ' })
+      );
     }
     return result;
   };
 
   // 切换项目
-  onChange = async val => {
+  onChange = async (/** @type {any} */ val) => {
     this.setState({
       project: val,
       selectedRowKeys: [],
@@ -70,14 +76,14 @@ export default class ImportInterface extends Component {
     const { list, projectList } = this.props;
 
     // const { selectedRowKeys } = this.state;
-    const data = this.flattenCategories(list).map(category => {
+    const data = this.flattenCategories(list).map((/** @type {any} */ category) => {
       const item = category.item;
       const interfaces = item.list || [];
       return {
         key: 'category_' + item._id,
         title: category.label,
         isCategory: true,
-        children: interfaces.map(e =>
+        children: interfaces.map((/** @type {any} */ e) =>
           Object.assign({}, e, {
             key: e._id,
             categoryKey: 'category_' + item._id,
@@ -96,22 +102,26 @@ export default class ImportInterface extends Component {
       // }
       // this.props.onChange(selectedRowKeys.filter(id => ('' + id).indexOf('category') === -1));
       // },
-      onSelect: (record, selected) => {
+      onSelect: (/** @type {any} */ record, /** @type {any} */ selected) => {
         // console.log(record, selected, selectedRows);
         const oldSelecteds = self.state.selectedRowKeys;
         const categoryCount = self.state.categoryCount;
         const categoryKey = record.categoryKey;
         const categoryLength = record.categoryLength;
-        let selectedRowKeys = [];
+        let selectedRowKeys = /** @type {any[]} */ ([]);
         if (record.isCategory) {
-          selectedRowKeys = record.children.map(item => item._id).concat(record.key);
+          selectedRowKeys = record.children
+            .map((/** @type {any} */ item) => item._id)
+            .concat(record.key);
           if (selected) {
             selectedRowKeys = selectedRowKeys
-              .filter(id => oldSelecteds.indexOf(id) === -1)
+              .filter((/** @type {any} */ id) => oldSelecteds.indexOf(id) === -1)
               .concat(oldSelecteds);
             categoryCount[categoryKey] = categoryLength;
           } else {
-            selectedRowKeys = oldSelecteds.filter(id => selectedRowKeys.indexOf(id) === -1);
+            selectedRowKeys = oldSelecteds.filter(
+              (/** @type {any} */ id) => selectedRowKeys.indexOf(id) === -1
+            );
             categoryCount[categoryKey] = 0;
           }
         } else {
@@ -126,31 +136,33 @@ export default class ImportInterface extends Component {
               selectedRowKeys.push(categoryKey);
             }
           } else {
-            selectedRowKeys = oldSelecteds.filter(id => id !== record._id);
+            selectedRowKeys = oldSelecteds.filter((/** @type {any} */ id) => id !== record._id);
             if (categoryCount[categoryKey]) {
               categoryCount[categoryKey] -= 1;
             }
-            selectedRowKeys = selectedRowKeys.filter(id => id !== categoryKey);
+            selectedRowKeys = selectedRowKeys.filter((/** @type {any} */ id) => id !== categoryKey);
           }
         }
         self.setState({ selectedRowKeys, categoryCount });
         self.props.selectInterface(
-          selectedRowKeys.filter(id => ('' + id).indexOf('category') === -1),
+          selectedRowKeys.filter((/** @type {any} */ id) => ('' + id).indexOf('category') === -1),
           self.state.project
         );
       },
-      onSelectAll: selected => {
+      onSelectAll: (/** @type {any} */ selected) => {
         // console.log(selected, selectedRows, changeRows);
-        let selectedRowKeys = [];
+        let selectedRowKeys = /** @type {any[]} */ ([]);
         let categoryCount = self.state.categoryCount;
         if (selected) {
-          data.forEach(item => {
+          data.forEach((/** @type {any} */ item) => {
             if (item.children) {
               categoryCount['category_' + item._id] = item.children.length;
-              selectedRowKeys = selectedRowKeys.concat(item.children.map(item => item._id));
+              selectedRowKeys = selectedRowKeys.concat(
+                item.children.map((/** @type {any} */ item) => item._id)
+              );
             }
           });
-          selectedRowKeys = selectedRowKeys.concat(data.map(item => item.key));
+          selectedRowKeys = selectedRowKeys.concat(data.map((/** @type {any} */ item) => item.key));
         } else {
           categoryCount = {};
           selectedRowKeys = [];
@@ -178,8 +190,9 @@ export default class ImportInterface extends Component {
       {
         title: '请求方法',
         dataIndex: 'method',
-        render: item => {
-          let methodColor = variable.METHOD_COLOR[item ? item.toLowerCase() : 'get'];
+        render: (/** @type {any} */ item) => {
+          let methodColor =
+            /** @type {any} */ (variable.METHOD_COLOR)[item ? item.toLowerCase() : 'get'];
           return (
             <span
               style={{
@@ -204,7 +217,7 @@ export default class ImportInterface extends Component {
           </span>
         ),
         dataIndex: 'status',
-        render: text => {
+        render: (/** @type {any} */ text) => {
           return (
             text &&
             (text === 'done' ? (
@@ -224,8 +237,8 @@ export default class ImportInterface extends Component {
             value: 'undone'
           }
         ],
-        onFilter: (value, record) => {
-          let arr = record.children.filter(item => {
+        onFilter: (/** @type {any} */ value, /** @type {any} */ record) => {
+          let arr = record.children.filter((/** @type {any} */ item) => {
             return item.status.indexOf(value) === 0;
           });
           return arr.length > 0;
@@ -239,7 +252,7 @@ export default class ImportInterface extends Component {
         <div className="select-project">
           <span>选择要导入的项目： </span>
           <Select value={this.state.project} style={{ width: 200 }} onChange={this.onChange}>
-            {projectList.map(item => {
+            {projectList.map((/** @type {any} */ item) => {
               return item.projectname ? (
                 ''
               ) : (

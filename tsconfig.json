@@ -51,6 +51,8 @@
     "client/containers/Group/Group.js",
     "client/containers/Project/Interface/InterfaceList/InterfaceMenu.js",
     "client/containers/Project/Interface/InterfaceList/Edit.js",
-    "client/containers/Project/Interface/InterfaceList/InterfaceEditForm.js"
+    "client/containers/Project/Interface/InterfaceList/InterfaceEditForm.js",
+    "client/containers/Project/Interface/InterfaceCol/ImportInterface.js",
+    "client/containers/Project/Setting/ProjectData/ProjectData.js"
   ]
 }

@@ -1,3 +1,4 @@
+// @ts-check
 import React, { PureComponent as Component } from 'react';
 import {
   Upload,
@@ -28,10 +29,14 @@ const Option = Select.Option;
 const confirm = Modal.confirm;
 const plugin = require('client/plugin.js');
 const RadioGroup = Radio.Group;
-const importDataModule = {};
-const exportDataModule = {};
+const importDataModule = /** @type {any} */ ({});
+const exportDataModule = /** @type {any} */ ({});
 const HandleImportData = require('common/HandleImportData');
-function handleExportRouteParams(url, status, isWiki) {
+function handleExportRouteParams(
+  /** @type {any} */ url,
+  /** @type {any} */ status,
+  /** @type {any} */ isWiki
+) {
   if (!url) {
     return;
   }
@@ -50,7 +55,7 @@ function handleExportRouteParams(url, status, isWiki) {
 //   desc: '导出项目接口文档为 pdf 文件'
 // }
 @connect(
-  state => {
+  (/** @type {any} */ state) => {
     return {
       curCatid: -(-state.inter.curdata.catid),
       basePath: state.project.currProject.basepath,
@@ -65,9 +70,9 @@ function handleExportRouteParams(url, status, isWiki) {
   }
 )
 class ProjectData extends Component {
-  constructor(props) {
+  constructor(/** @type {any} */ props) {
     super(props);
-    this.state = {
+    this.state = /** @type {any} */ ({
       selectCatid: '',
       menuList: [],
       curImportType: 'swagger',
@@ -78,17 +83,20 @@ class ProjectData extends Component {
       isSwaggerUrl: false,
       swaggerUrl: '',
       isWiki: false
-    };
+    });
   }
-  flattenCategories = list => {
-    const byParent = {};
-    (list || []).forEach(item => {
+  flattenCategories = (/** @type {any} */ list) => {
+    const byParent = /** @type {any} */ ({});
+    (list || []).forEach((/** @type {any} */ item) => {
       const parentId = item.parent_id || 0;
       if (!byParent[parentId]) byParent[parentId] = [];
       byParent[parentId].push(item);
     });
     const result = [];
-    const stack = (byParent[0] || []).slice().reverse().map(item => ({ item, prefix: '' }));
+    const stack = (byParent[0] || [])
+      .slice()
+      .reverse()
+      .map((/** @type {any} */ item) => ({ item, prefix: '' }));
     // 导入默认分类下拉框展示完整层级，提交时仍使用原分类 ID。
     while (stack.length) {
       const current = stack.pop();
@@ -96,7 +104,9 @@ class ProjectData extends Component {
       if (!item) continue;
       result.push({ item, label: current.prefix + item.name });
       const children = (byParent[item._id] || []).slice().reverse();
-      children.forEach(child => stack.push({ item: child, prefix: current.prefix + '└ ' }));
+      children.forEach((/** @type {any} */ child) =>
+        stack.push({ item: child, prefix: current.prefix + '└ ' })
+      );
     }
     return result;
   };
@@ -123,7 +133,7 @@ class ProjectData extends Component {
         menuList,
         selectCatid: prevState.selectCatid || (menuList.length ? menuList[0]._id : 0)
       }));
-    } catch (err) {
+    } catch (/** @type {any} */ err) {
       message.error('获取接口分类失败：' + err.message);
     }
   };
@@ -134,13 +144,13 @@ class ProjectData extends Component {
     plugin.emitHook('export_data', exportDataModule, this.props.match.params.id);
   }
 
-  selectChange(value) {
+  selectChange(/** @type {any} */ value) {
     this.setState({
       selectCatid: +value
     });
   }
 
-  uploadChange = info => {
+  uploadChange = (/** @type {any} */ info) => {
     const status = info.file.status;
     if (status !== 'uploading') {
       console.log(info.file, info.fileList);
@@ -152,7 +162,7 @@ class ProjectData extends Component {
     }
   };
 
-  handleAddInterface = async res => {
+  handleAddInterface = async (/** @type {any} */ res) => {
     const result = await HandleImportData(
       res,
       this.props.match.params.id,
@@ -170,7 +180,7 @@ class ProjectData extends Component {
   };
 
   // 本地文件上传
-  handleFile = info => {
+  handleFile = (/** @type {any} */ info) => {
     if (!this.state.curImportType) {
       return message.error('请选择导入数据的方式');
     }
@@ -178,7 +188,7 @@ class ProjectData extends Component {
       this.setState({ showLoading: true });
       let reader = new FileReader();
       reader.readAsText(info.file);
-      reader.onload = async res => {
+      reader.onload = async (/** @type {any} */ res) => {
         try {
           res = await importDataModule[this.state.curImportType].run(res.target.result);
           if (!res || !Array.isArray(res.apis)) {
@@ -191,7 +201,7 @@ class ProjectData extends Component {
             // 未开启同步
             await this.handleAddInterface(res);
           }
-        } catch (err) {
+        } catch (/** @type {any} */ err) {
           this.setState({ showLoading: false });
           message.error(err.message || '解析失败');
         }
@@ -205,14 +215,14 @@ class ProjectData extends Component {
     }
   };
 
-  showConfirm = async res => {
+  showConfirm = async (/** @type {any} */ res) => {
     let that = this;
     let typeid = this.props.match.params.id;
     if (!res || !Array.isArray(res.apis)) {
       this.setState({ showLoading: false, dataSync: 'normal' });
       return message.error('解析数据为空');
     }
-    let apiCollections = res.apis.map(item => {
+    let apiCollections = res.apis.map((/** @type {any} */ item) => {
       return {
         method: item.method,
         path: item.path
@@ -225,7 +235,7 @@ class ProjectData extends Component {
         typeid,
         apis: apiCollections
       });
-    } catch (err) {
+    } catch (/** @type {any} */ err) {
       this.setState({ showLoading: false, dataSync: 'normal' });
       return message.error('获取同步差异失败：' + err.message);
     }
@@ -241,7 +251,7 @@ class ProjectData extends Component {
       content: (
         <div className="postman-dataImport-modal">
           <div className="postman-dataImport-modal-content">
-            {domainData.map((item, index) => {
+            {domainData.map((/** @type {any} */ item, /** @type {any} */ index) => {
               return (
                 <div key={index} className="postman-dataImport-show-diff">
                   <span className="logcontent" dangerouslySetInnerHTML={{ __html: item.content }} />
@@ -255,7 +265,7 @@ class ProjectData extends Component {
       async onOk() {
         try {
           await that.handleAddInterface(res);
-        } catch (err) {
+        } catch (/** @type {any} */ err) {
           message.error('数据同步失败：' + err.message);
         } finally {
           that.setState({ dataSync: 'normal' });
@@ -269,14 +279,14 @@ class ProjectData extends Component {
     });
   };
 
-  handleImportType = val => {
+  handleImportType = (/** @type {any} */ val) => {
     this.setState({
       curImportType: val,
       isSwaggerUrl: false
     });
   };
 
-  handleExportType = val => {
+  handleExportType = (/** @type {any} */ val) => {
     this.setState({
       curExportType: val,
       isWiki: false
@@ -284,21 +294,21 @@ class ProjectData extends Component {
   };
 
   // 处理导入信息同步
-  onChange = checked => {
+  onChange = (/** @type {any} */ checked) => {
     this.setState({
       dataSync: checked
     });
   };
 
   // 处理swagger URL 导入
-  handleUrlChange = checked => {
+  handleUrlChange = (/** @type {any} */ checked) => {
     this.setState({
       isSwaggerUrl: checked
     });
   };
 
   // 记录输入的url
-  swaggerUrlInput = url => {
+  swaggerUrlInput = (/** @type {any} */ url) => {
     this.setState({
       swaggerUrl: url
     });
@@ -327,7 +337,7 @@ class ProjectData extends Component {
           // 未开启同步
           await this.handleAddInterface(res);
         }
-      } catch (e) {
+      } catch (/** @type {any} */ e) {
         this.setState({ showLoading: false });
         message.error(e.message);
       }
@@ -337,12 +347,12 @@ class ProjectData extends Component {
   };
 
   // 处理导出接口是全部还是公开
-  handleChange = e => {
+  handleChange = (/** @type {any} */ e) => {
     this.setState({ exportContent: e.target.value });
   };
 
   //  处理是否开启wiki导出
-  handleWikiChange = e => {
+  handleWikiChange = (/** @type {any} */ e) => {
     this.setState({
       isWiki: e.target.checked
     });
@@ -418,11 +428,11 @@ class ProjectData extends Component {
                   placeholder="请选择数据导入的默认分类"
                   optionFilterProp="children"
                   onChange={this.selectChange.bind(this)}
-                  filterOption={(input, option) =>
+                  filterOption={(/** @type {any} */ input, /** @type {any} */ option) =>
                     option.props.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
                   }
                 >
-                  {categories.map(category => {
+                  {categories.map((/** @type {any} */ category) => {
                     return (
                       <Option key={category.item._id} value={category.item._id + ''}>
                         {category.label}
@@ -479,7 +489,7 @@ class ProjectData extends Component {
                 <div className="import-content url-import-content">
                   <Input
                     placeholder="http://demo.swagger.io/v2/swagger.json"
-                    onChange={e => this.swaggerUrlInput(e.target.value)}
+                    onChange={(/** @type {any} */ e) => this.swaggerUrlInput(e.target.value)}
                   />
                   <Button
                     type="primary"
@@ -500,7 +510,7 @@ class ProjectData extends Component {
                       <p className="ant-upload-text">点击或者拖拽文件到上传区域</p>
                       <p
                         className="ant-upload-hint"
-                        onClick={e => {
+                        onClick={(/** @type {any} */ e) => {
                           e.stopPropagation();
                         }}
                         dangerouslySetInnerHTML={{

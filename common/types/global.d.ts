@@ -67,6 +67,14 @@ declare module 'crypto' {
   export function createDecipheriv(algorithm: string, key: any, iv: any): Decipher;
 }
 
+declare module 'url' {
+  const url: {
+    parse(urlStr: string, parseQueryString?: boolean): any;
+    format(urlObject: any): string;
+  };
+  export default url;
+}
+
 declare module 'axios' {
   const axios: any;
   export default axios;
@@ -144,6 +152,7 @@ declare module 'antd' {
   export const Row: any;
   export const Col: any;
   export const Card: any;
+  export const Table: any;
   export const Tree: any;
   export const Modal: any;
   export const Tooltip: any;
@@ -151,6 +160,9 @@ declare module 'antd' {
   export const Select: any;
   export const AutoComplete: any;
   export const Switch: any;
+  export const Upload: any;
+  export const Spin: any;
+  export const Checkbox: any;
 }
 
 /**
@@ -205,6 +217,11 @@ declare module 'json-schema-editor-visual' {
 declare module '*/mockEditor' {
   const mockEditor: any;
   export default mockEditor;
+}
+
+declare module '*/HandleImportData' {
+  const HandleImportData: any;
+  export = HandleImportData;
 }
 
 declare module '*/AceEditor' {
