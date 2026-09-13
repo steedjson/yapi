@@ -745,7 +745,7 @@ UI 迁移必须在 TypeScript 和构建工具稳定后进行，优先保持组�
 
 保留页面 URL、路由、表单字段、权限判断、接口调用、按钮含义和插件入口。
 
-当前进度（2026 年 9 月 13 日）：前三页已完成 UI 升级。
+当前进度（2026 年 9 月 13 日）：五个页面已全部完成 UI 升级。
 
 - 登录页（提交 `1331510f`）：Login.js、Reg.js、LoginWrap.js、LoginContainer.js 四个组件纳入 TypeScript 严格类型检查（`@ts-check` opt-in 模式），补充 React/antd/prop-types/JSX 环境声明到 `global.d.ts`，tsconfig 切换为 opt-in 模式（已有 `@ts-check` 文件的检查范围不变）。移除登录页调试 `console.log`。
 - 项目列表与分组页（提交 `af7ca4cd`）：ProjectList.js、Group.js 纳入严格检查，antd Tooltip/Layout/Spin 与 core-decorators 等缺失声明补齐，无逻辑变更。
@@ -789,6 +789,17 @@ rg -n "getFieldDecorator|Modal|Table|Tree|Menu|Icon|Form" client
 - 每次只升级一个 UI 大组件；
 - 不与 React 大版本升级同时修改后端；
 - 不因为 UI 升级删除原有操作。
+
+### 评估结论（2026 年 9 月 13 日，评估完成）
+
+Phase 16 评估已完成，详细论证、用量基线与逐条复跑命令见 `docs/devops/react-antd-upgrade-matrix.md`（基准 HEAD `39aedd3c`）。要点：
+
+- 六项前提全部满足；
+- 升级破坏面量化：antd 表单体系（client 84 + exts 15 处 `getFieldDecorator`、12+3 处 `Form.create`）是唯一「大工作量、高风险」项；图标 144 处（client 129 + exts 15）与 `TabPane` 30 处为中等工作量机械项；`theme.less` 166 个变量到 antd 5 才需要体系更换；
+- peer 约束决定唯一低成本顺序：react 16.14（S1）→ antd 4.24（S2）→ 生命周期现代化（S3）→ react 17/18（S4）；antd 4/5 与 react 16.2 组合非法，不可反序；
+- 最终决策：**维持 `react@16.2.0` + `antd@3.2.2` 高可用兼容运行状态**，与本节既有结论一致、不推翻；后续若推进升级，严格按报告的 S1→S4 分阶段路线执行，每阶段独立提交、独立验证、可独立回滚。
+
+至此第四批次（Phase 15 局部 UI 升级 + Phase 16 大版本评估）全部完成，重构计划四个批次闭环。
 
 ## 四、数据兼容和迁移原则
 
