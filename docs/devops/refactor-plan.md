@@ -751,8 +751,9 @@ UI 迁移必须在 TypeScript 和构建工具稳定后进行，优先保持组�
 - 项目列表与分组页（提交 `af7ca4cd`）：ProjectList.js、Group.js 纳入严格检查，antd Tooltip/Layout/Spin 与 core-decorators 等缺失声明补齐，无逻辑变更。
 - 接口分类树（提交 `dc692124`）：InterfaceMenu.js（661 行）纳入严格检查，全部方法补充 JSDoc 注解，`global.d.ts` 的 antd 声明追加 Tree/Modal/Tooltip，零 `@ts-ignore`；经 AST 前后等价对比验证无运行时语义变更。验证：`tsc --noEmit` 0 错误、Node 24.21.0（`.nvmrc`）下 `npm test` 236 pass/0 fail、`build-client` 退出码 0。注意 Node 25 下 server 侧测试因存量依赖 `buffer-equal-constant-time`（jsonwebtoken 传递依赖）访问已移除的 `SlowBuffer` 而崩溃，与页面改动无关，测试须用 `.nvmrc` 声明版本执行。
 - 接口编辑页（提交 `f418a200`）：Edit.js（249 行）与 InterfaceEditForm.js（1363 行）纳入严格检查，`global.d.ts` 追加 `*.css` 模块声明、antd Affix/Select/AutoComplete/Switch 与 json-schema-editor-visual、mockEditor、AceEditor、tui-editor 模块声明，零 `@ts-ignore`；AST 级对比证明无运行时语义变更。验证同上（tsc 实际检查 225 文件、236 pass/0 fail、build 退出码 0）。
+- 导入弹窗（提交 `31f5dc55`）：ImportInterface.js（257 行）与 ProjectData.js（586 行）纳入严格检查，`global.d.ts` 追加 url 模块（parse/format 最小签名）、antd Table/Upload/Spin/Checkbox 与 HandleImportData 声明，零 `@ts-ignore`；babylon AST 全等对比证明无运行时语义变更，原有注释零丢失。验证同上（tsc 检查 227 文件、236 pass/0 fail、build 退出码 0）。
 
-页面 URL、路由、表单字段、权限判断、接口调用、按钮含义和插件入口均未改动。剩余页面（导入弹窗）按相同模式推进。
+页面 URL、路由、表单字段、权限判断、接口调用、按钮含义和插件入口均未改动。**至此 Phase 15 五个页面（登录页→项目列表→接口分类树→接口编辑页→导入弹窗）全部完成。**
 
 ## Phase 16：最后评估 React 和 Ant Design 大版本
 
