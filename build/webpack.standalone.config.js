@@ -32,7 +32,7 @@ const config = {
   // dependOn entry vendor 或删除 entry——后者被项目约束禁止）。
   // 故采用 dependOn 链：lib(react 系,根) ← lib2 ← lib3 ← index。dependOn 使被依赖
   // entry 的模块对下游 entry 去重共享（实测 react-dom/lodash 仅存在于 lib chunk，
-  // moment 仅存在于 lib3 chunk），index 自身引入的 vendor（antd 等）留在 index chunk，
+  // dayjs 仅存在于 lib3 chunk），index 自身引入的 vendor（antd 等）留在 index chunk，
   // 由 runtime 依赖图保证加载顺序，index.html 固定的 5 个 script 标签顺序仍然成立。
   // splitChunks 关闭：无动态 import()，各 entry 模块经 dependOn 去重后不存在跨 entry
   // 重复，样式仍完整留在 index 与 theme-* 各自 chunk（index.css / theme-*@prd.css）。
@@ -48,7 +48,7 @@ const config = {
     },
     lib3: {
       dependOn: 'lib2',
-      import: ['mockjs', 'moment', 'recharts']
+      import: ['mockjs', 'dayjs', 'recharts']
     }
   },
   devtool: isProduction ? false : 'cheap-module-source-map',
@@ -152,8 +152,7 @@ const config = {
         test: /\.(js|css)$/,
         threshold: 10240,
         minRatio: 0.8
-      }),
-      new webpack.ContextReplacementPlugin(/moment[\\/]locale$/, /^\.\/(zh-cn|en-gb)$/)
+      })
     ] : [])
   ]
 };

@@ -3,7 +3,3 @@
 	    https://github.com/nuysoft/Mock
 	    墨智 mozhi.gyy@taobao.com nuysoft@gmail.com
 	*/
-
-//! moment.js
-
-//! moment.js locale configuration

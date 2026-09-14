@@ -1,5 +1,5 @@
 // @ts-nocheck
-const moment = require('moment');
+const dayjs = require('dayjs');
 const constants = require('./constants/variable');
 const Mock = require('mockjs');
 const json5 = require('json5');
@@ -79,7 +79,8 @@ exports.checkAuth = (action, role) => {
 };
 
 exports.formatTime = timestamp => {
-  return moment.unix(timestamp).format('YYYY-MM-DD HH:mm:ss');
+  // dayjs.unix 按 UTC 秒解析,输出格式与替换前保持一致
+  return dayjs.unix(timestamp).format('YYYY-MM-DD HH:mm:ss');
 };
 
 // 防抖函数，减少高频触发的函数执行的频率

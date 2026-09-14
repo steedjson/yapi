@@ -17,6 +17,11 @@ import { initSkin, useSkinTheme } from './theme';
 // 由于 antd 组件的默认文案是英文，所以需要修改为中文
 import zhCN from 'antd/locale/zh_CN';
 
+// antd5 日期类组件内部依赖 dayjs,统一初始化中文 locale
+import dayjs from 'dayjs';
+import 'dayjs/locale/zh-cn';
+dayjs.locale('zh-cn');
+
 initSkin();
 
 const store = createStore();
