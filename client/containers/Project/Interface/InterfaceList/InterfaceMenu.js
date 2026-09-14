@@ -134,7 +134,7 @@ class InterfaceMenu extends Component {
   /**
    * @returns {void}
    */
-  componentWillMount() {
+  UNSAFE_componentWillMount() {
     this.handleRequest();
   }
 
@@ -142,7 +142,7 @@ class InterfaceMenu extends Component {
    * @param {any} nextProps
    * @returns {void}
    */
-  componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     if (this.props.list !== nextProps.list) {
       // console.log('next', nextProps.list)
       this.setState({

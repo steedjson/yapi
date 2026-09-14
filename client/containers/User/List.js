@@ -122,7 +122,7 @@ class List extends Component {
       );
   };
 
-  async componentWillMount() {
+  async UNSAFE_componentWillMount() {
     this.props.setBreadcrumb([{ name: '用户管理' }]);
   }
 

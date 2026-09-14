@@ -139,7 +139,7 @@ class ProjectData extends Component {
     }
   };
 
-  componentWillMount() {
+  UNSAFE_componentWillMount() {
     this.loadCategoryMenu();
     plugin.emitHook('import_data', importDataModule);
     plugin.emitHook('export_data', exportDataModule, this.props.match.params.id);

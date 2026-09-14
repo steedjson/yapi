@@ -96,7 +96,7 @@ class ProjectList extends Component {
   /**
    * @param {any} nextProps
    */
-  componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     this.props.setBreadcrumb([{ name: '' + (nextProps.currGroup.group_name || '') }]);
 
     // 切换分组

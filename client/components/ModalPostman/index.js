@@ -62,7 +62,7 @@ class ModalPostman extends Component {
     };
   }
 
-  componentWillMount() {
+  UNSAFE_componentWillMount() {
     let { inputValue } = this.props;
     this.setState({
       constantInput: inputValue
