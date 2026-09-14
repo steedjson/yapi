@@ -12,10 +12,11 @@ import axios from 'axios';
 import { message } from 'antd';
 
 export const SKINS = [
-  { name: 'enterprise', label: '企业风' },
-  { name: 'gov', label: '政务风' },
-  { name: 'anime', label: '二次元风' },
-  { name: 'dark', label: '暗色' }
+  { name: 'enterprise', label: '默认' },
+  // hidden 仅为菜单入口隐藏:白名单校验/主题编译/已选用户的 localStorage 偏好均保持有效
+  { name: 'gov', label: '政务风', hidden: true },
+  { name: 'anime', label: '二次元' },
+  { name: 'dark', label: '暗色', hidden: true }
 ];
 
 const SKIN_NAMES = SKINS.map(item => item.name);
