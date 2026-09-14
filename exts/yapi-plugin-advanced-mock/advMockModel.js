@@ -25,13 +25,14 @@ class advMockModel extends baseModel {
   }
 
   delByInterfaceId(interface_id) {
-    return this.model.remove({
+    // mongoose 7 起移除 Model.remove，等价替换为 deleteMany。
+    return this.model.deleteMany({
       interface_id: interface_id
     });
   }
 
   delByProjectId(project_id){
-    return this.model.remove({
+    return this.model.deleteMany({
       project_id: project_id
     })
   }
@@ -44,7 +45,8 @@ class advMockModel extends baseModel {
 
   up(data) {
     data.up_time = yapi.commons.time();
-    return this.model.update({
+    // mongoose 7 起移除 Model.update，接口维度单条配置，等价替换为 updateOne（保留 upsert）。
+    return this.model.updateOne({
       interface_id: data.interface_id
     }, {
         uid: data.uid,

@@ -33,7 +33,8 @@ class statisMockModel extends baseModel {
   }
 
   up(id, data) {
-    return this.model.update(
+    // mongoose 7 起移除 Model.update，按 _id 单条更新等价替换为 updateOne。
+    return this.model.updateOne(
       {
         _id: id
       },
@@ -43,7 +44,7 @@ class statisMockModel extends baseModel {
   }
 
   upEditUid(id, uid) {
-    return this.model.update(
+    return this.model.updateOne(
       {
         _id: id
       },

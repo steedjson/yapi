@@ -39,13 +39,14 @@ class caseModel extends baseModel {
   }
 
   delByInterfaceId(interface_id) {
-    return this.model.remove({
+    // mongoose 7 起移除 Model.remove，等价替换为 deleteMany。
+    return this.model.deleteMany({
       interface_id: interface_id
     });
   }
 
   delByProjectId(project_id){
-    return this.model.remove({
+    return this.model.deleteMany({
       project_id: project_id
     })
   }
@@ -60,13 +61,13 @@ class caseModel extends baseModel {
     let id = data.id;
     delete data.id;
     data.up_time = yapi.commons.time();
-    return this.model.update({
+    return this.model.updateOne({
       _id: id
     }, data)
   }
 
   del(id){
-    return this.model.remove({
+    return this.model.deleteMany({
       _id: id
     })
   }
