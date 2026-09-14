@@ -9,7 +9,13 @@ module.exports = function (api) {
     [
       '@babel/preset-env',
       isTest
-        ? { loose: true, targets: { node: 'current' }, modules: 'commonjs' }
+        ? {
+            loose: true,
+            targets: { node: 'current' },
+            modules: 'commonjs',
+            // rewire 的 __set__ 依赖 var 形态的模块内变量，测试管线强制 const 降级
+            include: ['@babel/plugin-transform-block-scoping']
+          }
         : { loose: true, targets: { ie: 11 }, modules: 'commonjs' }
     ],
     '@babel/preset-react'

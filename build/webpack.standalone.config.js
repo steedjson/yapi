@@ -45,7 +45,7 @@ const config = {
   mode: isProduction ? 'production' : 'development',
   context: client,
   entry: {
-    index: [ ...(isDevelopment ? ['webpack-hot-middleware/client?path=/__webpack_hmr&reload=true'] : []), './index.js' ],
+    index: [ ...(isDevelopment ? ['webpack-hot-middleware/client?path=http://127.0.0.1:4000/__webpack_hmr&reload=true'] : []), './index.js' ],
     lib: ['react', 'react-dom', 'redux', 'redux-promise', 'react-router', 'react-router-dom', 'prop-types', 'react-dnd-html5-backend', 'react-dnd', 'reactabular-table', 'reactabular-dnd', 'table-resolver'],
     lib2: ['brace', 'json5', 'url', 'axios'],
     lib3: ['mockjs', 'moment', 'recharts'],

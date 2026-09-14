@@ -65,7 +65,7 @@ test('initPlugins3', t=>{
   }])
 })
 
-test('initPlugins3', t=>{
+test('initPlugins3 legacy config duplicate config', t=>{
   plugin.__set__("getPluginConfig", function(){
     return {
       server: false,
@@ -95,7 +95,7 @@ test('initPlugins3', t=>{
   }])
 })
 
-test('initPlugins3', t=>{
+test('initPlugins3 getPluginConfig mock', t=>{
   plugin.__set__("getPluginConfig", function(){
     return {
       server: false,
@@ -136,27 +136,27 @@ test('testJsonEqualBaseString', t=>{
 })
 
 
-test('isDeepMatch', t=>{
+test('isDeepMatch #1', t=>{
   t.true(lib.isDeepMatch({a:'aaaaa', b:2}, {a:'aaaaa'}))
 })
 
-test('isDeepMatch', t=>{
+test('isDeepMatch #2', t=>{
   t.true(lib.isDeepMatch({a:1, b:2, c: {t:'ttt'}}, {c: {t:'ttt'}}))
 })
 
-test('isDeepMatch', t=>{
+test('isDeepMatch #3', t=>{
   t.true(lib.isDeepMatch({}, undefined))
 })
 
-test('isDeepMatch', t=>{
+test('isDeepMatch #4', t=>{
   t.true(lib.isDeepMatch(undefined, {}))
 })
 
-test('isDeepMatch', t=>{
+test('isDeepMatch #5', t=>{
   t.false(lib.isDeepMatch(undefined, {a:1}))
 })
 
-test('isDeepMatch', t=>{
+test('isDeepMatch #6', t=>{
   t.true(lib.isDeepMatch({ t: 1,
     b: '2',
     ip: '127.0.0.1',
@@ -167,14 +167,14 @@ test('isDeepMatch', t=>{
     code: 1 }, {t:'1'}))
 })
 
-test('isDeepMatch', t=>{
+test('isDeepMatch #7', t=>{
     t.true(lib.isDeepMatch({ t:[{a: 1}]}, { t:[{a: 1}]}))
   })
 
-  test('isDeepMatch', t=>{
+  test('isDeepMatch #8', t=>{
     t.false(lib.isDeepMatch({ t:[{a: 1, b: 12}]}, { t:[{a: 1}]}))
   })
 
-  test('isDeepMatch', t=>{
+  test('isDeepMatch #9', t=>{
     t.true(lib.isDeepMatch([{a: 1}], [{a: 1}]))
   })
