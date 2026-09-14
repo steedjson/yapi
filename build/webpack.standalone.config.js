@@ -143,9 +143,9 @@ const config = {
     ]
   },
   optimization: {
-    // terser 多进程压缩曾出现子进程僵死（webpack 4 + antd 3.26 全量 less 重算），
-    // 固定单进程串行压缩规避（terser-webpack-plugin 5 缓存默认开启，无需 cache 选项）。
-    minimizer: [new TerserPlugin({ parallel: false })],
+    // terser 使用默认多进程并行压缩（webpack 4 时代的 worker 僵死规避项已复验移除：
+    // antd 4 + 预编译 CSS 不再触发，实测并行 18s 完成）。
+    minimizer: [new TerserPlugin()],
     runtimeChunk: { name: 'manifest' },
     // 依赖拆分改由 entry dependOn 承担（见 entry 注释）；webpack 5 禁止 cacheGroup
     // 与 entry 同名，原 lib/lib2/lib3 cacheGroups 无法等价保留。
