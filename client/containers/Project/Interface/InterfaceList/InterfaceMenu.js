@@ -404,19 +404,36 @@ class InterfaceMenu extends Component {
    */
   onDrop = async e => {
     try {
-      const dropCatIndex = e.node.props.pos.split('-')[1] - 1;
-      const dragCatIndex = e.dragNode.props.pos.split('-')[1] - 1;
+      // 搜索过滤状态下树节点索引与完整列表错位,继续排序可能把接口移入错误分类
+      if (this.state.filter) {
+        message.info('搜索过滤中无法拖拽排序，请清空搜索后重试');
+        return;
+      }
+      const dropPosArr = e.node.props.pos.split('-');
+      const dragPosArr = e.dragNode.props.pos.split('-');
+      // 拖放到根节点「全部接口」(pos="0")时没有分类索引:接口必须位于具体分类下。
+      // 该场景原实现会得到 NaN 并在 list[NaN]._id 处抛出 TypeError
+      if (dropPosArr.length < 2 || dragPosArr.length < 2) {
+        message.info('接口必须位于具体分类下，请拖拽到分类节点上');
+        return;
+      }
+      const dropCatIndex = Number(dropPosArr[1]) - 1;
+      const dragCatIndex = Number(dragPosArr[1]) - 1;
       if (dropCatIndex < 0 || dragCatIndex < 0) {
         return;
       }
       const { list, projectId, router } = this.props;
+      // 双重保险:索引越界时静默放弃,避免把接口移入错误分类
+      if (!list[dropCatIndex] || !list[dragCatIndex]) {
+        return;
+      }
       const dropCatId = list[dropCatIndex]._id;
       const id = e.dragNode.props.eventKey;
       const dragCatId = list[dragCatIndex]._id;
 
-      const dropPos = e.node.props.pos.split('-');
+      const dropPos = dropPosArr;
       const dropIndex = Number(dropPos[dropPos.length - 1]);
-      const dragPos = e.dragNode.props.pos.split('-');
+      const dragPos = dragPosArr;
       const dragIndex = Number(dragPos[dragPos.length - 1]);
 
       if (id.indexOf('cat') === -1) {
