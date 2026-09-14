@@ -6,7 +6,6 @@ import { Tabs } from 'antd';
 import LoginForm from './Login';
 import RegForm from './Reg';
 import './Login.scss';
-const TabPane = Tabs.TabPane;
 
 @connect((/** @type {any} */ state) => ({
   loginWrapActiveKey: state.user.loginWrapActiveKey,
@@ -31,14 +30,23 @@ export default class LoginWrap extends Component {
         defaultActiveKey={loginWrapActiveKey}
         className="login-form"
         tabBarStyle={{ border: 'none' }}
-      >
-        <TabPane tab="登录" key="1">
-          <LoginForm />
-        </TabPane>
-        <TabPane tab={"注册"} key="2">
-          {canRegister ? <RegForm /> : <div style={{minHeight: 200}}>管理员已禁止注册，请联系管理员</div>}
-        </TabPane>
-      </Tabs>
+        items={[
+          {
+            label: '登录',
+            key: '1',
+            children: <LoginForm />
+          },
+          {
+            label: '注册',
+            key: '2',
+            children: canRegister ? (
+              <RegForm />
+            ) : (
+              <div style={{ minHeight: 200 }}>管理员已禁止注册，请联系管理员</div>
+            )
+          }
+        ]}
+      />
     );
   }
 }

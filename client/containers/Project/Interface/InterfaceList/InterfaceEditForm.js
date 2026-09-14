@@ -17,7 +17,6 @@ import Editor from 'common/tui-editor/dist/tui-editor-Editor-all.min.js';
 const jSchema = require('json-schema-editor-visual');
 const ResBodySchema = jSchema({ lang: 'zh_CN', mock: MOCK_SOURCE });
 const ReqBodySchema = jSchema({ lang: 'zh_CN', mock: MOCK_SOURCE });
-const TabPane = Tabs.TabPane;
 
 
 require('common/tui-editor/dist/tui-editor.min.css'); // editor ui
@@ -1279,10 +1278,15 @@ function InterfaceEditForm(/** @type {any} */ props) {
             }}
           >
             <Col>
-              <Tabs size="large" defaultActiveKey="tpl" onChange={handleJsonType}>
-                <TabPane tab="模板" key="tpl" />
-                <TabPane tab="预览" key="preview" />
-              </Tabs>
+              <Tabs
+                size="large"
+                defaultActiveKey="tpl"
+                onChange={handleJsonType}
+                items={[
+                  { label: '模板', key: 'tpl' },
+                  { label: '预览', key: 'preview' }
+                ]}
+              />
               <div style={{ marginTop: '10px' }}>
                 {!resBodyIsJsonSchema ? (
                   <div style={{ padding: '10px 0', fontSize: '15px' }}>

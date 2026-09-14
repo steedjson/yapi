@@ -10,7 +10,6 @@ import { withRouter } from 'react-router-dom';
 import Run from './Run/Run.js';
 const plugin = require('client/plugin.js');
 
-const TabPane = Tabs.TabPane;
 @connect(
   state => {
     return {
@@ -162,12 +161,11 @@ class Content extends Component {
         onChange={this.onChange}
         activeKey={this.state.curtab}
         defaultActiveKey="view"
-      >
-        {Object.keys(InterfaceTabs).map(key => {
+        items={Object.keys(InterfaceTabs).map(key => {
           let item = InterfaceTabs[key];
-          return <TabPane tab={item.name} key={key} />;
+          return { label: item.name, key: key };
         })}
-      </Tabs>
+      />
     );
     let tabContent = null;
     if (this.state.curtab) {

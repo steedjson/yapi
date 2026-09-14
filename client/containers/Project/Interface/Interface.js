@@ -99,10 +99,16 @@ class Interface extends Component {
       <Layout style={{ minHeight: 'calc(100vh - 156px)', marginLeft: '24px', marginTop: '24px' }}>
         <Sider style={{ height: '100%' }} width={300}>
           <div className="left-menu">
-            <Tabs type="card" className="tabs-large" activeKey={activeKey} onChange={this.onChange}>
-              <Tabs.TabPane tab="接口列表" key="api" />
-              <Tabs.TabPane tab="测试集合" key="colOrCase" />
-            </Tabs>
+            <Tabs
+              type="card"
+              className="tabs-large"
+              activeKey={activeKey}
+              onChange={this.onChange}
+              items={[
+                { label: '接口列表', key: 'api' },
+                { label: '测试集合', key: 'colOrCase' }
+              ]}
+            />
             {activeKey === 'api' ? (
               <InterfaceMenu
                 router={matchPath(this.props.location.pathname, contentRouter)}

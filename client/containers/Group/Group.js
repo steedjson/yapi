@@ -12,7 +12,6 @@ import { Route, Switch, Redirect } from 'react-router-dom';
 // @ts-ignore
 import { Tabs, Layout, Spin } from 'antd';
 const { Content, Sider } = Layout;
-const TabPane = Tabs.TabPane;
 import { fetchNewsData } from '../../reducer/modules/news.js';
 import {
   setCurrGroup
@@ -92,30 +91,48 @@ export default class Group extends Component {
               backgroundColor: 'var(--sk-bg-component)'
             }}
           >
-            <Tabs type="card" className="m-tab tabs-large" style={{ height: '100%' }}>
-              <TabPane tab="项目列表" key="1">
-                <ProjectList />
-              </TabPane>
-              {this.props.currGroup.type === 'public' ? (
-                <TabPane tab="成员列表" key="2">
-                  <MemberList />
-                </TabPane>
-              ) : null}
-              {['admin', 'owner', 'guest', 'dev'].indexOf(this.props.curUserRoleInGroup) > -1 ||
-              this.props.curUserRole === 'admin' ? (
-                <TabPane tab="分组动态" key="3">
-                  <GroupLog />
-                </TabPane>
-              ) : (
-                ''
-              )}
-              {(this.props.curUserRole === 'admin' || this.props.curUserRoleInGroup === 'owner') &&
-              this.props.currGroup.type !== 'private' ? (
-                <TabPane tab="分组设置" key="4">
-                  <GroupSetting />
-                </TabPane>
-              ) : null}
-            </Tabs>
+            <Tabs
+              type="card"
+              className="m-tab tabs-large"
+              style={{ height: '100%' }}
+              items={[
+                {
+                  label: '项目列表',
+                  key: '1',
+                  children: <ProjectList />
+                },
+                ...(this.props.currGroup.type === 'public'
+                  ? [
+                      {
+                        label: '成员列表',
+                        key: '2',
+                        children: <MemberList />
+                      }
+                    ]
+                  : []),
+                ...(['admin', 'owner', 'guest', 'dev'].indexOf(this.props.curUserRoleInGroup) > -1 ||
+                this.props.curUserRole === 'admin'
+                  ? [
+                      {
+                        label: '分组动态',
+                        key: '3',
+                        children: <GroupLog />
+                      }
+                    ]
+                  : []),
+                ...((this.props.curUserRole === 'admin' ||
+                  this.props.curUserRoleInGroup === 'owner') &&
+                this.props.currGroup.type !== 'private'
+                  ? [
+                      {
+                        label: '分组设置',
+                        key: '4',
+                        children: <GroupSetting />
+                      }
+                    ]
+                  : [])
+              ]}
+            />
           </Content>
         </Layout>
       </Layout>
