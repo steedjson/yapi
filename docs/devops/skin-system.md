@@ -72,6 +72,10 @@ dev 模式页面由后端（:3000）提供、资源在 webpack dev server（:400
 5. `assets.js` 不记录 theme CSS（emit 重命名晚于 assets 插件），运行时为确定性 URL，部署路径
    变更时需同步 `getThemeHref`（P2 知会）。
 6. 二次元风为「轻二次元」（色板/圆角/字体观感），插画类重设计超出皮肤机制，需单独立项。
+7. **ykit 回退构建路径不含皮肤产物**：`ykit.config.js` 未配置 theme 入口与
+   `ThemeCssFixedNamePlugin`，走 `build-client-ykit`/`dev-client-ykit` 的包不存在 theme-*.css，
+   运行时注入 link 404 后静默回落企业默认（页面层令牌随 `data-skin` 仍生效，降级安全）。
+   皮肤特性仅在 standalone webpack 构建下完整支持。
 
 ## 六、验证
 
