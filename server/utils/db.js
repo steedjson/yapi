@@ -48,15 +48,9 @@ function connect(callback) {
     }
   }
 
-  let db = mongoose.connect(
-    connectString,
-    options,
-    function(err) {
-      if (err) {
-        yapi.commons.log(err + ', mongodb Authentication failed', 'error');
-      }
-    }
-  );
+  // mongoose 5.11+ 的 connect 只有在不传 callback 时才返回 Promise，
+  // 连接失败的日志由下方 then 的第二个函数统一处理。
+  let db = mongoose.connect(connectString, options);
 
   db.then(
     function() {
