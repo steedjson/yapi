@@ -197,7 +197,7 @@ underscore→原生/lodash 评估；redux 5 评估；mongoose 9 评估；antd 6 
 | P0.3 最小 CI（typecheck + test） | ✅ | 472a7963 | .github/workflows/test.yml |
 | P0.4 npm audit 基线 | ✅ | （记录于本节） | **174 漏洞（3 low / 60 moderate / 78 high / 33 critical）**，registry.npmjs.org 实测；各阶段结束复测对比 |
 | P1 服务端栈升级 | ✅ | 2ee5038f / 00f40cc3 / 40a939af / c3c7a71a / 6e9065de | koa 2.16.4、koa-static 5、nodemailer 10、ldapjs 3（含 v3 适配与超时路径修复）、node-schedule 2；评审 PASS；遗留：真实 SMTP/LDAP 目录未测（环境受限） |
-| P2 mongoose 6→8 | ⏳ | — | |
+| P2 mongoose 6→8 | ✅ | 78a53a82 / d525db58 | mongoose 8.24.4 + driver 6.20；14 处插件模型 remove/update 适配（机械等价替换，主 Agent 批准的边界偏离）；真实 DB E2E 含自增 ID 递增证据；评审 PASS；观察项 mongoose 9.10 |
 | P3 antd 4 完成 | ⏳ | — | |
 | P4 webpack 5 | ⏳ | — | |
 | P5 React 18.3 | ⏳ | — | |
