@@ -1,5 +1,7 @@
 import { message } from 'antd';
-import run from './run';
+// CJS 引用：run.js 同时服务 ESM(client) 与 CJS(test) 两类消费方，
+// 用 require 避开 webpack 对 default 命名的静态链接校验（babel 7 起严格）。
+const run = require('./run');
 
 module.exports = function() {
   this.bindHook('import_data', function(importDataModule) {

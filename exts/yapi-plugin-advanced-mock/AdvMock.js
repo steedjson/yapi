@@ -153,4 +153,4 @@ class AdvMock extends Component {
   }
 }
 
-module.exports = Form.create()(withRouter(AdvMock));
+export default Form.create()(withRouter(AdvMock));
