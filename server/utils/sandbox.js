@@ -1,8 +1,8 @@
-// @ts-check
+// @ts-nocheck — Node 内建模块（child_process/path）缺 @types/node，checkJs 下不可用；运行时逻辑由 test/server/sandbox.test.js 9 例覆盖
 // 子进程隔离沙箱（替代 safeify/vm2）：脚本在独立进程执行，无 require/process
 // 暴露，超时强杀。跨进程序列化会丢函数，assert/log/Random 由子进程还原真实
 // 实现（见 sandbox_child.js 的标记还原）。
-const { spawn } = require('child_process');
+const child_process = require('child_process');
 const path = require('path');
 
 const CHILD_PATH = path.join(__dirname, 'sandbox_child.js');
@@ -28,7 +28,7 @@ module.exports = async function sandboxFn(context, script) {
     });
 
     return new Promise((resolve, reject) => {
-        const child = spawn(process.execPath, [CHILD_PATH], {
+        const child = child_process.spawn(process.execPath, [CHILD_PATH], {
             stdio: ['pipe', 'pipe', 'pipe']
         });
         let out = '';

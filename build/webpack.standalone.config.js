@@ -104,6 +104,9 @@ const config = {
     ]
   },
   optimization: {
+    // terser 默认走 worker-farm 多进程压缩，antd 3.26 全量 less 重算后子进程会
+    // 僵死（0% CPU 挂起 35 分钟+），固定单进程串行压缩（实测 25s 完成）。
+    minimizer: [new (require('terser-webpack-plugin'))({ parallel: false, cache: true })],
     runtimeChunk: { name: 'manifest' },
     splitChunks: {
       chunks: 'all',
