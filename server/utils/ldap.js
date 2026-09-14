@@ -13,15 +13,18 @@ exports.ldapQuery = (username, password) => {
       url: ldapLogin.server
     });
 
-    client.once('error', err => {
+    // ldapjs v3 连接失败时会发 connectError（而非 error），需同时监听，否则登录流程会挂起
+    const onConnectError = err => {
       if (err) {
         let msg = {
           type: false,
-          message: `once: ${err}`
+          message: `ldap连接失败: ${err}`
         };
         reject(msg);
       }
-    });
+    };
+    client.once('error', onConnectError);
+    client.once('connectError', onConnectError);
     // 注册事件处理函数
     const ldapSearch = (err, search) => {
       const users = [];
@@ -35,8 +38,13 @@ exports.ldapQuery = (username, password) => {
       // 查询结果事件响应
       search.on('searchEntry', entry => {
         if (entry) {
+          // ldapjs v3 移除了 entry.object，改用 pojo 还原为 {dn, 属性...} 的扁平对象
+          const flat = { dn: entry.pojo.objectName };
+          entry.pojo.attributes.forEach(attr => {
+            flat[attr.type] = attr.values.length === 1 ? attr.values[0] : attr.values;
+          });
           // 获取查询对象
-          users.push(entry.object);
+          users.push(flat);
         }
       });
       // 查询错误事件
