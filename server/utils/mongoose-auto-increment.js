@@ -70,31 +70,49 @@ exports.plugin = function (schema, options) {
   schema.add(fields);
 
   // Find the counter for this model and the relevant field.
-  IdentityCounter.findOne(
-    { model: settings.model, field: settings.field },
-    function (err, counter) {
+  // mongoose 7 起移除 query callback 风格，统一用 promise（6/7 兼容）。
+  IdentityCounter.findOne({
+    model: settings.model,
+    field: settings.field
+  })
+    .then(function (counter) {
       if (!counter) {
         // If no counter exists then create one and save it.
         counter = new IdentityCounter({ model: settings.model, field: settings.field, count: settings.startAt - settings.incrementBy });
-        counter.save(function () {
-          ready = true;
-        });
+        counter.save().then(
+          function () {
+            ready = true;
+          },
+          function (err) {
+            console.error('[mongoose-auto-increment] 初始化计数器失败:', err && err.message); // eslint-disable-line
+          }
+        );
       }
       else {
         ready = true;
       }
-    }
-  );
+    })
+    .catch(function (err) {
+      console.error('[mongoose-auto-increment] 计数器查询失败:', err && err.message); // eslint-disable-line
+    });
 
   // Declare a function to get the next counter for the model/schema.
   var nextCount = function (callback) {
-    IdentityCounter.findOne({
+    // 返回 promise，同时兼容传入 callback 的旧调用方式（mongoose 7 移除 query callback）。
+    return IdentityCounter.findOne({
       model: settings.model,
       field: settings.field
-    }, function (err, counter) {
-      if (err) return callback(err);
-      callback(null, counter === null ? settings.startAt : counter.count + settings.incrementBy);
-    });
+    }).then(
+      function (counter) {
+        var value = counter === null ? settings.startAt : counter.count + settings.incrementBy;
+        if (callback) callback(null, value);
+        return value;
+      },
+      function (err) {
+        if (callback) callback(err);
+        throw err;
+      }
+    );
   };
   // Add nextCount as both a method on documents and a static on the schema for convenience.
   schema.method('nextCount', nextCount);
@@ -102,13 +120,18 @@ exports.plugin = function (schema, options) {
 
   // Declare a function to reset counter at the start value - increment value.
   var resetCount = function (callback) {
-    IdentityCounter.findOneAndUpdate(
+    return IdentityCounter.findOneAndUpdate(
       { model: settings.model, field: settings.field },
       { count: settings.startAt - settings.incrementBy },
-      { new: true }, // new: true specifies that the callback should get the updated counter.
+      { new: true } // new: true specifies that the callback should get the updated counter.
+    ).then(
+      function () {
+        if (callback) callback(null, settings.startAt);
+        return settings.startAt;
+      },
       function (err) {
-        if (err) return callback(err);
-        callback(null, settings.startAt);
+        if (callback) callback(err);
+        throw err;
       }
     );
   };
@@ -137,11 +160,14 @@ exports.plugin = function (schema, options) {
               // Check also that count is less than field value.
               { model: settings.model, field: settings.field, count: { $lt: doc[settings.field] } },
               // Change the count of the value found to the new field value.
-              { count: doc[settings.field] },
-              function (err) {
-                if (err) return next(err);
+              { count: doc[settings.field] }
+            ).then(
+              function () {
                 // Continue with default document save functionality.
                 next();
+              },
+              function (err) {
+                next(err);
               }
             );
           } else {
@@ -152,14 +178,16 @@ exports.plugin = function (schema, options) {
               // Increment the count by `incrementBy`.
               { $inc: { count: settings.incrementBy } },
               // new:true specifies that the callback should get the counter AFTER it is updated (incremented).
-              { new: true },
-              // Receive the updated counter.
-              function (err, updatedIdentityCounter) {
-                if (err) return next(err);
+              { new: true }
+            ).then(
+              function (updatedIdentityCounter) {
                 // If there are no errors then go ahead and set the document's field to the current count.
                 doc[settings.field] = updatedIdentityCounter.count;
                 // Continue with default document save functionality.
                 next();
+              },
+              function (err) {
+                next(err);
               }
             );
           }
