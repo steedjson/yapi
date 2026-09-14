@@ -2,7 +2,11 @@
 import React, { PureComponent as Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import { Form, Button, Input, Icon, message } from 'antd';
+import { Form, Button, Input, message } from 'antd';
+// Icon 迁移至 @ant-design/icons（v4 体系）；Form 暂用 @ant-design/compatible
+// 提供的 v3 实现（官方过渡路径），数据流迁移（Form.Item name）在 S3 批次处理。
+import { UserOutlined, MailOutlined, LockOutlined } from '@ant-design/icons';
+import { Form as LegacyForm } from '@ant-design/compatible';
 import { regActions } from '../../reducer/modules/user';
 import { withRouter } from 'react-router';
 const FormItem = Form.Item;
@@ -25,6 +29,7 @@ const changeHeight = {
   }
 )
 @withRouter
+@LegacyForm.create()
 class Reg extends Component {
   constructor(/** @type {any} */ props) {
     super(props);
@@ -95,7 +100,7 @@ class Reg extends Component {
           })(
             <Input
               style={changeHeight}
-              prefix={<Icon type="user" style={{ fontSize: 13 }} />}
+              prefix={<UserOutlined style={{ fontSize: 13 }} />}
               placeholder="Username"
             />
           )}
@@ -114,7 +119,7 @@ class Reg extends Component {
           })(
             <Input
               style={changeHeight}
-              prefix={<Icon type="mail" style={{ fontSize: 13 }} />}
+              prefix={<MailOutlined style={{ fontSize: 13 }} />}
               placeholder="Email"
             />
           )}
@@ -135,7 +140,7 @@ class Reg extends Component {
           })(
             <Input
               style={changeHeight}
-              prefix={<Icon type="lock" style={{ fontSize: 13 }} />}
+              prefix={<LockOutlined style={{ fontSize: 13 }} />}
               type="password"
               placeholder="Password"
             />
@@ -157,7 +162,7 @@ class Reg extends Component {
           })(
             <Input
               style={changeHeight}
-              prefix={<Icon type="lock" style={{ fontSize: 13 }} />}
+              prefix={<LockOutlined style={{ fontSize: 13 }} />}
               type="password"
               placeholder="Confirm Password"
             />
@@ -179,5 +184,5 @@ class Reg extends Component {
     );
   }
 }
-const RegForm = Form.create()(Reg);
+const RegForm = Reg;
 export default RegForm;

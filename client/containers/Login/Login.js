@@ -2,7 +2,11 @@
 import React, { PureComponent as Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import { Form, Button, Input, Icon, message, Radio } from 'antd';
+import { Form, Button, Input, message, Radio } from 'antd';
+// Icon 迁移至 @ant-design/icons（v4 体系）；Form 暂用 @ant-design/compatible
+// 提供的 v3 实现（官方过渡路径），数据流迁移（Form.Item name）在 S3 批次处理。
+import { UserOutlined, LockOutlined } from '@ant-design/icons';
+import { Form as LegacyForm } from '@ant-design/compatible';
 import { loginActions, loginLdapActions } from '../../reducer/modules/user';
 import { withRouter } from 'react-router';
 const FormItem = Form.Item;
@@ -31,6 +35,7 @@ const changeHeight = {
   }
 )
 @withRouter
+@LegacyForm.create()
 class Login extends Component {
   constructor(/** @type {any} */ props) {
     super(props);
@@ -113,7 +118,7 @@ class Login extends Component {
           {getFieldDecorator('email', { rules: [emailRule] })(
             <Input
               style={changeHeight}
-              prefix={<Icon type="user" style={{ fontSize: 13 }} />}
+              prefix={<UserOutlined style={{ fontSize: 13 }} />}
               placeholder="Email"
             />
           )}
@@ -126,7 +131,7 @@ class Login extends Component {
           })(
             <Input
               style={changeHeight}
-              prefix={<Icon type="lock" style={{ fontSize: 13 }} />}
+              prefix={<LockOutlined style={{ fontSize: 13 }} />}
               type="password"
               placeholder="Password"
             />
@@ -153,5 +158,5 @@ class Login extends Component {
     );
   }
 }
-const LoginForm = Form.create()(Login);
+const LoginForm = Login;
 export default LoginForm;
