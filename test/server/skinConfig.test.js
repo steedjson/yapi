@@ -346,3 +346,12 @@ test.serial('真实 app 冒烟: 未登录访问 skin_config 两条路由均返�
   const missing = await requestJson(app, 'POST', '/api/user/no_such_action', {});
   t.is(missing.statusCode, 404);
 });
+
+test.serial('storage 模型契约: key 为 String(skin_config 以字符串命名空间存取)', t => {
+  // 回归钉子: key 曾为 Number,导致真实 DB 下 skin_config 存取触发
+  // "Cast to Number failed for value \"skin_config\"" (mock 测试无法暴露)
+  // getSchema 为实例方法但实现不依赖 this,构造器依赖 mongoose 连接,故走原型调用
+  const schema = storageModel.prototype.getSchema();
+  t.is(schema.key.type, String);
+  t.truthy(schema.key.required);
+});

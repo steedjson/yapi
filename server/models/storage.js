@@ -21,7 +21,9 @@ class stroageModel extends baseModel {
 
   getSchema() {
     return {
-      key: { type: Number, required: true },
+      // key 使用字符串 id(如皮肤配置 'skin_config'、插件命名空间);
+      // storage 集合在本仓库无存量数据,且上游插件生态按字符串命名空间使用
+      key: { type: String, required: true },
       data: {
         type: String,
         default: ''
