@@ -298,7 +298,7 @@ function CaseDesForm(props) {
   return (
     <Modal
       title={isAdd ? '添加期望' : '编辑期望'}
-      visible={visible}
+      open={visible}
       maskClosable={false}
       onOk={() => form.submit()}
       width={780}

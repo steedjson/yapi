@@ -587,7 +587,7 @@ export default class Run extends Component {
       <div className="interface-test postman">
         {this.state.modalVisible && (
           <ModalPostman
-            visible={this.state.modalVisible}
+            open={this.state.modalVisible}
             handleCancel={this.handleModalCancel}
             handleOk={this.handleModalOk}
             inputValue={inputValue}
@@ -599,7 +599,7 @@ export default class Run extends Component {
         {this.state.envModalVisible && (
           <Modal
             title="环境设置"
-            visible={this.state.envModalVisible}
+            open={this.state.envModalVisible}
             onOk={this.handleEnvOk}
             onCancel={this.handleEnvCancel}
             footer={null}

@@ -3,7 +3,7 @@ import React, { PureComponent as Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { Link } from 'react-router-dom';
-import { Layout, Menu, Dropdown, message, Tooltip, Popover, Tag } from 'antd';
+import { Layout, Dropdown, message, Tooltip, Popover, Tag } from 'antd';
 import {
   SkinOutlined,
   CheckOutlined,
@@ -42,57 +42,45 @@ let HeaderMenu = {
 
 plugin.emitHook('header_menu', HeaderMenu);
 
-const MenuUser = props => (
-  <Menu theme="dark" className="user-menu">
-    {Object.keys(HeaderMenu).map(key => {
-      let item = HeaderMenu[key];
-      const isAdmin = props.role === 'admin';
-      if (item.adminFlag && !isAdmin) {
-        return null;
-      }
-      return (
-        <Menu.Item key={key}>
-          {item.name === '个人中心' ? (
-            <Link to={item.path + `/${props.uid}`}>
-              {React.createElement(getV4Icon(item.icon))}
-              {item.name}
-            </Link>
-          ) : (
-            <Link to={item.path}>
-              {React.createElement(getV4Icon(item.icon))}
-              {item.name}
-            </Link>
-          )}
-        </Menu.Item>
-      );
-    })}
-    <Menu.SubMenu
-      key="skin"
-      title={
-        <span>
-          <SkinOutlined />界面皮肤
-        </span>
-      }
-    >
-      {/* hidden 皮肤不显示入口;但当前正激活的 hidden 皮肤仍列出,避免用户无法切回 */}
-      {SKINS.filter(item => !item.hidden || item.name === props.skin).map(item => (
-        <Menu.Item key={'skin-' + item.name}>
-          <a onClick={() => props.onSelectSkin(item.name)}>
-            <CheckOutlined
-              style={{ visibility: props.skin === item.name ? 'visible' : 'hidden' }}
-            />
-            {item.label}
-          </a>
-        </Menu.Item>
-      ))}
-    </Menu.SubMenu>
-    <Menu.Item key="9">
-      <a onClick={props.logout}>
-        <LogoutOutlined />退出
-      </a>
-    </Menu.Item>
-  </Menu>
-);
+// antd5 的 Dropdown overlay 已移除,改用 menu(items 配置);theme="dark" 沿用原深色菜单,
+// className="user-menu" 经 MenuProps 透传保持原 hook 挂载点。
+const buildUserMenuItems = props => {
+  const isAdmin = props.role === 'admin';
+  const items = Object.keys(HeaderMenu)
+    .filter(key => !HeaderMenu[key].adminFlag || isAdmin)
+    .map(key => {
+      const item = HeaderMenu[key];
+      const path = item.name === '个人中心' ? item.path + `/${props.uid}` : item.path;
+      return {
+        key,
+        icon: React.createElement(getV4Icon(item.icon)),
+        label: <Link to={path}>{item.name}</Link>
+      };
+    });
+  // hidden 皮肤不显示入口;但当前正激活的 hidden 皮肤仍列出,避免用户无法切回
+  items.push({
+    key: 'skin',
+    icon: <SkinOutlined />,
+    label: '界面皮肤',
+    children: SKINS.filter(item => !item.hidden || item.name === props.skin).map(item => ({
+      key: 'skin-' + item.name,
+      label: (
+        <a onClick={() => props.onSelectSkin(item.name)}>
+          <CheckOutlined
+            style={{ visibility: props.skin === item.name ? 'visible' : 'hidden' }}
+          />
+          {item.label}
+        </a>
+      )
+    }))
+  });
+  items.push({
+    key: '9',
+    icon: <LogoutOutlined />,
+    label: <a onClick={props.logout}>退出</a>
+  });
+  return items;
+};
 
 const tipFollow = (
   <div className="title-container">
@@ -125,17 +113,6 @@ const tipDoc = (
   </div>
 );
 
-MenuUser.propTypes = {
-  user: PropTypes.string,
-  msg: PropTypes.string,
-  role: PropTypes.string,
-  uid: PropTypes.number,
-  skin: PropTypes.string,
-  onSelectSkin: PropTypes.func,
-  relieveLink: PropTypes.func,
-  logout: PropTypes.func
-};
-
 const ToolUser = props => {
   let imageUrl = props.imageUrl ? props.imageUrl : `/api/user/avatar?uid=${props.uid}`;
   return (
@@ -149,7 +126,7 @@ const ToolUser = props => {
         title={tipFollow}
         placement="bottomRight"
         arrowPointAtCenter
-        visible={props.studyTip === 1 && !props.study}
+        open={props.studyTip === 1 && !props.study}
       >
         <Tooltip placement="bottom" title={'我的关注'}>
           <li className="toolbar-li">
@@ -165,7 +142,7 @@ const ToolUser = props => {
         title={tipAdd}
         placement="bottomRight"
         arrowPointAtCenter
-        visible={props.studyTip === 2 && !props.study}
+        open={props.studyTip === 2 && !props.study}
       >
         <Tooltip placement="bottom" title={'新建项目'}>
           <li className="toolbar-li">
@@ -181,7 +158,7 @@ const ToolUser = props => {
         title={tipDoc}
         placement="bottomRight"
         arrowPointAtCenter
-        visible={props.studyTip === 3 && !props.study}
+        open={props.studyTip === 3 && !props.study}
       >
         <Tooltip placement="bottom" title={'使用文档'}>
           <li className="toolbar-li">
@@ -195,18 +172,17 @@ const ToolUser = props => {
         <Dropdown
           placement="bottomRight"
           trigger={['click']}
-          overlay={
-            <MenuUser
-              user={props.user}
-              msg={props.msg}
-              uid={props.uid}
-              role={props.role}
-              skin={props.skin}
-              onSelectSkin={props.onSelectSkin}
-              relieveLink={props.relieveLink}
-              logout={props.logout}
-            />
-          }
+          menu={{
+            theme: 'dark',
+            className: 'user-menu',
+            items: buildUserMenuItems({
+              uid: props.uid,
+              role: props.role,
+              skin: props.skin,
+              onSelectSkin: props.onSelectSkin,
+              logout: props.logout
+            })
+          }}
         >
           <a className="dropdown-link">
             <span className="avatar-image">

@@ -498,7 +498,7 @@ class List extends Component {
 
         <Modal
           title='添加用户'
-          visible={this.state.addModalVisible}
+          open={this.state.addModalVisible}
           onOk={this.handleAddUser}
           onCancel={this.closeAddModal}
           okText='确定'
@@ -544,7 +544,7 @@ class List extends Component {
 
         <Modal
           title='编辑用户'
-          visible={this.state.editModalVisible}
+          open={this.state.editModalVisible}
           onOk={this.handleEditUser}
           onCancel={this.closeEditModal}
           okText='确定'
@@ -570,7 +570,7 @@ class List extends Component {
 
         <Modal
           title='重置密码'
-          visible={this.state.resetModalVisible}
+          open={this.state.resetModalVisible}
           onOk={this.handleResetPassword}
           onCancel={this.closeResetModal}
           okText='确定'
@@ -587,7 +587,7 @@ class List extends Component {
 
         <Modal
           title='修改角色'
-          visible={this.state.roleModalVisible}
+          open={this.state.roleModalVisible}
           onOk={this.handleRoleChange}
           onCancel={this.closeRoleModal}
           okText='确定'

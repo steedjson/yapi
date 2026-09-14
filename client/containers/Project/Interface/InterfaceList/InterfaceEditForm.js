@@ -885,7 +885,7 @@ function InterfaceEditForm(/** @type {any} */ props) {
       <Modal
         title="批量添加参数"
         width={680}
-        visible={state.visible}
+        open={state.visible}
         onOk={handleBulkOk}
         onCancel={handleBulkCancel}
         okText="导入"

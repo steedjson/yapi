@@ -2,7 +2,6 @@
 import React, { PureComponent as Component } from 'react';
 import {
   Upload,
-  Icon,
   message,
   Select,
   Tooltip,
@@ -15,7 +14,7 @@ import {
   Checkbox
 } from 'antd';
 import PropTypes from 'prop-types';
-import { QuestionCircleOutlined, InboxOutlined } from '@ant-design/icons';
+import { QuestionCircleOutlined, InboxOutlined, ExclamationCircleFilled } from '@ant-design/icons';
 import { connect } from 'react-redux';
 import './ProjectData.scss';
 import axios from 'axios';
@@ -245,7 +244,8 @@ class ProjectData extends Component {
       title: '您确认要进行数据同步????',
       width: 600,
       okType: 'danger',
-      iconType: 'exclamation-circle',
+      // antd5 移除 iconType,改用 icon 节点保持感叹号语义
+      icon: <ExclamationCircleFilled />,
       className: 'dataImport-confirm',
       okText: '确认',
       cancelText: '取消',

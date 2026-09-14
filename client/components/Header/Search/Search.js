@@ -10,7 +10,6 @@ import { setCurrGroup, fetchGroupMsg } from '../../../reducer/modules/group';
 import { changeMenuItem } from '../../../reducer/modules/menu';
 
 import { fetchInterfaceListMenu } from '../../../reducer/modules/interface';
-const Option = AutoComplete.Option;
 
 @connect(
   state => ({
@@ -67,7 +66,9 @@ export default class Srch extends Component {
       .get('/api/project/search?q=' + value)
       .then(res => {
         if (res.data && res.data.errcode === 0) {
-          const dataSource = [];
+          // antd5 的 AutoComplete 移除 dataSource,改用 options 配置
+          // ({ key, value, label });key 仅作为 onSelect 的索引,不透传 DOM
+          const options = [];
           this.searchIndex = {};
           for (let title in res.data.data) {
             res.data.data[title].map(item => {
@@ -75,21 +76,13 @@ export default class Srch extends Component {
                 case 'group': {
                   const key = `分组${item._id}`;
                   this.searchIndex[key] = { type: '分组', id: item._id };
-                  dataSource.push(
-                    <Option key={key} value={item.groupName}>
-                      {`分组: ${item.groupName}`}
-                    </Option>
-                  );
+                  options.push({ key, value: item.groupName, label: `分组: ${item.groupName}` });
                   break;
                 }
                 case 'project': {
                   const key = `项目${item._id}`;
                   this.searchIndex[key] = { type: '项目', id: item._id, groupId: item.groupId };
-                  dataSource.push(
-                    <Option key={key} value={item.name}>
-                      {`项目: ${item.name}`}
-                    </Option>
-                  );
+                  options.push({ key, value: item.name, label: `项目: ${item.name}` });
                   break;
                 }
                 case 'interface': {
@@ -99,11 +92,7 @@ export default class Srch extends Component {
                     id: item._id,
                     projectId: item.projectId
                   };
-                  dataSource.push(
-                    <Option key={key} value={item.title}>
-                      {`接口: ${item.title}`}
-                    </Option>
-                  );
+                  options.push({ key, value: item.title, label: `接口: ${item.title}` });
                   break;
                 }
                 default:
@@ -112,7 +101,7 @@ export default class Srch extends Component {
             });
           }
           this.setState({
-            dataSource: dataSource
+            dataSource: options
           });
         } else {
           console.log('查询项目或分组失败');
@@ -138,7 +127,7 @@ export default class Srch extends Component {
       <div className="search-wrapper">
         <AutoComplete
           className="search-dropdown"
-          dataSource={dataSource}
+          options={dataSource}
           style={{ width: '100%' }}
           defaultActiveFirstOption={false}
           onSelect={this.onSelect}

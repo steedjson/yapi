@@ -39,7 +39,7 @@ const ColModalForm = props => {
     saveFormRef(form);
   }, [form, saveFormRef]);
   return (
-    <Modal visible={visible} title={title} onCancel={onCancel} onOk={onCreate} forceRender>
+    <Modal open={visible} title={title} onCancel={onCancel} onOk={onCreate} forceRender>
       <Form form={form} layout="vertical">
         <FormItem
           label="集合名"
@@ -615,7 +615,7 @@ export default class InterfaceColMenu extends Component {
         <ColModalForm
           saveFormRef={this.saveFormRef}
           type={colModalType}
-          visible={colModalVisible}
+          open={colModalVisible}
           onCancel={() => {
             this.setState({ colModalVisible: false });
           }}
@@ -624,7 +624,7 @@ export default class InterfaceColMenu extends Component {
 
         <Modal
           title="导入接口到集合"
-          visible={importInterVisible}
+          open={importInterVisible}
           onOk={this.handleImportOk}
           onCancel={this.handleImportCancel}
           className="import-case-modal"

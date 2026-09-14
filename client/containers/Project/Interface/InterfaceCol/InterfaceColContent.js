@@ -894,7 +894,7 @@ class InterfaceColContent extends Component {
       <div className="interface-col">
         <Modal
             title="通用规则配置"
-            visible={this.state.commonSettingModalVisible}
+            open={this.state.commonSettingModalVisible}
             onOk={this.handleCommonSetting}
             onCancel={this.cancelCommonSetting}
             width={'1000px'}
@@ -1111,7 +1111,7 @@ class InterfaceColContent extends Component {
           style={{
             minHeight: '500px'
           }}
-          visible={this.state.visible}
+          open={this.state.visible}
           onCancel={this.handleCancel}
           footer={null}
         >
@@ -1124,7 +1124,7 @@ class InterfaceColContent extends Component {
           style={{
             minHeight: '500px'
           }}
-          visible={this.state.advVisible}
+          open={this.state.advVisible}
           onCancel={this.handleAdvCancel}
           onOk={this.handleAdvOk}
           maskClosable={false}
@@ -1149,7 +1149,7 @@ class InterfaceColContent extends Component {
             style={{
               minHeight: '500px'
             }}
-            visible={this.state.autoVisible}
+            open={this.state.autoVisible}
             onCancel={this.handleAuto}
             className="autoTestsModal"
             footer={null}

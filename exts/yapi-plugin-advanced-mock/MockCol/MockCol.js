@@ -256,7 +256,7 @@ export default class MockCol extends Component {
         <Table columns={columns} dataSource={data} pagination={false} rowKey="_id" />
         {caseDesModalVisible && (
           <CaseDesModal
-            visible={caseDesModalVisible}
+            open={caseDesModalVisible}
             isAdd={isAdd}
             caseData={caseData}
             onOk={this.handleOk}

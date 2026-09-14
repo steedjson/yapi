@@ -188,7 +188,7 @@ class Content extends Component {
         {this.state.visible && (
           <Modal
             title="你即将离开编辑页面"
-            visible={this.state.visible}
+            open={this.state.visible}
             onCancel={this.handleCancel}
             footer={[
               <Button key="back" onClick={this.handleCancel}>

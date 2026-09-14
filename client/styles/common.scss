@@ -111,9 +111,19 @@ em {
   box-shadow: 0 1px 6px rgba(0, 0, 0, 0.3);
 }
 
-// confirm 框内边距过大
-.ant-confirm .ant-modal-body{
+// confirm 框内边距过大(antd5 的确认框类名由 .ant-confirm 更名为 .ant-modal-confirm)
+.ant-modal-confirm .ant-modal-body{
   padding: .24rem !important;
+}
+
+// tabs 顶栏无下边距(原 theme.less 的 .ant-tabs-bar 规则,antd5 类名为 .ant-tabs-nav)
+.ant-tabs .ant-tabs-nav {
+  margin-bottom: 0;
+}
+
+// 嵌套 Form.Item 缩小下边距(原 theme.less 规则,antd5 类名未变)
+.ant-form-item > .ant-form-item, .ant-form-item :not(.ant-form) > .ant-form-item {
+  margin-bottom: 16px;
 }
 
 .card-panel {

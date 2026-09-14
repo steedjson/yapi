@@ -102,7 +102,7 @@ export default class Run extends Component {
           curUid={this.props.curUid}
         />
         <AddColModal
-          visible={this.state.saveCaseModalVisible}
+          open={this.state.saveCaseModalVisible}
           caseName={currInterface.title}
           onCancel={() => this.setState({ saveCaseModalVisible: false })}
           onOk={this.saveCase}

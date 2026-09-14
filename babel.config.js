@@ -23,8 +23,7 @@ module.exports = function (api) {
 
   const plugins = [
     '@babel/plugin-transform-runtime',
-    ['@babel/plugin-proposal-decorators', { legacy: true }],
-    ['babel-plugin-import', { libraryName: 'antd' }]
+    ['@babel/plugin-proposal-decorators', { legacy: true }]
   ];
 
   return { presets, plugins };

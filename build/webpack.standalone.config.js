@@ -20,15 +20,9 @@ const client = paths.client;
 const isProduction = process.env.NODE_ENV === 'production';
 const isDevelopment = !isProduction;
 
-// mini-css-extract-plugin@2 支持 filename 传函数，可按 chunk 名切换命名模板。
-// 皮肤主题(theme-*)需要无 contenthash 的固定文件名 theme-*@prd.css 供运行时按皮肤名
-// 拼 URL 注入 link（client/theme.js），其余 CSS 保持 [name]@[contenthash].css。
+// mini-css-extract-plugin@2：其余 CSS 保持 [name]@[contenthash].css。
 // (开发模式产物本身是固定的 `[name]@dev.css`，无需区分。)
 // AssetsPlugin/CompressionPlugin 排在其后注册，产出的 assets.js 与 .gz 均基于最终文件名。
-const productionCssFilename = pathData =>
-  pathData && pathData.chunk && /^theme-/.test(pathData.chunk.name)
-    ? '[name]@prd.css'
-    : '[name]@[contenthash].css';
 
 const config = {
   mode: isProduction ? 'production' : 'development',
@@ -55,12 +49,7 @@ const config = {
     lib3: {
       dependOn: 'lib2',
       import: ['mockjs', 'moment', 'recharts']
-    },
-    // 皮肤预编译主题:纯 less 入口,产物为固定名 CSS(无 contenthash),由 client/theme.js
-    // 运行时按需注入 <link id="skin-theme-link"> 加载。
-    'theme-gov': './styles/themes/gov.less',
-    'theme-anime': './styles/themes/anime.less',
-    'theme-dark': './styles/themes/dark.less'
+    }
   },
   devtool: isProduction ? false : 'cheap-module-source-map',
   output: {
@@ -105,23 +94,6 @@ const config = {
         use: [MiniCssExtractPlugin.loader, { loader: 'css-loader', options: { sourceMap: true } }]
       },
       {
-        test: /\.less$/,
-        use: [
-          MiniCssExtractPlugin.loader,
-          { loader: 'css-loader', options: { sourceMap: true } },
-          {
-            loader: 'less-loader',
-            options: {
-              sourceMap: true,
-              // antd 4.24 的 less 面向 less 3 编写；less 4 默认 math:'parens-division'
-              // 会改变裸除法求值行为，显式回退 'always' 保持 less 3 语义。
-              // javascriptEnabled 为 antd 4 less 所需。
-              lessOptions: { javascriptEnabled: true, math: 'always' }
-            }
-          }
-        ]
-      },
-      {
         test: /\.(sass|scss)$/,
         use: [
           MiniCssExtractPlugin.loader,
@@ -153,7 +125,7 @@ const config = {
   },
   plugins: [
     new MiniCssExtractPlugin({
-      filename: isDevelopment ? '[name]@dev.css' : productionCssFilename
+      filename: isDevelopment ? '[name]@dev.css' : '[name]@[contenthash].css'
     }),
     ...(isDevelopment ? [new webpack.HotModuleReplacementPlugin()] : []),
     // webpack 4 的 node.Buffer/node.setImmediate 默认垫片在 webpack 5 已移除，
