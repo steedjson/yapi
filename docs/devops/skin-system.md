@@ -17,11 +17,17 @@
 运行时切换 = 设置 `html[data-skin]`（同步生效）+ 按需注入对应主题 `<link>`（antd 层）。
 
 **关键陷阱**（实现时踩过/评审发现的 antd 变量联动，新增主题必须逐项显式设置）：
-- `@layout-sider-background` 默认跟随 `@layout-header-background`（gov 深蓝顶栏会把 Sider 染蓝）；
-- `@menu-dark-bg` 默认跟随 `@layout-header-background`（anime 浅粉顶栏会让用户下拉白字粉底不可读，
-  已显式改为深玫瑰 `#703d59` 浮层）；
-- `@layout-body-background` antd 默认 `#f0f2f5` 且**不**跟随 `@body-background`；
-- `@font-size-base: 13px` 与 `@icon-url: "/iconfont/iconfont"` 必须与 theme.less 对齐，否则字号/图标异常。
+- **必须继承基线**：三套主题文件均 `@import './baseline.less'`（从 theme.less 抽取的全量
+  变量，约 150 项：布局尺寸/输入框/表格/气泡/圆角等）。遗漏会导致皮肤回落 antd 默认值，
+  已实际踩坑的联动项：`@layout-header-height`（默认 64px，企业 56px，漏掉使顶栏变高、
+  工具栏垂直偏移）、`@layout-sider-background`（默认跟随 header 背景）、`@menu-dark-bg`
+  （默认跟随 header 背景，anime 浅粉顶栏曾致下拉白字粉底不可读）、`@layout-body-background`
+  （antd 默认 #f0f2f5 且不跟随 `@body-background`）；
+- **主题 CSS 是后注入的独立样式表**：其中 antd 全局元素规则（如 `ul, dl { margin-bottom: 1em }`）
+  会晚于 index.css 中的页面级重置生效。受影响的选择器需在页面 scss 用更高特异性显式钉住
+  （实例：`.user-toolbar ul { margin: 0 }`，否则工具栏 flex 垂直居中偏移 6px）；
+- `@font-size-base: 13px` 与 `@icon-url: "/iconfont/iconfont"` 必须与 theme.less 保持一致，
+  否则会出现与默认皮肤字号/图标不一致。
 
 ## 二、四套皮肤
 
