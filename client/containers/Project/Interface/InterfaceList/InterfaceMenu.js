@@ -402,6 +402,73 @@ class InterfaceMenu extends Component {
    * @param {any} e
    * @returns {Promise<void>}
    */
+  /**
+   * 递归在分类树中按接口 ID 查找所属分类、接口列表以及接口在该分类中的下标。
+   * @param {Array<any>} tree 分类树数组
+   * @param {string|number} interfaceId 接口 ID
+   * @returns {{ cat: any, list: Array<any>, index: number } | null}
+   */
+  findCatByInterfaceId = (tree, interfaceId) => {
+    if (!Array.isArray(tree)) return null;
+    for (const cat of tree) {
+      if (Array.isArray(cat.list)) {
+        const idx = cat.list.findIndex((/** @type {any} */ item) => String(item._id) === String(interfaceId));
+        if (idx !== -1) {
+          return { cat, list: cat.list, index: idx };
+        }
+      }
+      if (Array.isArray(cat.children) && cat.children.length) {
+        const found = this.findCatByInterfaceId(cat.children, interfaceId);
+        if (found) return found;
+      }
+    }
+    return null;
+  };
+
+  /**
+   * 递归在分类树中按分类 ID 查找分类对象。
+   * @param {Array<any>} tree 分类树数组
+   * @param {string|number} catId 分类 ID
+   * @returns {any | null}
+   */
+  findCatById = (tree, catId) => {
+    if (!Array.isArray(tree)) return null;
+    for (const cat of tree) {
+      if (String(cat._id) === String(catId)) return cat;
+      if (Array.isArray(cat.children) && cat.children.length) {
+        const found = this.findCatById(cat.children, catId);
+        if (found) return found;
+      }
+    }
+    return null;
+  };
+
+  /**
+   * 递归在分类树中按分类 ID 查找所属兄弟列表及自身下标，用于同级分类拖拽排序。
+   * @param {Array<any>} tree 分类树数组
+   * @param {string|number} catId 分类 ID
+   * @param {any} parent 父分类对象
+   * @returns {{ parent: any, list: Array<any>, index: number } | null}
+   */
+  findCatSiblingInfo = (tree, catId, parent = null) => {
+    if (!Array.isArray(tree)) return null;
+    for (let i = 0; i < tree.length; i++) {
+      const item = tree[i];
+      if (String(item._id) === String(catId)) {
+        return { parent, list: tree, index: i };
+      }
+      if (Array.isArray(item.children) && item.children.length) {
+        const res = this.findCatSiblingInfo(item.children, catId, item);
+        if (res) return res;
+      }
+    }
+    return null;
+  };
+
+  /**
+   * @param {any} e
+   * @returns {Promise<void>}
+   */
   onDrop = async e => {
     try {
       // 搜索过滤状态下树节点索引与完整列表错位,继续排序可能把接口移入错误分类
@@ -409,57 +476,91 @@ class InterfaceMenu extends Component {
         message.info('搜索过滤中无法拖拽排序，请清空搜索后重试');
         return;
       }
-      const dropPosArr = e.node.props.pos.split('-');
-      const dragPosArr = e.dragNode.props.pos.split('-');
-      // 拖放到根节点「全部接口」(pos="0")时没有分类索引:接口必须位于具体分类下。
-      // 该场景原实现会得到 NaN 并在 list[NaN]._id 处抛出 TypeError
-      if (dropPosArr.length < 2 || dragPosArr.length < 2) {
-        message.info('接口必须位于具体分类下，请拖拽到分类节点上');
-        return;
-      }
-      const dropCatIndex = Number(dropPosArr[1]) - 1;
-      const dragCatIndex = Number(dragPosArr[1]) - 1;
-      if (dropCatIndex < 0 || dragCatIndex < 0) {
-        return;
-      }
+
       const { list, projectId, router } = this.props;
-      // 双重保险:索引越界时静默放弃,避免把接口移入错误分类
-      if (!list[dropCatIndex] || !list[dragCatIndex]) {
+      const dragKey = String(e.dragNode.props.eventKey || '');
+      const dropKey = String(e.node.props.eventKey || '');
+
+      // 拖放到根节点「全部接口」(eventKey="root")时没有具体分类: 接口必须归属于某个分类
+      if (dropKey === 'root') {
+        message.info('接口必须位于具体分类下，请拖拽到分类或接口节点上');
         return;
       }
-      const dropCatId = list[dropCatIndex]._id;
-      const id = e.dragNode.props.eventKey;
-      const dragCatId = list[dragCatIndex]._id;
 
-      const dropPos = dropPosArr;
-      const dropIndex = Number(dropPos[dropPos.length - 1]);
-      const dragPos = dragPosArr;
-      const dragIndex = Number(dragPos[dragPos.length - 1]);
+      const isDragCat = dragKey.indexOf('cat_') === 0;
+      const isDropCat = dropKey.indexOf('cat_') === 0;
 
-      if (id.indexOf('cat') === -1) {
-        if (dropCatId === dragCatId) {
-          // 同一个分类下的接口交换顺序。
-          const colList = list[dropCatIndex].list || [];
+      if (!isDragCat) {
+        // === 场景 1：拖动的是【接口】 ===
+        const dragInterfaceId = dragKey;
+        const dragCatInfo = this.findCatByInterfaceId(list, dragInterfaceId);
+        if (!dragCatInfo) {
+          return;
+        }
+        const dragCatId = dragCatInfo.cat._id;
+        const dragIndex = dragCatInfo.index;
+
+        let targetCat = null;
+        let dropIndex = 0;
+
+        if (isDropCat) {
+          // 放置目标是【分类】：接口移动到该分类的末尾（或顶部）
+          const dropCatId = dropKey.replace('cat_', '');
+          targetCat = this.findCatById(list, dropCatId);
+          if (!targetCat) return;
+          dropIndex = (targetCat.list || []).length;
+        } else {
+          // 放置目标是【另一个接口】：放置到该目标接口所在的分类中
+          const dropInterfaceId = dropKey;
+          const dropCatInfo = this.findCatByInterfaceId(list, dropInterfaceId);
+          if (!dropCatInfo) return;
+          targetCat = dropCatInfo.cat;
+          dropIndex = dropCatInfo.index;
+        }
+
+        const dropCatId = targetCat._id;
+
+        if (String(dropCatId) === String(dragCatId)) {
+          // 同一个分类下的接口调整排序顺序
+          const colList = targetCat.list || [];
           const changes = arrayChangeIndex(colList, dragIndex, dropIndex);
           await axios.post('/api/interface/up_index', changes);
         } else {
-          await axios.post('/api/interface/up', { id, catid: dropCatId });
+          // 跨分类移动接口（支持从子分类移动到根分类、根分类移动到子分类、或不同子分类互移）
+          await axios.post('/api/interface/up', { id: dragInterfaceId, catid: dropCatId });
         }
+
         const requests = [
           this.props.fetchInterfaceListMenu(projectId),
           this.props.fetchInterfaceList({ project_id: projectId })
         ];
         if (router && isNaN(router.params.actionId)) {
-          // 当前正在查看分类时，同时刷新分类下的接口列表。
           const catid = router.params.actionId.substr(4);
           requests.push(this.props.fetchInterfaceCatList({ catid }));
         }
         await Promise.all(requests);
       } else {
-        // 分类之间拖动；排序接口会在所有更新完成后再清理缓存。
-        const changes = arrayChangeIndex(list, dragIndex - 1, dropIndex - 1);
-        await axios.post('/api/interface/up_cat_index', changes);
-        await this.props.fetchInterfaceListMenu(projectId);
+        // === 场景 2：拖动的是【分类】 ===
+        if (!isDropCat) {
+          // 分类不能拖放到接口节点内
+          return;
+        }
+        const dragCatId = dragKey.replace('cat_', '');
+        const dropCatId = dropKey.replace('cat_', '');
+        const dragCatInfo = this.findCatSiblingInfo(list, dragCatId);
+        const dropCatInfo = this.findCatSiblingInfo(list, dropCatId);
+
+        if (!dragCatInfo || !dropCatInfo) {
+          return;
+        }
+
+        // 同级分类之间调整排序顺序
+        if (dragCatInfo.parent === dropCatInfo.parent) {
+          const siblingList = dragCatInfo.list;
+          const changes = arrayChangeIndex(siblingList, dragCatInfo.index, dropCatInfo.index);
+          await axios.post('/api/interface/up_cat_index', changes);
+          await this.props.fetchInterfaceListMenu(projectId);
+        }
       }
     } catch (/** @type {any} */ err) {
       message.error('拖拽排序失败：' + err.message);
