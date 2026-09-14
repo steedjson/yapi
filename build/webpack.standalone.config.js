@@ -41,17 +41,6 @@ const client = paths.client;
 const isProduction = process.env.NODE_ENV === 'production';
 const isDevelopment = !isProduction;
 
-// babel-loader@6 依赖 webpack 2/3 的 loaderContext.options 获取 babel 配置，
-// webpack 4 已从 loader context 移除该属性；5 行兼容 shim 将 compiler.options
-// 挂回 loaderContext，保持 babel-loader@6 不升级（避免同时变更 Babel 核心）。
-function makeBabelLoader6Compatible(compiler) {
-  compiler.hooks.compilation.tap('BabelLoader6Compat', compilation => {
-    compilation.hooks.normalModuleLoader.tap('BabelLoader6Compat', loaderContext => {
-      loaderContext.options = compiler.options;
-    });
-  });
-}
-
 const config = {
   mode: isProduction ? 'production' : 'development',
   context: client,
@@ -91,7 +80,9 @@ const config = {
         test: /\.(js|jsx)$/,
         exclude: clientBuildConfig.getPluginExclude(process.platform === 'win32'),
         loader: 'babel-loader',
-        query: clientBuildConfig.getBabelQuery()
+        // 只走根目录 babel.config.js（babel 7）；.babelrc 是 ava/babel-register
+        // 测试管线的 babel 6 专用配置，客户端构建必须显式排除。
+        query: { cacheDirectory: true, babelrc: false, configFile: true }
       },
       {
         test: /\.css$/,
