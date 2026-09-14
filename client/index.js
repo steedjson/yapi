@@ -1,6 +1,6 @@
 import './styles/common.scss';
 import './styles/theme.less';
-import { LocaleProvider } from 'antd';
+import { ConfigProvider } from 'antd';
 import './plugin';
 import React from 'react';
 import ReactDOM from 'react-dom';
@@ -18,9 +18,9 @@ const store = createStore();
 
 ReactDOM.render(
   <Provider store={store}>
-    <LocaleProvider locale={zhCN}>
+    <ConfigProvider locale={zhCN}>
       <App />
-    </LocaleProvider>
+    </ConfigProvider>
   </Provider>,
   document.getElementById('yapi')
 );

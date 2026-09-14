@@ -244,7 +244,7 @@ class MemberList extends Component {
                   cancelText=""
                 >
                   <Button type="danger" icon="delete" className="btn-danger" />
-                  {/* <Icon type="delete" className="btn-danger"/> */}
+                  {/*  */}
                 </Popconfirm>
               </div>
             );

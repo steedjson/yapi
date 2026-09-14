@@ -505,7 +505,7 @@ class InterfaceColContent extends Component {
 
   openReport = id => {
     if (!this.reports[id]) {
-      return message.warn('还没有生成报告');
+      return message.warning('还没有生成报告');
     }
     this.setState({ visible: true, curCaseid: id });
   };
@@ -756,11 +756,10 @@ class InterfaceColContent extends Component {
                   return (
                     <div>
                       <Tooltip title="Pass">
-                        <Icon
+                        <CheckCircleFilled
                           style={{
                             color: '#00a854'
                           }}
-                          type="check-circle"
                         />
                       </Tooltip>
                     </div>
@@ -769,8 +768,7 @@ class InterfaceColContent extends Component {
                   return (
                     <div>
                       <Tooltip title="请求异常">
-                        <Icon
-                          type="info-circle"
+                        <InfoCircleFilled
                           style={{
                             color: '#f04134'
                           }}
@@ -782,8 +780,7 @@ class InterfaceColContent extends Component {
                   return (
                     <div>
                       <Tooltip title="验证失败">
-                        <Icon
-                          type="exclamation-circle"
+                        <ExclamationCircleFilled
                           style={{
                             color: '#ffbf00'
                           }}
@@ -794,11 +791,10 @@ class InterfaceColContent extends Component {
                 default:
                   return (
                     <div>
-                      <Icon
+                      <CheckCircleFilled
                         style={{
                           color: '#00a854'
                         }}
-                        type="check-circle"
                       />
                     </div>
                   );
@@ -902,7 +898,7 @@ class InterfaceColContent extends Component {
             <Row className="setting-item">
               <Col className="col-item" span="4">
                 <label>检查HttpCode:&nbsp;<Tooltip title={'检查 http code 是否为 200'}>
-                  <Icon type="question-circle-o" style={{ width: '10px' }} />
+                  <QuestionCircleOutlined style={{ width: '10px' }} />
                 </Tooltip></label>
               </Col>
               <Col className="col-item"  span="18">
@@ -921,7 +917,7 @@ class InterfaceColContent extends Component {
             <Row className="setting-item">
               <Col className="col-item"  span="4">
                 <label>检查返回json:&nbsp;<Tooltip title={'检查接口返回数据字段值，比如检查 code 是不是等于 0'}>
-                  <Icon type="question-circle-o" style={{ width: '10px' }} />
+                  <QuestionCircleOutlined style={{ width: '10px' }} />
                 </Tooltip></label>
               </Col>
               <Col  className="col-item" span="6">
@@ -938,7 +934,7 @@ class InterfaceColContent extends Component {
             <Row className="setting-item">
               <Col className="col-item" span="4">
                 <label>检查返回数据结构:&nbsp;<Tooltip title={'只有 response 基于 json-schema 方式定义，该检查才会生效'}>
-                  <Icon type="question-circle-o" style={{ width: '10px' }} />
+                  <QuestionCircleOutlined style={{ width: '10px' }} />
                 </Tooltip></label>
               </Col>
               <Col className="col-item"  span="18">
@@ -957,7 +953,7 @@ class InterfaceColContent extends Component {
             <Row className="setting-item">
               <Col className="col-item  " span="4">
                 <label>全局测试脚本:&nbsp;<Tooltip title={'在跑自动化测试时，优先调用全局脚本，只有全局脚本通过测试，才会开始跑case自定义的测试脚本'}>
-                  <Icon type="question-circle-o" style={{ width: '10px' }} />
+                  <QuestionCircleOutlined style={{ width: '10px' }} />
                 </Tooltip></label>
               </Col>
               <Col className="col-item"  span="14">
@@ -1020,7 +1016,7 @@ class InterfaceColContent extends Component {
                 href="https://hellosean1025.github.io/yapi/documents/case.html"
               >
                 <Tooltip title="点击查看文档">
-                  <Icon type="question-circle-o" />
+                  <QuestionCircleOutlined />
                 </Tooltip>
               </a>
             </h2>
@@ -1156,7 +1152,7 @@ class InterfaceColContent extends Component {
               <Col span={3} className="label" style={{ paddingTop: '16px' }}>
                 选择环境
                 <Tooltip title="默认使用测试用例选择的环境">
-                  <Icon type="question-circle-o" />
+                  <QuestionCircleOutlined />
                 </Tooltip>
                 &nbsp;：
               </Col>
@@ -1189,8 +1185,7 @@ class InterfaceColContent extends Component {
               <Col span={3} className="label">
                 消息通知
                 <Tooltip title={'测试不通过时，会给项目组成员发送消息通知'}>
-                  <Icon
-                    type="question-circle-o"
+                  <QuestionCircleOutlined
                     style={{
                       width: '10px'
                     }}
@@ -1211,8 +1206,7 @@ class InterfaceColContent extends Component {
               <Col span={3} className="label">
                 下载数据
                 <Tooltip title={'开启后，测试数据将被下载到本地'}>
-                  <Icon
-                    type="question-circle-o"
+                  <QuestionCircleOutlined
                     style={{
                       width: '10px'
                     }}

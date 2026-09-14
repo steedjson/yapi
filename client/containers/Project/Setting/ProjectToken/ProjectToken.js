@@ -63,11 +63,11 @@ class ProjectToken extends Component {
             token: <span className="token-message">{this.props.token}</span>
           </span>
           <Tooltip title="复制">
-            <Icon className="token-btn" type="copy" onClick={this.copyToken} />
+            <CopyOutlined className="token-btn" onClick={this.copyToken} />
           </Tooltip>
           {this.props.curProjectRole === 'admin' || this.props.curProjectRole === 'owner' ? (
             <Tooltip title="刷新">
-              <Icon className="token-btn" type="reload" onClick={this.updateToken} />
+              <ReloadOutlined className="token-btn" onClick={this.updateToken} />
             </Tooltip>
           ) : null}
         </div>

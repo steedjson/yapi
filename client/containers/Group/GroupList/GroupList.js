@@ -215,7 +215,7 @@ export default class GroupList extends Component {
               <span className="name">{currGroup.group_name}</span>
               <Tooltip title="添加分组">
                 <a className="editSet">
-                  <Icon className="btn" type="folder-add" onClick={this.showModal} />
+                  <FolderAddOutlined className="btn" onClick={this.showModal} />
                 </a>
               </Tooltip>
             
@@ -251,7 +251,7 @@ export default class GroupList extends Component {
                     className="group-item"
                     style={{ zIndex: this.props.studyTip === 0 ? 3 : 1 }}
                   >
-                    <Icon type="user" />
+                    <UserOutlined />
                     <Popover
                       overlayClassName="popover-index"
                       content={<GuideBtns />}
@@ -266,7 +266,7 @@ export default class GroupList extends Component {
               } else {
                 return (
                   <Menu.Item key={`${group._id}`} className="group-item">
-                    <Icon type="folder-open" />
+                    <FolderOpenOutlined />
                     {group.group_name}
                   </Menu.Item>
                 );

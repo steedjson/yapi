@@ -12,7 +12,15 @@ import {
   initInterface
 } from '../../../../reducer/modules/interface.js';
 import { getProject } from '../../../../reducer/modules/project.js';
-import { Input, Icon, Button, Modal, message, Tree, Tooltip } from 'antd';
+import { Input, Button, Modal, message, Tree, Tooltip } from 'antd';
+import {
+  FolderOpenOutlined,
+  FolderOutlined,
+  FolderAddOutlined,
+  DeleteOutlined,
+  EditOutlined,
+  CopyOutlined
+} from '@ant-design/icons';
 import AddInterfaceForm from './AddInterfaceForm';
 import AddInterfaceCatForm from './AddInterfaceCatForm';
 import axios from 'axios';
@@ -618,10 +626,9 @@ class InterfaceMenu extends Component {
           }}
           to={'/project/' + matchParams.id + '/interface/api/cat_' + item._id}
         >
-          <Icon type="folder-open" style={{ marginRight: 5 }} />
+          <FolderOpenOutlined style={{ marginRight: 5 }} />
           {item.name}
-          <Icon
-            type="delete"
+          <DeleteOutlined
             className="interface-delete-icon"
             onClick={(/** @type {any} */ e) => {
               e.preventDefault();
@@ -629,8 +636,7 @@ class InterfaceMenu extends Component {
               this.showDelCatConfirm(item._id);
             }}
           />
-          <Icon
-            type="edit"
+          <EditOutlined
             className="interface-delete-icon"
             onClick={(/** @type {any} */ e) => {
               e.preventDefault();
@@ -639,8 +645,7 @@ class InterfaceMenu extends Component {
               this.setState({ curCatdata: item });
             }}
           />
-          <Icon
-            type="folder-add"
+          <FolderAddOutlined
             className="interface-delete-icon"
             onClick={(/** @type {any} */ e) => {
               e.preventDefault();
@@ -784,8 +789,7 @@ class InterfaceMenu extends Component {
               </Link>
               <div className="btns">
                 <Tooltip title="删除接口">
-                  <Icon
-                    type="delete"
+                  <DeleteOutlined
                     className="interface-delete-icon"
                   onClick={(/** @type {any} */ e) => {
                     e.stopPropagation();
@@ -795,8 +799,7 @@ class InterfaceMenu extends Component {
                   />
                 </Tooltip>
                 <Tooltip title="复制接口">
-                  <Icon
-                    type="copy"
+                  <CopyOutlined
                     className="interface-delete-icon"
                   onClick={(/** @type {any} */ e) => {
                     e.stopPropagation();
@@ -807,7 +810,7 @@ class InterfaceMenu extends Component {
                 </Tooltip>
               </div>
               {/*<Dropdown overlay={menu(item)} trigger={['click']} onClick={e => e.stopPropagation()}>
-            <Icon type='ellipsis' className="interface-delete-icon" style={{ opacity: this.state.delIcon == item._id ? 1 : 0 }}/>
+            
           </Dropdown>*/}
             </div>
           }
@@ -855,7 +858,7 @@ class InterfaceMenu extends Component {
                     }}
                     to={'/project/' + matchParams.id + '/interface/api'}
                   >
-                    <Icon type="folder" style={{ marginRight: 5 }} />
+                    <FolderOutlined style={{ marginRight: 5 }} />
                     全部接口
                   </Link>
                 }

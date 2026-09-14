@@ -140,14 +140,13 @@ class ProjectCard extends Component {
             this.props.history.push('/project/' + (projectData.projectid || projectData._id))
           }
         >
-          <Icon
-            type={projectData.icon || 'star-o'}
-            className="ui-logo"
-            style={{
+          {React.createElement(getV4Icon(projectData.icon || 'star-o'), {
+            className: 'ui-logo',
+            style: {
               backgroundColor:
                 constants.PROJECT_COLOR[projectData.color] || constants.PROJECT_COLOR.blue
-            }}
-          />
+            }
+          })}
           <h4 className="ui-title">{projectData.name || projectData.projectname}</h4>
         </Card>
         <div
@@ -158,16 +157,17 @@ class ProjectCard extends Component {
             placement="rightTop"
             title={projectData.follow || inFollowPage ? '取消关注' : '添加关注'}
           >
-            <Icon
-              type={projectData.follow || inFollowPage ? 'star' : 'star-o'}
-              className={'icon ' + (projectData.follow || inFollowPage ? 'active' : '')}
-            />
+            {projectData.follow || inFollowPage ? (
+              <StarFilled className="icon active" />
+            ) : (
+              <StarOutlined className="icon" />
+            )}
           </Tooltip>
         </div>
         {isShow && (
           <div className="copy-btns" onClick={this.showConfirm}>
             <Tooltip placement="rightTop" title="复制项目">
-              <Icon type="copy" className="icon" />
+              <CopyOutlined className="icon" />
             </Tooltip>
           </div>
         )}

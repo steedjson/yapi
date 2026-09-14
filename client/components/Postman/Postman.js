@@ -701,8 +701,7 @@ export default class Run extends Component {
                     placeholder="参数值"
                     id={`req_params_${index}`}
                     addonAfter={
-                      <Icon
-                        type="edit"
+                      <EditOutlined
                         onClick={() => this.showModal(item.value, index, 'req_params')}
                       />
                     }
@@ -713,7 +712,7 @@ export default class Run extends Component {
             <Button
               style={{ display: 'none' }}
               type="primary"
-              icon="plus"
+              icon={<PlusOutlined />}
               onClick={this.addPathParam}
             >
               添加Path参数
@@ -754,8 +753,7 @@ export default class Run extends Component {
                     placeholder="参数值"
                     id={`req_query_${index}`}
                     addonAfter={
-                      <Icon
-                        type="edit"
+                      <EditOutlined
                         onClick={() => this.showModal(item.value, index, 'req_query')}
                       />
                     }
@@ -763,7 +761,7 @@ export default class Run extends Component {
                 </div>
               );
             })}
-            <Button style={{ display: 'none' }} type="primary" icon="plus" onClick={this.addQuery}>
+            <Button style={{ display: 'none' }} type="primary" icon={<PlusOutlined />} onClick={this.addQuery}>
               添加Query参数
             </Button>
           </Panel>
@@ -788,8 +786,7 @@ export default class Run extends Component {
                     id={`req_headers_${index}`}
                     addonAfter={
                       !item.abled && (
-                        <Icon
-                          type="edit"
+                        <EditOutlined
                           onClick={() => this.showModal(item.value, index, 'req_headers')}
                         />
                       )
@@ -798,7 +795,7 @@ export default class Run extends Component {
                 </div>
               );
             })}
-            <Button style={{ display: 'none' }} type="primary" icon="plus" onClick={this.addHeader}>
+            <Button style={{ display: 'none' }} type="primary" icon={<PlusOutlined />} onClick={this.addHeader}>
               添加Header
             </Button>
           </Panel>
@@ -828,7 +825,7 @@ export default class Run extends Component {
                   </Button>
                   <Tooltip title="高级参数设置只在json字段值中生效">
                     {'  '}
-                    <Icon type="question-circle-o" />
+                    <QuestionCircleOutlined />
                   </Tooltip>
                 </div>
               )}
@@ -888,8 +885,7 @@ export default class Run extends Component {
                             placeholder="参数值"
                             id={`req_body_form_${index}`}
                             addonAfter={
-                              <Icon
-                                type="edit"
+                              <EditOutlined
                                 onClick={() => this.showModal(item.value, index, 'req_body_form')}
                               />
                             }
@@ -901,7 +897,7 @@ export default class Run extends Component {
                   <Button
                     style={{ display: 'none' }}
                     type="primary"
-                    icon="plus"
+                    icon={<PlusOutlined />}
                     onClick={this.addBody}
                   >
                     添加Form参数
@@ -942,7 +938,7 @@ export default class Run extends Component {
                     <span>
                       Warning &nbsp;
                       <Tooltip title="针对定义为 json schema 的返回数据进行格式校验">
-                        <Icon type="question-circle-o" />
+                        <QuestionCircleOutlined />
                       </Tooltip>
                     </span>
                   }

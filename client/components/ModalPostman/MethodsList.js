@@ -180,7 +180,7 @@ class MethodsList extends Component {
         })}
         {moreFlag && (
           <div className="show-more" onClick={this.showMore}>
-            <Icon type="down" />
+            <DownOutlined />
             <span style={{ paddingLeft: '4px' }}>更多</span>
           </div>
         )}

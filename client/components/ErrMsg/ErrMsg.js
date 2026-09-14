@@ -1,6 +1,6 @@
 import React, { PureComponent as Component } from 'react';
 import PropTypes from 'prop-types';
-import { Icon } from 'antd';
+import { getV4Icon } from '../../constants/v4IconMap';
 import './ErrMsg.scss';
 import { withRouter } from 'react-router';
 
@@ -81,7 +81,7 @@ class ErrMsg extends Component {
     }
     return (
       <div className="err-msg">
-        <Icon type={icon} className="icon" />
+        {React.createElement(getV4Icon(icon), { className: "icon" })}
         <p className="title">{title}</p>
         <p className="desc">{desc}</p>
         <p className="opration">{opration}</p>

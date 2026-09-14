@@ -101,7 +101,7 @@ export default class AddColModal extends Component {
                 className={`col-item ${col._id === id ? 'selected' : ''}`}
                 onClick={() => this.select(col._id)}
               >
-                <Icon type="folder-open" style={{ marginRight: 6 }} />
+                <FolderOpenOutlined style={{ marginRight: 6 }} />
                 {col.name}
               </li>
             ))

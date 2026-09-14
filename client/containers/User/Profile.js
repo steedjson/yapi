@@ -225,7 +225,7 @@ class Profile extends Component {
       userNameEditHtml = (
         <div>
           <span className="text">{userinfo.username}</span>&nbsp;&nbsp;
-          {/*<span className="text-button"  onClick={() => { this.handleEdit('usernameEdit', true) }}><Icon type="edit" />修改</span>*/}
+          {/*<span className="text-button"  onClick={() => { this.handleEdit('usernameEdit', true) }}>修改</span>*/}
           {/* {btn} */}
           {/* 站点登陆才能编辑 */}
           {userType && (
@@ -275,7 +275,7 @@ class Profile extends Component {
       emailEditHtml = (
         <div>
           <span className="text">{userinfo.email}</span>&nbsp;&nbsp;
-          {/*<span className="text-button" onClick={() => { this.handleEdit('emailEdit', true) }} ><Icon type="edit" />修改</span>*/}
+          {/*<span className="text-button" onClick={() => { this.handleEdit('emailEdit', true) }} >修改</span>*/}
           {/* {btn} */}
           {/* 站点登陆才能编辑 */}
           {userType && (

@@ -1,6 +1,7 @@
 import React, { PureComponent as Component } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
+import { QuestionCircleOutlined, ExclamationCircleOutlined, UpOutlined, DownOutlined } from '@ant-design/icons';
 import { Input, Button, message, Icon, Card, Alert, Modal, Switch, Row, Col, Tooltip } from 'antd';
 import { fetchNewsData } from '../../../reducer/modules/news.js';
 import {
@@ -237,7 +238,7 @@ class GroupSetting extends Component {
           <Col span={4} className="label">
             接口自定义字段&nbsp;
             <Tooltip title={'可以在接口中添加 额外字段 数据'}>
-              <Icon type="question-circle-o" style={{ width: '10px' }} />
+              <QuestionCircleOutlined style={{ width: '10px' }} />
             </Tooltip> ：
           </Col>
           <Col span={12} style={{ position: 'relative' }}>
@@ -278,10 +279,10 @@ class GroupSetting extends Component {
           <Row type="flex" justify="center" className="danger-container">
             <Col span={24} className="title">
               <h2 className="content">
-                <Icon type="exclamation-circle-o" /> 危险操作
+                <ExclamationCircleOutlined /> 危险操作
               </h2>
               <Button onClick={this.toggleDangerOptions}>
-                查 看<Icon type={this.state.showDangerOptions ? 'up' : 'down'} />
+                查 看{React.createElement(this.state.showDangerOptions ? UpOutlined : DownOutlined)}
               </Button>
             </Col>
             {this.state.showDangerOptions ? (

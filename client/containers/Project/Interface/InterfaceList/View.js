@@ -2,6 +2,7 @@ import './View.scss';
 import React, { PureComponent as Component } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
+import { FileOutlined, CopyOutlined } from '@ant-design/icons';
 import { Table, Icon, Row, Col, Tooltip, message } from 'antd';
 import { Link } from 'react-router-dom';
 import AceEditor from 'client/components/AceEditor/AceEditor';
@@ -57,7 +58,7 @@ class View extends Component {
               </span>
             ) : (
               <span>
-                <Icon type="file" className="query-icon" />文件
+                <FileOutlined className="query-icon" />文件
               </span>
             );
           }
@@ -441,8 +442,7 @@ class View extends Component {
                 {this.props.curData.path}
               </span>
               <Tooltip title="复制路径">
-                <Icon
-                  type="copy"
+                <CopyOutlined
                   className="interface-url-icon"
                   onClick={() => this.copyUrl(this.props.currProject.basepath + this.props.curData.path)}
                   style={{ display: this.state.enter ? 'inline-block' : 'none' }}

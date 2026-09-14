@@ -45,7 +45,7 @@ class FootItem extends Component {
     return (
       <Col span={6}>
         <h4 className="title">
-          {this.props.iconType ? <Icon type={this.props.iconType} className="icon" /> : ''}
+          {this.props.iconType ? React.createElement(getV4Icon(this.props.iconType), { className: 'icon' }) : ''}
           {this.props.title}
         </h4>
         {this.props.linkList.map(function(item, i) {

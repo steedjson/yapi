@@ -2,7 +2,8 @@ import React, { PureComponent as Component } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import axios from 'axios';
-import { Table, Button, Modal, message, Tooltip, Select, Icon } from 'antd';
+import { Table, Button, Modal, message, Tooltip, Select } from 'antd';
+import { EyeOutlined } from '@ant-design/icons';
 import AddInterfaceForm from './AddInterfaceForm';
 import {
   fetchInterfaceListMenu,
@@ -251,7 +252,7 @@ class InterfaceList extends Component {
                 {record.method}
               </span>
               <Tooltip title="开放接口" placement="topLeft">
-                <span>{record.api_opened && <Icon className="opened" type="eye-o" />}</span>
+                <span>{record.api_opened && <EyeOutlined className="opened" />}</span>
               </Tooltip>
               <Tooltip title={path} placement="topLeft" overlayClassName="toolTip">
                 <span className="path">{path}</span>

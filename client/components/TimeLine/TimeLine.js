@@ -190,7 +190,7 @@ class TimeTree extends Component {
           >
             <div className="logMesHeade">
               <span className="logoTimeago">{timeago(item.add_time)}</span>
-              {/*<span className="logusername"><Link to={`/user/profile/${item.uid}`}><Icon type="user" />{item.username}</Link></span>*/}
+              {/*<span className="logusername"><Link to={`/user/profile/${item.uid}`}>{item.username}</Link></span>*/}
               <span className="logtype">{logType[item.type]}动态</span>
               <span className="logtime">{formatTime(item.add_time)}</span>
             </div>

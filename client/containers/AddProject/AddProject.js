@@ -1,13 +1,22 @@
 import React, { PureComponent as Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import { Button, Form, Input, Icon, Tooltip, Select, message, Row, Col, Radio } from 'antd';
+import { Button, Input, Tooltip, Select, message, Row, Col, Radio } from 'antd';
+// Icon 迁移至 @ant-design/icons（v4 体系）；Form 暂用 @ant-design/compatible
+// 提供的 v3 实现（官方过渡路径），数据流迁移在 S3 批次处理。
+import { Form as LegacyForm } from '@ant-design/compatible';
+import {
+  QuestionCircleOutlined,
+  LockOutlined,
+  UnlockOutlined,
+  PlusOutlined
+} from '@ant-design/icons';
 import { addProject } from '../../reducer/modules/project.js';
 import { fetchGroupList } from '../../reducer/modules/group.js';
 import { autobind } from 'core-decorators';
 import { setBreadcrumb } from '../../reducer/modules/user';
 const { TextArea } = Input;
-const FormItem = Form.Item;
+const FormItem = LegacyForm.Item;
 const Option = Select.Option;
 const RadioGroup = Radio.Group;
 import { pickRandomProperty, handlePath, nameLengthLimit } from '../../common';
@@ -108,7 +117,7 @@ class ProjectList extends Component {
     return (
       <div className="g-row">
         <div className="g-row m-container">
-          <Form>
+          <LegacyForm>
             <FormItem {...formItemLayout} label="项目名称">
               {getFieldDecorator('name', {
                 rules: nameLengthLimit('项目')
@@ -149,7 +158,7 @@ class ProjectList extends Component {
                 <span>
                   基本路径&nbsp;
                   <Tooltip title="接口基本路径，为空是根路径">
-                    <Icon type="question-circle-o" />
+                    <QuestionCircleOutlined />
                   </Tooltip>
                 </span>
               }
@@ -187,21 +196,21 @@ class ProjectList extends Component {
               })(
                 <RadioGroup>
                   <Radio value="private" className="radio">
-                    <Icon type="lock" />私有<br />
+                    <LockOutlined />私有<br />
                     <span className="radio-desc">只有组长和项目开发者可以索引并查看项目信息</span>
                   </Radio>
                   <br />
                   {/* <Radio value="public" className="radio">
-                    <Icon type="unlock" />公开<br />
+                    <UnlockOutlined />公开<br />
                     <span className="radio-desc">任何人都可以索引并查看项目信息</span>
                   </Radio> */}
                 </RadioGroup>
               )}
             </FormItem>
-          </Form>
+          </LegacyForm>
           <Row>
             <Col sm={{ offset: 6 }} lg={{ offset: 3 }}>
-              <Button className="m-btn" icon="plus" type="primary" onClick={this.handleOk}>
+              <Button className="m-btn" icon={<PlusOutlined />} type="primary" onClick={this.handleOk}>
                 创建项目
               </Button>
             </Col>
@@ -212,4 +221,4 @@ class ProjectList extends Component {
   }
 }
 
-export default Form.create()(ProjectList);
+export default LegacyForm.create()(ProjectList);
