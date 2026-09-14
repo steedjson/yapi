@@ -1,6 +1,8 @@
 import React, { PureComponent as Component } from 'react'
 import PropTypes from 'prop-types'
-import { Form, Input, Select, Button } from 'antd';
+import { Input, Select, Button } from 'antd';
+// Form 暂用 @ant-design/compatible 提供的 v3 实现（官方过渡路径）。
+import { Form as LegacyForm } from '@ant-design/compatible';
 
 import constants from '../../../../constants/variable.js'
 import { handleApiPath, nameLengthLimit } from '../../../../common.js'
@@ -126,4 +128,4 @@ class AddInterfaceForm extends Component {
   }
 }
 
-export default Form.create()(AddInterfaceForm);
+export default LegacyForm.create()(AddInterfaceForm);

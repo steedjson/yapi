@@ -1,6 +1,8 @@
 import React, { PureComponent as Component } from 'react';
 import PropTypes from 'prop-types';
-import { Form, Input, Button, Select } from 'antd';
+import { Input, Button, Select } from 'antd';
+// Form 暂用 @ant-design/compatible 提供的 v3 实现（官方过渡路径）。
+import { Form as LegacyForm } from '@ant-design/compatible';
 const FormItem = Form.Item;
 const Option = Select.Option;
 function hasErrors(fieldsError) {
@@ -86,4 +88,4 @@ class AddInterfaceForm extends Component {
   }
 }
 
-export default Form.create()(AddInterfaceForm);
+export default LegacyForm.create()(AddInterfaceForm);

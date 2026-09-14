@@ -11,30 +11,40 @@ import {
 import { fetchProjectList } from '../../../../reducer/modules/project';
 import axios from 'axios';
 import ImportInterface from './ImportInterface';
-import { Input, Icon, Button, Modal, message, Tooltip, Tree, Form } from 'antd';
+import { Input, Button, Modal, message, Tooltip, Tree } from 'antd';
+// Icon 迁移至 @ant-design/icons（v4 体系）；Form 暂用 @ant-design/compatible
+// 提供的 v3 实现（官方过渡路径），数据流迁移在 S3 批次处理。
+import { Form as LegacyForm } from '@ant-design/compatible';
+import {
+  FolderOpenOutlined,
+  DeleteOutlined,
+  CopyOutlined,
+  EditOutlined,
+  PlusOutlined
+} from '@ant-design/icons';
 import { arrayChangeIndex } from '../../../../common.js';
 import _ from 'underscore'
 
 const TreeNode = Tree.TreeNode;
-const FormItem = Form.Item;
+const FormItem = LegacyForm.Item;
 const confirm = Modal.confirm;
 const headHeight = 240; // menu顶部到网页顶部部分的高度
 
 import './InterfaceColMenu.scss';
 
-const ColModalForm = Form.create()(props => {
+const ColModalForm = LegacyForm.create()(props => {
   const { visible, onCancel, onCreate, form, title } = props;
   const { getFieldDecorator } = form;
   return (
     <Modal visible={visible} title={title} onCancel={onCancel} onOk={onCreate}>
-      <Form layout="vertical">
+      <LegacyForm layout="vertical">
         <FormItem label="集合名">
           {getFieldDecorator('colName', {
             rules: [{ required: true, message: '请输入集合命名！' }]
           })(<Input />)}
         </FormItem>
         <FormItem label="简介">{getFieldDecorator('colDesc')(<Input type="textarea" />)}</FormItem>
-      </Form>
+      </LegacyForm>
     </Modal>
   );
 });
@@ -453,8 +463,7 @@ export default class InterfaceColMenu extends Component {
               <span className="casename">{interfaceCase.casename}</span>
               <div className="btns">
                 <Tooltip title="删除用例">
-                  <Icon
-                    type="delete"
+                  <DeleteOutlined
                     className="interface-delete-icon"
                     onClick={e => {
                       e.stopPropagation();
@@ -464,8 +473,7 @@ export default class InterfaceColMenu extends Component {
                   />
                 </Tooltip>
                 <Tooltip title="克隆用例">
-                  <Icon
-                    type="copy"
+                  <CopyOutlined
                     className="interface-delete-icon"
                     onClick={e => {
                       e.stopPropagation();
@@ -545,13 +553,12 @@ export default class InterfaceColMenu extends Component {
                 title={
                   <div className="menu-title">
                     <span>
-                      <Icon type="folder-open" style={{ marginRight: 5 }} />
+                      <FolderOpenOutlined style={{ marginRight: 5 }} />
                       <span>{col.name}</span>
                     </span>
                     <div className="btns">
                       <Tooltip title="删除集合">
-                        <Icon
-                          type="delete"
+                        <DeleteOutlined
                           style={{ display: list.length > 1 ? '' : 'none' }}
                           className="interface-delete-icon"
                           onClick={() => {
@@ -560,8 +567,7 @@ export default class InterfaceColMenu extends Component {
                         />
                       </Tooltip>
                       <Tooltip title="编辑集合">
-                        <Icon
-                          type="edit"
+                        <EditOutlined
                           className="interface-delete-icon"
                           onClick={e => {
                             e.stopPropagation();
@@ -570,8 +576,7 @@ export default class InterfaceColMenu extends Component {
                         />
                       </Tooltip>
                       <Tooltip title="导入接口">
-                        <Icon
-                          type="plus"
+                        <PlusOutlined
                           className="interface-delete-icon"
                           onClick={e => {
                             e.stopPropagation();
@@ -580,8 +585,7 @@ export default class InterfaceColMenu extends Component {
                         />
                       </Tooltip>
                       <Tooltip title="克隆集合">
-                        <Icon
-                          type="copy"
+                        <CopyOutlined
                           className="interface-delete-icon"
                           onClick={e => {
                             e.stopPropagation();
@@ -591,7 +595,7 @@ export default class InterfaceColMenu extends Component {
                       </Tooltip>
                     </div>
                     {/*<Dropdown overlay={menu(col)} trigger={['click']} onClick={e => e.stopPropagation()}>
-                      <Icon className="opts-icon" type='ellipsis'/>
+                      
                     </Dropdown>*/}
                   </div>
                 }
