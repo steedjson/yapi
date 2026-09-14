@@ -46,18 +46,19 @@ export default class Srch extends Component {
   };
 
   onSelect = async (value, option) => {
-    if (option.props.type === '分组') {
+    // 选项附带的自定义数据存放在 searchIndex 中（见 handleSearch），
+    // 不能作为 props 挂在 Option 上，否则会透传到 DOM 触发 React 警告
+    const meta = (this.searchIndex || {})[option.key] || {};
+    if (meta.type === '分组') {
       this.props.changeMenuItem('/group');
-      this.props.history.push('/group/' + option.props['id']);
-      this.props.setCurrGroup({ group_name: value, _id: option.props['id'] - 0 });
-    } else if (option.props.type === '项目') {
-      await this.props.fetchGroupMsg(option.props['groupId']);
-      this.props.history.push('/project/' + option.props['id']);
-    } else if (option.props.type === '接口') {
-      await this.props.fetchInterfaceListMenu(option.props['projectId']);
-      this.props.history.push(
-        '/project/' + option.props['projectId'] + '/interface/api/' + option.props['id']
-      );
+      this.props.history.push('/group/' + meta.id);
+      this.props.setCurrGroup({ group_name: value, _id: meta.id - 0 });
+    } else if (meta.type === '项目') {
+      await this.props.fetchGroupMsg(meta.groupId);
+      this.props.history.push('/project/' + meta.id);
+    } else if (meta.type === '接口') {
+      await this.props.fetchInterfaceListMenu(meta.projectId);
+      this.props.history.push('/project/' + meta.projectId + '/interface/api/' + meta.id);
     }
   };
 
@@ -67,45 +68,44 @@ export default class Srch extends Component {
       .then(res => {
         if (res.data && res.data.errcode === 0) {
           const dataSource = [];
+          this.searchIndex = {};
           for (let title in res.data.data) {
             res.data.data[title].map(item => {
               switch (title) {
-                case 'group':
+                case 'group': {
+                  const key = `分组${item._id}`;
+                  this.searchIndex[key] = { type: '分组', id: item._id };
                   dataSource.push(
-                    <Option
-                      key={`分组${item._id}`}
-                      type="分组"
-                      value={`${item.groupName}`}
-                      id={`${item._id}`}
-                    >
+                    <Option key={key} value={item.groupName}>
                       {`分组: ${item.groupName}`}
                     </Option>
                   );
                   break;
-                case 'project':
+                }
+                case 'project': {
+                  const key = `项目${item._id}`;
+                  this.searchIndex[key] = { type: '项目', id: item._id, groupId: item.groupId };
                   dataSource.push(
-                    <Option
-                      key={`项目${item._id}`}
-                      type="项目"
-                      id={`${item._id}`}
-                      groupId={`${item.groupId}`}
-                    >
+                    <Option key={key} value={item.name}>
                       {`项目: ${item.name}`}
                     </Option>
                   );
                   break;
-                case 'interface':
+                }
+                case 'interface': {
+                  const key = `接口${item._id}`;
+                  this.searchIndex[key] = {
+                    type: '接口',
+                    id: item._id,
+                    projectId: item.projectId
+                  };
                   dataSource.push(
-                    <Option
-                      key={`接口${item._id}`}
-                      type="接口"
-                      id={`${item._id}`}
-                      projectId={`${item.projectId}`}
-                    >
+                    <Option key={key} value={item.title}>
                       {`接口: ${item.title}`}
                     </Option>
                   );
                   break;
+                }
                 default:
                   break;
               }
