@@ -79,7 +79,7 @@ export default class ProjectRequest extends Component {
 
     return (
       <div className="project-request">
-        <Form onSubmit={this.handleSubmit}>
+        <LegacyForm onSubmit={this.handleSubmit}>
           <FormItem {...formItemLayout} label="Pre-request Script(请求参数处理脚本)">
             <AceEditor
               data={pre_script}
@@ -101,7 +101,7 @@ export default class ProjectRequest extends Component {
               保存
             </Button>
           </FormItem>
-        </Form>
+        </LegacyForm>
       </div>
     );
   }

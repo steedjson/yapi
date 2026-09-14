@@ -2,14 +2,14 @@
 import React, { PureComponent as Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import { Form, Button, Input, message } from 'antd';
+import { Button, Input, message } from 'antd';
 // Icon 迁移至 @ant-design/icons（v4 体系）；Form 暂用 @ant-design/compatible
 // 提供的 v3 实现（官方过渡路径），数据流迁移（Form.Item name）在 S3 批次处理。
 import { UserOutlined, MailOutlined, LockOutlined } from '@ant-design/icons';
 import { Form as LegacyForm } from '@ant-design/compatible';
 import { regActions } from '../../reducer/modules/user';
 import { withRouter } from 'react-router';
-const FormItem = Form.Item;
+const FormItem = LegacyForm.Item;
 const formItemStyle = {
   marginBottom: '.16rem'
 };
@@ -92,7 +92,7 @@ class Reg extends Component {
   render() {
     const { getFieldDecorator } = this.props.form;
     return (
-      <Form onSubmit={this.handleSubmit}>
+      <LegacyForm onSubmit={this.handleSubmit}>
         {/* 用户名 */}
         <FormItem style={formItemStyle}>
           {getFieldDecorator('userName', {
@@ -180,7 +180,7 @@ class Reg extends Component {
             注册
           </Button>
         </FormItem>
-      </Form>
+      </LegacyForm>
     );
   }
 }

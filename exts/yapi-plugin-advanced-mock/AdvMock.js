@@ -112,7 +112,7 @@ class AdvMock extends Component {
           </Radio.Group>
         </div>
         <div style={{ display: isShowCase ? 'none' : '' }}>
-          <Form onSubmit={this.handleSubmit}>
+          <LegacyForm onSubmit={this.handleSubmit}>
             <FormItem
               label={
                 <span>
@@ -145,7 +145,7 @@ class AdvMock extends Component {
                 保存
               </Button>
             </FormItem>
-          </Form>
+          </LegacyForm>
         </div>
         <div style={{ display: isShowCase ? '' : 'none' }}>
           <MockCol />

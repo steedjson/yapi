@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { Input, Button, Select } from 'antd';
 // Form 暂用 @ant-design/compatible 提供的 v3 实现（官方过渡路径）。
 import { Form as LegacyForm } from '@ant-design/compatible';
-const FormItem = Form.Item;
+const FormItem = LegacyForm.Item;
 const Option = Select.Option;
 function hasErrors(fieldsError) {
   return Object.keys(fieldsError).some(field => fieldsError[field]);
@@ -40,7 +40,7 @@ class AddInterfaceForm extends Component {
     };
 
     return (
-      <Form onSubmit={this.handleSubmit}>
+      <LegacyForm onSubmit={this.handleSubmit}>
         <FormItem {...formItemLayout} label="分类名">
           {getFieldDecorator('name', {
             rules: [
@@ -83,7 +83,7 @@ class AddInterfaceForm extends Component {
             提交
           </Button>
         </FormItem>
-      </Form>
+      </LegacyForm>
     );
   }
 }

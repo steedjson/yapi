@@ -9,7 +9,7 @@ import { handleApiPath, nameLengthLimit } from '../../../../common.js'
 const HTTP_METHOD = constants.HTTP_METHOD;
 const HTTP_METHOD_KEYS = Object.keys(HTTP_METHOD);
 
-const FormItem = Form.Item;
+const FormItem = LegacyForm.Item;
 const Option = Select.Option;
 function hasErrors(fieldsError) {
   return Object.keys(fieldsError).some(field => fieldsError[field]);
@@ -67,7 +67,7 @@ class AddInterfaceForm extends Component {
 
     return (
 
-      <Form onSubmit={this.handleSubmit}>
+      <LegacyForm onSubmit={this.handleSubmit}>
         <FormItem
           {...formItemLayout}
           label="接口分类"
@@ -122,7 +122,7 @@ class AddInterfaceForm extends Component {
           </Button>
         </FormItem>
 
-      </Form>
+      </LegacyForm>
 
     );
   }

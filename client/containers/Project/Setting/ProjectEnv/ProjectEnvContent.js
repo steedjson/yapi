@@ -6,7 +6,7 @@ import { Row, Col, Input, Select, Button, AutoComplete, Tooltip } from 'antd';
 // 提供的 v3 实现（官方过渡路径），数据流迁移在 S3 批次处理。
 import { DeleteOutlined, QuestionCircleOutlined } from '@ant-design/icons';
 import { Form as LegacyForm } from '@ant-design/compatible';
-const FormItem = Form.Item;
+const FormItem = LegacyForm.Item;
 const Option = Select.Option;
 import constants from 'client/constants/variable.js';
 

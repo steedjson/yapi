@@ -2,7 +2,7 @@ import './Footer.scss';
 import React, { PureComponent as Component } from 'react';
 import PropTypes from 'prop-types';
 import { Row, Col } from 'antd';
-import { Icon } from 'antd';
+import { getV4Icon } from '../../constants/v4IconMap';
 
 const version = process.env.version;
 class Footer extends Component {

@@ -97,7 +97,7 @@ export default class ProjectMock extends Component {
   render() {
     return (
       <div className="m-panel">
-        <Form>
+        <LegacyForm>
           <FormItem
             label={
               <span>
@@ -133,7 +133,7 @@ export default class ProjectMock extends Component {
               保存
             </Button>
           </FormItem>
-        </Form>
+        </LegacyForm>
       </div>
     );
   }

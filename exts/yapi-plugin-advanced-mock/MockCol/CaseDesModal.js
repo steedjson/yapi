@@ -339,7 +339,7 @@ class CaseDesForm extends Component {
         afterClose={() => this.setState({ paramsForm: 'form' })}
         className="case-des-modal"
       >
-        <Form onSubmit={this.handleOk}>
+        <LegacyForm onSubmit={this.handleOk}>
           <h2 className="sub-title" style={{ marginTop: 0 }}>
             基本信息
           </h2>
@@ -470,7 +470,7 @@ class CaseDesForm extends Component {
               />
             </FormItem>
           </FormItem>
-        </Form>
+        </LegacyForm>
       </Modal>
     );
   }

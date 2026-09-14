@@ -141,7 +141,7 @@ export default class ProjectInterfaceSync extends Component {
     const { getFieldDecorator } = this.props.form;
     return (
       <div className="m-panel">
-        <Form>
+        <LegacyForm>
           <FormItem
             label="是否开启自动同步"
             {...formItemLayout}
@@ -234,7 +234,7 @@ export default class ProjectInterfaceSync extends Component {
               保存
             </Button>
           </FormItem>
-        </Form>
+        </LegacyForm>
       </div>
     );
   }

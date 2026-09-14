@@ -32,7 +32,7 @@ import { setBreadcrumb } from '../../../../reducer/modules/user';
 import { connect } from 'react-redux';
 const { TextArea } = Input;
 import { withRouter } from 'react-router';
-const FormItem = Form.Item;
+const FormItem = LegacyForm.Item;
 const RadioGroup = Radio.Group;
 const RadioButton = Radio.Button;
 import constants from '../../../../constants/variable.js';
@@ -317,7 +317,7 @@ class ProjectMessage extends Component {
             </Col>
           </Row>
           <hr className="breakline" />
-          <Form>
+          <LegacyForm>
             <FormItem {...formItemLayout} label="项目ID">
               <span>{this.props.projectMsg._id}</span>
             </FormItem>
@@ -470,7 +470,7 @@ class ProjectMessage extends Component {
                 </RadioGroup>
               )}
             </FormItem>
-          </Form>
+          </LegacyForm>
 
           <div className="btnwrap-changeproject">
             <Button
