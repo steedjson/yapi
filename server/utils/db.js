@@ -13,27 +13,18 @@ function model(model, schema) {
 }
 
 function connect(callback) {
-  mongoose.Promise = global.Promise;
-  mongoose.set('useNewUrlParser', true);
-  mongoose.set('useFindAndModify', false);
-  mongoose.set('useCreateIndex', true);
+  // mongoose 6 起移除 useNewUrlParser/useCreateIndex/useUnifiedTopology 等
+  // 连接选项与 useFindAndModify 开关，连接串与认证参数保持原样即可。
+  // strictQuery 显式固定为 false（与 5.x 行为一致），避免升级 7 时默认值翻转。
+  mongoose.set('strictQuery', false);
 
   let config = yapi.WEBCONFIG;
-  let options = {useNewUrlParser: true, useCreateIndex: true, useUnifiedTopology: true};
+  let options = {};
 
   if (config.db.user) {
     options.user = config.db.user;
     options.pass = config.db.pass;
   }
-
-  if (config.db.reconnectTries) {
-    options.reconnectTries = config.db.reconnectTries;
-  }
-
-  if (config.db.reconnectInterval) {
-    options.reconnectInterval = config.db.reconnectInterval;
-  }
-
 
   options = Object.assign({}, options, config.db.options)
 
