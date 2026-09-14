@@ -3,7 +3,7 @@ import React, { PureComponent as Component } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import { FileOutlined, CopyOutlined } from '@ant-design/icons';
-import { Table, Icon, Row, Col, Tooltip, message } from 'antd';
+import { Table, Row, Col, Tooltip, message } from 'antd';
 import { Link } from 'react-router-dom';
 import AceEditor from 'client/components/AceEditor/AceEditor';
 import { formatTime, safeArray } from '../../../../common.js';

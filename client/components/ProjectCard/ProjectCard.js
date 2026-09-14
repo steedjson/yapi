@@ -1,6 +1,6 @@
 import './ProjectCard.scss';
 import React, { PureComponent as Component } from 'react';
-import { Card, Icon, Tooltip, Modal, Alert, Input, message } from 'antd';
+import { Card, Tooltip, Modal, Alert, Input, message } from 'antd';
 import { CopyOutlined, StarFilled, StarOutlined } from '@ant-design/icons';
 import { getV4Icon } from '../../constants/v4IconMap';
 import { connect } from 'react-redux';

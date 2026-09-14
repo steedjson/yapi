@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import { Icon, Row, Col, Input } from 'antd';
+import { Row, Col, Input } from 'antd';
 import { DeleteOutlined } from '@ant-design/icons';
 import './ProjectTag.scss';
 

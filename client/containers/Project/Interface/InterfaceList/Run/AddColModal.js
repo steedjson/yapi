@@ -1,6 +1,6 @@
 import React, { PureComponent as Component } from 'react';
 import { connect } from 'react-redux';
-import { Modal, Collapse, Row, Col, Input, message, Button, Icon } from 'antd';
+import { Modal, Collapse, Row, Col, Input, message, Button } from 'antd';
 import { FolderOpenOutlined } from '@ant-design/icons';
 import PropTypes from 'prop-types';
 import axios from 'axios';
