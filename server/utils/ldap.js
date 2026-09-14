@@ -34,6 +34,8 @@ exports.ldapQuery = (username, password) => {
           message: `ldapSearch: ${err}`
         };
         reject(msg);
+        // v3 超时等错误路径不携带 search 实例，必须终止否则下一行抛 TypeError
+        return;
       }
       // 查询结果事件响应
       search.on('searchEntry', entry => {
