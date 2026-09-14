@@ -589,7 +589,8 @@ ${JSON.stringify(schema, null, 2)}`)
       logs.push('执行脚本:' + script)
       result = await sandboxFn(context, script);
     }
-    result.logs = logs;
+    // 沙箱子进程内 log() 收集的输出并入执行日志
+    result.logs = logs.concat((result && result.logs) || []);
     return yapi.commons.resReturn(result);
   } catch (err) {
     logs.push(convertString(err));
