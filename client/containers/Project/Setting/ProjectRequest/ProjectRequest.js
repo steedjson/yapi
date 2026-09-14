@@ -1,8 +1,10 @@
 import React, { PureComponent as Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import { Form, Button, message } from 'antd';
-const FormItem = Form.Item;
+import { Button, message } from 'antd';
+// Form 暂用 @ant-design/compatible 提供的 v3 实现（官方过渡路径）。
+import { Form as LegacyForm } from '@ant-design/compatible';
+const FormItem = LegacyForm.Item;
 import './project-request.scss';
 import AceEditor from 'client/components/AceEditor/AceEditor';
 import { updateProjectScript, getProject } from '../../../../reducer/modules/project';
@@ -18,7 +20,7 @@ import { updateProjectScript, getProject } from '../../../../reducer/modules/pro
     getProject
   }
 )
-@Form.create()
+@LegacyForm.create()
 export default class ProjectRequest extends Component {
   static propTypes = {
     projectMsg: PropTypes.object,

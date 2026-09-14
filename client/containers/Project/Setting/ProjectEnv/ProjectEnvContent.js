@@ -1,7 +1,11 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import './index.scss';
-import { Icon, Row, Col, Form, Input, Select, Button, AutoComplete, Tooltip } from 'antd';
+import { Row, Col, Input, Select, Button, AutoComplete, Tooltip } from 'antd';
+// Icon 迁移至 @ant-design/icons（v4 体系）；Form 暂用 @ant-design/compatible
+// 提供的 v3 实现（官方过渡路径），数据流迁移在 S3 批次处理。
+import { DeleteOutlined, QuestionCircleOutlined } from '@ant-design/icons';
+import { Form as LegacyForm } from '@ant-design/compatible';
 const FormItem = Form.Item;
 const Option = Select.Option;
 import constants from 'client/constants/variable.js';
@@ -27,6 +31,7 @@ const initMap = {
   ]
 };
 
+@LegacyForm.create()
 class ProjectEnvContent extends Component {
   static propTypes = {
     projectMsg: PropTypes.object,
@@ -198,9 +203,8 @@ class ProjectEnvContent extends Component {
           </Col>
           <Col span={2} className={index === headerLength ? ' env-last-row' : null}>
             {/* 新增的项中，只有最后一项没有有删除按钮 */}
-            <Icon
+            <DeleteOutlined
               className="dynamic-delete-button delete"
-              type="delete"
               onClick={e => {
                 e.stopPropagation();
                 this.delHeader(index, 'header');
@@ -239,9 +243,8 @@ class ProjectEnvContent extends Component {
           </Col>
           <Col span={2} className={index === length ? ' env-last-row' : null}>
             {/* 新增的项中，只有最后一项没有有删除按钮 */}
-            <Icon
+            <DeleteOutlined
               className="dynamic-delete-button delete"
-              type="delete"
               onClick={e => {
                 e.stopPropagation();
                 this.delHeader(index, name);
@@ -350,7 +353,7 @@ class ProjectEnvContent extends Component {
               style={{ marginLeft: 8 }}
             >
               <Tooltip title="点击查看文档">
-                <Icon type="question-circle-o" style={{fontSize: '13px'}}/>
+                <QuestionCircleOutlined style={{fontSize: '13px'}}/>
               </Tooltip>
             </a>
           </h3>
@@ -379,4 +382,4 @@ class ProjectEnvContent extends Component {
     );
   }
 }
-export default Form.create()(ProjectEnvContent);
+export default LegacyForm.create()(ProjectEnvContent);

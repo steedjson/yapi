@@ -1,9 +1,13 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import { Form, Switch, Button, Icon, Tooltip, message } from 'antd';
+import { Switch, Button, Tooltip, message } from 'antd';
+// Icon 迁移至 @ant-design/icons（v4 体系）；Form 暂用 @ant-design/compatible
+// 提供的 v3 实现（官方过渡路径），数据流迁移在 S3 批次处理。
+import { QuestionCircleOutlined } from '@ant-design/icons';
+import { Form as LegacyForm } from '@ant-design/compatible';
+const FormItem = LegacyForm.Item;
 import AceEditor from '../../../../components/AceEditor/AceEditor';
-const FormItem = Form.Item;
 import { updateProjectMock, getProject } from '../../../../reducer/modules/project';
 
 const formItemLayout = {
@@ -34,7 +38,7 @@ const tailFormItemLayout = {
     getProject
   }
 )
-@Form.create()
+@LegacyForm.create()
 export default class ProjectMock extends Component {
   static propTypes = {
     form: PropTypes.object,
@@ -103,7 +107,7 @@ export default class ProjectMock extends Component {
                   href="https://hellosean1025.github.io/yapi/documents/project.html#%E5%85%A8%E5%B1%80mock"
                 >
                   <Tooltip title="点击查看文档">
-                    <Icon type="question-circle-o" />
+                    <QuestionCircleOutlined />
                   </Tooltip>
                 </a>
               </span>
