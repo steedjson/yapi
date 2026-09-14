@@ -65,7 +65,6 @@
     "mockjs": "1.0.1-beta3",
     "moment": "^2.19.3",
     "mongoose": "8.24.4",
-    "mongoose-auto-increment": "5.0.1",
     "node-schedule": "2.1.1",
     "nodemailer": "10.0.10",
     "qs": "^6.7.0",
