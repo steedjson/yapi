@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import { formatTime } from 'client/common.js';
 import { Switch, Button, Tooltip, message, Input, Select } from 'antd';
 import { QuestionCircleOutlined } from '@ant-design/icons';
-import { Form as LegacyForm } from '@ant-design/compatible';
+import { Form as LegacyForm } from 'antd';
 import {handleSwaggerUrlData} from 'client/reducer/modules/project';
 const FormItem = LegacyForm.Item;
 const Option = Select.Option;

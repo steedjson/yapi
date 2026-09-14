@@ -78,9 +78,8 @@ import {
   AutoComplete,
   Switch
 } from 'antd';
-// Icon 迁移至 @ant-design/icons（v4 体系）；Form 暂用 @ant-design/compatible
-// 提供的 v3 实现（官方过渡路径），数据流迁移在 S3 批次处理。
-import { Form as LegacyForm } from '@ant-design/compatible';
+
+import { Form as LegacyForm } from 'antd';
 import {
   BarsOutlined,
   DeleteOutlined,

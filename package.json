@@ -82,7 +82,6 @@
     "yapi-plugin-qsso": "^1.1.0"
   },
   "devDependencies": {
-    "@ant-design/compatible": "1.0.8",
     "@ant-design/icons": "4.8.1",
     "@babel/core": "7.28.4",
     "@babel/plugin-proposal-decorators": "7.28.0",

@@ -2,10 +2,9 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import './index.scss';
 import { Row, Col, Input, Select, Button, AutoComplete, Tooltip } from 'antd';
-// Icon 迁移至 @ant-design/icons（v4 体系）；Form 暂用 @ant-design/compatible
-// 提供的 v3 实现（官方过渡路径），数据流迁移在 S3 批次处理。
+
 import { DeleteOutlined, QuestionCircleOutlined } from '@ant-design/icons';
-import { Form as LegacyForm } from '@ant-design/compatible';
+import { Form as LegacyForm } from 'antd';
 const FormItem = LegacyForm.Item;
 const Option = Select.Option;
 import constants from 'client/constants/variable.js';

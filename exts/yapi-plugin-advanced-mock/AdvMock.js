@@ -5,7 +5,7 @@ import PropTypes from 'prop-types';
 import { withRouter } from 'react-router-dom';
 import { Switch, Button, message, Tooltip, Radio } from 'antd';
 import { QuestionCircleOutlined } from '@ant-design/icons';
-import { Form as LegacyForm } from '@ant-design/compatible';
+import { Form as LegacyForm } from 'antd';
 import MockCol from './MockCol/MockCol.js';
 import mockEditor from 'client/components/AceEditor/mockEditor';
 import constants from '../../client/constants/variable.js';

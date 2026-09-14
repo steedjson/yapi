@@ -13,7 +13,7 @@ import {
   Modal
 } from 'antd';
 import { DeleteOutlined, PlusOutlined, MinusCircleOutlined } from '@ant-design/icons';
-import { Form as LegacyForm } from '@ant-design/compatible';
+import { Form as LegacyForm } from 'antd';
 const Option = Select.Option;
 const FormItem = LegacyForm.Item;
 import { safeAssign } from 'client/common.js';
