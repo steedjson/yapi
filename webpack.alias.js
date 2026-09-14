@@ -1,10 +1,12 @@
-const path = require('path')
+const paths = require('./build/paths');
 
+// babel（webpack-alias 插件）与构建共用的路径别名；与 standalone 构建同源。
 module.exports = {
   resolve: {
     alias: {
-      'common': path.resolve(__dirname, 'common'),
-      'client': path.resolve(__dirname, 'client')
+      'common': paths.common,
+      'client': paths.client,
+      'exts': paths.exts
     }
   }
-}
+};

@@ -35,8 +35,9 @@ class ThemeCssFixedNamePlugin {
   }
 }
 
-const root = path.resolve(__dirname, '..');
-const client = path.join(root, 'client');
+const paths = require('./paths');
+const root = paths.root;
+const client = paths.client;
 const isProduction = process.env.NODE_ENV === 'production';
 const isDevelopment = !isProduction;
 
@@ -79,8 +80,8 @@ const config = {
     extensions: ['.js', '.jsx', '.css', '.json', '.string', '.tpl'],
     alias: {
       client,
-      common: path.join(root, 'common'),
-      exts: path.join(root, 'exts')
+      common: paths.common,
+      exts: paths.exts
     }
   },
   module: {
