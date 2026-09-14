@@ -199,8 +199,8 @@ underscore→原生/lodash 评估；redux 5 评估；mongoose 9 评估；antd 6 
 | P1 服务端栈升级 | ✅ | 2ee5038f / 00f40cc3 / 40a939af / c3c7a71a / 6e9065de | koa 2.16.4、koa-static 5、nodemailer 10、ldapjs 3（含 v3 适配与超时路径修复）、node-schedule 2；评审 PASS；遗留：真实 SMTP/LDAP 目录未测（环境受限） |
 | P2 mongoose 6→8 | ✅ | 78a53a82 / d525db58 | mongoose 8.24.4 + driver 6.20；14 处插件模型 remove/update 适配（机械等价替换，主 Agent 批准的边界偏离）；真实 DB E2E 含自增 ID 递增证据；评审 PASS；观察项 mongoose 9.10 |
 | P3 antd 4 完成 | ✅ | a5168c40 / 75b6b0ae / 9ca352a5 / a630d8ea / 8e6bf420 / 84e12582 | Spike 绿色（json-schema-editor-visual 嵌套 antd3 零改动，双实例共存）；14 文件 105 处 Form 迁移 useForm、TabPane→items、ConfigProvider、less 3.13.1 + less-loader 补丁；首轮评审 2P0+1P1 已修复并复验 PASS；浏览器回归：编辑表单/动态行/保存持久化/添加分类/登录真实提交/gov 皮肤渲染 |
-| P4 webpack 5 | ⏳ | — | |
-| P4 webpack 5 | ⏳ | — | |
+| P4 webpack 5 | ✅ | d956daba / f529b1a1 / 0f51f771 | webpack 5.111 + 全套 loader/插件现代化；entry dependOn 链替代同名 cacheGroups（webpack5 强制）；ThemeCssFixedNamePlugin 删除（MCEP filename 函数）；less 4.9 + less-loader 13（补丁删除）；评审 PASS，4 项 P2 备忘 |
+| P4 webpack 5 | ✅ | d956daba / f529b1a1 / 0f51f771 | webpack 5.111 + 全套 loader/插件现代化；entry dependOn 链替代同名 cacheGroups（webpack5 强制）；ThemeCssFixedNamePlugin 删除（MCEP filename 函数）；less 4.9 + less-loader 13（补丁删除）；评审 PASS，4 项 P2 备忘 |
 | P5 React 18.3 | ⏳ | — | |
 | P6 antd 5 + 皮肤重构 | ⏳ | — | |
 | P7 现代化收尾 | ⏳ | — | |
