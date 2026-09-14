@@ -3,11 +3,13 @@ import React, { Component } from 'react';
 import axios from 'axios';
 import PropTypes from 'prop-types';
 import { withRouter } from 'react-router-dom';
-import { Form, Switch, Button, message, Icon, Tooltip, Radio } from 'antd';
+import { Switch, Button, message, Tooltip, Radio } from 'antd';
+import { QuestionCircleOutlined } from '@ant-design/icons';
+import { Form as LegacyForm } from '@ant-design/compatible';
 import MockCol from './MockCol/MockCol.js';
 import mockEditor from 'client/components/AceEditor/mockEditor';
 import constants from '../../client/constants/variable.js';
-const FormItem = Form.Item;
+const FormItem = LegacyForm.Item;
 
 class AdvMock extends Component {
   static propTypes = {
@@ -120,7 +122,7 @@ class AdvMock extends Component {
                     href={constants.docHref.adv_mock_script}
                   >
                     <Tooltip title="点击查看文档">
-                      <Icon type="question-circle-o" />
+                      <QuestionCircleOutlined />
                     </Tooltip>
                   </a>
                 </span>
@@ -153,4 +155,4 @@ class AdvMock extends Component {
   }
 }
 
-export default Form.create()(withRouter(AdvMock));
+export default LegacyForm.create()(withRouter(AdvMock));

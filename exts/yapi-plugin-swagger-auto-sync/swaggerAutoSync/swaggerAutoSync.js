@@ -2,9 +2,11 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import { formatTime } from 'client/common.js';
-import { Form, Switch, Button, Icon, Tooltip, message, Input, Select } from 'antd';
+import { Switch, Button, Tooltip, message, Input, Select } from 'antd';
+import { QuestionCircleOutlined } from '@ant-design/icons';
+import { Form as LegacyForm } from '@ant-design/compatible';
 import {handleSwaggerUrlData} from 'client/reducer/modules/project';
-const FormItem = Form.Item;
+const FormItem = LegacyForm.Item;
 const Option = Select.Option;
 import axios from 'axios';
 
@@ -41,7 +43,7 @@ const tailFormItemLayout = {
     handleSwaggerUrlData
   }
 )
-@Form.create()
+@LegacyForm.create()
 export default class ProjectInterfaceSync extends Component {
   static propTypes = {
     form: PropTypes.object,
@@ -174,7 +176,7 @@ export default class ProjectInterfaceSync extends Component {
                     </div>
                   }
                 >
-                  <Icon type="question-circle-o" />
+                  <QuestionCircleOutlined />
                 </Tooltip>{' '}
               </span>
             }>

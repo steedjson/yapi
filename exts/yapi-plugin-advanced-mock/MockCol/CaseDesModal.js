@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import {
-  Form,
   Select,
   InputNumber,
   Switch,
@@ -10,12 +9,13 @@ import {
   Row,
   Input,
   Button,
-  Icon,
   AutoComplete,
   Modal
 } from 'antd';
+import { DeleteOutlined, PlusOutlined, MinusCircleOutlined } from '@ant-design/icons';
+import { Form as LegacyForm } from '@ant-design/compatible';
 const Option = Select.Option;
-const FormItem = Form.Item;
+const FormItem = LegacyForm.Item;
 import { safeAssign } from 'client/common.js';
 import AceEditor from 'client/components/AceEditor/AceEditor';
 import constants from 'client/constants/variable.js';
@@ -274,9 +274,8 @@ class CaseDesForm extends Component {
               </Col>
               <Col span={4}>
                 {values.length > 1 ? (
-                  <Icon
+                  <MinusCircleOutlined
                     className="dynamic-delete-button"
-                    type="minus-circle-o"
                     onClick={() => this.removeValues('paramsArr', index)}
                   />
                 ) : null}
@@ -318,9 +317,8 @@ class CaseDesForm extends Component {
               </Col>
               <Col span={4}>
                 {values.length > 1 ? (
-                  <Icon
+                  <MinusCircleOutlined
                     className="dynamic-delete-button"
-                    type="minus-circle-o"
                     onClick={() => this.removeValues('headers', index)}
                   />
                 ) : null}
@@ -407,7 +405,7 @@ class CaseDesForm extends Component {
               onClick={() => this.addValues('paramsArr')}
               style={{ width: '100%' }}
             >
-              <Icon type="plus" /> 添加参数
+              <PlusOutlined /> 添加参数
             </Button>
           </FormItem>
           <FormItem
@@ -459,7 +457,7 @@ class CaseDesForm extends Component {
               onClick={() => this.addValues('headers')}
               style={{ width: '100%' }}
             >
-              <Icon type="plus" /> 添加 HTTP 头
+              <PlusOutlined /> 添加 HTTP 头
             </Button>
           </FormItem>
           <FormItem {...formItemLayout} wrapperCol={{ span: 17 }} label="Body" required>
@@ -478,5 +476,5 @@ class CaseDesForm extends Component {
   }
 }
 
-const CaseDesModal = Form.create()(CaseDesForm);
+const CaseDesModal = LegacyForm.create()(CaseDesForm);
 export default CaseDesModal;
