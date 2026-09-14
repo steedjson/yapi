@@ -9,8 +9,10 @@ const hotMiddleware = require('webpack-hot-middleware');
 const config = require('./webpack.standalone.config');
 
 // standalone 开发服务保留现有 4000 端口和 static/dev.html 页面入口。
+// webpack-dev-middleware 8：publicPath 缺省即取 config.output.publicPath(/prd/)，
+// 显式传入保持自文档化；v4+ 已移除 quiet/noInfo 选项（由 stats 选项控制输出）。
 const compiler = webpack(config);
-const middleware = devMiddleware(compiler, { publicPath: '/prd/', quiet: false });
+const middleware = devMiddleware(compiler, { publicPath: '/prd/', stats: 'errors-warnings' });
 const hot = hotMiddleware(compiler, { path: '/__webpack_hmr' });
 const htmlPath = path.resolve(__dirname, '../static/dev.html');
 const port = Number(process.env.PORT || 4000);
