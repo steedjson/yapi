@@ -1,4 +1,5 @@
 import React, { PureComponent as Component } from 'react';
+import { DeleteOutlined } from '@ant-design/icons';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { Table, Select, Button, Modal, Row, Col, message, Popconfirm } from 'antd';
@@ -243,7 +244,7 @@ class MemberList extends Component {
                   okText="确定"
                   cancelText=""
                 >
-                  <Button type="danger" icon="delete" className="btn-danger" />
+                  <Button type="danger" icon={<DeleteOutlined />} className="btn-danger" />
                   {/*  */}
                 </Popconfirm>
               </div>

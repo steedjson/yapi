@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import _ from 'underscore';
 import constants from '../../../../constants/variable.js';
-import { handlePath, nameLengthLimit } from '../../../../common.js';
+import { handlePath as handlePathUtil, nameLengthLimit } from '../../../../common.js';
 import { changeEditStatus } from '../../../../reducer/modules/interface.js';
 import json5 from 'json5';
 import { message, Affix, Tabs, Modal } from 'antd';
@@ -489,7 +489,7 @@ function InterfaceEditForm(/** @type {any} */ props) {
         queue.push({ name: name, desc: '' });
       }
     };
-    val = handlePath(val);
+    val = handlePathUtil(val);
     form.setFieldsValue({
       path: val
     });

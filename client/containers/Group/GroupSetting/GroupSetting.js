@@ -1,4 +1,5 @@
 import React, { PureComponent as Component } from 'react';
+import { SaveOutlined } from '@ant-design/icons';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import { QuestionCircleOutlined, ExclamationCircleOutlined, UpOutlined, DownOutlined } from '@ant-design/icons';
@@ -269,7 +270,7 @@ class GroupSetting extends Component {
         </Row>
         <Row type="flex" justify="center" className="row save">
           <Col span={4} className="save-button">
-            <Button className="m-btn btn-save" icon="save" type="primary" onClick={this.editGroup}>
+            <Button className="m-btn btn-save" icon={<SaveOutlined />} type="primary" onClick={this.editGroup}>
               保 存
             </Button>
           </Col>

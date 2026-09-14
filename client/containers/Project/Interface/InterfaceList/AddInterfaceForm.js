@@ -101,8 +101,8 @@ function AddInterfaceForm(props) {
             <Button
               type="primary"
               htmlType="submit"
-              // antd4 下 getFieldsError 惯用法行为变化,改按必填值是否已填控制禁用
-              disabled={!form.getFieldValue('name')}
+              // antd4 下 getFieldsError 惯用法行为变化,改按本表单必填字段(接口名称/路径)是否已填控制禁用
+              disabled={!form.getFieldValue('title') || !form.getFieldValue('path')}
             >
               提交
             </Button>
