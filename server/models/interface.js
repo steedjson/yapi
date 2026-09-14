@@ -344,26 +344,26 @@ class interfaceModel extends baseModel {
   }
 
   del(id) {
-    return this.model.remove({
+    return this.model.deleteMany({
       _id: id
     });
   }
 
   delByCatid(id) {
-    return this.model.remove({
+    return this.model.deleteMany({
       catid: id
     });
   }
 
   delByProjectId(id) {
-    return this.model.remove({
+    return this.model.deleteMany({
       project_id: id
     });
   }
 
   up(id, data) {
     data.up_time = yapi.commons.time();
-    return this.model.update(
+    return this.model.updateOne(
       {
         _id: id
       },
@@ -373,7 +373,7 @@ class interfaceModel extends baseModel {
   }
 
   upEditUid(id, uid) {
-    return this.model.update(
+    return this.model.updateOne(
       {
         _id: id
       },
@@ -414,7 +414,7 @@ class interfaceModel extends baseModel {
   }
 
   upIndex(id, index) {
-    return this.model.update(
+    return this.model.updateOne(
       {
         _id: id
       },

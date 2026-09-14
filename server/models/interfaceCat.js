@@ -51,20 +51,20 @@ class interfaceCat extends baseModel {
   }
 
   del(id) {
-    return this.model.remove({
+    return this.model.deleteMany({
       _id: id
     });
   }
 
   delByProjectId(id) {
-    return this.model.remove({
+    return this.model.deleteMany({
       project_id: id
     });
   }
 
   up(id, data) {
     data.up_time = yapi.commons.time();
-    return this.model.update(
+    return this.model.updateOne(
       {
         _id: id
       },
@@ -73,7 +73,7 @@ class interfaceCat extends baseModel {
   }
 
   upCatIndex(id, index) {
-    return this.model.update(
+    return this.model.updateOne(
       {
         _id: id
       },
