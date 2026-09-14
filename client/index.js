@@ -6,12 +6,13 @@ import 'antd/dist/reset.css';
 import 'json-schema-editor-visual/node_modules/antd/dist/antd.css';
 import './styles/common.scss';
 import './plugin';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
+import { ConfigProvider } from 'antd';
 import App from './Application';
 import { Provider } from 'react-redux';
 import createStore from './reducer/create';
-import { initSkin } from './theme';
+import { initSkin, useSkinTheme } from './theme';
 
 // 由于 antd 组件的默认文案是英文，所以需要修改为中文
 import zhCN from 'antd/locale/zh_CN';
@@ -20,10 +21,21 @@ initSkin();
 
 const store = createStore();
 
+// 根组件消费皮肤主题:useSkinTheme 内部订阅 theme.js 的发布订阅,
+// setSkin/initSkin 应用皮肤后通知,ConfigProvider 的 theme 随 getThemeConfig(skin) 即时切换。
+function ThemedRoot({ children }) {
+  const skinTheme = useSkinTheme();
+  return (
+    <ConfigProvider locale={zhCN} theme={skinTheme}>
+      {children}
+    </ConfigProvider>
+  );
+}
+
 createRoot(document.getElementById('yapi')).render(
   <Provider store={store}>
-    <ConfigProvider locale={zhCN}>
+    <ThemedRoot>
       <App />
-    </ConfigProvider>
+    </ThemedRoot>
   </Provider>
 );
