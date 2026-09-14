@@ -6,6 +6,7 @@
  * 已知简化:相对 theme.less(企业默认)仅覆盖皮肤敏感变量;@font-size-base/@icon-url 与 theme.less 对齐。
  */
 @import '~antd/dist/antd.less';
+@import './baseline.less'; // YApi 基线变量(布局尺寸/输入框/表格等,后定义优先被下方皮肤差异覆盖)
 
 // -------- Colors -----------
 @primary-color          : #a05ce6;

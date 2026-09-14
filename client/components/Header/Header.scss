@@ -90,6 +90,11 @@
     height: .54rem;
     display: flex;
     align-items: center;
+    // 皮肤主题 CSS(后注入)中的 antd 全局规则 ul{margin-bottom:1em} 会晚于
+    // index.css 的通用重置生效,导致工具栏垂直居中偏移;此处显式归零,与皮肤无关。
+    ul {
+      margin: 0;
+    }
     .item-search {
       width: 2rem;
     }
