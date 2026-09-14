@@ -1,5 +1,5 @@
 import React, { PureComponent as Component } from 'react';
-import ReactDOM from 'react-dom';
+import { createRoot } from 'react-dom/client';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import { Route, BrowserRouter as Router } from 'react-router-dom';
@@ -100,7 +100,8 @@ export default class App extends Component {
     // http://reacttraining.cn/web/api/BrowserRouter/getUserConfirmation-func
     let container = document.createElement('div');
     document.body.appendChild(container);
-    ReactDOM.render(<MyPopConfirm msg={msg} callback={callback} />, container);
+    // React 18 每次 showConfirm 都新建独立容器，单独建 root 渲染，无需跨容器复用
+    createRoot(container).render(<MyPopConfirm msg={msg} callback={callback} />);
   };
 
   route = status => {

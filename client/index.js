@@ -3,7 +3,7 @@ import './styles/theme.less';
 import { ConfigProvider } from 'antd';
 import './plugin';
 import React from 'react';
-import ReactDOM from 'react-dom';
+import { createRoot } from 'react-dom/client';
 import App from './Application';
 import { Provider } from 'react-redux';
 import createStore from './reducer/create';
@@ -16,11 +16,10 @@ initSkin();
 
 const store = createStore();
 
-ReactDOM.render(
+createRoot(document.getElementById('yapi')).render(
   <Provider store={store}>
     <ConfigProvider locale={zhCN}>
       <App />
     </ConfigProvider>
-  </Provider>,
-  document.getElementById('yapi')
+  </Provider>
 );
