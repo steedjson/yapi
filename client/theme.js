@@ -26,30 +26,42 @@ const STORAGE_KEY = 'yapi-skin';
 
 /**
  * 皮肤 → antd5 theme 映射(模块级缓存,引用稳定,避免 ConfigProvider 无效重算)。
- * enterprise 为 undefined 即 antd 默认主题。
+ * enterprise 钉住 YApi 基线(主色 #2395f1/13px 字号/32px 控件高),保持升级前观感。
  */
 const THEME_CONFIGS = {
-  enterprise: undefined,
+  enterprise: {
+    token: {
+      colorPrimary: '#2395f1',
+      fontSize: 13,
+      controlHeight: 32,
+      borderRadius: 4,
+      colorBgLayout: '#eceef1'
+    },
+    components: { Layout: { siderBg: '#fff' } }
+  },
   gov: {
     token: {
       colorPrimary: '#1e4f9c',
       borderRadius: 2,
       colorBgLayout: '#f0f2f5'
-    }
+    },
+    components: { Layout: { siderBg: '#fff' } }
   },
   anime: {
     token: {
       colorPrimary: '#a05ce6',
       borderRadius: 12,
       colorBgLayout: '#fff7fb'
-    }
+    },
+    components: { Layout: { siderBg: '#fff' } }
   },
   dark: {
     algorithm: antdTheme.darkAlgorithm,
     token: {
       colorPrimary: '#2395f1',
       borderRadius: 4
-    }
+    },
+    components: { Layout: { siderBg: '#2a2a2a' } }
   }
 };
 

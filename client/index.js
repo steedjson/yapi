@@ -9,6 +9,7 @@ import './plugin';
 import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { ConfigProvider } from 'antd';
+import { StyleProvider } from '@ant-design/cssinjs';
 import App from './Application';
 import { Provider } from 'react-redux';
 import createStore from './reducer/create';
@@ -30,10 +31,14 @@ const store = createStore();
 // setSkin/initSkin 应用皮肤后通知,ConfigProvider 的 theme 随 getThemeConfig(skin) 即时切换。
 function ThemedRoot({ children }) {
   const skinTheme = useSkinTheme();
+  // hashPriority high: cssinjs 规则以 .css-hash 前缀提升特异性,压过显式加载的
+  // json-schema-editor-visual 内嵌 antd3 全量样式(否则 antd3 默认蓝覆盖皮肤 token)
   return (
-    <ConfigProvider locale={zhCN} theme={skinTheme}>
-      {children}
-    </ConfigProvider>
+    <StyleProvider hashPriority="high">
+      <ConfigProvider locale={zhCN} theme={skinTheme}>
+        {children}
+      </ConfigProvider>
+    </StyleProvider>
   );
 }
 
