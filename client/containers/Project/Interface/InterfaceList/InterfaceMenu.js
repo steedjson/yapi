@@ -576,36 +576,52 @@ class InterfaceMenu extends Component {
   };
   // 数据过滤
   /**
-   * @param {any} list
+   * 递归收集分类及其所有子分类的 key（搜索命中后用于自动展开）
+   * @param {any} cat
+   * @param {any[]} arr
+   * @returns {void}
+   */
+  collectCatKeys = (cat, arr) => {
+    arr.push('cat_' + cat._id);
+    (cat.children || []).forEach((/** @type {any} */ child) => this.collectCatKeys(child, arr));
+  };
+
+  /**
+   * 递归过滤分类树：分类名命中则保留整棵子树；
+   * 否则按关键字过滤该分类下的接口与子分类，命中才保留。
+   * @param {any[]} list
    * @returns {any}
    */
   filterList = list => {
     let that = this;
     let arr = /** @type {any[]} */ ([]);
-    let menuList = produce(list, draftList => {
-      draftList.filter((/** @type {any} */ item) => {
-        let interfaceFilter = /** @type {any} */ (false);
-        // arr = [];
-        if (item.name.indexOf(that.state.filter) === -1) {
-          item.list = item.list.filter((/** @type {any} */ inter) => {
-            if (
-              inter.title.indexOf(that.state.filter) === -1 &&
-              inter.path.indexOf(that.state.filter) === -1
-            ) {
-              return false;
-            }
-            //arr.push('cat_' + inter.catid)
-            interfaceFilter = true;
-            return true;
-          });
-          arr.push('cat_' + item._id);
-          return interfaceFilter === true;
+    const filterChildren = (/** @type {any[]} */ draftList) => {
+      const kept = draftList.filter((/** @type {any} */ item) => {
+        // 分类名命中：保留整棵子树并展开全部层级
+        if (item.name.indexOf(that.state.filter) !== -1) {
+          that.collectCatKeys(item, arr);
+          return true;
         }
-        arr.push('cat_' + item._id);
-        return true;
+        // 过滤当前分类下的接口
+        item.list = (item.list || []).filter((/** @type {any} */ inter) => {
+          return (
+            inter.title.indexOf(that.state.filter) !== -1 ||
+            inter.path.indexOf(that.state.filter) !== -1
+          );
+        });
+        // 递归过滤子分类
+        item.children = filterChildren(item.children || []);
+        const kept = item.list.length > 0 || item.children.length > 0;
+        if (kept) arr.push('cat_' + item._id);
+        return kept;
       });
+      // 原地替换 draft 内容：immer 的 recipe 不得既返回新值又修改 draft
+      draftList.splice(0, draftList.length, ...kept);
+      return draftList;
+    };
+    const menuList = produce(list, draftList => {
+      filterChildren(draftList);
     });
-
     return { menuList, arr };
   };
 
