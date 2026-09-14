@@ -208,6 +208,16 @@ let routerConfig = {
       action: 'changeRole',
       path: 'change_role',
       method: 'post'
+    },
+    {
+      action: 'getSkinConfig',
+      path: 'skin_config',
+      method: 'get'
+    },
+    {
+      action: 'setSkinConfig',
+      path: 'skin_config',
+      method: 'post'
     }
   ],
   project: [

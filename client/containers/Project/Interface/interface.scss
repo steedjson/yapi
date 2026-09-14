@@ -168,7 +168,7 @@
   background: var(--sk-bg-component);
   .caseContainer {
     table {
-      border-radius: 4px;
+      border-radius: var(--sk-radius);
       // border-collapse: collapse;
     }
     .ant-table-small .ant-table-thead > tr > th {

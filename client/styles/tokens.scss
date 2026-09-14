@@ -25,6 +25,9 @@
   --sk-text: #333;                  // 基准文字(当前页面层无 #333 硬编码,为后续换肤预留)
   --sk-text-on-header: #fff;        // 深色顶栏上的文字(面包屑等)
   --sk-text-on-header-muted: #ccc;  // 深色顶栏上的弱文字(工具栏图标/链接)
+  // 深色头块内的半透明文字(与原 mixin.scss $color-white / $color-white-secondary 同值)
+  --sk-text-on-header-strong: rgba(255, 255, 255, 0.85);
+  --sk-text-on-header-dim: rgba(255, 255, 255, 0.67);
   --sk-text-secondary: #6b6c6d;     // 次级正文(动态时间线正文)
   --sk-text-tertiary: #7b7b7b;      // 三级描述文字(Mock 展示地址等)
   --sk-text-muted: #919191;         // 弱化说明文字(panel 描述等)
@@ -33,4 +36,7 @@
   --sk-border: #d9d9d9;             // 常规边框(theme.less @border-color-base)
   --sk-border-split: #e9e9e9;       // 组件内分隔线(theme.less @border-color-split)
   --sk-border-light: #eee;          // 更浅分隔线/描边
+
+  // ---- 形状 ----
+  --sk-radius: 4px;                 // 常规组件圆角(theme.less @border-radius-base 同值)
 }

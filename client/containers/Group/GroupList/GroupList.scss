@@ -6,11 +6,11 @@
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
              "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei",
              SimSun, sans-serif;
-    background-color: $color-bg-dark;
-    color: $color-white;
+    background-color: var(--sk-bg-header);
+    color: var(--sk-text-on-header-strong);
     padding: .24rem .24rem 0;
     .curr-group-name {
-      color: $color-white;
+      color: var(--sk-text-on-header-strong);
       font-size: .22rem;
       display: flex;
       justify-content: space-between;
@@ -59,7 +59,7 @@
       }
     }
     .curr-group-desc {
-      color: $color-white-secondary;
+      color: var(--sk-text-on-header-dim);
       font-size: 13px;
       max-height: 54px;
       margin-top: .16rem;
@@ -73,9 +73,9 @@
       font-size: 14px;
       margin-left: .08rem;
       cursor: pointer;
-      border: 1px solid $color-white;
+      border: 1px solid var(--sk-text-on-header-strong);
       padding: 6px 12px;
-      border-radius: 4px;
+      border-radius: var(--sk-radius);
       transition: all .2s;
     }
     .delete-group:hover, .edit-group:hover {
@@ -87,19 +87,19 @@
     padding: 16px 24px;
     display: flex;
     justify-content: space-around;
-    background-color: $color-bg-dark;
+    background-color: var(--sk-bg-header);
     .search {
       flex-grow: 1;
     }
     .ant-input {
-      color: $color-white;
-      background-color: $color-bg-dark;
+      color: var(--sk-text-on-header-strong);
+      background-color: var(--sk-bg-header);
     }
     .ant-input::-webkit-input-placeholder { /* Chrome/Opera/Safari */
-      color: $color-white-secondary;
+      color: var(--sk-text-on-header-dim);
     }
     .ant-input-suffix {
-      color: $color-white;
+      color: var(--sk-text-on-header-strong);
     }
   }
   .group-list {
@@ -115,7 +115,7 @@
     }
     .group-item:hover {
       // background: #34495E;
-      // color: $color-white;
+      // color: var(--sk-text-on-header-strong);
     }
     .group-item.selected {
       // background: #34495E;

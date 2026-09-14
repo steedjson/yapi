@@ -13,6 +13,28 @@ const clientPluginModule = require('./clientPluginModule');
 // standalone 入口复用插件发现逻辑，但不加载 YKit 配置文件。
 clientPluginModule.initPlugins(path.resolve(__dirname, '..'));
 
+// mini-css-extract-plugin@0.9 不支持 filename 传函数，无法按 chunk 名切换命名模板。
+// 皮肤主题(theme-*)需要无 contenthash 的固定文件名供运行时按皮肤名拼 URL 注入 link，
+// 故在 emit 阶段把 `theme-*@[contenthash].css` 重命名为 `theme-*@prd.css`
+// (开发模式产物本身就是固定的 `[name]@dev.css`，无需处理)。
+// AssetsPlugin/CompressionPlugin 排在其后注册，产出的 assets.js 与 .gz 均基于重命名结果。
+const THEME_CSS_RE = /^(theme-[a-z]+)@[^@]+\.css$/;
+class ThemeCssFixedNamePlugin {
+  apply(compiler) {
+    compiler.hooks.emit.tap('ThemeCssFixedNamePlugin', compilation => {
+      Object.keys(compilation.assets).forEach(name => {
+        const matched = name.match(THEME_CSS_RE);
+        if (!matched) return;
+        const fixed = matched[1] + '@prd.css';
+        if (name !== fixed) {
+          compilation.assets[fixed] = compilation.assets[name];
+          delete compilation.assets[name];
+        }
+      });
+    });
+  }
+}
+
 const root = path.resolve(__dirname, '..');
 const client = path.join(root, 'client');
 const isProduction = process.env.NODE_ENV === 'production';
@@ -36,7 +58,12 @@ const config = {
     index: [ ...(isDevelopment ? ['webpack-hot-middleware/client?path=/__webpack_hmr&reload=true'] : []), './index.js' ],
     lib: ['react', 'react-dom', 'redux', 'redux-promise', 'react-router', 'react-router-dom', 'prop-types', 'react-dnd-html5-backend', 'react-dnd', 'reactabular-table', 'reactabular-dnd', 'table-resolver'],
     lib2: ['brace', 'json5', 'url', 'axios'],
-    lib3: ['mockjs', 'moment', 'recharts']
+    lib3: ['mockjs', 'moment', 'recharts'],
+    // 皮肤预编译主题:纯 less 入口,产物为固定名 CSS(无 contenthash),由 client/theme.js
+    // 运行时按需注入 <link id="skin-theme-link"> 加载。
+    'theme-gov': './styles/themes/gov.less',
+    'theme-anime': './styles/themes/anime.less',
+    'theme-dark': './styles/themes/dark.less'
   },
   devtool: isProduction ? false : 'cheap-module-source-map',
   output: {
@@ -125,7 +152,20 @@ const config = {
         // 关闭 webpack 4 默认注入的 vendors cacheGroup，避免把已分好组的
         // node_modules 模块再次拆出 vendors~* 杂散 chunk。
         vendors: false,
-        default: { minChunks: 2, priority: -20, reuseExistingChunk: true }
+        default: {
+          // 样式模块不参与 default 共享拆分：theme-* 入口与 index 共享 antd less 模块，
+          // 若被 default 组(minChunks:2)抽出会生成 index~theme-* 的 CSS chunk，
+          // 导致 index.css 丢失 antd 样式且页面无引用来源。排除样式后样式一律留在
+          // 所属入口 chunk(index.css 与 theme-*.css 各自完整，行为与单入口时代一致)；
+          // 对 JS 模块无影响(等价于原先的无 test)。
+          test: module => {
+            const resource = module.resource || '';
+            return !/\.(css|less|sass|scss)$/.test(resource);
+          },
+          minChunks: 2,
+          priority: -20,
+          reuseExistingChunk: true
+        }
       }
     }
   },
@@ -134,6 +174,7 @@ const config = {
       filename: isDevelopment ? '[name]@dev.css' : '[name]@[contenthash].css'
     }),
     ...(isDevelopment ? [new webpack.HotModuleReplacementPlugin()] : []),
+    ...(isProduction ? [new ThemeCssFixedNamePlugin()] : []),
     new webpack.DefinePlugin(
       clientBuildConfig.getDefineValues(packageInfo, yapi.WEBCONFIG, isProduction ? 'prd' : 'dev')
     ),

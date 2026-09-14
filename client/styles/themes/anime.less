@@ -1,0 +1,54 @@
+/**
+ * 轻二次元主题(预编译 antd 变量)
+ * 结构:先整体引入 antd 默认主题,再覆盖变量;页面层配套令牌见 client/styles/skins.scss。
+ * 注意:顶栏为浅粉底,页面层 --sk-text-on-header 已在 skins.scss 成对换成深玫瑰色;
+ *       Header 用户下拉仍为 antd dark Menu(深色浮层),与浅粉顶栏形成浮层对比,属预期。
+ * 已知简化:相对 theme.less(企业默认)仅覆盖皮肤敏感变量;@font-size-base/@icon-url 与 theme.less 对齐。
+ */
+@import '~antd/dist/antd.less';
+
+// -------- Colors -----------
+@primary-color          : #a05ce6;
+@info-color             : #a05ce6;
+@success-color          : #57cf27;
+@error-color            : #ff561b;
+@highlight-color        : #ff561b;
+@warning-color          : #fac200;
+@normal-color           : #e8d5f5;
+
+// 主色色阶重算(与 theme.less 相同机制:antd 引入后 colorPalette 已注册)
+@primary-1: color(~`colorPalette("@{primary-color}", 1)`);
+@primary-2: color(~`colorPalette("@{primary-color}", 2)`);
+@primary-3: color(~`colorPalette("@{primary-color}", 3)`);
+@primary-4: color(~`colorPalette("@{primary-color}", 4)`);
+@primary-5: color(~`colorPalette("@{primary-color}", 5)`);
+@primary-6: @primary-color;
+@primary-7: color(~`colorPalette("@{primary-color}", 7)`);
+@primary-8: color(~`colorPalette("@{primary-color}", 8)`);
+@primary-9: color(~`colorPalette("@{primary-color}", 9)`);
+@primary-10: color(~`colorPalette("@{primary-color}", 10)`);
+
+// -------- Base scaffolding(与 theme.less 对齐,不做皮肤差异) -----------
+@font-size-base         : 13px;
+@icon-url               : "/iconfont/iconfont";
+
+// -------- 皮肤差异 -----------
+@body-background        : #fff7fb;
+@layout-body-background : #fff7fb;   // antd 默认 #f0f2f5 不跟随 @body-background,需显式覆盖
+@component-background   : #fff;
+@layout-header-background: #f8c8dc;   // 浅粉顶栏(文字对比由页面层令牌保证)
+@layout-sider-background: #fff;
+// 用户下拉 Menu theme="dark" 默认跟随 @layout-header-background(浅粉),
+// 白字浅粉底不可读,显式改为深玫瑰浮层(与页面层 text-on-header 同源),浅色文字可读
+@menu-dark-bg           : #703d59;
+@menu-dark-submenu-bg   : #5d3149;
+@border-radius-base     : 12px;
+@border-radius-sm       : 8px;
+@border-color-base      : #eec9de;
+@border-color-split     : #f5d9e9;
+@text-color             : #524050;
+@text-color-secondary   : fade(#524050, 60%);
+@heading-color          : fade(#3d2f3b, 88%);
+@table-header-bg        : #fdf0f7;
+@background-color-base  : #fdf0f7;
+@input-addon-bg         : #fdf0f7;

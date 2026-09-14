@@ -68,7 +68,7 @@ $color-white: #fff;
       width: 100%;
       border: .01rem solid $color-grey;
       box-shadow : 0 0 3px 1px $color-grey;
-      border-radius: .04rem;
+      border-radius: var(--sk-radius);
     }
   }
 }

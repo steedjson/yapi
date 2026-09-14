@@ -88,7 +88,7 @@
   }
   .colValue{
     display: inline-block;
-    border-radius: 4px;
+    border-radius: var(--sk-radius);
     color: #00a854;
     background: #cfefdf;
     border-color: #cfefdf;

@@ -122,7 +122,7 @@ class Interface extends Component {
               height: '100%',
               margin: '0 24px 0 16px',
               overflow: 'initial',
-              backgroundColor: '#fff'
+              backgroundColor: 'var(--sk-bg-component)'
             }}
           >
             <div className="right-content">

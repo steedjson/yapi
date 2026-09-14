@@ -1,0 +1,63 @@
+/**
+ * 暗色主题(预编译 antd 变量)—— 尽力而为的半成品
+ * 已知限制:
+ * 1. antd 3 无官方暗色主题,深色覆盖以高频组件为主,低频组件(日期面板/传输/级联等)
+ *    仍会露出浅色底;
+ * 2. 页面层残留的少量字面色(链接蓝 #4eaef3、状态色、Home 营销渐变等)仍是浅色取值;
+ * 3. 主色沿用 #2395f1(在深底上可读),如需夜间护眼可在后续版本单独调低饱和度。
+ * 页面层配套令牌见 client/styles/skins.scss。
+ */
+@import '~antd/dist/antd.less';
+
+// -------- Colors -----------
+@primary-color          : #2395f1;
+@info-color             : #2395f1;
+@success-color          : #57cf27;
+@error-color            : #ff561b;
+@highlight-color        : #ff561b;
+@warning-color          : #fac200;
+@normal-color           : #434343;
+
+// 主色色阶重算(与 theme.less 相同机制:antd 引入后 colorPalette 已注册)
+@primary-1: color(~`colorPalette("@{primary-color}", 1)`);
+@primary-2: color(~`colorPalette("@{primary-color}", 2)`);
+@primary-3: color(~`colorPalette("@{primary-color}", 3)`);
+@primary-4: color(~`colorPalette("@{primary-color}", 4)`);
+@primary-5: color(~`colorPalette("@{primary-color}", 5)`);
+@primary-6: @primary-color;
+@primary-7: color(~`colorPalette("@{primary-color}", 7)`);
+@primary-8: color(~`colorPalette("@{primary-color}", 8)`);
+@primary-9: color(~`colorPalette("@{primary-color}", 9)`);
+@primary-10: color(~`colorPalette("@{primary-color}", 10)`);
+
+// -------- Base scaffolding(与 theme.less 对齐,不做皮肤差异) -----------
+@font-size-base         : 13px;
+@icon-url               : "/iconfont/iconfont";
+
+// -------- 皮肤差异(深色) -----------
+@body-background        : #1f1f1f;
+@layout-body-background : #1f1f1f;   // antd 默认浅灰 #f0f2f5 且不跟随 @body-background,必须显式覆盖
+@component-background   : #2a2a2a;
+@layout-header-background: #161616;
+@layout-sider-background: #2a2a2a;
+@border-color-base      : #434343;
+@border-color-split     : #3a3a3a;
+@text-color             : #d9d9d9;
+@text-color-secondary   : fade(#d9d9d9, 65%);
+@heading-color          : fade(#d9d9d9, 88%);
+@text-color-dark        : fade(#d9d9d9, 91%);
+@heading-color-dark     : fade(#d9d9d9, 97%);
+@disabled-color         : fade(#d9d9d9, 40%);
+@background-color-base  : #383838;    // 禁用/置灰底
+@background-color-active: #333333;
+@table-header-bg        : #383838;
+@table-header-sort-bg   : #333333;
+@table-selected-row-bg  : #333333;
+@input-addon-bg         : #383838;
+@input-bg               : #2a2a2a;
+@tag-default-bg         : #383838;
+@tag-default-color      : #d9d9d9;
+@tooltip-bg             : rgba(80, 80, 80, .92);
+@tooltip-arrow-color    : rgba(80, 80, 80, .92);
+@modal-mask-bg          : rgba(0, 0, 0, .7);
+@shadow-color           : rgba(0, 0, 0, .45);

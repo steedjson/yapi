@@ -191,7 +191,7 @@ class ProjectEnv extends Component {
     return (
       <div className="m-env-panel">
         <Layout className="project-env">
-          <Sider width={195} style={{ background: '#fff' }}>
+          <Sider width={195} style={{ background: 'var(--sk-bg-component)' }}>
             <div style={{ height: '100%', borderRight: 0 }}>
               <Row className="first-menu-item menu-item">
                 <div className="env-icon-style">
@@ -211,7 +211,7 @@ class ProjectEnv extends Component {
             </div>
           </Sider>
           <Layout className="env-content">
-            <Content style={{ background: '#fff', padding: 24, margin: 0, minHeight: 280 }}>
+            <Content style={{ background: 'var(--sk-bg-component)', padding: 24, margin: 0, minHeight: 280 }}>
               <ProjectEnvContent
                 projectMsg={this.state.currentEnvMsg}
                 onSubmit={e => this.onSubmit(e, currentKey)}

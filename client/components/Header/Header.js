@@ -8,6 +8,7 @@ import { checkLoginState, logoutActions, loginTypeAction } from '../../reducer/m
 import { changeMenuItem } from '../../reducer/modules/menu';
 import { withRouter } from 'react-router';
 import Srch from './Search/Search';
+import { SKINS, getSkin, setSkin, setGlobalSkin } from '../../theme';
 const { Header } = Layout;
 import LogoSVG from '../LogoSVG/index.js';
 import Breadcrumb from '../Breadcrumb/Breadcrumb.js';
@@ -55,6 +56,45 @@ const MenuUser = props => (
         </Menu.Item>
       );
     })}
+    <Menu.SubMenu
+      key="skin"
+      title={
+        <span>
+          <Icon type="skin" />界面皮肤
+        </span>
+      }
+    >
+      {SKINS.map(item => (
+        <Menu.Item key={'skin-' + item.name}>
+          <a onClick={() => props.onSelectSkin(item.name)}>
+            <Icon
+              type="check"
+              style={{ visibility: props.skin === item.name ? 'visible' : 'hidden' }}
+            />
+            {item.label}
+          </a>
+        </Menu.Item>
+      ))}
+    </Menu.SubMenu>
+    {props.role === 'admin' ? (
+      <Menu.SubMenu
+        key="global-skin"
+        title={
+          <span>
+            <Icon type="global" />全局默认皮肤
+          </span>
+        }
+      >
+        {SKINS.map(item => (
+          <Menu.Item key={'global-skin-' + item.name}>
+            <a onClick={() => props.onSelectGlobalSkin(item.name)}>
+              <Icon type="check" style={{ visibility: 'hidden' }} />
+              {item.label}
+            </a>
+          </Menu.Item>
+        ))}
+      </Menu.SubMenu>
+    ) : null}
     <Menu.Item key="9">
       <a onClick={props.logout}>
         <Icon type="logout" />退出
@@ -99,6 +139,9 @@ MenuUser.propTypes = {
   msg: PropTypes.string,
   role: PropTypes.string,
   uid: PropTypes.number,
+  skin: PropTypes.string,
+  onSelectSkin: PropTypes.func,
+  onSelectGlobalSkin: PropTypes.func,
   relieveLink: PropTypes.func,
   logout: PropTypes.func
 };
@@ -168,6 +211,9 @@ const ToolUser = props => {
               msg={props.msg}
               uid={props.uid}
               role={props.role}
+              skin={props.skin}
+              onSelectSkin={props.onSelectSkin}
+              onSelectGlobalSkin={props.onSelectGlobalSkin}
               relieveLink={props.relieveLink}
               logout={props.logout}
             />
@@ -192,6 +238,9 @@ ToolUser.propTypes = {
   msg: PropTypes.string,
   role: PropTypes.string,
   uid: PropTypes.number,
+  skin: PropTypes.string,
+  onSelectSkin: PropTypes.func,
+  onSelectGlobalSkin: PropTypes.func,
   relieveLink: PropTypes.func,
   logout: PropTypes.func,
   groupList: PropTypes.array,
@@ -224,7 +273,27 @@ ToolUser.propTypes = {
 export default class HeaderCom extends Component {
   constructor(props) {
     super(props);
+    this.state = {
+      skin: getSkin()
+    };
   }
+
+  selectSkin = name => {
+    if (setSkin(name)) {
+      this.setState({ skin: getSkin() });
+    }
+  };
+
+  selectGlobalSkin = name => {
+    setGlobalSkin(name)
+      .then(() => {
+        const matched = SKINS.filter(item => item.name === name)[0];
+        message.success('全局默认皮肤已设置为「' + (matched ? matched.label : name) + '」');
+      })
+      .catch(() => {
+        // 失败提示已由 theme.setGlobalSkin 统一弹出
+      });
+  };
 
   static propTypes = {
     router: PropTypes.object,
@@ -312,6 +381,9 @@ export default class HeaderCom extends Component {
             {login ? (
               <ToolUser
                 {...{ studyTip, study, user, msg, uid, role, imageUrl }}
+                skin={this.state.skin}
+                onSelectSkin={this.selectSkin}
+                onSelectGlobalSkin={this.selectGlobalSkin}
                 relieveLink={this.relieveLink}
                 logout={this.logout}
               />

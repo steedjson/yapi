@@ -24,7 +24,7 @@
     background: var(--sk-bg-component);
     display: block;
     min-height: 550px;
-    border-radius: 4px;
+    border-radius: var(--sk-radius);
     .news-timeline{
       padding-left: 125px;
       color: var(--sk-text-secondary);      
@@ -193,7 +193,7 @@
           background-color: var(--sk-bg-component);
           background-image: none;
           border: 1px solid var(--sk-border);
-          border-radius: 4px;
+          border-radius: var(--sk-radius);
           -webkit-transition: all .3s;
           transition: all .3s;
           overflow-x:auto;

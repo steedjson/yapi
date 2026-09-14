@@ -46,7 +46,7 @@
   .m-user-img {
     width: .32rem;
     height: .32rem;
-    border-radius: .04rem;
+    border-radius: var(--sk-radius);
   }
   .m-user-name {
     margin-left: 8px;

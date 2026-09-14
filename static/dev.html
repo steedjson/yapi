@@ -7,6 +7,17 @@
 <meta name="description" content="YApi 是高效、易用、功能强大的 api 管理平台，旨在为开发、产品、测试人员提供更优雅的接口管理服务。可以帮助开发者轻松创建、发布、维护 API，YApi 还为用户提供了优秀的交互体验，开发人员只需利用平台提供的接口数据写入工具以及简单的点击操作就可以实现接口的管理。" />
 <title>YApi-高效、易用、功能强大的可视化接口管理平台</title>
 <link rel="icon" type="image/png" sizes="192x192" href="/image/favicon.png">
+<script>
+    // 防闪烁:在样式加载前同步恢复本地皮肤偏好(与 client/theme.js 的存储键/白名单保持一致)
+    (function() {
+        try {
+            var skin = localStorage.getItem('yapi-skin');
+            if (skin && ['enterprise', 'gov', 'anime', 'dark'].indexOf(skin) > -1 && skin !== 'enterprise') {
+                document.documentElement.setAttribute('data-skin', skin);
+            }
+        } catch (e) {}
+    })();
+</script>
 <link rel="stylesheet" href="http://127.0.0.1:4000/prd/index@dev.css">
 </head>
 <body>

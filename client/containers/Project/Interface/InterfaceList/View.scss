@@ -70,7 +70,7 @@
     .colMethod{
         .colValue{
             display: inline-block;
-            border-radius: 4px;
+            border-radius: var(--sk-radius);
             color: #00a854;
             background: #cfefdf;
             border-color: #cfefdf;
@@ -88,7 +88,7 @@
             padding: 0 5px;
             line-height: 23px;
             display: inline-block;
-            border-radius: 4px;
+            border-radius: var(--sk-radius);
             color: white;
         }
     }
@@ -103,7 +103,7 @@
     .tag-method {
       padding: 4px 6px;
       margin-right: 8px;
-      border-radius: 4px;
+      border-radius: var(--sk-radius);
       vertical-align: middle;
     }
 }

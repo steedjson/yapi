@@ -1,0 +1,84 @@
+/**
+ * 皮肤变量覆盖层
+ *
+ * 通过 html 根节点上的 data-skin 属性切换(body 语义上等价,统一挂在 documentElement):
+ *   <html data-skin="gov|anime|dark">  —— 不设置或值为 enterprise 时使用 tokens.scss 默认值。
+ *
+ * 约束:
+ * 1. 只覆盖需要变化的令牌;同值异令牌的配对项必须一起覆盖:
+ *    - bg-header(深色头) 与 text-on-header / text-on-header-muted 成对;
+ *    - bg-component 与 primary-contrast 成对(contrast 默认 #fff 在浅色组件底上不成立时才需要动);
+ *    - text-on-header 的取值必须保证 bg-header 上的对比度。
+ * 2. antd 组件内部配色由 client/styles/themes/*.less 预编译主题控制,本文件只管页面层令牌。
+ */
+
+// ---- 政务风:深蓝 + 冷灰,方角 ----
+:root[data-skin='gov'] {
+  --sk-primary: #1e4f9c;
+  // primary-contrast(#fff) 在深蓝主色上继续成立,无需覆盖
+  --sk-bg-body: #f0f2f5;
+  // bg-component(#fff) 不变
+  --sk-bg-header: #16325c;            // 深蓝顶栏
+  --sk-text-on-header-muted: #b9c6dd; // 与深蓝顶栏配对,弱文字提亮偏冷
+  // text-on-header(#fff) 在深蓝顶栏上继续成立,无需覆盖
+  --sk-bg-hover: #f7f8fa;
+  --sk-bg-secondary: #f4f6f9;
+  --sk-bg-muted: #eceef2;
+  --sk-bg-gray: #e8ebf0;
+  --sk-bg-faint: #f8f9fb;
+  --sk-text-secondary: #56637c;
+  --sk-text-tertiary: #66738c;
+  --sk-text-muted: #8792a5;
+  --sk-border: #d9dce3;
+  --sk-border-split: #e5e8ef;
+  --sk-border-light: #eef0f4;
+  --sk-radius: 2px;
+}
+
+// ---- 二次元风:粉紫浅色,大圆角 ----
+:root[data-skin='anime'] {
+  --sk-primary: #a05ce6;
+  // primary-contrast(#fff) 在紫色主色上继续成立,无需覆盖
+  --sk-bg-body: #fff7fb;
+  // bg-component(#fff) 不变
+  --sk-bg-header: #f8c8dc;            // 浅粉顶栏
+  --sk-text-on-header: #703d59;       // 配对:浅粉底必须换深玫瑰字,否则不可读
+  --sk-text-on-header-muted: #a86487; // 配对:浅粉底上的弱文字
+  // 配对:浅粉头块上的半透明文字(默认半透明白在浅粉底上不可读)
+  --sk-text-on-header-strong: #703d59;
+  --sk-text-on-header-dim: rgba(112, 61, 89, 0.7);
+  --sk-bg-hover: #fef3f9;
+  --sk-bg-secondary: #fdf0f7;
+  --sk-bg-muted: #fbe9f3;
+  --sk-bg-gray: #f9e2ee;
+  --sk-bg-faint: #fef8fc;
+  --sk-text-secondary: #8c6f80;
+  --sk-text-tertiary: #99788a;
+  --sk-text-muted: #ac93a1;
+  --sk-border: #eec9de;
+  --sk-border-split: #f5d9e9;
+  --sk-border-light: #fae8f1;
+  --sk-radius: 12px;
+}
+
+// ---- 暗色(尽力而为的半成品,已知限制:antd 组件内部深色依赖 themes/dark.less,
+//      页面层残留的少量字面色(链接蓝/状态色等)仍是浅色主题取值) ----
+:root[data-skin='dark'] {
+  --sk-bg-body: #1f1f1f;
+  --sk-bg-component: #2a2a2a;
+  --sk-bg-header: #161616;
+  // text-on-header(#fff)/muted(#ccc) 在深色顶栏上继续成立,无需覆盖
+  --sk-bg-hover: #333333;
+  --sk-bg-secondary: #303030;
+  --sk-bg-muted: #383838;
+  --sk-bg-gray: #242424;
+  --sk-bg-faint: #333333;
+  --sk-text: #d9d9d9;
+  --sk-text-secondary: #a8b0bc;
+  --sk-text-tertiary: #98a0ab;
+  --sk-text-muted: #828a96;
+  --sk-border: #434343;
+  --sk-border-split: #3a3a3a;
+  --sk-border-light: #333333;
+  // primary 与 primary-contrast 沿用默认(#2395f1/#fff),在暗色底上成立
+}

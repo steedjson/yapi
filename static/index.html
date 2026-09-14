@@ -8,6 +8,17 @@
 <title>YApi-高效、易用、功能强大的可视化接口管理平台</title>
 <link rel="icon" type="image/png" sizes="192x192" href="/image/favicon.png">
 <script>
+    // 防闪烁:在样式加载前同步恢复本地皮肤偏好(与 client/theme.js 的存储键/白名单保持一致)
+    (function() {
+        try {
+            var skin = localStorage.getItem('yapi-skin');
+            if (skin && ['enterprise', 'gov', 'anime', 'dark'].indexOf(skin) > -1 && skin !== 'enterprise') {
+                document.documentElement.setAttribute('data-skin', skin);
+            }
+        } catch (e) {}
+    })();
+</script>
+<script>
     document.write('<script src="/prd/assets.js?v=' + Math.random() + '"><\/script>');
 </script>
 

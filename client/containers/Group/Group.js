@@ -89,7 +89,7 @@ export default class Group extends Component {
               height: '100%',
               margin: '0 24px 0 16px',
               overflow: 'initial',
-              backgroundColor: '#fff'
+              backgroundColor: 'var(--sk-bg-component)'
             }}
           >
             <Tabs type="card" className="m-tab tabs-large" style={{ height: '100%' }}>

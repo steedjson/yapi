@@ -1,0 +1,49 @@
+/**
+ * 政务风主题(预编译 antd 变量)
+ * 结构:先整体引入 antd 默认主题,再覆盖变量;页面层配套令牌见 client/styles/skins.scss。
+ * 已知简化:相对 theme.less(企业默认)仅覆盖皮肤敏感变量,其余沿用 antd 默认值;
+ * @font-size-base 与 @icon-url 必须与 theme.less 保持一致(字号 13px、本地 iconfont),
+ * 否则会出现与默认皮肤字号/图标不一致。
+ */
+@import '~antd/dist/antd.less';
+
+// -------- Colors -----------
+@primary-color          : #1e4f9c;
+@info-color             : #1e4f9c;
+@success-color          : #57cf27;
+@error-color            : #ff561b;
+@highlight-color        : #ff561b;
+@warning-color          : #fac200;
+@normal-color           : #d9d9d9;
+
+// 主色色阶重算(与 theme.less 相同机制:antd 引入后 colorPalette 已注册)
+@primary-1: color(~`colorPalette("@{primary-color}", 1)`);
+@primary-2: color(~`colorPalette("@{primary-color}", 2)`);
+@primary-3: color(~`colorPalette("@{primary-color}", 3)`);
+@primary-4: color(~`colorPalette("@{primary-color}", 4)`);
+@primary-5: color(~`colorPalette("@{primary-color}", 5)`);
+@primary-6: @primary-color;
+@primary-7: color(~`colorPalette("@{primary-color}", 7)`);
+@primary-8: color(~`colorPalette("@{primary-color}", 8)`);
+@primary-9: color(~`colorPalette("@{primary-color}", 9)`);
+@primary-10: color(~`colorPalette("@{primary-color}", 10)`);
+
+// -------- Base scaffolding(与 theme.less 对齐,不做皮肤差异) -----------
+@font-size-base         : 13px;
+@icon-url               : "/iconfont/iconfont";
+
+// -------- 皮肤差异 -----------
+@body-background        : #f0f2f5;
+@component-background   : #fff;
+@layout-header-background: #16325c;
+@layout-sider-background: #fff;      // 与 theme.less(企业)对齐,Sider 不跟随 header 深色
+@border-radius-base     : 2px;
+@border-radius-sm       : 2px;
+@border-color-base      : #d9dce3;
+@border-color-split     : #e5e8ef;
+@text-color             : fade(#12274f, 75%);
+@text-color-secondary   : fade(#12274f, 50%);
+@heading-color          : fade(#12274f, 85%);
+@table-header-bg        : #f4f6f9;
+@background-color-base  : #f4f6f9;
+@input-addon-bg         : #f4f6f9;

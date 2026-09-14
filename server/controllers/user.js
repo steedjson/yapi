@@ -1072,6 +1072,58 @@ class userController extends baseController {
       return (ctx.body = yapi.commons.resReturn(result, 422, e.message));
     }
   }
+
+  /**
+   * 获取全局默认皮肤
+   * @interface /user/skin_config
+   * @method GET
+   * @category user
+   * @returns {Object}
+   */
+
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
+   */
+  async getSkinConfig(ctx) {
+    try {
+      const skinStorage = require('../utils/storage.js')('skin_config');
+      const data = await skinStorage.getItem('default');
+      return (ctx.body = yapi.commons.resReturn({ skin: data || 'enterprise' }));
+    } catch (/** @type {any} */ e) {
+      return (ctx.body = yapi.commons.resReturn(null, 400, e.message));
+    }
+  }
+
+  /**
+   * 设置全局默认皮肤(仅 admin)
+   * @interface /user/skin_config
+   * @method POST
+   * @category user
+   * @param {String} skin 皮肤名,枚举 enterprise | gov | anime | dark
+   * @returns {Object}
+   */
+
+  /**
+   * @param {any} ctx Koa 请求上下文
+   * @returns {Promise<any>}
+   */
+  async setSkinConfig(ctx) {
+    if (this.getRole() !== 'admin') {
+      return (ctx.body = yapi.commons.resReturn(null, 402, '没有权限'));
+    }
+    const skin = ctx.request.body.skin;
+    if (['enterprise', 'gov', 'anime', 'dark'].indexOf(skin) === -1) {
+      return (ctx.body = yapi.commons.resReturn(null, 400, '皮肤参数不合法'));
+    }
+    try {
+      const skinStorage = require('../utils/storage.js')('skin_config');
+      await skinStorage.setItem('default', skin);
+      return (ctx.body = yapi.commons.resReturn({ skin: skin }));
+    } catch (/** @type {any} */ e) {
+      return (ctx.body = yapi.commons.resReturn(null, 400, e.message));
+    }
+  }
 }
 
 module.exports = userController;

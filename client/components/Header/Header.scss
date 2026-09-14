@@ -6,10 +6,10 @@
 
 .user-menu.ant-menu.ant-menu-dark .ant-menu-item-selected {
   background: var(--sk-bg-header);
-  color: rgba(255, 255, 255, 0.67);
+  color: var(--sk-text-on-header-dim);
 }
 .user-menu.ant-menu-dark .ant-menu-item-selected > a {
-  color: rgba(255, 255, 255, 0.67);
+  color: var(--sk-text-on-header-dim);
 }
 
 /* .header-box.css */
