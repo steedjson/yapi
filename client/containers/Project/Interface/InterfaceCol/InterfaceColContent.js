@@ -6,6 +6,12 @@ import { Link } from 'react-router-dom';
 //import constants from '../../../../constants/variable.js'
 import { Tooltip, Icon,Input, Button, Row, Col, Spin, Modal, message, Select, Switch } from 'antd';
 import {
+  CheckCircleFilled,
+  InfoCircleFilled,
+  ExclamationCircleFilled,
+  QuestionCircleOutlined
+} from '@ant-design/icons';
+import {
   fetchInterfaceColList,
   fetchCaseList,
   setColData,

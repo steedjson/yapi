@@ -4,6 +4,7 @@ import './ProjectToken.scss';
 import { getToken, updateToken } from '../../../../reducer/modules/project';
 import { connect } from 'react-redux';
 import { Icon, Tooltip, message, Modal } from 'antd';
+import { CopyOutlined, ReloadOutlined } from '@ant-design/icons';
 import copy from 'copy-to-clipboard';
 const confirm = Modal.confirm;
 

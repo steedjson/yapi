@@ -7,7 +7,6 @@ import {
   Modal,
   Select,
   Spin,
-  Icon,
   Collapse,
   Tooltip,
   Tabs,
@@ -16,6 +15,7 @@ import {
   Col,
   Alert
 } from 'antd';
+import { EditOutlined, PlusOutlined, QuestionCircleOutlined } from '@ant-design/icons';
 import constants from '../../constants/variable.js';
 import AceEditor from 'client/components/AceEditor/AceEditor';
 import _ from 'underscore';

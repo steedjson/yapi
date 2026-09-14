@@ -12,7 +12,7 @@ const config = require('./webpack.standalone.config');
 const compiler = webpack(config);
 const middleware = devMiddleware(compiler, { publicPath: '/prd/', quiet: false });
 const hot = hotMiddleware(compiler, { path: '/__webpack_hmr' });
-const html = fs.readFileSync(path.resolve(__dirname, '../static/dev.html'));
+const htmlPath = path.resolve(__dirname, '../static/dev.html');
 const port = Number(process.env.PORT || 4000);
 
 const staticRoot = path.resolve(__dirname, '../static');
@@ -33,6 +33,10 @@ const server = http.createServer((req, res) => {
   const reqUrl = (req.url || '').split('?')[0];
 
   // 支持开发页面跨域加载 iconfont 图标字体及图片，避免 404 和 CORS 导致的树形图标/折叠箭头失效。
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+
   if (reqUrl.startsWith('/iconfont/') || reqUrl.startsWith('/image/')) {
     const filePath = path.join(staticRoot, reqUrl);
     if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
@@ -46,7 +50,7 @@ const server = http.createServer((req, res) => {
 
   if (req.url === '/' || req.url === '/index.html') {
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.end(html);
+    res.end(fs.readFileSync(htmlPath));
     return;
   }
   hot(req, res, () => middleware(req, res, () => {

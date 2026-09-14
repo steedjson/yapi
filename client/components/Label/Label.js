@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
-import { Icon, Input, Tooltip } from 'antd';
+import { Input, Tooltip } from 'antd';
+import { EditOutlined, CheckOutlined, CloseOutlined } from '@ant-design/icons';
 import PropTypes from 'prop-types';
 import './Label.scss';
 

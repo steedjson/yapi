@@ -16,18 +16,29 @@
                 document.documentElement.setAttribute('data-skin', skin);
             }
         } catch (e) {}
+        window.onerror = function(message, source, lineno, colno, error) {
+            try {
+                window.__YAPI_LAST_ERROR = {
+                    message: String(message),
+                    source: source,
+                    lineno: lineno,
+                    colno: colno,
+                    stack: error && error.stack
+                };
+            } catch (err) {}
+        };
     })();
 </script>
-<link rel="stylesheet" href="http://127.0.0.1:4000/prd/index@dev.css">
+<link rel="stylesheet" href="http://127.0.0.1:4000/prd/index@dev.css?v=cjs6">
 </head>
 <body>
 <div id="yapi" style="height: 100%;"></div>
 
-<script src="http://127.0.0.1:4000/prd/manifest@dev.js"></script>
-<script src="http://127.0.0.1:4000/prd/lib3@dev.js"></script>
-<script src="http://127.0.0.1:4000/prd/lib2@dev.js"></script>
-<script src="http://127.0.0.1:4000/prd/lib@dev.js"></script>
-<script src="http://127.0.0.1:4000/prd/index@dev.js"></script>
+<script crossorigin src="http://127.0.0.1:4000/prd/manifest@dev.js?v=cjs6"></script>
+<script crossorigin src="http://127.0.0.1:4000/prd/lib3@dev.js?v=cjs6"></script>
+<script crossorigin src="http://127.0.0.1:4000/prd/lib2@dev.js?v=cjs6"></script>
+<script crossorigin src="http://127.0.0.1:4000/prd/lib@dev.js?v=cjs6"></script>
+<script crossorigin src="http://127.0.0.1:4000/prd/index@dev.js?v=cjs6"></script>
 
 
 
