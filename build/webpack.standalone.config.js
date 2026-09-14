@@ -90,7 +90,14 @@ const config = {
       },
       {
         test: /\.less$/,
-        use: [MiniCssExtractPlugin.loader, 'css-loader?sourceMap', 'less-loader?sourceMap']
+        use: [
+          MiniCssExtractPlugin.loader,
+          { loader: 'css-loader', options: { sourceMap: true } },
+          {
+            loader: 'less-loader',
+            options: { sourceMap: true, javascriptEnabled: true }
+          }
+        ]
       },
       {
         test: /\.(sass|scss)$/,
