@@ -1,14 +1,12 @@
 // @ts-check
-import React, { PureComponent as Component } from 'react';
-import PropTypes from 'prop-types';
+import React, { useState } from 'react';
 import { connect } from 'react-redux';
-import { Button, Input, message } from 'antd';
+import { Button, Input, message, Form } from 'antd';
 
 import { UserOutlined, MailOutlined, LockOutlined } from '@ant-design/icons';
-import { Form as LegacyForm } from 'antd';
 import { regActions } from '../../reducer/modules/user';
 import { withRouter } from 'react-router';
-const FormItem = LegacyForm.Item;
+
 const formItemStyle = {
   marginBottom: '.16rem'
 };
@@ -17,48 +15,30 @@ const changeHeight = {
   height: '.42rem'
 };
 
-@connect(
-  (/** @type {any} */ state) => {
-    return {
-      loginData: state.user
-    };
-  },
-  {
-    regActions
-  }
-)
-@withRouter
-@LegacyForm.create()
-class Reg extends Component {
-  constructor(/** @type {any} */ props) {
-    super(props);
-    this.state = {
-      confirmDirty: false
-    };
-  }
-
-  static propTypes = {
-    form: PropTypes.object,
-    history: PropTypes.object,
-    regActions: PropTypes.func
-  };
+/**
+ * @param {any} props
+ */
+function Reg(props) {
+  const [form] = Form.useForm();
+  const [confirmDirty] = useState(false);
 
   /**
-   * @param {React.SyntheticEvent} e
+   * @param {any} values
    */
-  handleSubmit = e => {
-    e.preventDefault();
-    const form = this.props.form;
-    form.validateFieldsAndScroll((/** @type {any} */ err, /** @type {any} */ values) => {
-      if (!err) {
-        this.props.regActions(values).then((/** @type {any} */ res) => {
-          if (res.payload.data.errcode == 0) {
-            this.props.history.replace('/group');
-            message.success('注册成功! ');
-          }
-        });
+  const handleSubmit = values => {
+    props.regActions(values).then((/** @type {any} */ res) => {
+      if (res.payload.data.errcode == 0) {
+        props.history.replace('/group');
+        message.success('注册成功! ');
       }
     });
+  };
+
+  /** 校验失败时滚动到首个出错字段(对齐原 validateFieldsAndScroll 行为) */
+  const handleFinishFailed = (/** @type {{ errorFields: any[] }} */ { errorFields }) => {
+    if (errorFields && errorFields.length) {
+      form.scrollToField(errorFields[0].name);
+    }
   };
 
   /**
@@ -66,8 +46,7 @@ class Reg extends Component {
    * @param {any} value
    * @param {Function} callback
    */
-  checkPassword = (rule, value, callback) => {
-    const form = this.props.form;
+  const checkPassword = (rule, value, callback) => {
     if (value && value !== form.getFieldValue('password')) {
       callback('两次输入的密码不一致啊!');
     } else {
@@ -80,108 +59,115 @@ class Reg extends Component {
    * @param {any} value
    * @param {Function} callback
    */
-  checkConfirm = (rule, value, callback) => {
-    const form = this.props.form;
-    if (value && this.state.confirmDirty) {
-      form.validateFields(['confirm'], { force: true });
+  const checkConfirm = (rule, value, callback) => {
+    if (value && confirmDirty) {
+      form.validateFields(['confirm']);
     }
     callback();
   };
 
-  render() {
-    const { getFieldDecorator } = this.props.form;
-    return (
-      <LegacyForm onSubmit={this.handleSubmit}>
-        {/* 用户名 */}
-        <FormItem style={formItemStyle}>
-          {getFieldDecorator('userName', {
-            rules: [{ required: true, message: '请输入用户名!' }]
-          })(
-            <Input
-              style={changeHeight}
-              prefix={<UserOutlined style={{ fontSize: 13 }} />}
-              placeholder="Username"
-            />
-          )}
-        </FormItem>
+  return (
+    <Form form={form} onFinish={handleSubmit} onFinishFailed={handleFinishFailed}>
+      {/* 用户名 */}
+      <Form.Item
+        style={formItemStyle}
+        name="userName"
+        rules={[{ required: true, message: '请输入用户名!' }]}
+      >
+        <Input
+          style={changeHeight}
+          prefix={<UserOutlined style={{ fontSize: 13 }} />}
+          placeholder="Username"
+        />
+      </Form.Item>
 
-        {/* Emaiil */}
-        <FormItem style={formItemStyle}>
-          {getFieldDecorator('email', {
-            rules: [
-              {
-                required: true,
-                message: '请输入email!',
-                pattern: /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{1,})+$/
-              }
-            ]
-          })(
-            <Input
-              style={changeHeight}
-              prefix={<MailOutlined style={{ fontSize: 13 }} />}
-              placeholder="Email"
-            />
-          )}
-        </FormItem>
+      {/* Emaiil */}
+      <Form.Item
+        style={formItemStyle}
+        name="email"
+        rules={[
+          {
+            required: true,
+            message: '请输入email!',
+            pattern: /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{1,})+$/
+          }
+        ]}
+      >
+        <Input
+          style={changeHeight}
+          prefix={<MailOutlined style={{ fontSize: 13 }} />}
+          placeholder="Email"
+        />
+      </Form.Item>
 
-        {/* 密码 */}
-        <FormItem style={formItemStyle}>
-          {getFieldDecorator('password', {
-            rules: [
-              {
-                required: true,
-                message: '请输入密码!'
-              },
-              {
-                validator: this.checkConfirm
-              }
-            ]
-          })(
-            <Input
-              style={changeHeight}
-              prefix={<LockOutlined style={{ fontSize: 13 }} />}
-              type="password"
-              placeholder="Password"
-            />
-          )}
-        </FormItem>
+      {/* 密码 */}
+      <Form.Item
+        style={formItemStyle}
+        name="password"
+        rules={[
+          {
+            required: true,
+            message: '请输入密码!'
+          },
+          {
+            validator: checkConfirm
+          }
+        ]}
+      >
+        <Input
+          style={changeHeight}
+          prefix={<LockOutlined style={{ fontSize: 13 }} />}
+          type="password"
+          placeholder="Password"
+        />
+      </Form.Item>
 
-        {/* 密码二次确认 */}
-        <FormItem style={formItemStyle}>
-          {getFieldDecorator('confirm', {
-            rules: [
-              {
-                required: true,
-                message: '请再次输入密码密码!'
-              },
-              {
-                validator: this.checkPassword
-              }
-            ]
-          })(
-            <Input
-              style={changeHeight}
-              prefix={<LockOutlined style={{ fontSize: 13 }} />}
-              type="password"
-              placeholder="Confirm Password"
-            />
-          )}
-        </FormItem>
+      {/* 密码二次确认 */}
+      <Form.Item
+        style={formItemStyle}
+        name="confirm"
+        rules={[
+          {
+            required: true,
+            message: '请再次输入密码密码!'
+          },
+          {
+            validator: checkPassword
+          }
+        ]}
+      >
+        <Input
+          style={changeHeight}
+          prefix={<LockOutlined style={{ fontSize: 13 }} />}
+          type="password"
+          placeholder="Confirm Password"
+        />
+      </Form.Item>
 
-        {/* 注册按钮 */}
-        <FormItem style={formItemStyle}>
-          <Button
-            style={changeHeight}
-            type="primary"
-            htmlType="submit"
-            className="login-form-button"
-          >
-            注册
-          </Button>
-        </FormItem>
-      </LegacyForm>
-    );
-  }
+      {/* 注册按钮 */}
+      <Form.Item style={formItemStyle}>
+        <Button
+          style={changeHeight}
+          type="primary"
+          htmlType="submit"
+          className="login-form-button"
+        >
+          注册
+        </Button>
+      </Form.Item>
+    </Form>
+  );
 }
-const RegForm = Reg;
+
+const RegForm = connect(
+  (/** @type {any} */ state) => {
+    return {
+      loginData: state.user
+    };
+  },
+  {
+    regActions
+  }
+)(withRouter(Reg));
+
 export default RegForm;

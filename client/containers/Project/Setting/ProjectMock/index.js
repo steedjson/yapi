@@ -1,11 +1,10 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import { Switch, Button, Tooltip, message } from 'antd';
+import { Switch, Button, Tooltip, message, Form } from 'antd';
 
 import { QuestionCircleOutlined } from '@ant-design/icons';
-import { Form as LegacyForm } from 'antd';
-const FormItem = LegacyForm.Item;
+const FormItem = Form.Item;
 import AceEditor from '../../../../components/AceEditor/AceEditor';
 import { updateProjectMock, getProject } from '../../../../reducer/modules/project';
 
@@ -37,10 +36,8 @@ const tailFormItemLayout = {
     getProject
   }
 )
-@LegacyForm.create()
 export default class ProjectMock extends Component {
   static propTypes = {
-    form: PropTypes.object,
     match: PropTypes.object,
     projectId: PropTypes.number,
     updateProjectMock: PropTypes.func,
@@ -96,7 +93,7 @@ export default class ProjectMock extends Component {
   render() {
     return (
       <div className="m-panel">
-        <LegacyForm>
+        <Form>
           <FormItem
             label={
               <span>
@@ -132,7 +129,7 @@ export default class ProjectMock extends Component {
               保存
             </Button>
           </FormItem>
-        </LegacyForm>
+        </Form>
       </div>
     );
   }

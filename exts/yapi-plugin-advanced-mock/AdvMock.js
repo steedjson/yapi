@@ -3,17 +3,15 @@ import React, { Component } from 'react';
 import axios from 'axios';
 import PropTypes from 'prop-types';
 import { withRouter } from 'react-router-dom';
-import { Switch, Button, message, Tooltip, Radio } from 'antd';
+import { Switch, Button, message, Tooltip, Radio, Form } from 'antd';
 import { QuestionCircleOutlined } from '@ant-design/icons';
-import { Form as LegacyForm } from 'antd';
 import MockCol from './MockCol/MockCol.js';
 import mockEditor from 'client/components/AceEditor/mockEditor';
 import constants from '../../client/constants/variable.js';
-const FormItem = LegacyForm.Item;
+const FormItem = Form.Item;
 
 class AdvMock extends Component {
   static propTypes = {
-    form: PropTypes.object,
     match: PropTypes.object
   };
 
@@ -26,8 +24,7 @@ class AdvMock extends Component {
     };
   }
 
-  handleSubmit = e => {
-    e.preventDefault();
+  handleSubmit = () => {
     let projectId = this.props.match.params.id;
     let interfaceId = this.props.match.params.actionId;
     let params = {
@@ -112,7 +109,7 @@ class AdvMock extends Component {
           </Radio.Group>
         </div>
         <div style={{ display: isShowCase ? 'none' : '' }}>
-          <LegacyForm onSubmit={this.handleSubmit}>
+          <Form onFinish={this.handleSubmit}>
             <FormItem
               label={
                 <span>
@@ -145,7 +142,7 @@ class AdvMock extends Component {
                 保存
               </Button>
             </FormItem>
-          </LegacyForm>
+          </Form>
         </div>
         <div style={{ display: isShowCase ? '' : 'none' }}>
           <MockCol />
@@ -155,4 +152,4 @@ class AdvMock extends Component {
   }
 }
 
-export default LegacyForm.create()(withRouter(AdvMock));
+export default withRouter(AdvMock);

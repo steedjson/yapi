@@ -123,6 +123,11 @@ declare module 'react' {
     render(): any;
   }
   export class PureComponent<P = any, S = any> extends Component<P, S> {}
+  export function useState<S = any>(
+    initialState: S | (() => S)
+  ): [S, (state: S | ((prevState: S) => S)) => void];
+  export function useEffect(effect: () => void | (() => void), deps?: any[]): void;
+  export function useRef(initialValue?: any): { current: any };
   const React: any;
   export default React;
 }

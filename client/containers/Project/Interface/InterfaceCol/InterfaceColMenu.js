@@ -11,9 +11,8 @@ import {
 import { fetchProjectList } from '../../../../reducer/modules/project';
 import axios from 'axios';
 import ImportInterface from './ImportInterface';
-import { Input, Button, Modal, message, Tooltip, Tree } from 'antd';
+import { Input, Button, Modal, message, Tooltip, Tree, Form } from 'antd';
 
-import { Form as LegacyForm } from 'antd';
 import {
   FolderOpenOutlined,
   DeleteOutlined,
@@ -25,28 +24,37 @@ import { arrayChangeIndex } from '../../../../common.js';
 import _ from 'underscore'
 
 const TreeNode = Tree.TreeNode;
-const FormItem = LegacyForm.Item;
+const FormItem = Form.Item;
 const confirm = Modal.confirm;
 const headHeight = 240; // menu顶部到网页顶部部分的高度
 
 import './InterfaceColMenu.scss';
 
-const ColModalForm = LegacyForm.create()(props => {
-  const { visible, onCancel, onCreate, form, title } = props;
-  const { getFieldDecorator } = form;
+const ColModalForm = props => {
+  const { visible, onCancel, onCreate, title, saveFormRef } = props;
+  const [form] = Form.useForm();
+  // 将 form 实例上报给父组件(antd3 时代经表单包装组件的 ref 获取),
+  // 供父组件 getFieldsValue / setFieldsValue
+  React.useEffect(() => {
+    saveFormRef(form);
+  }, [form, saveFormRef]);
   return (
-    <Modal visible={visible} title={title} onCancel={onCancel} onOk={onCreate}>
-      <LegacyForm layout="vertical">
-        <FormItem label="集合名">
-          {getFieldDecorator('colName', {
-            rules: [{ required: true, message: '请输入集合命名！' }]
-          })(<Input />)}
+    <Modal visible={visible} title={title} onCancel={onCancel} onOk={onCreate} forceRender>
+      <Form form={form} layout="vertical">
+        <FormItem
+          label="集合名"
+          name="colName"
+          rules={[{ required: true, message: '请输入集合命名！' }]}
+        >
+          <Input />
         </FormItem>
-        <FormItem label="简介">{getFieldDecorator('colDesc')(<Input type="textarea" />)}</FormItem>
-      </LegacyForm>
+        <FormItem label="简介" name="colDesc">
+          <Input.TextArea />
+        </FormItem>
+      </Form>
     </Modal>
   );
-});
+};
 
 @connect(
   state => {
@@ -605,7 +613,7 @@ export default class InterfaceColMenu extends Component {
           </Tree>
         </div>
         <ColModalForm
-          ref={this.saveFormRef}
+          saveFormRef={this.saveFormRef}
           type={colModalType}
           visible={colModalVisible}
           onCancel={() => {

@@ -1,10 +1,9 @@
 import React, { PureComponent as Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import { Button, message } from 'antd';
+import { Button, message, Form } from 'antd';
 
-import { Form as LegacyForm } from 'antd';
-const FormItem = LegacyForm.Item;
+const FormItem = Form.Item;
 import './project-request.scss';
 import AceEditor from 'client/components/AceEditor/AceEditor';
 import { updateProjectScript, getProject } from '../../../../reducer/modules/project';
@@ -20,7 +19,6 @@ import { updateProjectScript, getProject } from '../../../../reducer/modules/pro
     getProject
   }
 )
-@LegacyForm.create()
 export default class ProjectRequest extends Component {
   static propTypes = {
     projectMsg: PropTypes.object,
@@ -79,7 +77,8 @@ export default class ProjectRequest extends Component {
 
     return (
       <div className="project-request">
-        <LegacyForm onSubmit={this.handleSubmit}>
+        {/* 保存按钮经 onClick 提交,不依赖表单 onSubmit */}
+        <Form>
           <FormItem {...formItemLayout} label="Pre-request Script(请求参数处理脚本)">
             <AceEditor
               data={pre_script}
@@ -101,7 +100,7 @@ export default class ProjectRequest extends Component {
               保存
             </Button>
           </FormItem>
-        </LegacyForm>
+        </Form>
       </div>
     );
   }
