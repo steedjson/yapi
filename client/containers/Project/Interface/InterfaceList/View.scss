@@ -25,7 +25,7 @@
     }
     .col-title{margin-bottom: 5px}
     .colValue.href {
-      color: #2395f1;
+      color: var(--sk-primary);
       cursor: pointer;
     }
     .ace_print-margin{
@@ -65,7 +65,7 @@
         }
     }
     .ant-table-thead>tr>th{
-        background: #f7f7f7;
+        background: var(--sk-bg-faint);
     }
     .colMethod{
         .colValue{
@@ -96,7 +96,7 @@
       width: .3rem;
       height: .3rem;
       border-radius: 50%;
-      border: 2px solid #eee;
+      border: 2px solid var(--sk-border-light);
       vertical-align: middle;
       margin-right: 4px;
     }

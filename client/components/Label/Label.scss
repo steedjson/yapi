@@ -12,7 +12,7 @@
   }
   .interface-delete-icon {
     &:hover {
-      color: #2395f1;
+      color: var(--sk-primary);
       cursor: pointer;
     }
   }

@@ -7,18 +7,18 @@
     margin-bottom: 8px;
   }
   .pretty-editor {
-    border: 1px solid #d9d9d9;
+    border: 1px solid var(--sk-border);
     border-radius: 4px;
     min-height: 200px;
   }
   .pretty-editor-body {
-    border: 1px solid #d9d9d9;
+    border: 1px solid var(--sk-border);
     border-radius: 4px;
     min-height: 300px;
     min-width: 100%;
   }
   .pretty-editor-header {
-    border: 1px solid #d9d9d9;
+    border: 1px solid var(--sk-border);
     border-radius: 4px;
     min-height: 300px;
   }
@@ -52,9 +52,9 @@
     margin-top: 20px;
     margin-bottom: 20px;
     .ant-tabs-nav{
-      background: #f7f7f7;
+      background: var(--sk-bg-faint);
       border-radius: 0 0 4px 4px;      
-      border: 1px solid #d9d9d9;
+      border: 1px solid var(--sk-border);
       width: 100%;
     }
 
@@ -142,7 +142,7 @@
     // res body 无返回json时显示text信息
     .res-body-text {
       height: 100%;
-      border: 1px solid #d9d9d9;
+      border: 1px solid var(--sk-border);
       border-radius: 4px;
       padding: 8px;
     }
@@ -177,7 +177,7 @@
     margin-left: 6px;
   }
   .icon-btn:hover {
-    color: #2395f1;
+    color: var(--sk-primary);
   }
 
 }

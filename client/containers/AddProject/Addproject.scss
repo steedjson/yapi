@@ -3,7 +3,7 @@
 .m-container {
   margin: .24rem auto !important;
   padding: .24rem !important;
-  background-color: #fff;
+  background-color: var(--sk-bg-component);
 }
 
 .form-item {
@@ -14,7 +14,7 @@
   margin-top: .18rem;
   margin-bottom: .18rem;
   border: 0;
-  border-top: 1px solid #eeeeee;
+  border-top: 1px solid var(--sk-border-light);
 }
 
 
@@ -27,5 +27,5 @@
   position: relative;
   font-weight: normal;
   top: -.08rem;
-  color: #919191;
+  color: var(--sk-text-muted);
 }

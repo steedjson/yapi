@@ -1,10 +1,10 @@
 .project-request{
-  background: #fff;
+  background: var(--sk-bg-component);
   padding: 15px;
 
   .request-editor{
     min-height: 300px;
     margin-top: 10px;
-    background-color: #eee;
+    background-color: var(--sk-bg-muted);
   }
 }

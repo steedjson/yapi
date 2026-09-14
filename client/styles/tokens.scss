@@ -1,0 +1,36 @@
+/**
+ * 皮肤令牌层(design tokens)
+ *
+ * 所有语义令牌以 CSS 自定义属性形式挂在 :root,换肤时仅需在根节点覆盖变量值。
+ * 红线约束:每个令牌的默认值必须与它所替换的源硬编码颜色完全一致,
+ * 保证默认皮肤渲染像素级不变。
+ * 注意:CSS 变量不可参与 sass color 函数运算,rgba()/fade() 内部色值保持原样。
+ */
+:root {
+  // ---- 主色 ----
+  --sk-primary: #2395f1;            // 主色(theme.less @primary-color)
+  --sk-primary-contrast: #fff;      // 主色底上的文字/图标(原 color: #fff on #2395f1)
+
+  // ---- 背景表面 ----
+  --sk-bg-body: #eceef1;            // 页面底色(theme.less @body-background)
+  --sk-bg-component: #fff;          // 卡片/面板/表格等组件底
+  --sk-bg-header: #32363a;          // 顶部导航深色底(theme.less @layout-header-background)
+  --sk-bg-hover: #f8f8f8;           // 表头/斑马纹/悬浮浅底
+  --sk-bg-secondary: #f5f5f5;       // 次级面板底(模态 footer/折叠头/信息块)
+  --sk-bg-muted: #eee;              // 置灰底(搜索条/列表头/case 底)
+  --sk-bg-gray: #ececec;            // 深一档灰底(mixin.scss $color-bg-gray 同值)
+  --sk-bg-faint: #f7f7f7;           // 最浅灰底(antd @background-color-base 同值,响应 tab 头/表头)
+
+  // ---- 文字 ----
+  --sk-text: #333;                  // 基准文字(当前页面层无 #333 硬编码,为后续换肤预留)
+  --sk-text-on-header: #fff;        // 深色顶栏上的文字(面包屑等)
+  --sk-text-on-header-muted: #ccc;  // 深色顶栏上的弱文字(工具栏图标/链接)
+  --sk-text-secondary: #6b6c6d;     // 次级正文(动态时间线正文)
+  --sk-text-tertiary: #7b7b7b;      // 三级描述文字(Mock 展示地址等)
+  --sk-text-muted: #919191;         // 弱化说明文字(panel 描述等)
+
+  // ---- 边框 ----
+  --sk-border: #d9d9d9;             // 常规边框(theme.less @border-color-base)
+  --sk-border-split: #e9e9e9;       // 组件内分隔线(theme.less @border-color-split)
+  --sk-border-light: #eee;          // 更浅分隔线/描边
+}

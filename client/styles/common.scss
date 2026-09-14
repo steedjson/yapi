@@ -1,5 +1,7 @@
 @charset "utf-8";
 
+@import './tokens.scss';
+
 
 html {
   font-size:100px;
@@ -17,7 +19,7 @@ html {
 }
 
 ::selection {
-  background-color: #2395f1;
+  background-color: var(--sk-primary);
 }
 
 /* 设置滚动条的样式 */
@@ -75,7 +77,7 @@ em {
   height: auto !important;
   height: 100%;
   margin-bottom: -2.4rem;
-  background-color: #eceef1;
+  background-color: var(--sk-bg-body);
   &::after {
     content: '';
     display: block;
@@ -84,7 +86,7 @@ em {
 }
 .m-tab {
   .ant-tabs-nav-wrap {
-    background-color: #eceef1;
+    background-color: var(--sk-bg-body);
   }
 }
 
@@ -123,14 +125,14 @@ em {
 
 .panel-title {
   margin-bottom: .16rem;
-  border-left: 3px solid #2395f1;
+  border-left: 3px solid var(--sk-primary);
   padding-left: 8px;
   .title {
     font-weight: normal;
   }
   .desc {
     font-size: 13px;
-    color: #919191;
+    color: var(--sk-text-muted);
 
   }
 }
@@ -226,6 +228,6 @@ em {
 .link-tooltip {
   color: #56b2fd;
   &:hover {
-    color: #2395f1;
+    color: var(--sk-primary);
   }
 }

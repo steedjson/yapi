@@ -114,7 +114,7 @@ $color-bg-lightblue: #c6e2ff;
   }
 }
 .home-main {
-  background-color: #fff;
+  background-color: var(--sk-bg-component);
   display: -webkit-box;
   -webkit-box-orient: vertical;
   .main-one{
@@ -477,7 +477,7 @@ $color-bg-lightblue: #c6e2ff;
   margin-top: .48rem;
   padding-top: .48rem;
   padding-bottom: .24rem;
-  background-color: #ececec;
+  background-color: var(--sk-bg-gray);
   .container {
     display: flex;
     align-items: center;

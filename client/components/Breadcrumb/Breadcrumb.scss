@@ -4,23 +4,23 @@
   .ant-breadcrumb {
     font-size: 16px;
     float: left;
-    color: #fff;
+    color: var(--sk-text-on-header);
     padding-left: 16px;
     line-height: unset;
   
   }
   .ant-breadcrumb a {
-    color: #fff;
+    color: var(--sk-text-on-header);
     &:hover {
       color: $color-blue
     }
   }
   .ant-breadcrumb > span:last-child {
-    color: #fff;
+    color: var(--sk-text-on-header);
     font-weight: normal;
   }
   .ant-breadcrumb-separator {
-    color: #fff;
+    color: var(--sk-text-on-header);
     font-weight: normal;
   }
 }

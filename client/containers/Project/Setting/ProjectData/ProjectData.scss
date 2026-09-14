@@ -2,7 +2,7 @@
     display: flex;
     .dataImportCon{
         min-width: 304px;
-        background-color: #ececec;
+        background-color: var(--sk-bg-gray);
         padding: 16px;
         border-radius: 4px;
 
@@ -11,7 +11,7 @@
             background-color: white;
         }
         .dataImportTile{
-            color: #2395f1;
+            color: var(--sk-primary);
             padding: 16px 0px;
             font-weight: 500;
             width: 100%;

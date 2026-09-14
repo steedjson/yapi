@@ -5,7 +5,7 @@
 }
 
 .user-menu.ant-menu.ant-menu-dark .ant-menu-item-selected {
-  background: #32363a;
+  background: var(--sk-bg-header);
   color: rgba(255, 255, 255, 0.67);
 }
 .user-menu.ant-menu-dark .ant-menu-item-selected > a {
@@ -28,7 +28,7 @@
     background-color: inherit;
     transition: all .2s;
     &:hover{
-      background-color: #2395f1;
+      background-color: var(--sk-primary);
     }
     .href {
       text-decoration: none;
@@ -97,14 +97,14 @@
       float: left;
       font-size: .14rem;
       cursor: pointer;
-      color: #ccc;
+      color: var(--sk-text-on-header-muted);
       margin-left: .16rem;
       transition: color .2s;
       & a {
-        color: #ccc;
+        color: var(--sk-text-on-header-muted);
       }
       .dropdown-link {
-        color: #ccc;
+        color: var(--sk-text-on-header-muted);
         transition: color .2s;
         // .ant-avatar-image{
         //   margin-bottom: -10px;
@@ -135,11 +135,11 @@
 
       }
       .anticon.active {
-        color: #2395f1;
+        color: var(--sk-primary);
       }
       &:hover{
         .dropdown-link {
-          color: #2395f1;
+          color: var(--sk-primary);
         }
       }
       .name {

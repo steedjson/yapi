@@ -2,7 +2,7 @@
   // padding-top: 8px;
   min-height: 4.68rem;
   margin-top: 0;
-  background-color: #fff;
+  background-color: var(--sk-bg-component);
 }
 
 .project-env{
@@ -29,14 +29,14 @@
 
   .menu-item-checked{
     background-color: #eef7fe;
-    color: #2395f1;
+    color: var(--sk-primary);
     font-size: 14px;
     margin-right: -1px;
-    border-right: 2px solid #2395f1;
+    border-right: 2px solid var(--sk-primary);
   }
 
   .first-menu-item{
-    background-color: #eceef1;
+    background-color: var(--sk-bg-body);
   }
 
   .delete{
@@ -84,8 +84,8 @@
   .btnwrap-changeproject {
     text-align: center;
     padding: .16rem 0;
-    background: #fff;
-    background-color: #fff;
+    background: var(--sk-bg-component);
+    background-color: var(--sk-bg-component);
     margin: 0 -.4rem;
     background-size: 4px 4px;
 }

@@ -5,7 +5,7 @@
 
 
 .m-panel{
-  background-color: #fff;
+  background-color: var(--sk-bg-component);
   padding: 24px;
   min-height: 4.68rem;
   margin-top: 0;
@@ -13,7 +13,7 @@
 
 .project-list{
   .project-list-header{
-    background: #eee;
+    background: var(--sk-bg-muted);
     height: 64px;
     line-height: 40px;
     border-radius: 4px;
@@ -34,7 +34,7 @@
     // margin-bottom: 15px;
     font-weight: 400;
     margin-bottom: 0.16rem;
-    border-left: 3px solid #2395f1;
+    border-left: 3px solid var(--sk-primary);
     padding-left: 8px;
   }
 }

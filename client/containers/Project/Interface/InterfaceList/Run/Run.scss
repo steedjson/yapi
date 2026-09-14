@@ -12,7 +12,7 @@
       background: #fa0;
     }
     .col-item.selected {
-      background: #2395f1;
+      background: var(--sk-primary);
       color: rgba(255, 255, 255, 1);
     }
   }

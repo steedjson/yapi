@@ -14,12 +14,12 @@
   margin-top: 24px;
   .user-list {
     box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.2);
-    background: #fff;
+    background: var(--sk-bg-component);
     border-radius: 4px;
     min-height: 5rem;
     .search {
       padding: 5px;
-      background-color: #eee;
+      background-color: var(--sk-bg-muted);
     }
     ul {
       border: none;
@@ -45,7 +45,7 @@
   .user-table {
     -webkit-box-flex: 1;
     padding: 24px;
-    background: #fff;
+    background: var(--sk-bg-component);
     min-height: 5rem;
     .ant-table-wrapper table {
       // font-size: .14rem;
@@ -67,7 +67,7 @@
 
   .user-profile {
     -webkit-box-flex: 1;
-    background: #fff;
+    background: var(--sk-bg-component);
     min-height: 5rem;
     position: relative;
 
