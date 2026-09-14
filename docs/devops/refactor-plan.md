@@ -1068,6 +1068,18 @@ Phase 16  最后评估 React 和 Ant Design 大版本
 
 回滚：保留旧组件实现，页面级回滚，不回滚 API、数据库和运行时。
 
+## 八、批次五：技术栈现代化（2026-09-15 立项）
+
+第四批次闭环后，全栈技术栈升级立项为批次五。完整评估（基线清单、升级矩阵、替代栈结论、
+P0-P7 分期路线与周期）见 `docs/devops/tech-stack-upgrade-assessment.md`。要点：
+
+- 前置已完成：S1（antd 3.26.20 + react 16.14.0）、Babel 7 全量迁移、react-redux 7.2.9、
+  react-router 5.3.4、AVA 6.4.1、@ant-design/icons 4.8 引入、UNSAFE_ 前缀；
+- 分期：P0 清障 → P1 服务端（koa/nodemailer/ldapjs/node-schedule）→ P2 mongoose 6→8 →
+  P3 antd 4 完成 → P4 webpack 5 → P5 React 18 → P6 antd 5 + 皮肤 token 重构 → P7 收尾；
+- 总周期 23-36 人日（日历 7-11 周），每阶段独立提交、独立回滚、门禁全绿后进入下一阶段；
+- 目标版本以各阶段执行时点 `npm view` 核实为准。
+
 ## 八、批次通过门槛
 
 只有满足当前批次的通过条件，才进入下一批次：
