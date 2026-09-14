@@ -1,0 +1,25 @@
+diff --git a/node_modules/less-loader/dist/createWebpackLessPlugin.js b/node_modules/less-loader/dist/createWebpackLessPlugin.js
+index 6e224c8..a6ebdb2 100644
+--- a/node_modules/less-loader/dist/createWebpackLessPlugin.js
++++ b/node_modules/less-loader/dist/createWebpackLessPlugin.js
+@@ -63,7 +63,19 @@ function createWebpackLessPlugin(loaderContext) {
+         var context = currentDirectory.replace(trailingSlash, '');
+         var resolvedFilename = void 0;
+ 
+-        return resolve(context, moduleRequest).then(function (f) {
++        // antd 4 styles use extensionless relative imports like `@import './index';`.
++        // Webpack resolves such requests to `.js` files first (its `extensions` list),
++        // which would feed JavaScript into Less and fail with "Unrecognised input".
++        // For extensionless requests, try resolving the `.less` variant first and
++        // fall back to the original resolution when that does not exist.
++        var hasExtension = /\.[^./\\]+$/.test(moduleRequest);
++        var resolveRequest = hasExtension
++          ? resolve(context, moduleRequest)
++          : resolve(context, moduleRequest + '.less').catch(function () {
++              return resolve(context, moduleRequest);
++            });
++
++        return resolveRequest.then(function (f) {
+           resolvedFilename = f;
+           loaderContext.addDependency(resolvedFilename);
+ 
