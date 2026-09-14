@@ -186,3 +186,20 @@ underscore→原生/lodash 评估；redux 5 评估；mongoose 9 评估；antd 6 
 
 **总周期：23-36 人日有效工作，日历约 7-11 周（含 P2/P3/P4/P6 后各 3-5 天观察窗口）。**
 每阶段完成后更新本文档状态表与 refactor-plan.md 批次五进度。
+
+## 六、执行进度记录
+
+| 阶段 | 状态 | 提交 | 备注 |
+|---|---|---|---|
+| 交付物 1 评估文档 + 批次五挂接 | ✅ | d05fa73b | 目标版本 npm view 实测钉死 |
+| P0.1 幽灵依赖显式化 + 僵尸依赖裁剪 | ✅ | 5decfd01 | 移除 44 包；mime/extend 入 dependencies；测试基线 307 passed |
+| P0.2 prettier 3.9.6 安装 | ✅ | 887e767b | 仅增量使用 |
+| P0.3 最小 CI（typecheck + test） | ✅ | 472a7963 | .github/workflows/test.yml |
+| P0.4 npm audit 基线 | ✅ | （记录于本节） | **174 漏洞（3 low / 60 moderate / 78 high / 33 critical）**，registry.npmjs.org 实测；各阶段结束复测对比 |
+| P1 服务端栈升级 | ⏳ | — | |
+| P2 mongoose 6→8 | ⏳ | — | |
+| P3 antd 4 完成 | ⏳ | — | |
+| P4 webpack 5 | ⏳ | — | |
+| P5 React 18.3 | ⏳ | — | |
+| P6 antd 5 + 皮肤重构 | ⏳ | — | |
+| P7 现代化收尾 | ⏳ | — | |
