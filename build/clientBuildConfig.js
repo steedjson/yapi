@@ -43,43 +43,9 @@ function getDefineValues(packageInfo, webConfig, environment) {
   };
 }
 
-function getStyleRule(test, extractTextPlugin, fallback, use) {
-  return {
-    test,
-    loader: use === undefined
-      ? extractTextPlugin.extract(fallback)
-      : extractTextPlugin.extract(fallback, use)
-  };
-}
-
-function getAssetRule() {
-  return {
-    test: /.(gif|jpg|jpeg|png|woff|woff2|eot|ttf|svg)$/,
-    loader: 'url-loader',
-    options: {
-      limit: 8192,
-      name: ['[path][name].[ext]?[sha256#base64:8]']
-    }
-  };
-}
-
-function getPreLoaders() {
-  return [
-    {
-      test: /\.(js|jsx)$/,
-      exclude: /tui-editor|node_modules|google-diff.js/,
-      loader: 'eslint-loader'
-    },
-    { test: /\.json$/, loader: 'json-loader' }
-  ];
-}
-
 module.exports = {
   getBabelQuery,
   getPluginExclude,
   getDefineValues,
-  normalizeAssets,
-  getStyleRule,
-  getAssetRule,
-  getPreLoaders
+  normalizeAssets
 };
