@@ -9,9 +9,6 @@ const HTTP_METHOD_KEYS = Object.keys(HTTP_METHOD);
 
 const FormItem = Form.Item;
 const Option = Select.Option;
-function hasErrors(fieldsError) {
-  return Object.keys(fieldsError).some(field => fieldsError[field]);
-}
 
 
 function AddInterfaceForm(props) {
@@ -104,7 +101,8 @@ function AddInterfaceForm(props) {
             <Button
               type="primary"
               htmlType="submit"
-              disabled={hasErrors(form.getFieldsError())}
+              // antd4 下 getFieldsError 惯用法行为变化,改按必填值是否已填控制禁用
+              disabled={!form.getFieldValue('name')}
             >
               提交
             </Button>

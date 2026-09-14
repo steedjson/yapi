@@ -3,9 +3,6 @@ import PropTypes from 'prop-types';
 import { Input, Button, Select, Form } from 'antd';
 const FormItem = Form.Item;
 const Option = Select.Option;
-function hasErrors(fieldsError) {
-  return Object.keys(fieldsError).some(field => fieldsError[field]);
-}
 function AddInterfaceForm(props) {
   const [form] = Form.useForm();
   const formItemLayout = {
@@ -72,7 +69,8 @@ function AddInterfaceForm(props) {
         </Button>
         <FormItem noStyle shouldUpdate={true}>
           {() => (
-            <Button type="primary" htmlType="submit" disabled={hasErrors(form.getFieldsError())}>
+            <Button type="primary" htmlType="submit" // antd4 下 getFieldsError 惯用法行为变化,改按必填值是否已填控制禁用
+              disabled={!form.getFieldValue('name')}>
               提交
             </Button>
           )}
