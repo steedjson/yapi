@@ -45,3 +45,19 @@ test('完整 Koa 应用支持真实 HTTP 请求', async t => {
   t.is(result.body.errcode, 400);
   t.is(result.body.errmsg, 'email不能为空');
 });
+
+
+// 收尾取消定时任务并关闭 MongoDB 连接，避免 AVA 因常驻句柄强制退出
+test.after.always('cleanup lingering handles', async () => {
+  try {
+    const schedule = require('node-schedule');
+    schedule.scheduledJobs && Object.keys(schedule.scheduledJobs).forEach(name => {
+      schedule.scheduledJobs[name].cancel();
+    });
+  } catch (e) {}
+  const mongoose = require('mongoose');
+  if (mongoose.connection && mongoose.connection.readyState !== 0) {
+    await new Promise(r => setTimeout(r, 200));
+    await mongoose.connection.close();
+  }
+});

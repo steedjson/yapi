@@ -49,6 +49,9 @@ app.use(async (ctx, next) => {
     ctx.set('Cache-Control', 'max-age=8640000000');
     if (yapi.commons.fileExist(yapi.path.join(yapi.WEBROOT, 'static', ctx.path + '.gz'))) {
       ctx.set('Content-Encoding', 'gzip');
+      // koa-send 按改写后的整个文件名（含 .gz 后缀）推断 Content-Type，
+      // 会返回 application/gzip 导致浏览器拒绝应用样式，此处按原始扩展名显式声明
+      ctx.type = yapi.path.extname(ctx.path).replace('.', '');
       ctx.path = ctx.path + '.gz';
     }
   }

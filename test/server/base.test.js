@@ -338,3 +338,19 @@ test.serial('真实 app 冒烟: 4 条新用户管理路由已注册且未登录�
   const missing = await postJson(app, '/api/user/no_such_action', {});
   t.is(missing.statusCode, 404);
 });
+
+
+// 收尾取消定时任务并关闭 MongoDB 连接，避免 AVA 因常驻句柄强制退出
+test.after.always('cleanup lingering handles', async () => {
+  try {
+    const schedule = require('node-schedule');
+    schedule.scheduledJobs && Object.keys(schedule.scheduledJobs).forEach(name => {
+      schedule.scheduledJobs[name].cancel();
+    });
+  } catch (e) {}
+  const mongoose = require('mongoose');
+  if (mongoose.connection && mongoose.connection.readyState !== 0) {
+    await new Promise(r => setTimeout(r, 200));
+    await mongoose.connection.close();
+  }
+});

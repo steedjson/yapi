@@ -355,3 +355,19 @@ test.serial('storage 模型契约: key 为 String(skin_config 以字符串命名
   t.is(schema.key.type, String);
   t.truthy(schema.key.required);
 });
+
+
+// 收尾取消定时任务并关闭 MongoDB 连接，避免 AVA 因常驻句柄强制退出
+test.after.always('cleanup lingering handles', async () => {
+  try {
+    const schedule = require('node-schedule');
+    schedule.scheduledJobs && Object.keys(schedule.scheduledJobs).forEach(name => {
+      schedule.scheduledJobs[name].cancel();
+    });
+  } catch (e) {}
+  const mongoose = require('mongoose');
+  if (mongoose.connection && mongoose.connection.readyState !== 0) {
+    await new Promise(r => setTimeout(r, 200));
+    await mongoose.connection.close();
+  }
+});
