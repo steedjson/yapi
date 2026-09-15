@@ -65,7 +65,7 @@ app.use(async (ctx, next) => {
   const current = ctx.res.getHeader('content-type');
   if (current && current !== 'application/octet-stream') return;
   const ext = ctx.path === '/' ? '.html' : yapi.path.extname(String(ctx.path).replace(/\.gz$/, ''));
-  const type = mime.lookup(ext);
+  const type = mime.getType(ext);
   if (type && type !== 'application/octet-stream') ctx.set('Content-Type', type);
 });
 app.use(koaStatic(yapi.path.join(yapi.WEBROOT, 'static'), { index: indexFile, gzip: true }));
