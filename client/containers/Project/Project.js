@@ -11,6 +11,7 @@ import Interface from './Interface/Interface.js';
 import Activity from './Activity/Activity.js';
 import Setting from './Setting/Setting.js';
 import Loading from '../../components/Loading/Loading';
+import ErrMsg from '../../components/ErrMsg/ErrMsg.js';
 import ProjectMember from './Setting/ProjectMember/ProjectMember.js';
 import ProjectData from './Setting/ProjectData/ProjectData.js';
 const plugin = require('client/plugin.js');
@@ -40,42 +41,44 @@ export default class Project extends Component {
 
   constructor(props) {
     super(props);
+    this.state = { loadError: false };
   }
 
   async UNSAFE_componentWillMount() {
-    await this.props.getProject(this.props.match.params.id);
-    await this.props.fetchGroupMsg(this.props.curProject.group_id);
-
-    this.props.setBreadcrumb([
-      {
-        name: this.props.currGroup.group_name,
-        href: '/group/' + this.props.currGroup._id
-      },
-      {
-        name: this.props.curProject.name
-      }
-    ]);
+    try {
+      const project = await this.props.getProject(this.props.match.params.id);
+      const projectData = project && project.payload && project.payload.data.data;
+      if (!projectData) throw new Error('project not found');
+      await this.props.fetchGroupMsg(projectData.group_id);
+      this.props.setBreadcrumb([
+        { name: projectData.name }
+      ]);
+    } catch (e) {
+      console.error(e);
+      this.setState({ loadError: true });
+    }
   }
 
   async UNSAFE_componentWillReceiveProps(nextProps) {
     const currProjectId = this.props.match.params.id;
     const nextProjectId = nextProps.match.params.id;
     if (currProjectId !== nextProjectId) {
-      await this.props.getProject(nextProjectId);
-      await this.props.fetchGroupMsg(this.props.curProject.group_id);
-      this.props.setBreadcrumb([
-        {
-          name: this.props.currGroup.group_name,
-          href: '/group/' + this.props.currGroup._id
-        },
-        {
-          name: this.props.curProject.name
-        }
-      ]);
+      try {
+        const project = await this.props.getProject(nextProjectId);
+        const projectData = project && project.payload && project.payload.data.data;
+        if (!projectData) throw new Error('project not found');
+        await this.props.fetchGroupMsg(projectData.group_id);
+        this.setState({ loadError: false });
+        this.props.setBreadcrumb([{ name: projectData.name }]);
+      } catch (e) {
+        console.error(e);
+        this.setState({ loadError: true });
+      }
     }
   }
 
   render() {
+    if (this.state.loadError) return <ErrMsg type="projectError" />;
     const { match, location } = this.props;
     // path: 绝对路径，用于子导航高亮的 matchPath 与 URL 拼接；
     // route: v6 嵌套路由相对路径（相对 /project/:id 前缀），接口页需 /* 消费更深路径
@@ -146,7 +149,7 @@ export default class Project extends Component {
       subnavData.push(value);
     });
 
-    if (this.props.currGroup.type === 'private') {
+    if (this.props.currGroup && this.props.currGroup.type === 'private') {
       subnavData = subnavData.filter(item => {
         return item.name != '成员管理';
       });

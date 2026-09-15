@@ -66,6 +66,14 @@ class ErrMsg extends Component {
           title = '该分组还没有项目呢';
           desc = <span>请点击右上角添加项目按钮新建项目</span>;
           break;
+        case 'projectError':
+          title = '项目加载失败';
+          desc = '项目不存在或您没有访问权限';
+          break;
+        case 'groupError':
+          title = '分组加载失败';
+          desc = '请稍后重试';
+          break;
         case 'noData':
           title = '暂无数据';
           desc = '先去别处逛逛吧';

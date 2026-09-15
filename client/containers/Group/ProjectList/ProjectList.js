@@ -43,7 +43,8 @@ class ProjectList extends Component {
     this.state = {
       visible: false,
       protocol: 'http://',
-      projectData: []
+      projectData: [],
+      loadError: false
     };
   }
   static propTypes = {
@@ -72,6 +73,14 @@ class ProjectList extends Component {
     });
   }
 
+  componentDidMount() {
+    if (this.props.currGroup._id) {
+      this.props.fetchProjectList(this.props.currGroup._id, this.props.currPage).catch(() => {
+        this.setState({ loadError: true });
+      });
+    }
+  }
+
   // 获取 ProjectCard 组件的关注事件回调，收到后更新数据
 
   /**
@@ -89,7 +98,9 @@ class ProjectList extends Component {
 
     // 切换分组
     if (this.props.currGroup !== nextProps.currGroup && nextProps.currGroup._id) {
-      this.props.fetchProjectList(nextProps.currGroup._id, this.props.currPage);
+      this.props.fetchProjectList(nextProps.currGroup._id, this.props.currPage).catch(() => {
+        this.setState({ loadError: true });
+      });
     }
 
     // 切换项目列表
@@ -109,6 +120,7 @@ class ProjectList extends Component {
    * @returns {any}
    */
   render() {
+    if (this.state.loadError) return <ErrMsg type="projectError" />;
     let projectData = /** @type {any} */ (this.state.projectData);
     let noFollow = [];
     let followProject = [];

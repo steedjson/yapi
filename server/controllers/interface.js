@@ -1395,6 +1395,14 @@ class interfaceController extends baseController {
       if (!params || !Array.isArray(params)) {
         return (ctx.body = yapi.commons.resReturn(null, 400, '请求参数必须是数组'));
       }
+      const interfaces = await Promise.all(
+        params.filter(item => item && item.id).map(item => this.Model.get(item.id))
+      );
+      for (const interfaceData of interfaces) {
+        if (!interfaceData || (await this.checkAuth(interfaceData.project_id, 'project', 'edit')) !== true) {
+          return (ctx.body = yapi.commons.resReturn(null, 400, '没有权限'));
+        }
+      }
       categoryCache.clear();
       params.forEach((/** @type {any} */ item) => {
         if (item.id) {
@@ -1433,6 +1441,14 @@ class interfaceController extends baseController {
       let params = ctx.request.body;
       if (!params || !Array.isArray(params)) {
         return (ctx.body = yapi.commons.resReturn(null, 400, '请求参数必须是数组'));
+      }
+      const categories = await Promise.all(
+        params.filter(item => item && item.id !== undefined).map(item => this.catModel.get(item.id))
+      );
+      for (const category of categories) {
+        if (!category || (await this.checkAuth(category.project_id, 'project', 'edit')) !== true) {
+          return (ctx.body = yapi.commons.resReturn(null, 400, '没有权限'));
+        }
       }
       await Promise.all(
         params

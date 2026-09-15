@@ -191,6 +191,103 @@ test.serial('get 缺失接口 id 时返回 400', async t => {
   });
 });
 
+test.serial('upIndex 拒绝跨项目接口排序且不更新', async t => {
+  await withMockYapi({ commons: { resReturn } }, async () => {
+    let updated = false;
+    let authorizedProjectId;
+    const ctx = { request: { body: [{ id: 10, index: 1 }] }, body: null };
+    const fakeThis = {
+      Model: {
+        get: async () => ({ _id: 10, project_id: 2 }),
+        upIndex: async () => { updated = true; }
+      },
+      checkAuth: async projectId => {
+        authorizedProjectId = projectId;
+        return false;
+      }
+    };
+
+    await InterfaceController.prototype.upIndex.call(fakeThis, ctx);
+
+    t.is(authorizedProjectId, 2);
+    t.is(ctx.body.errmsg, '没有权限');
+    t.false(updated);
+  });
+});
+
+test.serial('upIndex 同项目鉴权通过时允许接口排序', async t => {
+  await withMockYapi({ commons: { resReturn } }, async () => {
+    let updated;
+    let authorizedProjectId;
+    const ctx = { request: { body: [{ id: 10, index: 1 }] }, body: null };
+    const fakeThis = {
+      Model: {
+        get: async () => ({ _id: 10, project_id: 2 }),
+        upIndex: async (id, index) => { updated = { id, index }; }
+      },
+      checkAuth: async projectId => {
+        authorizedProjectId = projectId;
+        return true;
+      }
+    };
+
+    await InterfaceController.prototype.upIndex.call(fakeThis, ctx);
+    await Promise.resolve();
+
+    t.is(authorizedProjectId, 2);
+    t.is(ctx.body.errcode, 0);
+    t.deepEqual(updated, { id: 10, index: 1 });
+  });
+});
+
+test.serial('upCatIndex 拒绝跨项目分类排序且不更新', async t => {
+  await withMockYapi({ commons: { resReturn } }, async () => {
+    let updated = false;
+    let authorizedProjectId;
+    const ctx = { request: { body: [{ id: 10, index: 1 }] }, body: null };
+    const fakeThis = {
+      catModel: {
+        get: async () => ({ _id: 10, project_id: 2 }),
+        upCatIndex: async () => { updated = true; }
+      },
+      checkAuth: async projectId => {
+        authorizedProjectId = projectId;
+        return false;
+      }
+    };
+
+    await InterfaceController.prototype.upCatIndex.call(fakeThis, ctx);
+
+    t.is(authorizedProjectId, 2);
+    t.is(ctx.body.errmsg, '没有权限');
+    t.false(updated);
+  });
+});
+
+test.serial('upCatIndex 同项目鉴权通过时允许分类排序', async t => {
+  await withMockYapi({ commons: { resReturn } }, async () => {
+    let updated;
+    let authorizedProjectId;
+    const ctx = { request: { body: [{ id: 10, index: 1 }] }, body: null };
+    const fakeThis = {
+      catModel: {
+        get: async () => ({ _id: 10, project_id: 2 }),
+        upCatIndex: async (id, index) => { updated = { id, index }; }
+      },
+      checkAuth: async projectId => {
+        authorizedProjectId = projectId;
+        return true;
+      }
+    };
+
+    await InterfaceController.prototype.upCatIndex.call(fakeThis, ctx);
+
+    t.is(authorizedProjectId, 2);
+    t.is(ctx.body.errcode, 0);
+    t.deepEqual(updated, { id: 10, index: 1 });
+  });
+});
+
 test.serial('del 缺失接口 id 时返回 400 且不访问数据库', async t => {
   await withMockYapi({ getInst: () => ({}), commons: { resReturn } }, async () => {
     let modelTouched = false;

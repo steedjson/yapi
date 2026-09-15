@@ -468,7 +468,7 @@ class List extends Component {
     return (
       <section className='user-table'>
         <div className='user-search-wrapper'>
-          <h2 style={{ marginBottom: '10px' }}>
+          <h2 className='user-count' style={{ marginBottom: '10px' }}>
             {this.state.keyword ? '过滤结果' : '用户总数'}：{this.state.total}位
           </h2>
           {role === 'admin' && (

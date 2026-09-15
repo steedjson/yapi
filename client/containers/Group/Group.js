@@ -11,6 +11,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 // common/types/global.d.ts 的 antd 声明未包含 Layout/Spin，且 common/ 不在本次可修改范围内
 // @ts-ignore
 import { Tabs, Layout, Spin } from 'antd';
+import ErrMsg from '../../components/ErrMsg/ErrMsg.js';
 const { Content, Sider } = Layout;
 import { fetchNewsData } from '../../reducer/modules/news.js';
 import {
@@ -41,20 +42,21 @@ export default class Group extends Component {
     super(props);
 
     this.state = {
-      groupId: -1
+      groupId: -1,
+      loadError: false
     }
   }
 
-  async componentDidMount(){
-    let r = await axios.get('/api/group/get_mygroup')
-    try{
-      let group = r.data.data;
-      this.setState({
-        groupId: group._id
-      })
-      this.props.setCurrGroup(group)
-    }catch(e){
-      console.error(e)
+  async componentDidMount() {
+    try {
+      const r = await axios.get('/api/group/get_mygroup');
+      const group = r.data.data;
+      if (!group || !group._id) throw new Error('invalid group');
+      this.setState({ groupId: group._id });
+      this.props.setCurrGroup(group);
+    } catch (e) {
+      console.error(e);
+      this.setState({ loadError: true });
     }
   }
 
@@ -75,7 +77,8 @@ export default class Group extends Component {
    * @returns {any}
    */
   render() {
-    if(this.state.groupId === -1)return <Spin />
+    if (this.state.loadError) return <ErrMsg type="groupError" />;
+    if (this.state.groupId === -1) return <Spin />
     const GroupContent = (
       <Layout style={{ minHeight: 'calc(100vh - 100px)', marginLeft: '24px', marginTop: '24px' }}>
         <Sider style={{ height: '100%' }} width={300}>

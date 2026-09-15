@@ -391,6 +391,14 @@ class interfaceColController extends baseController {
         return (ctx.body = yapi.commons.resReturn(null, 400, '用例名称不能为空'));
       }
 
+      const [col, interfaceData] = await Promise.all([
+        this.colModel.get(params.col_id),
+        this.interfaceModel.get(params.interface_id)
+      ]);
+      if (!col || col.project_id !== params.project_id || !interfaceData || interfaceData.project_id !== params.project_id) {
+        return (ctx.body = yapi.commons.resReturn(null, 400, '没有权限'));
+      }
+
       params.uid = this.getUid();
       params.index = 0;
       params.add_time = yapi.commons.time();
@@ -465,8 +473,8 @@ class interfaceColController extends baseController {
         interfaceById[interfaceData._id] = interfaceData;
       });
       const col = await this.colModel.get(params.col_id);
-      if (!col) {
-        throw new Error('不存在的接口集');
+      if (!col || col.project_id !== params.project_id) {
+        return (ctx.body = yapi.commons.resReturn(null, 400, '没有权限'));
       }
 
       for (let i = 0; i < params.interface_list.length; i++) {
@@ -474,6 +482,9 @@ class interfaceColController extends baseController {
         const interfaceData = interfaceById[interfaceId];
         if (!interfaceData) {
           throw new Error(`不存在的接口 ${interfaceId}`);
+        }
+        if (interfaceData.project_id !== params.project_id) {
+          return (ctx.body = yapi.commons.resReturn(null, 400, '没有权限'));
         }
         data.interface_id = interfaceId;
         data.casename = interfaceData.title;
@@ -826,6 +837,12 @@ class interfaceColController extends baseController {
       if (!params || !Array.isArray(params)) {
         return (ctx.body = yapi.commons.resReturn(null, 400, '请求参数必须是数组'));
       }
+      const cases = await Promise.all(params.filter(item => item && item.id).map(item => this.caseModel.get(item.id)));
+      for (const caseData of cases) {
+        if (!caseData || (await this.checkAuth(caseData.project_id, 'project', 'edit')) !== true) {
+          return (ctx.body = yapi.commons.resReturn(null, 400, '没有权限'));
+        }
+      }
       params.forEach((/** @type {any} */ item) => {
         if (item.id) {
           this.caseModel.upCaseIndex(item.id, item.index).then(
@@ -863,6 +880,12 @@ class interfaceColController extends baseController {
       let params = ctx.request.body;
       if (!params || !Array.isArray(params)) {
         return (ctx.body = yapi.commons.resReturn(null, 400, '请求参数必须是数组'));
+      }
+      const cols = await Promise.all(params.filter(item => item && item.id).map(item => this.colModel.get(item.id)));
+      for (const col of cols) {
+        if (!col || (await this.checkAuth(col.project_id, 'project', 'edit')) !== true) {
+          return (ctx.body = yapi.commons.resReturn(null, 400, '没有权限'));
+        }
       }
       params.forEach((/** @type {any} */ item) => {
         if (item.id) {

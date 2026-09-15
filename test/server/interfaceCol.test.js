@@ -271,7 +271,8 @@ test.serial('addCase 校验通过后保存用例、更新项目时间并异步�
     casename: '用例A',
     case_env: 'local'
   });
-  env.returns.colGet = { _id: 5, name: '测试集A' };
+  env.returns.colGet = { _id: 5, project_id: 1, name: '测试集A' };
+  env.returns.interfaceGet = { _id: 301, project_id: 1 };
 
   await env.inst.addCase(env.ctx);
   await flushAsync();
@@ -283,7 +284,7 @@ test.serial('addCase 校验通过后保存用例、更新项目时间并异步�
   t.is(env.calls.caseSave[0].uid, 11);
   t.is(env.calls.caseSave[0].index, 0);
   // 异步日志链：colModel.get(col_id) 后写操作日志
-  t.deepEqual(env.calls.colGet, [5]);
+  t.deepEqual(env.calls.colGet, [5, 5]);
   t.is(env.calls.logSave.length, 1);
   t.is(env.calls.logSave[0].typeid, 1);
   t.is(env.calls.projectUp.length, 1);
@@ -311,10 +312,11 @@ test.serial('addCaseList 校验通过后批量导入用例并逐条写日志', a
     col_id: 5,
     interface_list: [301, 302]
   });
-  env.returns.colGet = { _id: 5, name: '测试集A' };
+  env.returns.colGet = { _id: 5, project_id: 1, name: '测试集A' };
   env.returns.interfaceGetByIds = [
     {
       _id: 301,
+      project_id: 1,
       title: '接口A',
       req_body_type: 'json',
       req_body_other: '{"a":1}',
@@ -322,6 +324,7 @@ test.serial('addCaseList 校验通过后批量导入用例并逐条写日志', a
     },
     {
       _id: 302,
+      project_id: 1,
       title: '接口B',
       req_body_type: 'form',
       req_body_other: '',
@@ -345,6 +348,53 @@ test.serial('addCaseList 校验通过后批量导入用例并逐条写日志', a
   // 每条导入的用例各写一条操作日志
   t.is(env.calls.logSave.length, 2);
   t.is(env.calls.logSave[0].typeid, 1);
+});
+
+
+test.serial('addCase 拒绝 col 或 interface 跨项目归属', async t => {
+  const env = createTestEnv({
+    project_id: 1,
+    col_id: 5,
+    interface_id: 301,
+    casename: '用例A'
+  });
+  env.returns.colGet = { _id: 5, project_id: 2 };
+  env.returns.interfaceGet = { _id: 301, project_id: 1 };
+
+  await env.inst.addCase(env.ctx);
+
+  t.is(env.ctx.body.errcode, 400);
+  t.is(env.ctx.body.errmsg, '没有权限');
+  t.is(env.calls.caseSave.length, 0);
+});
+
+test.serial('addCaseList 拒绝跨项目接口或接口集', async t => {
+  const env = createTestEnv({ project_id: 1, col_id: 5, interface_list: [301] });
+  env.returns.colGet = { _id: 5, project_id: 1, name: '测试集A' };
+  env.returns.interfaceGetByIds = [{ _id: 301, project_id: 2, title: '接口A' }];
+
+  await env.inst.addCaseList(env.ctx);
+
+  t.is(env.ctx.body.errcode, 400);
+  t.is(env.ctx.body.errmsg, '没有权限');
+  t.is(env.calls.caseSave.length, 0);
+});
+
+test.serial('upCaseIndex 和 upColIndex 拒绝无权限项目且不更新', async t => {
+  const env = createTestEnv({});
+  env.inst.checkAuth = async projectId => projectId === 1;
+  env.returns.caseGet = { _id: 501, project_id: 2 };
+  env.returns.colGet = { _id: 5, project_id: 2 };
+
+  const caseCtx = { request: { body: [{ id: 501, index: 1 }] }, body: null };
+  await env.inst.upCaseIndex(caseCtx);
+  t.is(caseCtx.body.errmsg, '没有权限');
+  t.is(env.calls.caseUpCaseIndex.length, 0);
+
+  const colCtx = { request: { body: [{ id: 5, index: 1 }] }, body: null };
+  await env.inst.upColIndex(colCtx);
+  t.is(colCtx.body.errmsg, '没有权限');
+  t.is(env.calls.colUpColIndex.length, 0);
 });
 
 test.serial('cloneCaseList 依次缺失 project_id / col_id / new_col_id 分别返回 400 对应文案', async t => {
@@ -522,6 +572,7 @@ test.serial('upCaseIndex body 非数组返回 400，空数组直接成功，合�
   t.is(empty.calls.caseUpCaseIndex.length, 0);
 
   const ok = createTestEnv([{ id: 101, index: 2 }, { id: 102, index: 1 }, { index: 9 }]);
+  ok.returns.caseGet = { project_id: 1 };
   await ok.inst.upCaseIndex(ok.ctx);
   t.is(ok.ctx.body.errcode, 0);
   t.is(ok.ctx.body.data, '成功！');
@@ -535,6 +586,7 @@ test.serial('upColIndex body 非数组返回 400，合法数组逐项更新 inde
   t.is(bad.ctx.body.data, null);
 
   const ok = createTestEnv([{ id: 201, index: 1 }, { id: 202, index: 3 }]);
+  ok.returns.colGet = { project_id: 1 };
   await ok.inst.upColIndex(ok.ctx);
   t.is(ok.ctx.body.errcode, 0);
   t.is(ok.ctx.body.data, '成功！');
