@@ -7,7 +7,6 @@ import GroupLog from './GroupLog/GroupLog.js';
 import GroupSetting from './GroupSetting/GroupSetting.js';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import { Routes, Route, Navigate } from 'react-router-dom';
 // common/types/global.d.ts 的 antd 声明未包含 Layout/Spin，且 common/ 不在本次可修改范围内
 // @ts-ignore
 import { Tabs, Layout, Spin } from 'antd';
@@ -140,13 +139,6 @@ export default class Group extends Component {
         </Layout>
       </Layout>
     );
-    return (
-      <div className="projectGround">
-        <Routes>
-          <Route index element={<Navigate to={'/group/' + this.state.groupId} />} />
-          <Route path=":groupId" element={GroupContent} />
-        </Routes>
-      </div>
-    );
+    return <div className="projectGround">{GroupContent}</div>;
   }
 }
