@@ -94,6 +94,17 @@ const config = {
         use: [MiniCssExtractPlugin.loader, { loader: 'css-loader', options: { sourceMap: true } }]
       },
       {
+        // json-schema-editor-visual(接口编辑的 JSON Schema 编辑器)内嵌 antd3,
+        // 其全量 antd.css 不能再全局加载(antd3 body 基础样式与全局 .ant-* 规则
+        // 污染 antd5 应用)。该文件先经自定义 loader 把每条选择器前缀化为
+        // `.json-schema-editor-scope `,配合编辑器容器类名限定作用域
+        // (enforce: 'pre' 保证在通用 css-loader 规则之前作用于源文本;
+        // 详见 build/json-schema-css-scope-loader.js)。
+        test: /node_modules[\\/]json-schema-editor-visual[\\/]node_modules[\\/]antd[\\/]dist[\\/]antd\.css$/,
+        enforce: 'pre',
+        use: [{ loader: path.join(__dirname, 'json-schema-css-scope-loader.js') }]
+      },
+      {
         test: /\.(sass|scss)$/,
         use: [
           MiniCssExtractPlugin.loader,

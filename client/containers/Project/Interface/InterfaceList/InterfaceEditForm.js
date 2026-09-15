@@ -17,6 +17,9 @@ import Editor from 'common/tui-editor/dist/tui-editor-Editor-all.min.js';
 const jSchema = require('json-schema-editor-visual');
 const ResBodySchema = jSchema({ lang: 'zh_CN', mock: MOCK_SOURCE });
 const ReqBodySchema = jSchema({ lang: 'zh_CN', mock: MOCK_SOURCE });
+// 编辑器内嵌 antd3 的全量样式:经 build/json-schema-css-scope-loader.js 把选择器
+// 前缀化为 `.json-schema-editor-scope `,仅作用于下方编辑器容器,不再全局加载。
+import 'json-schema-editor-visual/node_modules/antd/dist/antd.css';
 
 
 require('common/tui-editor/dist/tui-editor.min.css'); // editor ui
@@ -1182,7 +1185,10 @@ function InterfaceEditForm(/** @type {any} */ props) {
               <Switch checkedChildren="开" unCheckedChildren="关" disabled={!projectMsg.is_json5} />
             </FormItem>
 
-            <Col style={{ marginTop: '5px' }} className="interface-edit-json-info">
+            <Col
+              style={{ marginTop: '5px' }}
+              className="interface-edit-json-info json-schema-editor-scope"
+            >
               {!reqBodyIsJsonSchema ? (
                 <span>
                   基于 Json5, 参数描述信息用注释的方式实现{' '}
@@ -1308,7 +1314,10 @@ function InterfaceEditForm(/** @type {any} */ props) {
                     ，“全局编辑”或 “退出全屏” 请按 <span style={{ fontWeight: '500' }}>F9</span>
                   </div>
                 ) : (
-                  <div style={{ display: state.jsonType === 'tpl' ? 'block' : 'none' }}>
+                  <div
+                    className="json-schema-editor-scope"
+                    style={{ display: state.jsonType === 'tpl' ? 'block' : 'none' }}
+                  >
                     <ResBodySchema
                       onChange={(/** @type {any} */ text) => {
                         setState((/** @type {any} */ prev) => ({

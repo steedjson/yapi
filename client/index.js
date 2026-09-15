@@ -1,9 +1,9 @@
 // antd 5 组件样式为 css-in-js 运行时注入,不再有全局 antd css;reset 提供基础 normalize。
 import 'antd/dist/reset.css';
-// json-schema-editor-visual(接口编辑的 JSON Schema 编辑器)内嵌 antd3 组件,
-// 依赖全局 .ant-* 样式表;v5 后应用内无全局 antd css,显式加载其内嵌 antd3 的样式。
-// 置于 common.scss 之前,保证应用层样式在级联中后置胜出。
-import 'json-schema-editor-visual/node_modules/antd/dist/antd.css';
+// json-schema-editor-visual(接口编辑的 JSON Schema 编辑器)内嵌 antd3 的全量样式
+// 已不再全局加载:由 build/json-schema-css-scope-loader.js 前缀化后随
+// InterfaceEditForm 的编辑器容器(./containers/Project/Interface/InterfaceList/InterfaceEditForm.js)
+// 以 .json-schema-editor-scope 作用域加载,避免 antd3 全局规则污染应用。
 import './styles/common.scss';
 import './plugin';
 import React, { useEffect, useState } from 'react';
