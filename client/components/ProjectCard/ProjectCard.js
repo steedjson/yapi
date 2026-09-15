@@ -136,20 +136,27 @@ class ProjectCard extends Component {
     return (
       <div className="card-container">
         <Card
-          bordered={false}
+          hoverable
+          variant="outlined"
           className="m-card"
           onClick={() =>
             this.props.history.push('/project/' + (projectData.projectid || projectData._id))
           }
         >
-          {React.createElement(getV4Icon(projectData.icon || 'star-o'), {
-            className: 'ui-logo',
-            style: {
-              backgroundColor:
-                constants.PROJECT_COLOR[projectData.color] || constants.PROJECT_COLOR.blue
-            }
-          })}
-          <h4 className="ui-title">{projectData.name || projectData.projectname}</h4>
+          <div className="project-card-content">
+            <div
+              className="ui-logo"
+              style={{
+                backgroundColor:
+                  constants.PROJECT_COLOR[projectData.color] || constants.PROJECT_COLOR.blue
+              }}
+            >
+              {React.createElement(getV4Icon(projectData.icon || 'star-o'))}
+            </div>
+            <h4 className="ui-title" title={projectData.name || projectData.projectname}>
+              {projectData.name || projectData.projectname}
+            </h4>
+          </div>
         </Card>
         <div
           className="card-btns"

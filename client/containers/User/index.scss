@@ -8,8 +8,9 @@
 .user-box {
   @include row-width-limit;
   padding: 0;
-  display: -webkit-box;
-  -webkit-box-flex: 1;
+  display: flex;
+  flex: 1;
+  width: 100%;
   margin: 0 auto;
   margin-top: 24px;
   .user-list {
@@ -66,7 +67,8 @@
   }
 
   .user-profile {
-    -webkit-box-flex: 1;
+    flex: 1;
+    width: 100%;
     background: var(--sk-bg-component);
     min-height: 5rem;
     position: relative;
@@ -144,13 +146,15 @@
       #old_password {
         margin-top: 0px;
       }
-      .ant-col-12 {
+      .ant-col-12,
+      .ant-col-18 {
         .ant-input {
           width: 60%;
           margin-right: 16px;
         }
       }
-      .ant-col-4 {
+      .ant-col-4,
+      .ant-col-6 {
         color: rgba(71, 86, 99, 0.8);
         font-weight: 500;
         padding: 0px 16px;

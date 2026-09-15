@@ -131,30 +131,34 @@ class ProjectList extends Component {
 
     const Follow = () => {
       return followProject.length ? (
-        <Row>
+        <div style={{ marginBottom: '15px' }}>
           <h3 className="owner-type">我的关注</h3>
-          {followProject.map((item, index) => {
-            return (
-              <Col xs={8} lg={6} xxl={4} key={index}>
-                <ProjectCard projectData={item} callbackResult={this.receiveRes} />
-              </Col>
-            );
-          })}
-        </Row>
+          <Row gutter={16}>
+            {followProject.map((item, index) => {
+              return (
+                <Col xs={24} sm={12} md={8} lg={6} xl={4} key={index}>
+                  <ProjectCard projectData={item} callbackResult={this.receiveRes} />
+                </Col>
+              );
+            })}
+          </Row>
+        </div>
       ) : null;
     };
     const NoFollow = () => {
       return noFollow.length ? (
-        <Row style={{ borderBottom: '1px solid #eee', marginBottom: '15px' }}>
+        <div style={{ borderBottom: '1px solid #eee', marginBottom: '15px' }}>
           <h3 className="owner-type">我的项目</h3>
-          {noFollow.map((item, index) => {
-            return (
-              <Col xs={8} lg={6} xxl={4} key={index}>
-                <ProjectCard projectData={item} callbackResult={this.receiveRes} isShow={isShow} />
-              </Col>
-            );
-          })}
-        </Row>
+          <Row gutter={16}>
+            {noFollow.map((item, index) => {
+              return (
+                <Col xs={24} sm={12} md={8} lg={6} xl={4} key={index}>
+                  <ProjectCard projectData={item} callbackResult={this.receiveRes} isShow={isShow} />
+                </Col>
+              );
+            })}
+          </Row>
+        </div>
       ) : null;
     };
 
@@ -189,31 +193,29 @@ class ProjectList extends Component {
             )}
           </Col>
         </Row>
-        <Row>
-          {/* {projectData.length ? projectData.map((item, index) => {
-            return (
-              <Col xs={8} md={6} xl={4} key={index}>
-                <ProjectCard projectData={item} callbackResult={this.receiveRes} />
-              </Col>);
-          }) : <ErrMsg type="noProject" />} */}
-          {this.props.currGroup.type === 'private' ? (
-            <OwnerSpace />
-          ) : projectData.length ? (
-            projectData.map((/** @type {any} */ item, /** @type {any} */ index) => {
-              return (
-                <Col xs={8} lg={6} xxl={4} key={index}>
-                  <ProjectCard
-                    projectData={item}
-                    callbackResult={this.receiveRes}
-                    isShow={isShow}
-                  />
-                </Col>
-              );
-            })
-          ) : (
-            <ErrMsg type="noProject" />
-          )}
-        </Row>
+        {this.props.currGroup.type === 'private' ? (
+          <OwnerSpace />
+        ) : (
+          <Row gutter={16}>
+            {projectData.length ? (
+              projectData.map((/** @type {any} */ item, /** @type {any} */ index) => {
+                return (
+                  <Col xs={24} sm={12} md={8} lg={6} xl={4} key={index}>
+                    <ProjectCard
+                      projectData={item}
+                      callbackResult={this.receiveRes}
+                      isShow={isShow}
+                    />
+                  </Col>
+                );
+              })
+            ) : (
+              <Col span={24}>
+                <ErrMsg type="noProject" />
+              </Col>
+            )}
+          </Row>
+        )}
       </div>
     );
   }

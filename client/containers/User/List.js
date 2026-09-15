@@ -5,7 +5,7 @@ import { setBreadcrumb } from '../../reducer/modules/user';
 //import PropTypes from 'prop-types'
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import { Table, Popconfirm, message, Input, Button, Modal, Select, Tag } from 'antd';
+import { Table, Popconfirm, message, Input, Button, Modal, Select, Tag, Divider, Space } from 'antd';
 import axios from 'axios';
 
 const Search = Input.Search;
@@ -419,28 +419,22 @@ class List extends Component {
         width: 300,
         render: item => {
           return (
-            <span>
+            <Space split={<Divider type="vertical" />}>
               <a onClick={() => this.openEditModal(item)}>编辑</a>
-              <span className='ant-divider' />
               <a onClick={() => this.openResetModal(item)}>重置密码</a>
+              {!this.isSelf(item) && <a onClick={() => this.openRoleModal(item)}>角色</a>}
               {!this.isSelf(item) && (
-                <span>
-                  <span className='ant-divider' />
-                  <a onClick={() => this.openRoleModal(item)}>角色</a>
-                  <span className='ant-divider' />
-                  <Popconfirm
-                    title={item.disabled ? '确认启用该用户?' : '确认禁用该用户?'}
-                    onConfirm={() => {
-                      this.handleChangeStatus(item);
-                    }}
-                    okText='确定'
-                    cancelText='取消'
-                  >
-                    <a href='#'>{item.disabled ? '启用' : '禁用'}</a>
-                  </Popconfirm>
-                </span>
+                <Popconfirm
+                  title={item.disabled ? '确认启用该用户?' : '确认禁用该用户?'}
+                  onConfirm={() => {
+                    this.handleChangeStatus(item);
+                  }}
+                  okText='确定'
+                  cancelText='取消'
+                >
+                  <a href='#'>{item.disabled ? '启用' : '禁用'}</a>
+                </Popconfirm>
               )}
-              <span className='ant-divider' />
               <Popconfirm
                 title='确认删除此用户?'
                 onConfirm={() => {
@@ -451,7 +445,7 @@ class List extends Component {
               >
                 <a href='#'>删除</a>
               </Popconfirm>
-            </span>
+            </Space>
           );
         }
       }

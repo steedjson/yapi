@@ -861,7 +861,7 @@ class InterfaceMenu extends Component {
               selectedKeys={currentKes.selects}
               onSelect={this.onSelect}
               onExpand={this.onExpand}
-              draggable
+              draggable={{ icon: false }}
               onDrop={this.onDrop}
               treeData={[
                 {

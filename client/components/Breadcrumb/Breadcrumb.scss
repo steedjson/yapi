@@ -7,20 +7,27 @@
     color: var(--sk-text-on-header);
     padding-left: 16px;
     line-height: unset;
-  
-  }
-  .ant-breadcrumb a {
-    color: var(--sk-text-on-header);
-    &:hover {
-      color: $color-blue
+
+    ol,
+    li,
+    span,
+    .ant-breadcrumb-link {
+      color: var(--sk-text-on-header) !important;
+      font-weight: 500;
     }
-  }
-  .ant-breadcrumb > span:last-child {
-    color: var(--sk-text-on-header);
-    font-weight: normal;
-  }
-  .ant-breadcrumb-separator {
-    color: var(--sk-text-on-header);
-    font-weight: normal;
+
+    a,
+    .ant-breadcrumb-link a {
+      color: var(--sk-text-on-header) !important;
+      &:hover {
+        color: $color-blue !important;
+      }
+    }
+
+    .ant-breadcrumb-separator {
+      color: var(--sk-text-on-header) !important;
+      font-weight: normal;
+      opacity: 0.85;
+    }
   }
 }

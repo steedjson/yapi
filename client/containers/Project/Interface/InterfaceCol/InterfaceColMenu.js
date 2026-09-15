@@ -548,7 +548,7 @@ export default class InterfaceColMenu extends Component {
             selectedKeys={currentKes.selects}
             onSelect={this.onSelect}
             autoExpandParent
-            draggable
+            draggable={{ icon: false }}
             onExpand={this.onExpand}
             onDrop={this.onDrop}
             treeData={list.map(col => ({

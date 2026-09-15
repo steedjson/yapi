@@ -108,6 +108,9 @@
   }
 
   .interface-list {
+    .ant-tree-draggable-icon {
+      display: none !important;
+    }
     //max-height: 600px;
     //overflow-y: scroll;
     .cat_switch_hidden {

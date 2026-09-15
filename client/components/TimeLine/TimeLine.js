@@ -172,37 +172,35 @@ class TimeTree extends Component {
       </Option>
     );
 
+    let timelineItems = [];
     if (data && data.length) {
-      data = data.map((item, i) => {
+      timelineItems = data.map((item, i) => {
         let interfaceDiff = false;
-        // 去掉了 && item.data.interface_id
         if (item.data && typeof item.data === 'object') {
           interfaceDiff = true;
         }
-        return (
-          <Timeline.Item
-            dot={
-              <Link to={`/user/profile/${item.uid}`}>
-                <Avatar src={`/api/user/avatar?uid=${item.uid}`} />
-              </Link>
-            }
-            key={i}
-          >
-            <div className="logMesHeade">
-              <span className="logoTimeago">{timeago(item.add_time)}</span>
-              {/*<span className="logusername"><Link to={`/user/profile/${item.uid}`}>{item.username}</Link></span>*/}
-              <span className="logtype">{logType[item.type]}动态</span>
-              <span className="logtime">{formatTime(item.add_time)}</span>
+        return {
+          key: i,
+          dot: (
+            <Link to={`/user/profile/${item.uid}`}>
+              <Avatar src={`/api/user/avatar?uid=${item.uid}`} />
+            </Link>
+          ),
+          children: (
+            <div>
+              <div className="logMesHeade">
+                <span className="logoTimeago">{timeago(item.add_time)}</span>
+                <span className="logtype">{logType[item.type]}动态</span>
+                <span className="logtime">{formatTime(item.add_time)}</span>
+              </div>
+              <span className="logcontent" dangerouslySetInnerHTML={{ __html: item.content }} />
+              <div style={{ padding: '10px 0 0 10px' }}>
+                {interfaceDiff && <Button onClick={() => this.openDiff(item.data)}>改动详情</Button>}
+              </div>
             </div>
-            <span className="logcontent" dangerouslySetInnerHTML={{ __html: item.content }} />
-            <div style={{ padding: '10px 0 0 10px' }}>
-              {interfaceDiff && <Button onClick={() => this.openDiff(item.data)}>改动详情</Button>}
-            </div>
-          </Timeline.Item>
-        );
+          )
+        };
       });
-    } else {
-      data = '';
     }
     let pending =
       this.props.newsData.total <= this.props.curpage ? (
@@ -272,10 +270,8 @@ class TimeTree extends Component {
             </Col>
           </Row>
         )}
-        {data ? (
-          <Timeline className="news-content" pending={pending}>
-            {data}
-          </Timeline>
+        {timelineItems && timelineItems.length > 0 ? (
+          <Timeline className="news-content" pending={pending} items={timelineItems} />
         ) : (
           <ErrMsg type="noData" />
         )}

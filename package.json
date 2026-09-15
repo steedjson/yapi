@@ -4,7 +4,7 @@
   "description": "YAPI",
   "main": "server/app.js",
   "scripts": {
-    "dev-copy-icon": "cp -r static/iconfont ./",
+    "dev-copy-icon": "cp -r static/iconfont ./ && cp common/tui-editor/dist/tui-editor*.png static/ && cp common/tui-editor/dist/tui-editor*.png static/prd/",
     "dev-server": " nodemon server/app.js dev -L",
     "install-server": " node server/install.js",
     "dev-client": "npm run dev-client-standalone",

@@ -613,9 +613,11 @@ export default class Run extends Component {
         <div className="url">
           <InputGroup compact style={{ display: 'flex' }}>
             <Select disabled value={method} style={{ flexBasis: 60 }}>
-              {Object.keys(HTTP_METHOD).map(name => {
-                <Option value={name.toUpperCase()}>{name.toUpperCase()}</Option>;
-              })}
+              {Object.keys(HTTP_METHOD).map(name => (
+                <Option value={name.toUpperCase()} key={name}>
+                  {name.toUpperCase()}
+                </Option>
+              ))}
             </Select>
             <Select
               value={case_env}
@@ -658,7 +660,7 @@ export default class Run extends Component {
               onClick={this.reqRealInterface}
               type="primary"
               style={{ marginLeft: 10 }}
-              icon={loading ? 'loading' : ''}
+              loading={loading}
             >
               {loading ? '取消' : '发送'}
             </Button>

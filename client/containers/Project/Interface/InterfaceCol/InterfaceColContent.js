@@ -180,10 +180,12 @@ class InterfaceColContent extends Component {
     let { currColId } = this.props;
     const params = this.props.match.params;
     const { actionId } = params;
-    this.currColId = currColId = +actionId || result.payload.data.data[0]._id;
+    const colList = result && result.payload && result.payload.data && result.payload.data.data;
+    const firstCol = Array.isArray(colList) && colList.length > 0 ? colList[0] : null;
+    this.currColId = currColId = +actionId || (firstCol ? firstCol._id : 0);
     // this.props.history.push('/project/' + params.id + '/interface/col/' + currColId);
     if (currColId && currColId != 0) {
-      await this.handleColIdChange(currColId)
+      await this.handleColIdChange(currColId);
     }
 
     this._crossRequestInterval = initCrossRequest(hasPlugin => {

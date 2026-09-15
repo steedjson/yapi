@@ -81,6 +81,12 @@ const authed = Component => {
   return authedCache.get(Component);
 };
 
+const AppHeader = withRouter(props => {
+  const isLoginPage = props.location && props.location.pathname === '/login';
+  if (isLoginPage) return null;
+  return props.loginState !== 1 ? <Header /> : null;
+});
+
 @connect(
   state => {
     return {
@@ -121,7 +127,7 @@ export default class App extends Component {
             <div className="router-main">
               {this.props.curUserRole === 'admin' && <Notify />}
               {alertContent()}
-              {this.props.loginState !== 1 ? <Header /> : null}
+              <AppHeader loginState={this.props.loginState} />
               <div className="router-container">
                 {/* v6：Route 必须是 Routes 直接子元素，v5 时代顶层裸 Route 独立匹配语义由
                     Routes 的最佳匹配承担（各路径前缀互不重叠，行为等价） */}

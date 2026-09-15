@@ -16,6 +16,15 @@
       line-height: .54rem;
       padding: 0 .36rem;
       font-weight: normal;
+      // 高亮下划线与文字区域对齐（与 padding 0 .36rem 保持一致），避免下划线宽度跳变。
+      // 用 .item.ant-menu-item 提升优先级，确保覆盖 antd 对 .ant-menu-item::after 的 inset-inline: 16px
+      &.ant-menu-item::after {
+        inset-inline: .36rem;
+        left: .36rem;
+        right: .36rem;
+        // 下划线颜色在选中/取消选中双向平滑过渡，消除非必要的跳动
+        transition: border-color .3s cubic-bezier(0.645, 0.045, 0.355, 1);
+      }
     }
   }
 }

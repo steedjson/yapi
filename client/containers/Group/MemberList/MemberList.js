@@ -2,7 +2,7 @@ import React, { PureComponent as Component } from 'react';
 import { DeleteOutlined } from '@ant-design/icons';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import { Table, Select, Button, Modal, Row, Col, message, Popconfirm } from 'antd';
+import { Table, Select, Button, Modal, Row, Col, message, Popconfirm, Space, Divider } from 'antd';
 import { Link } from 'react-router-dom';
 import './MemberList.scss';
 import { autobind } from 'core-decorators';
@@ -227,7 +227,7 @@ class MemberList extends Component {
         render: (text, record) => {
           if (this.state.role === 'owner' || this.state.role === 'admin') {
             return (
-              <div>
+              <Space split={<Divider type="vertical" />}>
                 <Select
                   value={record.role + '-' + record.uid}
                   className="select"
@@ -247,7 +247,7 @@ class MemberList extends Component {
                   <Button type="danger" icon={<DeleteOutlined />} className="btn-danger" />
                   {/*  */}
                 </Popconfirm>
-              </div>
+              </Space>
             );
           } else {
             // 非管理员可以看到权限 但无法修改

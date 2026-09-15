@@ -54,7 +54,9 @@ import {
   CloseOutlined,
   DownloadOutlined,
   UploadOutlined,
-  CopyOutlined
+  CopyOutlined,
+  GithubOutlined,
+  AliwangwangOutlined
 } from '@ant-design/icons';
 
 export const V3_TO_V4_ICON = {
@@ -110,7 +112,10 @@ export const V3_TO_V4_ICON = {
   close: CloseOutlined,
   'download': DownloadOutlined,
   upload: UploadOutlined,
-  copy: CopyOutlined
+  copy: CopyOutlined,
+  github: GithubOutlined,
+  'aliwangwang-o': AliwangwangOutlined,
+  aliwangwang: AliwangwangOutlined
 };
 
 /**

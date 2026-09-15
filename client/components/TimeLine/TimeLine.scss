@@ -17,12 +17,10 @@
 
 
 .news-box {
-    display: -webkit-box;
-    -webkit-box-flex: 1;
+    display: block;
     margin: 0px auto 0 auto;
     font-size: 0.14rem;
     background: var(--sk-bg-component);
-    display: block;
     min-height: 550px;
     border-radius: var(--sk-radius);
     .news-timeline{

@@ -404,18 +404,18 @@ class Profile extends Component {
           </Row>
           <Row className="user-item" type="flex" justify="start">
             <div className="maoboli" />
-            <Col span={4}>用户id</Col>
-            <Col span={12}>{userinfo.uid}</Col>
+            <Col span={6}>用户id</Col>
+            <Col span={18}>{userinfo.uid}</Col>
           </Row>
           <Row className="user-item" type="flex" justify="start">
             <div className="maoboli" />
-            <Col span={4}>用户名</Col>
-            <Col span={12}>{userNameEditHtml}</Col>
+            <Col span={6}>用户名</Col>
+            <Col span={18}>{userNameEditHtml}</Col>
           </Row>
           <Row className="user-item" type="flex" justify="start">
             <div className="maoboli" />
-            <Col span={4}>Email</Col>
-            <Col span={12}>{emailEditHtml}</Col>
+            <Col span={6}>Email</Col>
+            <Col span={18}>{emailEditHtml}</Col>
           </Row>
           <Row
             className="user-item"
@@ -424,8 +424,8 @@ class Profile extends Component {
             justify="start"
           >
             <div className="maoboli" />
-            <Col span={4}>角色</Col>
-            <Col span={12}>{roleEditHtml}</Col>
+            <Col span={6}>角色</Col>
+            <Col span={18}>{roleEditHtml}</Col>
           </Row>
           <Row
             className="user-item"
@@ -434,25 +434,25 @@ class Profile extends Component {
             justify="start"
           >
             <div className="maoboli" />
-            <Col span={4}>登陆方式</Col>
-            <Col span={12}>{userinfo.type === 'site' ? '站点登陆' : '第三方登陆'}</Col>
+            <Col span={6}>登陆方式</Col>
+            <Col span={18}>{userinfo.type === 'site' ? '站点登陆' : '第三方登陆'}</Col>
           </Row>
           <Row className="user-item" type="flex" justify="start">
             <div className="maoboli" />
-            <Col span={4}>创建账号时间</Col>
-            <Col span={12}>{formatTime(userinfo.add_time)}</Col>
+            <Col span={6}>创建账号时间</Col>
+            <Col span={18}>{formatTime(userinfo.add_time)}</Col>
           </Row>
           <Row className="user-item" type="flex" justify="start">
             <div className="maoboli" />
-            <Col span={4}>更新账号时间</Col>
-            <Col span={12}>{formatTime(userinfo.up_time)}</Col>
+            <Col span={6}>更新账号时间</Col>
+            <Col span={18}>{formatTime(userinfo.up_time)}</Col>
           </Row>
 
           {userType ? (
             <Row className="user-item" type="flex" justify="start">
               <div className="maoboli" />
-              <Col span={4}>密码</Col>
-              <Col span={12}>{secureEditHtml}</Col>
+              <Col span={6}>密码</Col>
+              <Col span={18}>{secureEditHtml}</Col>
             </Row>
           ) : (
             ''

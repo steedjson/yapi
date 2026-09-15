@@ -1,6 +1,6 @@
 import './Breadcrumb.scss';
 import withRouter from '../../withRouter';
-import { Breadcrumb } from 'antd';
+import { Breadcrumb, ConfigProvider } from 'antd';
 import PropTypes from 'prop-types';
 import React, { PureComponent as Component } from 'react';
 import { connect } from 'react-redux';
@@ -22,20 +22,31 @@ export default class BreadcrumbNavigation extends Component {
   };
 
   render() {
-    const getItem = this.props.breadcrumb.map((item, index) => {
-      if (item.href) {
-        return (
-          <Breadcrumb.Item key={index}>
-            <Link to={item.href}>{item.name}</Link>
-          </Breadcrumb.Item>
-        );
-      } else {
-        return <Breadcrumb.Item key={index}>{item.name}</Breadcrumb.Item>;
-      }
+    const items = (this.props.breadcrumb || []).map((item, index) => {
+      return {
+        key: index,
+        title: item.href ? <Link to={item.href}>{item.name}</Link> : item.name
+      };
     });
+
     return (
       <div className="breadcrumb-container">
-        <Breadcrumb>{getItem}</Breadcrumb>
+        <ConfigProvider
+          theme={{
+            components: {
+              Breadcrumb: {
+                itemColor: '#ffffff',
+                lastItemColor: '#ffffff',
+                separatorColor: 'rgba(255, 255, 255, 0.7)',
+                linkColor: '#ffffff',
+                linkHoverColor: '#2395f1',
+                fontSize: 16
+              }
+            }
+          }}
+        >
+          <Breadcrumb items={items} />
+        </ConfigProvider>
       </div>
     );
   }
