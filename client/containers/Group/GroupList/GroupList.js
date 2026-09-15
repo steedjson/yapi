@@ -243,37 +243,40 @@ export default class GroupList extends Component {
             mode="inline"
             onClick={this.selectGroup}
             selectedKeys={[`${currGroup._id}`]}
-          >
-            {this.state.groupList.map(group => {
+            items={this.state.groupList.map(group => {
               if (group.type === 'private') {
-                return (
-                  <Menu.Item
-                    key={`${group._id}`}
-                    className="group-item"
-                    style={{ zIndex: this.props.studyTip === 0 ? 3 : 1 }}
-                  >
-                    <UserOutlined />
-                    <Popover
-                      overlayClassName="popover-index"
-                      content={<GuideBtns />}
-                      title={tip}
-                      placement="right"
-                      open={this.props.studyTip === 0 && !this.props.study}
-                    >
-                      {group.group_name}
-                    </Popover>
-                  </Menu.Item>
-                );
-              } else {
-                return (
-                  <Menu.Item key={`${group._id}`} className="group-item">
+                return {
+                  key: `${group._id}`,
+                  className: 'group-item',
+                  style: { zIndex: this.props.studyTip === 0 ? 3 : 1 },
+                  label: (
+                    <span>
+                      <UserOutlined />
+                      <Popover
+                        overlayClassName="popover-index"
+                        content={<GuideBtns />}
+                        title={tip}
+                        placement="right"
+                        open={this.props.studyTip === 0 && !this.props.study}
+                      >
+                        {group.group_name}
+                      </Popover>
+                    </span>
+                  )
+                };
+              }
+              return {
+                key: `${group._id}`,
+                className: 'group-item',
+                label: (
+                  <span>
                     <FolderOpenOutlined />
                     {group.group_name}
-                  </Menu.Item>
-                );
-              }
+                  </span>
+                )
+              };
             })}
-          </Menu>
+          />
         </div>
         {this.state.addGroupModalVisible ? (
           <Modal

@@ -23,7 +23,6 @@ import {
 import { arrayChangeIndex } from '../../../../common.js';
 import _ from 'underscore'
 
-const TreeNode = Tree.TreeNode;
 const FormItem = Form.Item;
 const confirm = Modal.confirm;
 const headHeight = 240; // menu顶部到网页顶部部分的高度
@@ -455,45 +454,44 @@ export default class InterfaceColMenu extends Component {
       }
     };
 
+    // antd5 Tree 移除 TreeNode JSX,改用 treeData 配置({ key, title, children })
     const itemInterfaceColCreate = interfaceCase => {
-      return (
-        <TreeNode
-          style={{ width: '100%' }}
-          key={'case_' + interfaceCase._id}
-          title={
-            <div
-              className="menu-title"
-              onMouseEnter={() => this.enterItem(interfaceCase._id)}
-              onMouseLeave={this.leaveItem}
-              title={interfaceCase.casename}
-            >
-              <span className="casename">{interfaceCase.casename}</span>
-              <div className="btns">
-                <Tooltip title="删除用例">
-                  <DeleteOutlined
-                    className="interface-delete-icon"
-                    onClick={e => {
-                      e.stopPropagation();
-                      this.showDelCaseConfirm(interfaceCase._id);
-                    }}
-                    style={{ display: this.state.delIcon == interfaceCase._id ? 'block' : 'none' }}
-                  />
-                </Tooltip>
-                <Tooltip title="克隆用例">
-                  <CopyOutlined
-                    className="interface-delete-icon"
-                    onClick={e => {
-                      e.stopPropagation();
-                      this.caseCopy(interfaceCase._id);
-                    }}
-                    style={{ display: this.state.delIcon == interfaceCase._id ? 'block' : 'none' }}
-                  />
-                </Tooltip>
-              </div>
+      return {
+        key: 'case_' + interfaceCase._id,
+        style: { width: '100%' },
+        title: (
+          <div
+            className="menu-title"
+            onMouseEnter={() => this.enterItem(interfaceCase._id)}
+            onMouseLeave={this.leaveItem}
+            title={interfaceCase.casename}
+          >
+            <span className="casename">{interfaceCase.casename}</span>
+            <div className="btns">
+              <Tooltip title="删除用例">
+                <DeleteOutlined
+                  className="interface-delete-icon"
+                  onClick={e => {
+                    e.stopPropagation();
+                    this.showDelCaseConfirm(interfaceCase._id);
+                  }}
+                  style={{ display: this.state.delIcon == interfaceCase._id ? 'block' : 'none' }}
+                />
+              </Tooltip>
+              <Tooltip title="克隆用例">
+                <CopyOutlined
+                  className="interface-delete-icon"
+                  onClick={e => {
+                    e.stopPropagation();
+                    this.caseCopy(interfaceCase._id);
+                  }}
+                  style={{ display: this.state.delIcon == interfaceCase._id ? 'block' : 'none' }}
+                />
+              </Tooltip>
             </div>
-          }
-        />
-      );
+          </div>
+        )
+      };
     };
 
     let currentKes = defaultExpandedKeys();
@@ -553,64 +551,60 @@ export default class InterfaceColMenu extends Component {
             draggable
             onExpand={this.onExpand}
             onDrop={this.onDrop}
-          >
-            {list.map(col => (
-              <TreeNode
-                key={'col_' + col._id}
-                title={
-                  <div className="menu-title">
-                    <span>
-                      <FolderOpenOutlined style={{ marginRight: 5 }} />
-                      <span>{col.name}</span>
-                    </span>
-                    <div className="btns">
-                      <Tooltip title="删除集合">
-                        <DeleteOutlined
-                          style={{ display: list.length > 1 ? '' : 'none' }}
-                          className="interface-delete-icon"
-                          onClick={() => {
-                            this.showDelColConfirm(col._id);
-                          }}
-                        />
-                      </Tooltip>
-                      <Tooltip title="编辑集合">
-                        <EditOutlined
-                          className="interface-delete-icon"
-                          onClick={e => {
-                            e.stopPropagation();
-                            this.showColModal('edit', col);
-                          }}
-                        />
-                      </Tooltip>
-                      <Tooltip title="导入接口">
-                        <PlusOutlined
-                          className="interface-delete-icon"
-                          onClick={e => {
-                            e.stopPropagation();
-                            this.showImportInterfaceModal(col._id);
-                          }}
-                        />
-                      </Tooltip>
-                      <Tooltip title="克隆集合">
-                        <CopyOutlined
-                          className="interface-delete-icon"
-                          onClick={e => {
-                            e.stopPropagation();
-                            this.copyInterface(col);
-                          }}
-                        />
-                      </Tooltip>
-                    </div>
-                    {/*<Dropdown overlay={menu(col)} trigger={['click']} onClick={e => e.stopPropagation()}>
-                      
-                    </Dropdown>*/}
+            treeData={list.map(col => ({
+              key: 'col_' + col._id,
+              title: (
+                <div className="menu-title">
+                  <span>
+                    <FolderOpenOutlined style={{ marginRight: 5 }} />
+                    <span>{col.name}</span>
+                  </span>
+                  <div className="btns">
+                    <Tooltip title="删除集合">
+                      <DeleteOutlined
+                        style={{ display: list.length > 1 ? '' : 'none' }}
+                        className="interface-delete-icon"
+                        onClick={() => {
+                          this.showDelColConfirm(col._id);
+                        }}
+                      />
+                    </Tooltip>
+                    <Tooltip title="编辑集合">
+                      <EditOutlined
+                        className="interface-delete-icon"
+                        onClick={e => {
+                          e.stopPropagation();
+                          this.showColModal('edit', col);
+                        }}
+                      />
+                    </Tooltip>
+                    <Tooltip title="导入接口">
+                      <PlusOutlined
+                        className="interface-delete-icon"
+                        onClick={e => {
+                          e.stopPropagation();
+                          this.showImportInterfaceModal(col._id);
+                        }}
+                      />
+                    </Tooltip>
+                    <Tooltip title="克隆集合">
+                      <CopyOutlined
+                        className="interface-delete-icon"
+                        onClick={e => {
+                          e.stopPropagation();
+                          this.copyInterface(col);
+                        }}
+                      />
+                    </Tooltip>
                   </div>
-                }
-              >
-                {col.caseList.map(itemInterfaceColCreate)}
-              </TreeNode>
-            ))}
-          </Tree>
+                  {/*<Dropdown overlay={menu(col)} trigger={['click']} onClick={e => e.stopPropagation()}>
+
+                  </Dropdown>*/}
+                </div>
+              ),
+              children: col.caseList.map(itemInterfaceColCreate)
+            }))}
+          />
         </div>
         <ColModalForm
           saveFormRef={this.saveFormRef}

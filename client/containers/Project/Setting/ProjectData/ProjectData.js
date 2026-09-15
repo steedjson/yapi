@@ -427,10 +427,9 @@ class ProjectData extends Component {
                   showSearch
                   style={{ width: '100%' }}
                   placeholder="请选择数据导入的默认分类"
-                  optionFilterProp="children"
                   onChange={this.selectChange.bind(this)}
                   filterOption={(/** @type {any} */ input, /** @type {any} */ option) =>
-                    option.props.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+                    option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
                   }
                 >
                   {categories.map((/** @type {any} */ category) => {

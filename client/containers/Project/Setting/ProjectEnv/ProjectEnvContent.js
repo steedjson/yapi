@@ -183,11 +183,11 @@ function ProjectEnvContent(props) {
             <AutoComplete
               style={{ width: '200px' }}
               allowClear={true}
-              dataSource={constants.HTTP_REQUEST_HEADER}
+              options={constants.HTTP_REQUEST_HEADER.map(item => ({ value: item, label: item }))}
               placeholder="请输入header名称"
               onChange={() => addHeader(item, index, 'header')}
               filterOption={(inputValue, option) =>
-                option.props.children.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
+                option.value.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
               }
             />
           </FormItem>

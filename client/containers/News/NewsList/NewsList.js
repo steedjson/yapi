@@ -63,15 +63,12 @@ class NewsList extends Component {
           mode="inline"
           selectedKeys={[`${this.state.selectedKeys}`]}
           onClick={this.getLogData.bind(this)}
-        >
-          {logList.map((item, i) => {
-            return (
-              <Menu.Item key={i} className="log-item">
-                {item.name}
-              </Menu.Item>
-            );
-          })}
-        </Menu>
+          items={logList.map((item, i) => ({
+            key: `${i}`,
+            className: 'log-item',
+            label: item.name
+          }))}
+        />
       </div>
     );
   }

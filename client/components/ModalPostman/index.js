@@ -9,7 +9,6 @@ import VariablesSelect from './VariablesSelect.js';
 import { trim } from '../../common.js';
 
 const { handleParamsValue } = require('common/utils.js');
-const Panel = Collapse.Panel;
 
 // 深拷贝
 function deepEqual(state) {
@@ -253,39 +252,49 @@ class ModalPostman extends Component {
                   onChange={this.handleCollapse}
                   bordered={false}
                   accordion
-                >
-                  <Panel header={<h3 className="mock-title">常量</h3>} key="1">
-                    <Input
-                      placeholder="基础参数值"
-                      value={constantInput}
-                      onChange={e => this.handleConstantsInput(e.target.value, index)}
-                    />
-                  </Panel>
-                  <Panel header={<h3 className="mock-title">mock数据</h3>} key="2">
-                    <MockList click={this.mockClick(index)} clickValue={item.name} />
-                  </Panel>
-                  {envType === 'case' && (
-                    <Panel
-                      header={
-                        <h3 className="mock-title">
-                          变量&nbsp;<Tooltip
-                            placement="top"
-                            title="YApi 提供了强大的变量参数功能，你可以在测试的时候使用前面接口的 参数 或 返回值 作为 后面接口的参数，即使接口之间存在依赖，也可以轻松 一键测试~"
-                          >
-                            <QuestionCircleOutlined />
-                          </Tooltip>
-                        </h3>
-                      }
-                      key="3"
-                    >
-                      <VariablesSelect
-                        id={this.props.id}
-                        click={this.mockClick(index)}
-                        clickValue={item.name}
-                      />
-                    </Panel>
-                  )}
-                </Collapse>
+                  items={[
+                    {
+                      key: '1',
+                      label: <h3 className="mock-title">常量</h3>,
+                      children: (
+                        <Input
+                          placeholder="基础参数值"
+                          value={constantInput}
+                          onChange={e => this.handleConstantsInput(e.target.value, index)}
+                        />
+                      )
+                    },
+                    {
+                      key: '2',
+                      label: <h3 className="mock-title">mock数据</h3>,
+                      children: <MockList click={this.mockClick(index)} clickValue={item.name} />
+                    },
+                    ...(envType === 'case'
+                      ? [
+                          {
+                            key: '3',
+                            label: (
+                              <h3 className="mock-title">
+                                变量&nbsp;<Tooltip
+                                  placement="top"
+                                  title="YApi 提供了强大的变量参数功能，你可以在测试的时候使用前面接口的 参数 或 返回值 作为 后面接口的参数，即使接口之间存在依赖，也可以轻松 一键测试~"
+                                >
+                                  <QuestionCircleOutlined />
+                                </Tooltip>
+                              </h3>
+                            ),
+                            children: (
+                              <VariablesSelect
+                                id={this.props.id}
+                                click={this.mockClick(index)}
+                                clickValue={item.name}
+                              />
+                            )
+                          }
+                        ]
+                      : [])
+                  ]}
+                />
               </Col>
             ) : (
               <Col span={8} className="modal-postman-col" key={index}>

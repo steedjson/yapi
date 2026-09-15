@@ -32,7 +32,6 @@ import { arrayChangeIndex } from '../../../../common.js';
 import './interfaceMenu.scss';
 
 const confirm = Modal.confirm;
-const TreeNode = Tree.TreeNode;
 const headHeight = 240; // menu顶部到网页顶部部分的高度
 
 @connect(
@@ -632,54 +631,56 @@ class InterfaceMenu extends Component {
    * @param {any} itemInterfaceCreate
    * @returns {any}
    */
-  renderCategory = (item, matchParams, itemInterfaceCreate) => (
-    <TreeNode
-      title={
-        <Link
-          className="interface-item"
+  // antd5 Tree 移除 TreeNode JSX,改用 treeData 配置({ key, title, className, children })
+  renderCategory = (item, matchParams, itemInterfaceCreate) => ({
+    title: (
+      <Link
+        className="interface-item"
+        onClick={(/** @type {any} */ e) => {
+          e.stopPropagation();
+          this.changeExpands();
+        }}
+        to={'/project/' + matchParams.id + '/interface/api/cat_' + item._id}
+      >
+        <FolderOpenOutlined style={{ marginRight: 5 }} />
+        {item.name}
+        <DeleteOutlined
+          className="interface-delete-icon"
           onClick={(/** @type {any} */ e) => {
+            e.preventDefault();
             e.stopPropagation();
-            this.changeExpands();
+            this.showDelCatConfirm(item._id);
           }}
-          to={'/project/' + matchParams.id + '/interface/api/cat_' + item._id}
-        >
-          <FolderOpenOutlined style={{ marginRight: 5 }} />
-          {item.name}
-          <DeleteOutlined
-            className="interface-delete-icon"
-            onClick={(/** @type {any} */ e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              this.showDelCatConfirm(item._id);
-            }}
-          />
-          <EditOutlined
-            className="interface-delete-icon"
-            onClick={(/** @type {any} */ e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              this.changeModal('change_cat_modal_visible', true);
-              this.setState({ curCatdata: item });
-            }}
-          />
-          <FolderAddOutlined
-            className="interface-delete-icon"
-            onClick={(/** @type {any} */ e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              this.changeModal('add_cat_modal_visible', true);
-              this.setState({ curCatid: item._id });
-            }}
-          />
-        </Link>
-      }
-      key={'cat_' + item._id}
-      className={`interface-item-nav ${(item.list || []).length || (item.children || []).length ? '' : 'cat_switch_hidden'}`}
-    >
-      {(item.list || []).map(itemInterfaceCreate)}
-      {(item.children || []).map((/** @type {any} */ child) => this.renderCategory(child, matchParams, itemInterfaceCreate))}
-    </TreeNode>
-  );
+        />
+        <EditOutlined
+          className="interface-delete-icon"
+          onClick={(/** @type {any} */ e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.changeModal('change_cat_modal_visible', true);
+            this.setState({ curCatdata: item });
+          }}
+        />
+        <FolderAddOutlined
+          className="interface-delete-icon"
+          onClick={(/** @type {any} */ e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.changeModal('add_cat_modal_visible', true);
+            this.setState({ curCatid: item._id });
+          }}
+        />
+      </Link>
+    ),
+    key: 'cat_' + item._id,
+    className: `interface-item-nav ${(item.list || []).length || (item.children || []).length ? '' : 'cat_switch_hidden'}`,
+    children: [
+      ...(item.list || []).map(itemInterfaceCreate),
+      ...(item.children || []).map((
+        /** @type {any} */ child
+      ) => this.renderCategory(child, matchParams, itemInterfaceCreate))
+    ]
+  });
 
   /**
    * @returns {any}
@@ -789,51 +790,49 @@ class InterfaceMenu extends Component {
      * @returns {any}
      */
     const itemInterfaceCreate = item => {
-      return (
-        <TreeNode
-          title={
-            <div
-              className="container-title"
-              onMouseEnter={() => this.enterItem(item._id)}
-              onMouseLeave={this.leaveItem}
+      return {
+        title: (
+          <div
+            className="container-title"
+            onMouseEnter={() => this.enterItem(item._id)}
+            onMouseLeave={this.leaveItem}
+          >
+            <Link
+              className="interface-item"
+              onClick={(/** @type {any} */ e) => e.stopPropagation()}
+              to={'/project/' + matchParams.id + '/interface/api/' + item._id}
             >
-              <Link
-                className="interface-item"
-                onClick={(/** @type {any} */ e) => e.stopPropagation()}
-                to={'/project/' + matchParams.id + '/interface/api/' + item._id}
-              >
-                {item.title}
-              </Link>
-              <div className="btns">
-                <Tooltip title="删除接口">
-                  <DeleteOutlined
-                    className="interface-delete-icon"
+              {item.title}
+            </Link>
+            <div className="btns">
+              <Tooltip title="删除接口">
+                <DeleteOutlined
+                  className="interface-delete-icon"
                   onClick={(/** @type {any} */ e) => {
                     e.stopPropagation();
                     this.showConfirm(item);
-                    }}
-                    style={{ display: this.state.delIcon == item._id ? 'block' : 'none' }}
-                  />
-                </Tooltip>
-                <Tooltip title="复制接口">
-                  <CopyOutlined
-                    className="interface-delete-icon"
+                  }}
+                  style={{ display: this.state.delIcon == item._id ? 'block' : 'none' }}
+                />
+              </Tooltip>
+              <Tooltip title="复制接口">
+                <CopyOutlined
+                  className="interface-delete-icon"
                   onClick={(/** @type {any} */ e) => {
                     e.stopPropagation();
                     this.copyInterface(item._id);
-                    }}
-                    style={{ display: this.state.delIcon == item._id ? 'block' : 'none' }}
-                  />
-                </Tooltip>
-              </div>
-              {/*<Dropdown overlay={menu(item)} trigger={['click']} onClick={e => e.stopPropagation()}>
-            
-          </Dropdown>*/}
+                  }}
+                  style={{ display: this.state.delIcon == item._id ? 'block' : 'none' }}
+                />
+              </Tooltip>
             </div>
-          }
-          key={'' + item._id}
-        />
-      );
+            {/*<Dropdown overlay={menu(item)} trigger={['click']} onClick={e => e.stopPropagation()}>
+
+          </Dropdown>*/}
+          </div>
+        ),
+        key: '' + item._id
+      };
     };
 
     let currentKes = defaultExpandedKeys();
@@ -864,25 +863,28 @@ class InterfaceMenu extends Component {
               onExpand={this.onExpand}
               draggable
               onDrop={this.onDrop}
-            >
-              <TreeNode
-                className="item-all-interface"
-                title={
-                  <Link
-                    onClick={(/** @type {any} */ e) => {
-                      e.stopPropagation();
-                      this.changeExpands();
-                    }}
-                    to={'/project/' + matchParams.id + '/interface/api'}
-                  >
-                    <FolderOutlined style={{ marginRight: 5 }} />
-                    全部接口
-                  </Link>
-                }
-                key="root"
-              />
-              {menuList.map((/** @type {any} */ item) => this.renderCategory(item, matchParams, itemInterfaceCreate))}
-            </Tree>
+              treeData={[
+                {
+                  className: 'item-all-interface',
+                  title: (
+                    <Link
+                      onClick={(/** @type {any} */ e) => {
+                        e.stopPropagation();
+                        this.changeExpands();
+                      }}
+                      to={'/project/' + matchParams.id + '/interface/api'}
+                    >
+                      <FolderOutlined style={{ marginRight: 5 }} />
+                      全部接口
+                    </Link>
+                  ),
+                  key: 'root'
+                },
+                ...menuList.map((
+                  /** @type {any} */ item
+                ) => this.renderCategory(item, matchParams, itemInterfaceCreate))
+              ]}
+            />
           </div>
         ) : null}
       </div>

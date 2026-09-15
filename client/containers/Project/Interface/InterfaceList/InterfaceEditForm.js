@@ -747,9 +747,9 @@ function InterfaceEditForm(/** @type {any} */ props) {
         <Col span="4" className="interface-edit-item-content-col">
           <FormItem name={['req_headers', index, 'name']} initialValue={data.name}>
             <AutoComplete
-              dataSource={HTTP_REQUEST_HEADER}
+              options={HTTP_REQUEST_HEADER.map(item => ({ value: item, label: item }))}
               filterOption={(/** @type {any} */ inputValue, /** @type {any} */ option) =>
-                option.props.children.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
+                option.value.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
               }
               placeholder="参数名称"
             />

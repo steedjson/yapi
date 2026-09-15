@@ -22,19 +22,18 @@ class Subnav extends Component {
           selectedKeys={[this.props.default]}
           mode="horizontal"
           className="g-row m-subnav-menu"
-        >
-          {this.props.data.map((item, index) => {
+          items={this.props.data.map((item, index) => {
             // 若导航标题为两个字，则自动在中间加个空格
             if (item.name.length === 2) {
               item.name = item.name[0] + ' ' + item.name[1];
             }
-            return (
-              <Menu.Item className="item" key={item.name.replace(' ', '')}>
-                <Link to={item.path}>{this.props.data[index].name}</Link>
-              </Menu.Item>
-            );
+            return {
+              className: 'item',
+              key: item.name.replace(' ', ''),
+              label: <Link to={item.path}>{this.props.data[index].name}</Link>
+            };
           })}
-        </Menu>
+        />
       </div>
     );
   }

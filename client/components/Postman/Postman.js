@@ -42,7 +42,6 @@ const createContext = require('common/createContext')
 const HTTP_METHOD = constants.HTTP_METHOD;
 const InputGroup = Input.Group;
 const Option = Select.Option;
-const Panel = Collapse.Panel;
 
 export const InsertCodeMap = [
   {
@@ -677,12 +676,16 @@ export default class Run extends Component {
           </Tooltip>
         </div>
 
-        <Collapse defaultActiveKey={['0', '1', '2', '3']} bordered={true}>
-          <Panel
-            header="PATH PARAMETERS"
-            key="0"
-            className={req_params.length === 0 ? 'hidden' : ''}
-          >
+        <Collapse
+          defaultActiveKey={['0', '1', '2', '3']}
+          bordered={true}
+          items={[
+            {
+              key: '0',
+              className: req_params.length === 0 ? 'hidden' : '',
+              label: 'PATH PARAMETERS',
+              children: (
+                <>
             {req_params.map((item, index) => {
               return (
                 <div key={index} className="key-value-wrap">
@@ -717,12 +720,15 @@ export default class Run extends Component {
             >
               添加Path参数
             </Button>
-          </Panel>
-          <Panel
-            header="QUERY PARAMETERS"
-            key="1"
-            className={req_query.length === 0 ? 'hidden' : ''}
-          >
+                </>
+              )
+            },
+            {
+              key: '1',
+              className: req_query.length === 0 ? 'hidden' : '',
+              label: 'QUERY PARAMETERS',
+              children: (
+                <>
             {req_query.map((item, index) => {
               return (
                 <div key={index} className="key-value-wrap">
@@ -764,8 +770,15 @@ export default class Run extends Component {
             <Button style={{ display: 'none' }} type="primary" icon={<PlusOutlined />} onClick={this.addQuery}>
               添加Query参数
             </Button>
-          </Panel>
-          <Panel header="HEADERS" key="2" className={req_headers.length === 0 ? 'hidden' : ''}>
+                </>
+              )
+            },
+            {
+              key: '2',
+              className: req_headers.length === 0 ? 'hidden' : '',
+              label: 'HEADERS',
+              children: (
+                <>
             {req_headers.map((item, index) => {
               return (
                 <div key={index} className="key-value-wrap">
@@ -798,21 +811,23 @@ export default class Run extends Component {
             <Button style={{ display: 'none' }} type="primary" icon={<PlusOutlined />} onClick={this.addHeader}>
               添加Header
             </Button>
-          </Panel>
-          <Panel
-            header={
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <Tooltip title="F9 全屏编辑">BODY(F9)</Tooltip>
-              </div>
-            }
-            key="3"
-            className={
-              HTTP_METHOD[method].request_body &&
-              ((req_body_type === 'form' && req_body_form.length > 0) || req_body_type !== 'form')
-                ? 'POST'
-                : 'hidden'
-            }
-          >
+                </>
+              )
+            },
+            {
+              key: '3',
+              className:
+                HTTP_METHOD[method].request_body &&
+                ((req_body_type === 'form' && req_body_form.length > 0) || req_body_type !== 'form')
+                  ? 'POST'
+                  : 'hidden',
+              label: (
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <Tooltip title="F9 全屏编辑">BODY(F9)</Tooltip>
+                </div>
+              ),
+              children: (
+                <>
             <div
               style={{ display: checkRequestBodyIsRaw(method, req_body_type) ? 'block' : 'none' }}
             >
@@ -910,8 +925,11 @@ export default class Run extends Component {
                   <Input type="file" id="single-file" />
                 </div>
               )}
-          </Panel>
-        </Collapse>
+                </>
+              )
+            }
+          ]}
+        />
 
         <Tabs
           size="large"

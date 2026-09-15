@@ -230,10 +230,10 @@ function CaseDesForm(props) {
             <Col span={10}>
               <FormItem name={['paramsArr', index, 'name']} initialValue={item.name}>
                 <AutoComplete
-                  dataSource={dataSource}
+                  options={dataSource.map(item => ({ value: item, label: item }))}
                   placeholder="参数名称"
                   filterOption={(inputValue, option) =>
-                    option.props.children.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
+                    option.value.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
                   }
                 />
               </FormItem>
@@ -269,10 +269,10 @@ function CaseDesForm(props) {
             <Col span={10}>
               <FormItem name={['headers', index, 'name']} initialValue={item.name}>
                 <AutoComplete
-                  dataSource={dataSource}
+                  options={dataSource.map(item => ({ value: item, label: item }))}
                   placeholder="参数名称"
                   filterOption={(inputValue, option) =>
-                    option.props.children.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
+                    option.value.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
                   }
                 />
               </FormItem>

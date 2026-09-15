@@ -4,7 +4,6 @@ import { Tree } from 'antd';
 import { connect } from 'react-redux';
 import { fetchVariableParamsList } from '../../reducer/modules/interfaceCol.js';
 
-const TreeNode = Tree.TreeNode;
 const CanSelectPathPrefix = 'CanSelectPath-';
 
 function deleteLastObject(str) {
@@ -101,9 +100,10 @@ class VariablesSelect extends Component {
   };
 
   render() {
+    // antd5 Tree 移除 TreeNode JSX,改用 treeData 配置({ key, title, disabled, children })
     const pathSelctByTree = (data, elementKeyPrefix = '$', deepLevel = 0) => {
       let keys = Object.keys(data);
-      let TreeComponents = keys.map((key, index) => {
+      let treeNodes = keys.map((key, index) => {
         let item = data[key],
           casename;
         if (deepLevel === 0) {
@@ -127,16 +127,17 @@ class VariablesSelect extends Component {
         }
         if (item && typeof item === 'object') {
           const isDisable = Array.isArray(item) && item.length === 0;
-          return (
-            <TreeNode key={elementKeyPrefix} disabled={isDisable} title={casename || key}>
-              {pathSelctByTree(item, elementKeyPrefix, deepLevel + 1)}
-            </TreeNode>
-          );
+          return {
+            key: elementKeyPrefix,
+            disabled: isDisable,
+            title: casename || key,
+            children: pathSelctByTree(item, elementKeyPrefix, deepLevel + 1)
+          };
         }
-        return <TreeNode key={CanSelectPathPrefix + elementKeyPrefix} title={key} />;
+        return { key: CanSelectPathPrefix + elementKeyPrefix, title: key };
       });
 
-      return TreeComponents;
+      return treeNodes;
     };
 
     return (
@@ -146,9 +147,8 @@ class VariablesSelect extends Component {
           selectedKeys={this.state.selectedKeys}
           onSelect={([key]) => this.handleSelect(key)}
           onExpand={this.onExpand}
-        >
-          {pathSelctByTree(this.state.records)}
-        </Tree>
+          treeData={pathSelctByTree(this.state.records)}
+        />
       </div>
     );
   }
