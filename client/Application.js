@@ -2,7 +2,7 @@ import React, { PureComponent as Component } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 // v6：unstable_HistoryRouter 接管自定义 history 实例（供 BlockPrompt 拦截导航用）
-import { Route, unstable_HistoryRouter as HistoryRouter } from 'react-router-dom';
+import { Route, Routes, unstable_HistoryRouter as HistoryRouter } from 'react-router-dom';
 import { Home, Group, Project, Follows, AddProject, Login } from './containers/index';
 import { Alert } from 'antd';
 import User from './containers/User/User.js';
@@ -123,14 +123,18 @@ export default class App extends Component {
               {alertContent()}
               {this.props.loginState !== 1 ? <Header /> : null}
               <div className="router-container">
-                {Object.keys(AppRoute).map(key => {
-                  let item = AppRoute[key];
-                  if (key === 'login' || key === 'home') {
-                    return <Route key={key} path={item.path} element={<item.component />} />;
-                  }
-                  const Authed = authed(item.component);
-                  return <Route key={key} path={item.path} element={<Authed />} />;
-                })}
+                {/* v6：Route 必须是 Routes 直接子元素，v5 时代顶层裸 Route 独立匹配语义由
+                    Routes 的最佳匹配承担（各路径前缀互不重叠，行为等价） */}
+                <Routes>
+                  {Object.keys(AppRoute).map(key => {
+                    let item = AppRoute[key];
+                    if (key === 'login' || key === 'home') {
+                      return <Route key={key} path={item.path} element={<item.component />} />;
+                    }
+                    const Authed = authed(item.component);
+                    return <Route key={key} path={item.path} element={<Authed />} />;
+                  })}
+                </Routes>
               </div>
             </div>
             <Footer />
