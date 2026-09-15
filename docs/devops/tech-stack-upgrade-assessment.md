@@ -201,5 +201,5 @@ underscore→原生/lodash 评估；redux 5 评估；mongoose 9 评估；antd 6 
 | P3 antd 4 完成 | ✅ | a5168c40 / 75b6b0ae / 9ca352a5 / a630d8ea / 8e6bf420 / 84e12582 | Spike 绿色（json-schema-editor-visual 嵌套 antd3 零改动，双实例共存）；14 文件 105 处 Form 迁移 useForm、TabPane→items、ConfigProvider、less 3.13.1 + less-loader 补丁；首轮评审 2P0+1P1 已修复并复验 PASS；浏览器回归：编辑表单/动态行/保存持久化/添加分类/登录真实提交/gov 皮肤渲染 |
 | P4 webpack 5 | ✅ | d956daba / f529b1a1 / 0f51f771 | webpack 5.111 + 全套 loader/插件现代化；entry dependOn 链替代同名 cacheGroups（webpack5 强制）；ThemeCssFixedNamePlugin 删除（MCEP filename 函数）；less 4.9 + less-loader 13（补丁删除）；评审 PASS，4 项 P2 备忘 |
 | P5 React 18.3 | ✅ | cc618b23 / 11d244a6 | react 18.3.1 + react-redux 8.1.3 + redux 4.2.1；createRoot 2 处；redux-promise 实测兼容保留；react-dnd 2.5.4 实测兼容保留（React19 前需迁）；顺带修复生产 CSS Content-Type 缺陷与测试进程退出码；E2E 五页 10/10；评审 PASS |
-| P6 antd 5 + 皮肤重构 | ⏳ | — | |
+| P6 antd 5 + 皮肤重构 | ✅ | 0fc7914c / cb6def63 / 7fcbdde1 / 428a41a0 / 680a414a / a31e99e4 | antd 5.29.3 + icons 5.6.1；皮肤重构为 ConfigProvider token（gov/anime token 映射 + dark darkAlgorithm）+ StyleProvider hashPriority high 解决嵌套 antd3 CSS 级联冲突；dayjs 替换 moment；36 处 visible→open 等 v5 适配；评审 2P1（产物滞后/CI 提交授权）已处置；四皮肤浏览器截图核验 |
 | P7 现代化收尾 | ⏳ | — | |
