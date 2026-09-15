@@ -95,7 +95,17 @@ class Interface extends Component {
     // await this.props.fetchInterfaceColList(this.props.match.params.id)
   }
   render() {
-    const { action } = this.props.match.params;
+    // v6：本组件经 /project/:id 路由的 interface/* 分支挂载，match.params 被 * 吞并、
+    // 不再含 action（v5 为 /project/:id/interface/:action 形态），改由 location
+    // 前缀匹配得出当前 tab；end:false 保持 v5 非精确匹配语义
+    const actionMatch = matchPath(
+      {
+        path: '/project/:id/interface/:action',
+        end: false
+      },
+      this.props.location.pathname
+    );
+    const action = actionMatch && actionMatch.params.action;
     // const activeKey = this.state.curkey;
     const activeKey = action === 'api' ? 'api' : 'colOrCase';
 
