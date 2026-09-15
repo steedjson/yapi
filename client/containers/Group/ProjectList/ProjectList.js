@@ -61,18 +61,6 @@ class ProjectList extends Component {
     study: PropTypes.bool
   };
 
-  // 取消修改
-  /**
-   * @returns {void}
-   */
-  @autobind
-  handleCancel() {
-    this.props.form.resetFields();
-    this.setState({
-      visible: false
-    });
-  }
-
   // 修改线上域名的协议类型 (http/https)
   /**
    * @param {any} value

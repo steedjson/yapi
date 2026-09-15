@@ -80,12 +80,6 @@ class syncModel extends baseModel {
     })
   }
 
-  delByProjectId(projectId){
-    return this.model.deleteMany({
-      project_id: projectId
-    })
-  }
-
 }
 
 module.exports = syncModel;
