@@ -1,11 +1,16 @@
 import './index.scss';
 import React, { PureComponent as Component } from 'react';
 import { connect } from 'react-redux';
-import { Route } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import List from './List.js';
 import PropTypes from 'prop-types';
 import Profile from './Profile.js';
 import { Row } from 'antd';
+import withRouter from '../../withRouter';
+
+// v6 element 不注入路由 props，经兼容 HOC 包装（内部按组件缓存）
+const ProfileWithRouter = withRouter(Profile);
+
 @connect(
   state => {
     return {
@@ -33,8 +38,11 @@ class User extends Component {
       <div>
         <div className="g-doc">
           <Row className="user-box">
-            <Route path={this.props.match.path + '/list'} component={List} />
-            <Route path={this.props.match.path + '/profile/:uid'} component={Profile} />
+            {/* v6 嵌套路由相对路径写法（相对 /user 前缀），替代 v5 的 match.path 拼接 */}
+            <Routes>
+              <Route path="list" element={<List />} />
+              <Route path="profile/:uid" element={<ProfileWithRouter />} />
+            </Routes>
           </Row>
         </div>
       </div>

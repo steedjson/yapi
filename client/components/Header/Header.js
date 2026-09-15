@@ -16,7 +16,7 @@ import {
 import { getV4Icon } from '../../constants/v4IconMap';
 import { checkLoginState, logoutActions, loginTypeAction } from '../../reducer/modules/user';
 import { changeMenuItem } from '../../reducer/modules/menu';
-import { withRouter } from 'react-router';
+import withRouter from '../../withRouter';
 import Srch from './Search/Search';
 import { SKINS, getSkin, setSkin } from '../../theme';
 const { Header } = Layout;

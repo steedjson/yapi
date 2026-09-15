@@ -1,7 +1,7 @@
 import React, { PureComponent as Component } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import { withRouter } from 'react-router';
+import withRouter from '../../../../withRouter';
 import { Link } from 'react-router-dom';
 //import constants from '../../../../constants/variable.js'
 import { Tooltip, Input, Button, Row, Col, Spin, Modal, message, Select, Switch } from 'antd';

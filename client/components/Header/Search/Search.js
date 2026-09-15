@@ -4,7 +4,7 @@ import { connect } from 'react-redux';
 import { Input, AutoComplete } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import './Search.scss';
-import { withRouter } from 'react-router';
+import withRouter from '../../../withRouter';
 import axios from 'axios';
 import { setCurrGroup, fetchGroupMsg } from '../../../reducer/modules/group';
 import { changeMenuItem } from '../../../reducer/modules/menu';

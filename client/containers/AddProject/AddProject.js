@@ -18,7 +18,7 @@ const Option = Select.Option;
 const RadioGroup = Radio.Group;
 import { pickRandomProperty, handlePath as handlePathUtil, nameLengthLimit } from '../../common';
 import constants from '../../constants/variable.js';
-import { withRouter } from 'react-router';
+import withRouter from '../../withRouter';
 import './Addproject.scss';
 
 const formItemLayout = {

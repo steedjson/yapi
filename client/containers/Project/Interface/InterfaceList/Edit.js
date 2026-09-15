@@ -11,7 +11,8 @@ import { getProject } from '../../../../reducer/modules/project.js';
 import axios from 'axios';
 import { message, Modal } from 'antd';
 import './Edit.scss';
-import { withRouter, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
+import withRouter from '../../../../withRouter';
 import ProjectTag from '../../Setting/ProjectMessage/ProjectTag.js';
 
 @connect(

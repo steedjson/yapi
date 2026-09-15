@@ -1,18 +1,19 @@
 import React, { PureComponent as Component } from 'react';
-import { createRoot } from 'react-dom/client';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import { Route, BrowserRouter as Router } from 'react-router-dom';
+// v6：unstable_HistoryRouter 接管自定义 history 实例（供 BlockPrompt 拦截导航用）
+import { Route, unstable_HistoryRouter as HistoryRouter } from 'react-router-dom';
 import { Home, Group, Project, Follows, AddProject, Login } from './containers/index';
 import { Alert } from 'antd';
 import User from './containers/User/User.js';
 import Header from './components/Header/Header';
 import Footer from './components/Footer/Footer';
 import Loading from './components/Loading/Loading';
-import MyPopConfirm from './components/MyPopConfirm/MyPopConfirm';
 import { checkLoginState } from './reducer/modules/user';
 import { requireAuthentication } from './components/AuthenticatedComponent';
 import Notify from './components/Notify/Notify';
+import withRouter from './withRouter';
+import history from './history';
 
 const plugin = require('client/plugin.js');
 
@@ -39,15 +40,18 @@ let AppRoute = {
     component: Home
   },
   group: {
-    path: '/group',
+    // v6 默认精确匹配，分组页有嵌套路由（/group/:groupId），需以 /* 结尾
+    path: '/group/*',
     component: Group
   },
   project: {
-    path: '/project/:id',
+    // v6 默认精确匹配，项目页有嵌套路由（接口/动态/设置等），需以 /* 结尾
+    path: '/project/:id/*',
     component: Project
   },
   user: {
-    path: '/user',
+    // v6 默认精确匹配，用户页有嵌套路由（/user/list、/user/profile/:uid），需以 /* 结尾
+    path: '/user/*',
     component: User
   },
   follow: {
@@ -65,6 +69,17 @@ let AppRoute = {
 };
 // 增加路由钩子
 plugin.emitHook('app_route', AppRoute);
+
+// v6 <Route> 不再向组件注入路由 props：
+// requireAuthentication 依赖 history.push 做登录跳转，需经兼容 HOC 注入；
+// 包装结果按组件缓存，保证组件身份稳定避免重挂载。
+const authedCache = new Map();
+const authed = Component => {
+  if (!authedCache.has(Component)) {
+    authedCache.set(Component, withRouter(requireAuthentication(Component)));
+  }
+  return authedCache.get(Component);
+};
 
 @connect(
   state => {
@@ -95,22 +110,13 @@ export default class App extends Component {
     this.props.checkLoginState();
   }
 
-  showConfirm = (msg, callback) => {
-    // 自定义 window.confirm
-    // http://reacttraining.cn/web/api/BrowserRouter/getUserConfirmation-func
-    let container = document.createElement('div');
-    document.body.appendChild(container);
-    // React 18 每次 showConfirm 都新建独立容器，单独建 root 渲染，无需跨容器复用
-    createRoot(container).render(<MyPopConfirm msg={msg} callback={callback} />);
-  };
-
   route = status => {
     let r;
     if (status === LOADING_STATUS) {
       return <Loading visible />;
     } else {
       r = (
-        <Router getUserConfirmation={this.showConfirm}>
+        <HistoryRouter history={history}>
           <div className="g-main">
             <div className="router-main">
               {this.props.curUserRole === 'admin' && <Notify />}
@@ -119,33 +125,17 @@ export default class App extends Component {
               <div className="router-container">
                 {Object.keys(AppRoute).map(key => {
                   let item = AppRoute[key];
-                  return key === 'login' ? (
-                    <Route key={key} path={item.path} component={item.component} />
-                  ) : key === 'home' ? (
-                    <Route key={key} exact path={item.path} component={item.component} />
-                  ) : (
-                    <Route
-                      key={key}
-                      path={item.path}
-                      component={requireAuthentication(item.component)}
-                    />
-                  );
+                  if (key === 'login' || key === 'home') {
+                    return <Route key={key} path={item.path} element={<item.component />} />;
+                  }
+                  const Authed = authed(item.component);
+                  return <Route key={key} path={item.path} element={<Authed />} />;
                 })}
               </div>
-              {/* <div className="router-container">
-                <Route exact path="/" component={Home} />
-                <Route path="/group" component={requireAuthentication(Group)} />
-                <Route path="/project/:id" component={requireAuthentication(Project)} />
-                <Route path="/user" component={requireAuthentication(User)} />
-                <Route path="/follow" component={requireAuthentication(Follows)} />
-                <Route path="/add-project" component={requireAuthentication(AddProject)} />
-                <Route path="/login" component={Login} />
-                {/* <Route path="/statistic" component={statisticsPage} /> */}
-              {/* </div> */}
             </div>
             <Footer />
           </div>
-        </Router>
+        </HistoryRouter>
       );
     }
     return r;

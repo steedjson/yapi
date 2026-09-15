@@ -4,9 +4,9 @@ import PropTypes from 'prop-types';
 import { Tabs, Modal, Button, Spin, message } from 'antd';
 import Edit from './Edit.js';
 import View from './View.js';
-import { Prompt } from 'react-router';
+import BlockPrompt from '../../../../components/BlockPrompt/BlockPrompt';
 import { fetchInterfaceData, changeEditStatus } from '../../../../reducer/modules/interface.js';
-import { withRouter } from 'react-router-dom';
+import withRouter from '../../../../withRouter';
 import Run from './Run/Run.js';
 const plugin = require('client/plugin.js');
 
@@ -176,7 +176,7 @@ class Content extends Component {
 
     return (
       <div className="interface-content">
-        <Prompt
+        <BlockPrompt
           when={this.state.curtab === 'edit' && this.props.editStatus ? true : false}
           message={() => {
             // this.showModal();

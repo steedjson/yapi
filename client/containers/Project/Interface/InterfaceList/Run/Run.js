@@ -1,7 +1,7 @@
 import React, { PureComponent as Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import { withRouter } from 'react-router';
+import withRouter from '../../../../../withRouter';
 import axios from 'axios';
 import { message } from 'antd';
 import { Postman } from '../../../../../components';

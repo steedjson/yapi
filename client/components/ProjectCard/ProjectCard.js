@@ -6,7 +6,7 @@ import { getV4Icon } from '../../constants/v4IconMap';
 import { connect } from 'react-redux';
 import { delFollow, addFollow } from '../../reducer/modules/follow';
 import PropTypes from 'prop-types';
-import { withRouter } from 'react-router';
+import withRouter from '../../withRouter';
 import { debounce } from '../../common';
 import constants from '../../constants/variable.js';
 import produce from 'immer';

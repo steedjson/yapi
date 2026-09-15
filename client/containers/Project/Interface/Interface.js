@@ -1,7 +1,7 @@
 import React, { PureComponent as Component } from 'react';
 import PropTypes from 'prop-types';
 import { Tabs, Layout } from 'antd';
-import { Route, Switch, matchPath } from 'react-router-dom';
+import { Routes, Route, matchPath } from 'react-router-dom';
 import { connect } from 'react-redux';
 const { Content, Sider } = Layout;
 
@@ -16,9 +16,10 @@ import InterfaceColContent from './InterfaceCol/InterfaceColContent.js';
 import InterfaceCaseContent from './InterfaceCol/InterfaceCaseContent.js';
 import { getProject } from '../../../reducer/modules/project';
 import { setColData } from '../../../reducer/modules/interfaceCol.js';
+import withRouter from '../../../withRouter';
+// v6 matchPath：end 默认 true，等价于 v5 的 exact: true
 const contentRouter = {
-  path: '/project/:id/interface/:action/:actionId',
-  exact: true
+  path: '/project/:id/interface/:action/:actionId'
 };
 
 const InterfaceRoute = props => {
@@ -47,6 +48,9 @@ InterfaceRoute.propTypes = {
   match: PropTypes.object,
   history: PropTypes.object
 };
+
+// v6 <Route element> 不注入路由 props，经兼容 HOC 包装（内部按组件缓存）
+const InterfaceRouteWithRouter = withRouter(InterfaceRoute);
 
 @connect(
   state => {
@@ -111,12 +115,12 @@ class Interface extends Component {
             />
             {activeKey === 'api' ? (
               <InterfaceMenu
-                router={matchPath(this.props.location.pathname, contentRouter)}
+                router={matchPath(contentRouter, this.props.location.pathname)}
                 projectId={this.props.match.params.id}
               />
             ) : (
               <InterfaceColMenu
-                router={matchPath(this.props.location.pathname, contentRouter)}
+                router={matchPath(contentRouter, this.props.location.pathname)}
                 projectId={this.props.match.params.id}
               />
             )}
@@ -132,10 +136,11 @@ class Interface extends Component {
             }}
           >
             <div className="right-content">
-              <Switch>
-                <Route exact path="/project/:id/interface/:action" component={InterfaceRoute} />
-                <Route {...contentRouter} component={InterfaceRoute} />
-              </Switch>
+              {/* v6 嵌套路由相对路径（相对 /project/:id/interface 前缀），替代原 Switch + exact */}
+              <Routes>
+                <Route path=":action" element={<InterfaceRouteWithRouter />} />
+                <Route path=":action/:actionId" element={<InterfaceRouteWithRouter />} />
+              </Routes>
             </div>
           </Content>
         </Layout>

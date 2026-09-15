@@ -1,7 +1,8 @@
 import React, { PureComponent as Component } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import { Route, Switch, Redirect, matchPath } from 'react-router-dom';
+import { Route, Routes, Navigate, matchPath } from 'react-router-dom';
+import withRouter from '../../withRouter';
 import { Subnav } from '../../components/index';
 import { fetchGroupMsg } from '../../reducer/modules/group';
 import { setBreadcrumb } from '../../reducer/modules/user';
@@ -76,12 +77,19 @@ export default class Project extends Component {
 
   render() {
     const { match, location } = this.props;
+    // path: 绝对路径，用于子导航高亮的 matchPath 与 URL 拼接；
+    // route: v6 嵌套路由相对路径（相对 /project/:id 前缀），接口页需 /* 消费更深路径
     let routers = {
-      interface: { name: '接口', path: '/project/:id/interface/:action', component: Interface },
-      activity: { name: '动态', path: '/project/:id/activity', component: Activity },
-      data: { name: '数据管理', path: '/project/:id/data', component: ProjectData },
-      members: { name: '成员管理', path: '/project/:id/members', component: ProjectMember },
-      setting: { name: '设置', path: '/project/:id/setting', component: Setting }
+      interface: {
+        name: '接口',
+        path: '/project/:id/interface/:action',
+        route: 'interface/*',
+        component: Interface
+      },
+      activity: { name: '动态', path: '/project/:id/activity', route: 'activity', component: Activity },
+      data: { name: '数据管理', path: '/project/:id/data', route: 'data', component: ProjectData },
+      members: { name: '成员管理', path: '/project/:id/members', route: 'members', component: ProjectMember },
+      setting: { name: '设置', path: '/project/:id/setting', route: 'setting', component: Setting }
     };
 
     plugin.emitHook('sub_nav', routers);
@@ -89,9 +97,14 @@ export default class Project extends Component {
     let key, defaultName;
     for (key in routers) {
       if (
-        matchPath(location.pathname, {
-          path: routers[key].path
-        }) !== null
+        // v6 matchPath 参数为 (pattern, pathname)；end: false 保持 v5 前缀匹配语义
+        matchPath(
+          {
+            path: routers[key].path,
+            end: false
+          },
+          location.pathname
+        ) !== null
       ) {
         defaultName = routers[key].name;
         break;
@@ -146,29 +159,22 @@ export default class Project extends Component {
     return (
       <div>
         <Subnav default={defaultName} data={subnavData} />
-        <Switch>
-          <Redirect exact from="/project/:id" to={`/project/${match.params.id}/interface/api`} />
-          {/* <Route path={routers.activity.path} component={Activity} />
-          
-          <Route path={routers.setting.path} component={Setting} />
-          {this.props.currGroup.type !== 'private' ?
-            <Route path={routers.members.path} component={routers.members.component}/>
-            : null
-          }
-
-          <Route path={routers.data.path} component={ProjectData} /> */}
+        <Routes>
+          <Route index element={<Navigate to={`/project/${match.params.id}/interface/api`} />} />
           {Object.keys(routers).map(key => {
             let item = routers[key];
+            // v6 element 不注入路由 props，经兼容 HOC 包装（内部按组件缓存）
+            const Wrapped = withRouter(item.component);
 
             return key === 'members' ? (
               this.props.currGroup.type !== 'private' ? (
-                <Route path={item.path} component={item.component} key={key} />
+                <Route key={key} path={item.route} element={<Wrapped />} />
               ) : null
             ) : (
-              <Route path={item.path} component={item.component} key={key} />
+              <Route key={key} path={item.route} element={<Wrapped />} />
             );
           })}
-        </Switch>
+        </Routes>
       </div>
     );
   }

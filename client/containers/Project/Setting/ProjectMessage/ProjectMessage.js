@@ -30,7 +30,7 @@ import { fetchGroupList } from '../../../../reducer/modules/group.js';
 import { setBreadcrumb } from '../../../../reducer/modules/user';
 import { connect } from 'react-redux';
 const { TextArea } = Input;
-import { withRouter } from 'react-router';
+import withRouter from '../../../../withRouter';
 const FormItem = Form.Item;
 const RadioGroup = Radio.Group;
 const RadioButton = Radio.Button;

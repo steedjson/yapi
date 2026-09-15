@@ -5,7 +5,7 @@ import { Modal, Input, message,Spin,  Row, Menu, Col, Popover, Tooltip } from 'a
 import { FolderAddOutlined, FolderOpenOutlined, UserOutlined } from '@ant-design/icons';
 import { autobind } from 'core-decorators';
 import axios from 'axios';
-import { withRouter } from 'react-router-dom';
+import withRouter from '../../../withRouter';
 const { TextArea } = Input;
 const Search = Input.Search;
 import UsernameAutoComplete from '../../../components/UsernameAutoComplete/UsernameAutoComplete.js';

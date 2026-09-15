@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import axios from 'axios';
 import PropTypes from 'prop-types';
-import { withRouter } from 'react-router-dom';
+import withRouter from 'client/withRouter';
 import { Table, Button, message, Popconfirm, Tooltip } from 'antd';
 import { QuestionCircleOutlined } from '@ant-design/icons';
 import { fetchMockCol } from 'client/reducer/modules/mockCol';

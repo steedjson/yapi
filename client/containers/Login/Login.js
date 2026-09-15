@@ -5,7 +5,7 @@ import { Button, Input, message, Radio, Form } from 'antd';
 
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { loginActions, loginLdapActions } from '../../reducer/modules/user';
-import { withRouter } from 'react-router';
+import withRouter from '../../withRouter';
 
 import './Login.scss';
 

@@ -1,6 +1,6 @@
 import React, { PureComponent as Component } from 'react';
 import { connect } from 'react-redux';
-import { withRouter } from 'react-router';
+import withRouter from '../../../../withRouter';
 import PropTypes from 'prop-types';
 import {
   fetchInterfaceColList,

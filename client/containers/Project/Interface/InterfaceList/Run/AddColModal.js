@@ -4,7 +4,7 @@ import { Modal, Collapse, Row, Col, Input, message, Button } from 'antd';
 import { FolderOpenOutlined } from '@ant-design/icons';
 import PropTypes from 'prop-types';
 import axios from 'axios';
-import { withRouter } from 'react-router';
+import withRouter from '../../../../../withRouter';
 import { fetchInterfaceColList } from '../../../../../reducer/modules/interfaceCol';
 
 const { TextArea } = Input;

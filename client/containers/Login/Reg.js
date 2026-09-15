@@ -5,7 +5,7 @@ import { Button, Input, message, Form } from 'antd';
 
 import { UserOutlined, MailOutlined, LockOutlined } from '@ant-design/icons';
 import { regActions } from '../../reducer/modules/user';
-import { withRouter } from 'react-router';
+import withRouter from '../../withRouter';
 
 const formItemStyle = {
   marginBottom: '.16rem'

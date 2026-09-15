@@ -2,7 +2,7 @@ import React, { PureComponent as Component } from 'react';
 import PropTypes from 'prop-types';
 import { getV4Icon } from '../../constants/v4IconMap';
 import './ErrMsg.scss';
-import { withRouter } from 'react-router';
+import withRouter from '../../withRouter';
 
 /**
  * 错误信息提示

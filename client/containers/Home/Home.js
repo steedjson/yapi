@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 import { Row, Col, Button, Card } from 'antd';
 import { AppstoreOutlined, ApiOutlined, DatabaseOutlined, TeamOutlined } from '@ant-design/icons';
 import PropTypes from 'prop-types';
-import { withRouter } from 'react-router';
+import withRouter from '../../withRouter';
 import LogoSVG from '../../components/LogoSVG/index.js';
 import { changeMenuItem } from '../../reducer/modules/menu';
 const plugin = require('client/plugin.js');

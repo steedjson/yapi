@@ -1,5 +1,5 @@
 import './Breadcrumb.scss';
-import { withRouter } from 'react-router-dom';
+import withRouter from '../../withRouter';
 import { Breadcrumb } from 'antd';
 import PropTypes from 'prop-types';
 import React, { PureComponent as Component } from 'react';

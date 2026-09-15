@@ -197,18 +197,9 @@ declare namespace JSX {
   }
 }
 
-declare module 'react-router' {
-  export function withRouter(component: any): any;
-  export const Link: any;
-}
-
-declare module 'react-router-dom' {
-  export function withRouter(component: any): any;
-  export const Link: any;
-  export const Route: any;
-  export const Switch: any;
-  export const Redirect: any;
-}
+// react-router 6 起自带类型（flat config 时代遗留的 v5 ambient 声明已删除：
+// v6 无 withRouter/Switch/Redirect，且旧声明会遮蔽包内真实类型导致 tsc 误报）。
+// 项目内的 v6 withRouter 兼容 HOC 见 client/withRouter.jsx。
 
 declare module 'client/plugin.js' {
   export function emitHook(name: string, ...args: any[]): any;
