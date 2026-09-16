@@ -5,6 +5,7 @@ import { Button, Input, message, Radio, Form } from 'antd';
 
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { loginActions, loginLdapActions } from '../../reducer/modules/user';
+import { resolveSafeRedirect } from '../../components/AuthenticatedComponent';
 import withRouter from '../../withRouter';
 
 import './Login.scss';
@@ -22,26 +23,36 @@ const changeHeight = {
  */
 function Login(props) {
   const [loginType, setLoginType] = useState('ldap');
+  const [submitting, setSubmitting] = useState(false);
 
   /**
    * @param {any} values
    */
   const handleSubmit = values => {
-    if (props.isLDAP && loginType === 'ldap') {
-      props.loginLdapActions(values).then((/** @type {any} */ res) => {
-        if (res.payload.data.errcode == 0) {
-          props.history.replace('/group');
-          message.success('登录成功! ');
-        }
-      });
-    } else {
-      props.loginActions(values).then((/** @type {any} */ res) => {
-        if (res.payload.data.errcode == 0) {
-          props.history.replace('/group');
-          message.success('登录成功! ');
-        }
-      });
+    // 提交进行中直接忽略，防止重复点击/回车触发多次登录请求
+    if (submitting) {
+      return;
     }
+    setSubmitting(true);
+    const useLdap = props.isLDAP && loginType === 'ldap';
+    const login = useLdap ? props.loginLdapActions : props.loginActions;
+    login(values)
+      .then((/** @type {any} */ res) => {
+        const data = res.payload && res.payload.data;
+        if (data && data.errcode == 0) {
+          // 优先回到认证守卫记录的站内来源（深链接恢复），否则回落 /group
+          const from = props.location && props.location.state && props.location.state.from;
+          props.history.replace(resolveSafeRedirect(from));
+          message.success('登录成功! ');
+        } else {
+          message.error((data && data.errmsg) || '登录失败, 请重试');
+          setSubmitting(false);
+        }
+      })
+      .catch(() => {
+        message.error('登录请求失败, 请稍后重试');
+        setSubmitting(false);
+      });
   };
 
   /**
@@ -102,6 +113,7 @@ function Login(props) {
           type="primary"
           htmlType="submit"
           className="login-form-button"
+          loading={submitting}
         >
           登录
         </Button>

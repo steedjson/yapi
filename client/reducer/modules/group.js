@@ -12,6 +12,9 @@ const CHANGE_GROUP_MEMBER = 'yapi/group/CHANGE_GROUP_MEMBER';
 const CHANGE_GROUP_MESSAGE = 'yapi/group/CHANGE_GROUP_MESSAGE';
 const UPDATE_GROUP_LIST = 'yapi/group/UPDATE_GROUP_LIST';
 const DEL_GROUP = 'yapi/group/DEL_GROUP';
+// SET_CURR_GROUP 与 FETCH_GROUP_MSG 都写 currGroup，共用一个递增请求序号，
+// 保证“最后发起的分组请求获胜”，与 interface.js 的 interfaceRequestSequence 同一模式。
+let groupRequestSequence = 0;
 
 // Reducer
 const initialState = {
@@ -29,7 +32,8 @@ const initialState = {
     enable: false
   },
   member: [],
-  role: ''
+  role: '',
+  groupRequestId: 0
 };
 
 /**
@@ -51,9 +55,18 @@ export default (state = initialState, action) => {
       };
     }
     case SET_CURR_GROUP: {
+      // 快速切换分组时，忽略先发后至的旧响应，避免旧分组覆盖 URL 对应分组；
+      // 失败响应（errcode 非 0 / payload 异常）不污染已有状态。
+      if (action.requestId && action.requestId < state.groupRequestId) {
+        return state;
+      }
+      if (!action.payload || !action.payload.data || action.payload.data.errcode !== 0) {
+        return state;
+      }
       return {
         ...state,
-        currGroup: action.payload.data.data
+        currGroup: action.payload.data.data,
+        groupRequestId: action.requestId || state.groupRequestId
       };
     }
     case FETCH_GROUP_MEMBER: {
@@ -63,16 +76,23 @@ export default (state = initialState, action) => {
       };
     }
     case FETCH_GROUP_MSG: {
-      console.log(action.payload)
-      // const {role,group_name,group_desc,} = action.payload.data.data
+      // 与 SET_CURR_GROUP 共用序号：过期响应直接忽略，失败响应不污染已有状态。
+      if (action.requestId && action.requestId < state.groupRequestId) {
+        return state;
+      }
+      if (!action.payload || !action.payload.data || action.payload.data.errcode !== 0) {
+        return state;
+      }
+      const data = action.payload.data.data;
       return {
         ...state,
-        role: action.payload.data.data.role,
-        currGroup: action.payload.data.data,
+        role: data.role,
+        currGroup: data,
         field: {
-          name: action.payload.data.data.custom_field1.name,
-          enable: action.payload.data.data.custom_field1.enable
-        }
+          name: data.custom_field1.name,
+          enable: data.custom_field1.enable
+        },
+        groupRequestId: action.requestId || state.groupRequestId
       };
     }
 
@@ -84,14 +104,17 @@ export default (state = initialState, action) => {
 // 获取 group 信息 (权限信息)
 /**
  * @param {any} id
- * @returns {{ type: string, payload: any }}
+ * @returns {Promise<{ type: string, payload: any, requestId: number }>}
  */
-export function fetchGroupMsg(id) {
+export async function fetchGroupMsg(id) {
+  const requestId = ++groupRequestSequence;
+  const result = await axios.get('/api/group/get', {
+    params: { id }
+  });
   return {
     type: FETCH_GROUP_MSG,
-    payload: axios.get('/api/group/get', {
-      params: { id }
-    })
+    payload: result,
+    requestId
   };
 }
 
@@ -194,13 +217,16 @@ export function fetchGroupList() {
 
 /**
  * @param {any} group
- * @returns {{ type: string, payload: any }}
+ * @returns {Promise<{ type: string, payload: any, requestId: number }>}
  */
-export function setCurrGroup(group) {
+export async function setCurrGroup(group) {
+  const requestId = ++groupRequestSequence;
+  const result = await axios.get('/api/group/get', {
+    params: { id: group._id }
+  });
   return {
     type: SET_CURR_GROUP,
-    payload: axios.get('/api/group/get', {
-      params: { id: group._id }
-    })
+    payload: result,
+    requestId
   };
 }

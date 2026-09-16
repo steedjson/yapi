@@ -161,9 +161,10 @@
       .ant-col-6 {
         color: rgba(71, 86, 99, 0.8);
         font-weight: 500;
-        padding: 0px 16px;
+        padding: 0 16px;
+        // antd v5 Row 默认可换行：外间距会把值列挤到下一行，改用内边距保证同行
+        padding-right: 30px;
         text-indent: 0.7em;
-        margin-right: 30px;
         white-space: nowrap;
         text-align: right;
         width: 130px;

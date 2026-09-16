@@ -7,6 +7,19 @@
 html {
   font-size:100px;
 }
+// 根字号 100px 仅为 rem 换算基准，不可被内容继承：
+// 未命中局部规则的文本/标题若直接继承 html，会渲染成 100px 级别的超大字。
+body {
+  font-size: .14rem;
+}
+// 全局标题字号阶梯：避免浏览器默认 em 字号在 rem 基准下爆炸
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+}
+h1 { font-size: .24rem; }
+h2 { font-size: .2rem; }
+h3 { font-size: .18rem; }
+h4, h5, h6 { font-size: .16rem; }
 html, body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
              "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei",
@@ -100,6 +113,7 @@ em {
   min-width: 7.52rem;  // Col宽度 (752+16)/24 = 32
   margin: 0 auto;
   padding: 0 .24rem;
+  box-sizing: border-box;
 }
 
 .m-container {
@@ -149,8 +163,17 @@ em {
 }
 
 @media (max-width: 768px) {
-  html {
-    width: min-content !important;
+  html,
+  body,
+  #root {
+    width: 100%;
+    min-width: 0;
+    overflow-x: hidden;
+  }
+
+  .g-row {
+    min-width: 0;
+    width: 100%;
   }
 }
 
@@ -189,14 +212,14 @@ em {
   font-size: 16px;
 }
 
-.ant-tree li .ant-tree-node-content-wrapper{
+.ant-tree .ant-tree-node-content-wrapper{
   padding: 3px 5px;
   height: unset;
-  // line-height: 25px;
 }
 
-.ant-tree li .ant-tree-node-content-wrapper.ant-tree-node-selected{
-  background-color: #d5ebfc;
+.ant-tree .ant-tree-node-content-wrapper.ant-tree-node-selected{
+  background-color: #e6f7ff;
+  color: #1890ff;
 }
 
 

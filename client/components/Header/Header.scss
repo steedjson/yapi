@@ -14,9 +14,31 @@
 
 /* .header-box.css */
 .header-box {
+  background: var(--sk-bg-header, #32363a);
   height: .56rem;
+  min-width: 0;
+  box-sizing: border-box;
+  overflow-x: auto;
+  overflow-y: hidden;
   line-height: .56rem;
   padding: 0;
+  // antd5 运行时注入 .css-xxx.ant-layout-header{background:#001529;padding:0 50px}，特异性 (0,2,0)
+  // 且晚于构建产物：背景会把头部染成默认藏蓝，padding 会让头部内容比下方内容区(左右各 24px)
+  // 多出 50px 偏移、左右无法对齐。此处以同特异性 + !important 一并钉死。
+  &.ant-layout-header {
+    background: var(--sk-bg-header, #32363a) !important;
+    padding: 0 !important;
+  }
+  // 头部内容行与下方内容区共用同一水平基准：左侧 24px 对齐"个人空间"侧栏，
+  // 右侧 24px 对齐内容卡片右边框
+  .content.g-row {
+    min-width: 0;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 0 24px;
+    box-sizing: border-box;
+  }
   .logo {
     position: relative;
     float: left;
@@ -80,6 +102,9 @@
   .nav-toolbar {
     font-size: .15rem;
     float: left;
+    min-width: 0;
+    max-width: calc(100% - 56px);
+    overflow: hidden;
 
   }
   .user-menu{
@@ -87,30 +112,42 @@
   }
   .user-toolbar{
     float: right;
-    height: .54rem;
+    min-width: 0;
+    max-width: 55%;
+    height: .56rem;
     display: flex;
     align-items: center;
     // 皮肤主题 CSS(后注入)中的 antd 全局规则 ul{margin-bottom:1em} 会晚于
     // index.css 的通用重置生效,导致工具栏垂直居中偏移;此处显式归零,与皮肤无关。
     ul {
       margin: 0;
+      display: flex;
+      align-items: center;
     }
     .item-search {
-      width: 2rem;
+      width: 2.2rem;
     }
     .toolbar-li{
-      float: left;
+      display: inline-flex;
+      align-items: center;
       font-size: .14rem;
       cursor: pointer;
-      color: var(--sk-text-on-header-muted);
-      margin-left: .16rem;
+      color: rgba(255, 255, 255, 0.7);
+      margin-left: 18px;
       transition: color .2s;
       & a {
-        color: var(--sk-text-on-header-muted);
+        color: rgba(255, 255, 255, 0.7);
+        display: inline-flex;
+        align-items: center;
+      }
+      .anticon {
+        font-size: 16px;
       }
       .dropdown-link {
-        color: var(--sk-text-on-header-muted);
+        color: rgba(255, 255, 255, 0.7);
         transition: color .2s;
+        display: inline-flex;
+        align-items: center;
         // .ant-avatar-image{
         //   margin-bottom: -10px;
         // }
@@ -149,6 +186,84 @@
       }
       .name {
         margin-left: .08rem;
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .header-box {
+    display: flex;
+    align-items: center;
+    /* 移动端用 12px 紧凑边距；需与基础 .header-box.ant-layout-header 同特异性，
+       否则会被基础规则的 padding:0 !important 压过 */
+    &.ant-layout-header {
+      padding: 0 12px !important;
+    }
+
+    .logo,
+    .nav-toolbar,
+    .user-toolbar {
+      float: none;
+    }
+
+    /* 移动端 float:none 会让块级子元素纵向堆叠撑破 .56rem 头部，
+       改由 g-row 统一排成一行（flex 子项同时忽略内部浮动避免高度塌陷）；
+       宽高用 stretch/auto 而非百分比，避免嵌套 rem 容器下解析异常 */
+    .content.g-row {
+      display: flex;
+      align-items: center;
+      align-self: stretch;
+      height: auto;
+      min-width: 0;
+      /* 基础样式的 margin:0 auto 与内容宽约束会吞掉 flex-grow 空间，
+         此处强制占满一行，保证面包屑标题可见 */
+      margin: 0 !important;
+      flex: 1 1 0% !important;
+    }
+
+    .logo {
+      display: inline-flex;
+      align-items: center;
+      flex: 0 0 auto;
+    }
+
+    .breadcrumb-container {
+      display: flex;
+      align-items: center;
+      flex: 1 1 0%;
+      min-width: 64px;
+      height: auto;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+
+    .nav-toolbar {
+      flex: 1 1 auto;
+      max-width: none;
+    }
+
+    .user-toolbar {
+      flex: 0 0 auto;
+      max-width: none;
+      overflow: visible;
+
+      /* ul 内搜索框+图标靠 float 排布，容器过窄时浮动换行堆叠，
+         移动端改 flex 单行并放开宽度上限，避免头像/搜索被裁切 */
+      ul {
+        display: flex;
+        align-items: center;
+        height: 100%;
+        width: auto;
+      }
+
+      .toolbar-li {
+        float: none;
+        margin-left: 6px;
+      }
+
+      .item-search {
+        max-width: 100px;
       }
     }
   }

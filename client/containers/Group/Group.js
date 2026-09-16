@@ -13,11 +13,9 @@ import { Tabs, Layout, Spin } from 'antd';
 import ErrMsg from '../../components/ErrMsg/ErrMsg.js';
 const { Content, Sider } = Layout;
 import { fetchNewsData } from '../../reducer/modules/news.js';
-import {
-  setCurrGroup
-} from '../../reducer/modules/group';
 import './Group.scss';
 import axios from 'axios'
+import withRouter from '../../withRouter';
 
 @connect(
   (/** @type {any} */ state) => {
@@ -29,10 +27,10 @@ import axios from 'axios'
     };
   },
   {
-    fetchNewsData: fetchNewsData,
-    setCurrGroup
+    fetchNewsData: fetchNewsData
   }
 )
+@withRouter
 export default class Group extends Component {
   /**
    * @param {any} props
@@ -48,11 +46,13 @@ export default class Group extends Component {
 
   async componentDidMount() {
     try {
+      // get_mygroup 会在用户缺少个人分组时于服务端创建，返回前以 groupId 作渲染 gate
+      // （加载中 Spin，失败 ErrMsg）。选中分组统一由 GroupList 按路由/列表同步：
+      // 这里不再代为派发选中分组，避免本请求异步返回后覆盖 GroupList 已选中的分组（竞态）。
       const r = await axios.get('/api/group/get_mygroup');
       const group = r.data.data;
       if (!group || !group._id) throw new Error('invalid group');
       this.setState({ groupId: group._id });
-      this.props.setCurrGroup(group);
     } catch (e) {
       console.error(e);
       this.setState({ loadError: true });
@@ -64,8 +64,7 @@ export default class Group extends Component {
     curGroupId: PropTypes.number,
     curUserRole: PropTypes.string,
     currGroup: PropTypes.object,
-    curUserRoleInGroup: PropTypes.string,
-    setCurrGroup: PropTypes.func
+    curUserRoleInGroup: PropTypes.string
   };
   // onTabClick=(key)=> {
   //   // if (key == 3) {

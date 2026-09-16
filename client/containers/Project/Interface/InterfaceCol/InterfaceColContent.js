@@ -823,7 +823,7 @@ class InterfaceColContent extends Component {
               return (
                 <Tooltip title="跳转到对应接口">
                   <Link to={`/project/${record.project_id}/interface/api/${record.interface_id}`}>
-                    {record.path.length > 23 ? record.path + '...' : record.path}
+                    {record.path && record.path.length > 23 ? record.path.substr(0, 20) + '...' : record.path}
                   </Link>
                 </Tooltip>
               );

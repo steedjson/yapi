@@ -324,8 +324,12 @@ class InterfaceList extends Component {
         key: 'tag',
         width: 14,
         render: text => {
-          let textMsg = text.length > 0 ? text.join('\n') : '未设置';
-          return <div className="table-desc">{textMsg}</div>;
+          const textMsg = Array.isArray(text) && text.length > 0 ? text.join(' , ') : '未设置';
+          return (
+            <Tooltip title={textMsg}>
+              <div className="table-desc">{textMsg}</div>
+            </Tooltip>
+          );
         },
         filters: tagFilter,
         onFilter: (value, record) => {
@@ -396,6 +400,7 @@ class InterfaceList extends Component {
         </div>
         <Table
           className="table-interfacelist"
+          tableLayout="fixed"
           pagination={pageConfig}
           columns={columns}
           onChange={this.handleChange}

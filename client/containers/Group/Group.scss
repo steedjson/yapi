@@ -8,3 +8,42 @@
   min-width: 300px !important;
   width: 75% !important;
 }
+
+@media (max-width: 768px) {
+  .ant-layout {
+    flex-wrap: wrap;
+  }
+
+  .ant-layout-sider {
+    box-sizing: border-box;
+    width: 100% !important;
+    flex-basis: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .ant-layout-content {
+    min-width: 0;
+  }
+
+  /* 内层 Layout flex-basis 为 auto 时 0 宽不触发换行，会与全宽 Sider 同行溢出屏幕；
+     移动端直接改为纵向排列 */
+  /* antd v5 dev 哈希类为真实类名，特异性打平时运行时注入的后方样式获胜，
+     故用三级复合选择器压过 .ant-layout-has-sider 的 row 方向 */
+  .projectGround .ant-layout.ant-layout-has-sider {
+    flex-direction: column;
+  }
+
+  .projectGround .ant-layout.ant-layout-has-sider > .ant-layout-sider {
+    flex: 0 0 auto !important;
+  }
+
+  .projectGround .ant-layout.ant-layout-has-sider > .ant-layout {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .news-box .news-timeline .ant-timeline-item .ant-timeline-item-content {
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+}

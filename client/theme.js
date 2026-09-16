@@ -37,7 +37,10 @@ const THEME_CONFIGS = {
       borderRadius: 4,
       colorBgLayout: '#eceef1'
     },
-    components: { Layout: { siderBg: '#fff' } }
+    components: {
+      Layout: { siderBg: '#fff', headerBg: '#32363a' },
+      Tree: { nodeSelectedBg: '#e6f7ff', nodeHoverBg: '#f5f5f5' }
+    }
   },
   gov: {
     token: {
@@ -45,7 +48,8 @@ const THEME_CONFIGS = {
       borderRadius: 2,
       colorBgLayout: '#f0f2f5'
     },
-    components: { Layout: { siderBg: '#fff' } }
+    // headerBg 与 skins.scss 的 --sk-bg-header 成对，避免头部掉回 antd 默认 #001529
+    components: { Layout: { siderBg: '#fff', headerBg: '#16325c' } }
   },
   anime: {
     token: {
@@ -53,7 +57,7 @@ const THEME_CONFIGS = {
       borderRadius: 12,
       colorBgLayout: '#fff7fb'
     },
-    components: { Layout: { siderBg: '#fff' } }
+    components: { Layout: { siderBg: '#fff', headerBg: '#f8c8dc' } }
   },
   dark: {
     algorithm: antdTheme.darkAlgorithm,
@@ -61,7 +65,7 @@ const THEME_CONFIGS = {
       colorPrimary: '#2395f1',
       borderRadius: 4
     },
-    components: { Layout: { siderBg: '#2a2a2a' } }
+    components: { Layout: { siderBg: '#2a2a2a', headerBg: '#161616' } }
   }
 };
 

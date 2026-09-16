@@ -117,6 +117,12 @@ class TimeTree extends Component {
     }
   }
 
+  UNSAFE_componentWillReceiveProps(nextProps) {
+    if (nextProps.typeid !== this.props.typeid) {
+      this.props.fetchNewsData(nextProps.typeid, this.props.type, 1, 10);
+    }
+  }
+
   openDiff = data => {
     this.setState({
       curDiffData: data,

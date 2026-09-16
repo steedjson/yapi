@@ -419,7 +419,7 @@ class List extends Component {
         width: 300,
         render: item => {
           return (
-            <Space split={<Divider type="vertical" />}>
+            <Space split={<Divider type="vertical" />} style={{ whiteSpace: 'nowrap' }}>
               <a onClick={() => this.openEditModal(item)}>编辑</a>
               <a onClick={() => this.openResetModal(item)}>重置密码</a>
               {!this.isSelf(item) && <a onClick={() => this.openRoleModal(item)}>角色</a>}

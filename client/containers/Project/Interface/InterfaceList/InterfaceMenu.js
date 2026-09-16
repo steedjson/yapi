@@ -168,18 +168,13 @@ class InterfaceMenu extends Component {
     } else {
       history.push(basepath + '/' + curkey);
     }
-    this.setState({
-      expands: null
-    });
   };
 
   /**
    * @returns {void}
    */
   changeExpands = () => {
-    this.setState({
-      expands: null
-    });
+    // 保留当前展开状态，避免切换分类时整棵树意外折叠
   };
 
   /**
@@ -434,6 +429,30 @@ class InterfaceMenu extends Component {
   };
 
   /**
+   * 递归在分类树中按分类 ID 查找从根到该分类的完整祖先路径（包含目标自身）。
+   * 用于在选中子分类时自动展开所有上级分类，避免多级分类点击后折叠跳出。
+   * @param {Array<any>} tree 分类树数组
+   * @param {string|number} targetCatId 目标分类 ID
+   * @param {Array<string>} [currentPath] 递归路径前缀
+   * @returns {Array<string> | null}
+   */
+  findCatPath = (tree, targetCatId, currentPath = []) => {
+    if (!Array.isArray(tree)) return null;
+    for (const item of tree) {
+      if (!item) continue;
+      const nextPath = [...currentPath, 'cat_' + item._id];
+      if (String(item._id) === String(targetCatId)) {
+        return nextPath;
+      }
+      if (Array.isArray(item.children) && item.children.length) {
+        const found = this.findCatPath(item.children, targetCatId, nextPath);
+        if (found) return found;
+      }
+    }
+    return null;
+  };
+
+  /**
    * 递归在分类树中按分类 ID 查找分类对象。
    * @param {Array<any>} tree 分类树数组
    * @param {string|number} catId 分类 ID
@@ -634,43 +653,47 @@ class InterfaceMenu extends Component {
   // antd5 Tree 移除 TreeNode JSX,改用 treeData 配置({ key, title, className, children })
   renderCategory = (item, matchParams, itemInterfaceCreate) => ({
     title: (
-      <Link
-        className="interface-item"
-        onClick={(/** @type {any} */ e) => {
-          e.stopPropagation();
-          this.changeExpands();
-        }}
-        to={'/project/' + matchParams.id + '/interface/api/cat_' + item._id}
-      >
-        <FolderOpenOutlined style={{ marginRight: 5 }} />
-        {item.name}
-        <DeleteOutlined
-          className="interface-delete-icon"
+      <div className="category-title">
+        <Link
+          className="category-link"
           onClick={(/** @type {any} */ e) => {
-            e.preventDefault();
             e.stopPropagation();
-            this.showDelCatConfirm(item._id);
+            this.changeExpands();
           }}
-        />
-        <EditOutlined
-          className="interface-delete-icon"
-          onClick={(/** @type {any} */ e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            this.changeModal('change_cat_modal_visible', true);
-            this.setState({ curCatdata: item });
-          }}
-        />
-        <FolderAddOutlined
-          className="interface-delete-icon"
-          onClick={(/** @type {any} */ e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            this.changeModal('add_cat_modal_visible', true);
-            this.setState({ curCatid: item._id });
-          }}
-        />
-      </Link>
+          to={'/project/' + matchParams.id + '/interface/api/cat_' + item._id}
+        >
+          <FolderOpenOutlined style={{ marginRight: 5 }} />
+          <span>{item.name}</span>
+        </Link>
+        <div className="category-actions">
+          <FolderAddOutlined
+            className="interface-delete-icon"
+            onClick={(/** @type {any} */ e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              this.changeModal('add_cat_modal_visible', true);
+              this.setState({ curCatid: item._id });
+            }}
+          />
+          <EditOutlined
+            className="interface-delete-icon"
+            onClick={(/** @type {any} */ e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              this.changeModal('change_cat_modal_visible', true);
+              this.setState({ curCatdata: item });
+            }}
+          />
+          <DeleteOutlined
+            className="interface-delete-icon"
+            onClick={(/** @type {any} */ e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              this.showDelCatConfirm(item._id);
+            }}
+          />
+        </div>
+      </div>
     ),
     key: 'cat_' + item._id,
     className: `interface-item-nav ${(item.list || []).length || (item.children || []).length ? '' : 'cat_switch_hidden'}`,
@@ -766,14 +789,22 @@ class InterfaceMenu extends Component {
           if (!inter || !inter._id) {
             return rNull;
           }
+          const activePath = this.findCatPath(list, inter.catid) || ['cat_' + inter.catid];
+          const combinedExpands = Array.from(
+            new Set([...(this.state.expands || []), ...activePath])
+          );
           return {
-            expands: this.state.expands ? this.state.expands : ['cat_' + inter.catid],
+            expands: combinedExpands,
             selects: [inter._id + '']
           };
         } else {
           let catid = router.params.actionId.substr(4);
+          const activePath = this.findCatPath(list, catid) || ['cat_' + catid];
+          const combinedExpands = Array.from(
+            new Set([...(this.state.expands || []), ...activePath])
+          );
           return {
-            expands: this.state.expands ? this.state.expands : ['cat_' + catid],
+            expands: combinedExpands,
             selects: ['cat_' + catid]
           };
         }
@@ -855,6 +886,7 @@ class InterfaceMenu extends Component {
           >
             <Tree
               className="interface-list"
+              blockNode={true}
               defaultExpandedKeys={currentKes.expands}
               defaultSelectedKeys={currentKes.selects}
               expandedKeys={currentKes.expands}

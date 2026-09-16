@@ -1,7 +1,7 @@
 import './Home.scss';
 import React, { PureComponent as Component } from 'react';
 import { connect } from 'react-redux';
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { Row, Col, Button, Card } from 'antd';
 import { AppstoreOutlined, ApiOutlined, DatabaseOutlined, TeamOutlined } from '@ant-design/icons';
 import PropTypes from 'prop-types';
@@ -338,12 +338,6 @@ class Home extends Component {
     super(props);
   }
 
-  UNSAFE_componentWillMount() {
-    if (this.props.login) {
-      this.props.history.push('/group/261');
-    }
-  }
-
   componentDidMount() {}
   static propTypes = {
     introList: PropTypes.array,
@@ -355,6 +349,10 @@ class Home extends Component {
     this.props.changeMenuItem('/group');
   };
   render() {
+    // 登录态由 /api/user/status 异步获取，到达后也应立即离开游客落地页
+    if (this.props.login) {
+      return <Navigate to="/group" replace />;
+    }
     return (
       <div className="home-main">
         <HomeGuest introList={this.props.introList} />

@@ -12,6 +12,13 @@ import UsernameAutoComplete from '../../../components/UsernameAutoComplete/Usern
 import GuideBtns from '../../../components/GuideBtns/GuideBtns.js';
 import { fetchNewsData } from '../../../reducer/modules/news.js';
 import {
+  parseRouteGroupId,
+  resolveTargetGroup,
+  findGroupById,
+  buildGroupPath,
+  filterGroups
+} from './groupSelect.js';
+import {
   fetchGroupList,
   setCurrGroup,
   fetchGroupMsg
@@ -78,26 +85,33 @@ export default class GroupList extends Component {
   }
 
   async UNSAFE_componentWillMount() {
-    const groupId = !isNaN(this.props.match.params.groupId)
-      ? parseInt(this.props.match.params.groupId)
-      : 0;
-    await this.props.fetchGroupList();
-    let currGroup = false;
-    if (this.props.groupList.length && groupId) {
-      for (let i = 0; i < this.props.groupList.length; i++) {
-        if (this.props.groupList[i]._id === groupId) {
-          currGroup = this.props.groupList[i];
-        }
-      }
-    } else if (!groupId && this.props.groupList.length) {
-      this.props.history.push(`/group/${this.props.groupList[0]._id}`);
+    // 竞态修复：await 恢复时 this.props.groupList 可能仍是本次 dispatch 前渲染传入的旧列表，
+    // 初始化必须使用 fetchGroupList 返回的 action payload（redux-promise 以最新响应 resolve）。
+    const res = await this.props.fetchGroupList();
+    const list =
+      res && res.payload && res.payload.data ? res.payload.data.data : this.props.groupList;
+    this.syncGroupSelection(list, this.props.match.params);
+  }
+
+  /**
+   * 按路由参数同步选中分组：命中则保持 URL 不动；
+   * 无参数/参数非法/指向不存在的分组时回退首个分组并 replace 归一化 URL；
+   * 列表为空时仅展示加载态，不产生 /group/undefined 这类无效 URL。
+   */
+  @autobind
+  syncGroupSelection(groupList, params) {
+    const list = Array.isArray(groupList) ? groupList : [];
+    this.setState({ groupList: list });
+    const routeId = parseRouteGroupId(params);
+    const target = resolveTargetGroup(list, routeId);
+    if (!target || target._id === undefined || target._id === null) {
+      return null;
     }
-    if (!currGroup) {
-      currGroup = this.props.groupList[0] || { group_name: '', group_desc: '' };
-      this.props.history.replace(`${currGroup._id}`);
+    this.props.setCurrGroup(target);
+    if (routeId !== Number(target._id)) {
+      this.props.history.replace(buildGroupPath(target._id));
     }
-    this.setState({ groupList: this.props.groupList });
-    this.props.setCurrGroup(currGroup);
+    return target;
   }
 
   @autobind
@@ -167,13 +181,19 @@ export default class GroupList extends Component {
   @autobind
   selectGroup(e) {
     const groupId = e.key;
-    //const currGroup = this.props.groupList.find((group) => { return +group._id === +groupId });
-    const currGroup = _.find(this.props.groupList, group => {
-      return +group._id === +groupId;
-    });
-    this.props.setCurrGroup(currGroup);
-    this.props.history.replace(`${currGroup._id}`);
-    this.props.fetchNewsData(groupId, 'group', 1, 10);
+    const currGroup = findGroupById(this.props.groupList, groupId);
+    // 严格匹配失败时不更新选中态，避免把 undefined 写进 URL 与 redux
+    if (!currGroup) {
+      return;
+    }
+    // 点击当前分组直接返回，不重复请求
+    if (Number(currGroup._id) === Number(this.props.currGroup._id)) {
+      return;
+    }
+    // 只推送 URL（保留历史，后退可恢复上一个分组），
+    // 选中统一由路由变化生命周期 syncGroupSelection 派发，避免点击+路由双重请求；
+    // 动态数据由 TimeTree 监听 typeid 变化自行重拉，此处不再直发新闻请求
+    this.props.history.push(buildGroupPath(currGroup._id));
   }
 
   @autobind
@@ -185,15 +205,10 @@ export default class GroupList extends Component {
 
   @autobind
   searchGroup(e, value) {
-    const v = value || e.target.value;
-    const { groupList } = this.props;
-    if (v === '') {
-      this.setState({ groupList });
-    } else {
-      this.setState({
-        groupList: groupList.filter(group => new RegExp(v, 'i').test(group.group_name))
-      });
-    }
+    const v = value !== undefined ? value : e.target.value;
+    this.setState({
+      groupList: filterGroups(this.props.groupList, v)
+    });
   }
 
   UNSAFE_componentWillReceiveProps(nextProps) {
@@ -202,6 +217,15 @@ export default class GroupList extends Component {
       this.setState({
         groupList: nextProps.groupList
       });
+      // 列表刷新后（如当前分组被删除），路由不再指向有效分组时重新归一化选中
+      if (!findGroupById(nextProps.groupList, parseRouteGroupId(nextProps.match.params))) {
+        this.syncGroupSelection(nextProps.groupList, nextProps.match.params);
+      }
+    } else if (
+      parseRouteGroupId(nextProps.match.params) !== parseRouteGroupId(this.props.match.params)
+    ) {
+      // 路由参数变化（前进/后退、直接改 URL）时同步选中分组
+      this.syncGroupSelection(nextProps.groupList, nextProps.match.params);
     }
   }
 

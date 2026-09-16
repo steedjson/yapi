@@ -67,9 +67,17 @@
 .table-interfacelist {
   margin-top: .2rem;
   white-space: nowrap;
-  table {
+  // antd v5 的 cssinjs 以同优先级后置注入 table-layout:auto，这里需更高优先级恢复固定布局，
+  // 避免长路径/长 tag 将表格撑破容器造成整页横向滚动
+  .ant-table-content table {
     table-layout: fixed;
   }
+  .table-desc {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
   .path {
     width: 95%;
     display: inline-block;

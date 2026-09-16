@@ -20,8 +20,8 @@ const plugin = require('client/plugin.js');
 const LOADING_STATUS = 0;
 
 const alertContent = () => {
-  const ua = window.navigator.userAgent,
-    isChrome = ua.indexOf('Chrome') && window.chrome;
+  const ua = window.navigator.userAgent;
+  const isChrome = /Chrome/.test(ua) && !/Edg|OPR/.test(ua) && window.chrome;
   if (!isChrome) {
     return (
       <Alert

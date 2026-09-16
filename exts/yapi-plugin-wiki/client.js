@@ -6,6 +6,8 @@ module.exports = function() {
     app.wiki = {
       name: 'Wiki',
       path: '/project/:id/wiki',
+      // v6 嵌套路由相对路径：Project.js 以 route 字段注册子路由，缺失会导致导航死链
+      route: 'wiki',
       component: WikiPage
     };
   });

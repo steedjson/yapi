@@ -1,7 +1,33 @@
 import React from 'react';
+import { Navigate } from 'react-router-dom';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import { changeMenuItem } from '../reducer/modules/menu';
+
+const LOGIN_PATH = '/login';
+const DEFAULT_REDIRECT = '/group';
+
+// 登录后回跳地址的白名单式校验：仅接受站内绝对路径，
+// 拒绝绝对 URL、协议相对写法（'//' 与 '/\'）以及回到登录页自身，防止开放重定向。
+// 认证守卫（写入 from）与登录页（读取 from）共用同一判定，保持两端语义一致。
+export function resolveSafeRedirect(from, fallback = DEFAULT_REDIRECT) {
+  let target = '';
+  if (typeof from === 'string') {
+    target = from;
+  } else if (from && typeof from.pathname === 'string') {
+    target = `${from.pathname}${from.search || ''}${from.hash || ''}`;
+  }
+  if (
+    target &&
+    target.startsWith('/') &&
+    !target.startsWith('//') &&
+    !target.startsWith('/\\') &&
+    target !== LOGIN_PATH
+  ) {
+    return target;
+  }
+  return fallback;
+}
 
 export function requireAuthentication(Component) {
   return @connect(
@@ -21,24 +47,31 @@ export function requireAuthentication(Component) {
     static propTypes = {
       isAuthenticated: PropTypes.bool,
       location: PropTypes.object,
-      dispatch: PropTypes.func,
       history: PropTypes.object,
       changeMenuItem: PropTypes.func
     };
-    UNSAFE_componentWillMount() {
-      this.checkAuth();
-    }
-    UNSAFE_componentWillReceiveProps() {
-      this.checkAuth();
-    }
-    checkAuth() {
+    componentDidMount() {
+      // 未登录仅重置菜单高亮；页面跳转统一由 render 中的 <Navigate> 声明式完成，
+      // 不再叠加命令式 history.replace，避免双重导航
       if (!this.props.isAuthenticated) {
-        this.props.history.push('/');
         this.props.changeMenuItem('/');
       }
     }
     render() {
-      return <div>{this.props.isAuthenticated ? <Component {...this.props} /> : null}</div>;
+      if (!this.props.isAuthenticated) {
+        // 携带当前站内位置作为 from，登录成功后回跳，恢复深链接
+        const { location } = this.props;
+        const from =
+          location && location.pathname && location.pathname !== LOGIN_PATH
+            ? {
+                pathname: location.pathname,
+                search: location.search,
+                hash: location.hash
+              }
+            : null;
+        return <Navigate to={LOGIN_PATH} replace state={from ? { from } : undefined} />;
+      }
+      return <Component {...this.props} />;
     }
   };
 }

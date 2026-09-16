@@ -177,6 +177,11 @@ export default class Project extends Component {
               <Route key={key} path={item.route} element={<Wrapped />} />
             );
           })}
+          {/* 兜底：未知子路径明确提示不存在，避免静默空白 */}
+          <Route
+            path="*"
+            element={<ErrMsg title="页面不存在" desc="请检查网址是否正确，可从上方导航进入有效页面" />}
+          />
         </Routes>
       </div>
     );

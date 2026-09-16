@@ -68,43 +68,142 @@
     top: 50%;
     transform: translateY(-50%);
   }
-  .ant-tree li .ant-tree-node-content-wrapper {
-    width: calc(100% - 28px);
-    position: relative;
-    .container-title {
-      overflow: hidden;
-      text-overflow: ellipsis;
+
+  // antd5 Tree 统一单行布局与操作区靠右
+  .interface-list {
+    .ant-tree-treenode {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      min-width: 0;
+      box-sizing: border-box;
       white-space: nowrap;
     }
-    .btns {
-      background-color: #eef7fe;
-      position: absolute;
-      top: 50%;
-      right: 0;
-      transform: translateY(-60%);
-      transition: all 0.2s;
+
+    .ant-tree-node-content-wrapper {
+      display: flex !important;
+      flex: 1 1 auto;
+      align-items: center;
+      width: calc(100% - 24px);
+      min-width: 0;
+      box-sizing: border-box;
+      position: relative;
+      overflow: visible;
+      white-space: nowrap;
+      padding: 0 4px;
+
+      .ant-tree-title {
+        display: flex;
+        align-items: center;
+        width: 100%;
+        min-width: 0;
+        flex: 1 1 auto;
+      }
+
+      .container-title,
+      .category-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+        overflow: visible;
+        white-space: nowrap;
+      }
+
+      .category-link,
+      .container-title > .interface-item {
+        flex: 1 1 auto;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        display: flex;
+        align-items: center;
+      }
+
+      .category-link > span {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .category-actions {
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.2s, visibility 0.2s;
+      }
+
+      .category-actions,
+      .container-title .btns {
+        flex: 0 0 auto;
+        display: inline-flex;
+        flex-direction: row;
+        align-items: center;
+        min-width: 0;
+        margin-left: 8px;
+        white-space: nowrap;
+        overflow: visible;
+      }
+
+      .category-actions .interface-delete-icon,
+      .container-title .interface-delete-icon {
+        float: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        line-height: 24px;
+        font-size: 14px;
+        color: rgba(0, 0, 0, 0.45);
+        cursor: pointer;
+        transition: color 0.2s;
+
+        &:hover {
+          color: var(--sk-primary, #1890ff);
+        }
+      }
+
+      .btns {
+        background-color: #eef7fe;
+        position: absolute;
+        top: 50%;
+        right: 0;
+        transform: translateY(-50%);
+        transition: all 0.2s;
+      }
     }
-  }
-  .ant-tree li .ant-tree-node-selected {
-    .btns {
-      background-color: #d5ebfc;
-      transition: all 0.2s;
+
+    .ant-tree-treenode:hover,
+    .ant-tree-node-content-wrapper:hover,
+    .ant-tree-node-content-wrapper.ant-tree-node-selected {
+      .category-actions {
+        opacity: 1;
+        visibility: visible;
+      }
+    }
+
+    .ant-tree-node-content-wrapper.ant-tree-node-selected {
+      background-color: #e6f7ff;
+      color: #1890ff;
+
+      .btns {
+        background-color: #d5ebfc;
+      }
     }
   }
 
   .interface-delete-icon {
     position: relative;
     right: 0;
-    float: right;
     line-height: 25px;
     width: 24px;
-    font-weight: bold;
   }
   .anticon-ellipsis {
     transform: rotate(90deg);
-  }
-  .interface-delete-icon:hover {
-    color: var(--sk-primary);
   }
 
   .interface-list {
