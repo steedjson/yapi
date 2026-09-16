@@ -108,3 +108,48 @@ test.serial('导入部分失败时返回准确的结果统计', async t => {
     axios.post = originalPost;
   }
 });
+
+
+test.serial('新版 JSON 导入多级分类应按父子关系依次创建分类', async t => {
+  const requests = [];
+  const originalPost = axios.post;
+  axios.post = async (url, data) => {
+    requests.push({url, data});
+    return {data: {errcode: 0, data: {_id: 500 + requests.length}}};
+  };
+
+  try {
+    await handleImportData(
+      {
+        cats: [
+          {name: '父分类', desc: '', parent_id: 0, path: '父分类', parent_path: ''},
+          {name: '子分类', desc: '', parent_id: 12, path: '父分类/子分类', parent_path: '父分类'}
+        ],
+        apis: [{method: 'GET', path: '/health', title: 'health', catname: '子分类'}]
+      },
+      1,
+      99,
+      [],
+      '',
+      'normal',
+      () => {},
+      () => {},
+      () => {}
+    );
+  } finally {
+    axios.post = originalPost;
+  }
+
+  // 注意 add_cat 的 url 含 add 前缀，需精确区分两类请求。
+  const addCatRequests = requests.filter(item => item.url.indexOf('/api/interface/add_cat') > -1);
+  const addInterfaceRequests = requests.filter(
+    item => item.url.indexOf('/api/interface/add') > -1 && item.url.indexOf('add_cat') === -1
+  );
+  t.is(addCatRequests.length, 2);
+  t.is(addCatRequests[0].data.name, '父分类');
+  t.is(addCatRequests[0].data.parent_id, 0);
+  t.is(addCatRequests[1].data.name, '子分类');
+  t.is(addCatRequests[1].data.parent_id, 501);
+  t.is(addInterfaceRequests.length, 1);
+  t.is(addInterfaceRequests[0].data.catid, 502);
+});

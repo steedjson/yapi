@@ -1,14 +1,29 @@
 .postman-dataImport{
     display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+
     .dataImportCon{
-        min-width: 304px;
+        // 弹性网格自适应：由 flex-basis 控制换行，不再依赖固定 min-width 与硬编码 margin。
+        flex: 1 1 320px;
+        min-width: 0;
+        box-sizing: border-box;
         background-color: var(--sk-bg-gray);
         padding: 16px;
         border-radius: var(--sk-radius);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 
         .ant-upload-drag{
             padding: 16px;
-            background-color: white;
+            background-color: var(--sk-bg-component);
+            border: 1px dashed var(--sk-border);
+            border-radius: var(--sk-radius);
+            transition: border-color 0.2s ease, background-color 0.2s ease;
+
+            &:hover{
+                border-color: var(--sk-primary);
+                background-color: var(--sk-bg-faint);
+            }
         }
         .dataImportTile{
             color: var(--sk-primary);

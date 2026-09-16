@@ -39,6 +39,57 @@ class exportController extends baseController {
   }
 
   handleExistId(data) {
+    const list = Array.isArray(data) ? data : [];
+
+    // json 导出需保留多级分类：先基于 _id 计算每个分类的完整 path 与 parent_path，
+    // 供导入端按路径精准复原层级；parent_id 本身不清除，随分类一并导出。
+    const catById = {};
+    list.forEach(item => {
+      if (item && item._id !== undefined) catById[item._id] = item;
+    });
+    const catName = item => (item && item.name) || '';
+    const catPath = item => {
+      const parts = [catName(item)];
+      const visited = new Set([item._id]);
+      let parent = catById[item.parent_id];
+      // 带环保护：异常历史数据不能导致死循环。
+      while (parent && !visited.has(parent._id)) {
+        visited.add(parent._id);
+        parts.unshift(catName(parent));
+        parent = catById[parent.parent_id];
+      }
+      return parts.join('/');
+    };
+    list.forEach(item => {
+      if (!item || !item.name) return;
+      item.path = catPath(item);
+      item.parent_path = item.path.split('/').slice(0, -1).join('/');
+    });
+
+    // 分类顺序稳定为父分类先于子分类，导入端才能按 path 依次创建；
+    // 依次输出当前已可创建的分类，异常环数据最后按原顺序兜底保留。
+    const ordered = [];
+    const emitted = new Set();
+    let pending = list.slice();
+    while (pending.length) {
+      const rest = [];
+      pending.forEach(item => {
+        const parentInData = item && item.parent_id !== undefined && catById[item.parent_id];
+        if (!parentInData || emitted.has(item.parent_id)) {
+          if (item) emitted.add(item._id);
+          ordered.push(item);
+        } else {
+          rest.push(item);
+        }
+      });
+      if (rest.length === pending.length) {
+        ordered.push(...rest);
+        pending = [];
+      } else {
+        pending = rest;
+      }
+    }
+
     function delArrId(arr, fn) {
       if (!Array.isArray(arr)) return;
       arr.forEach(item => {
@@ -46,6 +97,7 @@ class exportController extends baseController {
         delete item.__v;
         delete item.uid;
         delete item.edit_uid;
+        // 注意：分类的 parent_id 必须保留，供导入端复原多级层级；此处的 catid 仅存在于接口数据上。
         delete item.catid;
         delete item.project_id;
 
@@ -53,7 +105,7 @@ class exportController extends baseController {
       });
     }
 
-    delArrId(data, function(item) {
+    delArrId(ordered, function(item) {
       delArrId(item.list, function(api) {
         delArrId(api.req_body_form);
         delArrId(api.req_params);
@@ -65,7 +117,7 @@ class exportController extends baseController {
       });
     });
 
-    return data;
+    return ordered;
   }
 
   async exportData(ctx) {

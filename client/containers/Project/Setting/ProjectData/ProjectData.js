@@ -4,6 +4,7 @@ import {
   Upload,
   message,
   Select,
+  TreeSelect,
   Tooltip,
   Button,
   Spin,
@@ -25,6 +26,7 @@ const Dragger = Upload.Dragger;
 import { saveImportData } from '../../../../reducer/modules/interface';
 import { fetchUpdateLogData } from '../../../../reducer/modules/news.js';
 import { handleSwaggerUrlData } from '../../../../reducer/modules/project';
+import { formatCatTreeData, flattenCatList } from 'common/utils.js';
 const Option = Select.Option;
 const confirm = Modal.confirm;
 const plugin = require('client/plugin.js');
@@ -85,32 +87,6 @@ class ProjectData extends Component {
       isWiki: false
     });
   }
-  flattenCategories = (/** @type {any} */ list) => {
-    const byParent = /** @type {any} */ ({});
-    (list || []).forEach((/** @type {any} */ item) => {
-      const parentId = item.parent_id || 0;
-      if (!byParent[parentId]) byParent[parentId] = [];
-      byParent[parentId].push(item);
-    });
-    const result = [];
-    const stack = (byParent[0] || [])
-      .slice()
-      .reverse()
-      .map((/** @type {any} */ item) => ({ item, prefix: '' }));
-    // 导入默认分类下拉框展示完整层级，提交时仍使用原分类 ID。
-    while (stack.length) {
-      const current = stack.pop();
-      const item = current.item;
-      if (!item) continue;
-      result.push({ item, label: current.prefix + item.name });
-      const children = (byParent[item._id] || []).slice().reverse();
-      children.forEach((/** @type {any} */ child) =>
-        stack.push({ item: child, prefix: current.prefix + '└ ' })
-      );
-    }
-    return result;
-  };
-
   static propTypes = {
     match: PropTypes.object,
     curCatid: PropTypes.number,
@@ -123,19 +99,33 @@ class ProjectData extends Component {
   };
 
   loadCategoryMenu = async () => {
+    const projectId = this.props.match.params.id;
+    // 优先读取树形分类接口以完整展现多级层级；无权限或接口异常时回退到平铺接口。
     try {
-      const data = await axios.get(`/api/interface/getCatMenu?project_id=${this.props.match.params.id}`);
+      const data = await axios.get(`/api/interface/get_cat_tree?project_id=${projectId}`);
+      if (data.data.errcode === 0) {
+        this.applyCategoryMenu(data.data.data || []);
+        return;
+      }
+    } catch (/** @type {any} */ err) {
+      // 忽略错误，走平铺接口兜底
+    }
+    try {
+      const data = await axios.get(`/api/interface/getCatMenu?project_id=${projectId}`);
       if (data.data.errcode !== 0) {
         return message.error(data.data.errmsg);
       }
-      const menuList = data.data.data || [];
-      this.setState(prevState => ({
-        menuList,
-        selectCatid: prevState.selectCatid || (menuList.length ? menuList[0]._id : 0)
-      }));
+      this.applyCategoryMenu(data.data.data || []);
     } catch (/** @type {any} */ err) {
       message.error('获取接口分类失败：' + err.message);
     }
+  };
+
+  applyCategoryMenu = (/** @type {any} */ menuList) => {
+    this.setState(prevState => ({
+      menuList,
+      selectCatid: prevState.selectCatid || (menuList.length ? menuList[0]._id : 0)
+    }));
   };
 
   UNSAFE_componentWillMount() {
@@ -167,7 +157,8 @@ class ProjectData extends Component {
       res,
       this.props.match.params.id,
       this.state.selectCatid,
-      this.state.menuList,
+      // HandleImportData 按平铺的 _id/parent_id 匹配已有分类，传入时先拍平树形数据。
+      flattenCatList(this.state.menuList),
       this.props.basePath,
       this.state.dataSync,
       message.error,
@@ -366,7 +357,6 @@ class ProjectData extends Component {
    * @memberof ProjectData
    */
   render() {
-    const categories = this.flattenCategories(this.state.menuList);
     const uploadMess = {
       name: 'interfaceData',
       multiple: true,
@@ -422,24 +412,15 @@ class ProjectData extends Component {
                 </Select>
               </div>
               <div className="catidSelect">
-                <Select
-                  value={this.state.selectCatid + ''}
-                  showSearch
+                <TreeSelect
+                  value={this.state.selectCatid ? String(this.state.selectCatid) : undefined}
+                  treeData={formatCatTreeData(this.state.menuList)}
                   style={{ width: '100%' }}
+                  dropdownStyle={{ maxHeight: 400, overflow: 'auto', minWidth: 200 }}
                   placeholder="请选择数据导入的默认分类"
+                  treeDefaultExpandAll={true}
                   onChange={this.selectChange.bind(this)}
-                  filterOption={(/** @type {any} */ input, /** @type {any} */ option) =>
-                    option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
-                  }
-                >
-                  {categories.map((/** @type {any} */ category) => {
-                    return (
-                      <Option key={category.item._id} value={category.item._id + ''}>
-                        {category.label}
-                      </Option>
-                    );
-                  })}
-                </Select>
+                />
               </div>
               <div className="dataSync">
                 <span className="label">
@@ -528,7 +509,6 @@ class ProjectData extends Component {
             <div
               className="dataImportCon"
               style={{
-                marginLeft: '20px',
                 display: Object.keys(exportDataModule).length > 0 ? '' : 'none'
               }}
             >
