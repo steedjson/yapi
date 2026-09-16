@@ -23,16 +23,37 @@
     background: var(--sk-bg-component);
     min-height: 550px;
     border-radius: var(--sk-radius);
+    // 时间线容器占满面板高度，空状态（err-msg）在其中垂直居中而非顶在上方。
+    // padding-left 125px 是为有数据时的时间线圆轴预留的；空状态下没有轴，
+    // 需抵消该预留让内容相对面板真正水平居中
     .news-timeline{
       padding-left: 125px;
-      color: var(--sk-text-secondary);      
+      color: var(--sk-text-secondary);
+      min-height: inherit;
+      display: flex;
+      flex-direction: column;
+      // 有搜索行的项目动态页：搜索行保持自然高度，时间线/空状态占满剩余空间并居中
+      justify-content: center;
       .news-search{
         height:35px;
         line-height: 30px;
         margin-top: 10px;
+        flex: 0 0 auto;
       }
       .news-content{
         margin-top: 20px;
+      }
+
+      // 空状态：占满剩余空间并垂直水平居中；
+      // 负 margin 抵消时间线圆轴预留的 padding-left，使其相对面板水平居中
+      .err-msg {
+        flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        margin-left: -125px;
+        margin-bottom: 0;
       }
 
       .ant-timeline-item{

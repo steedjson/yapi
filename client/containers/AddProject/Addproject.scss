@@ -19,13 +19,30 @@
 
 
 .radio {
-  font-weight: 600;
+  // 权限单选整体留白：图标/标题与说明文字分行后保留呼吸空间，
+  // 不再挤成 42px 的两行密排
+  display: block;
+  height: auto;
+  padding: 10px 14px;
+  line-height: 1.8;
+  border: 1px solid var(--sk-border-light);
+  border-radius: var(--sk-radius, 4px);
+  transition: border-color 0.2s, background-color 0.2s;
+
+  .anticon {
+    margin-right: 6px;
+    vertical-align: -0.125em;
+  }
+
+  &:hover {
+    border-color: var(--sk-primary);
+  }
 }
 
 .radio-desc {
-  margin-left: .22rem;
-  position: relative;
+  display: block;
+  margin: 2px 0 0 22px; // 与单选圆点对齐
   font-weight: normal;
-  top: -.08rem;
   color: var(--sk-text-muted);
+  line-height: 1.6;
 }
