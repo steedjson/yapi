@@ -312,3 +312,34 @@ function flattenCatList(list) {
   return result;
 }
 exports.flattenCatList = flattenCatList;
+
+/**
+ * 将树形分类列表转换为 antd TreeSelect 兼容的 treeData 结构。
+ * @param {Array} list 树形分类数组
+ * @returns {Array} 转换后的 treeData
+ */
+function formatCatTreeData(list) {
+  if (!Array.isArray(list)) return [];
+  const transform = (items, visited = new Set()) => {
+    return items
+      .filter(item => item && !visited.has(item._id))
+      .map(item => {
+        visited.add(item._id);
+        const node = {
+          title: item.name,
+          value: String(item._id),
+          key: String(item._id)
+        };
+        if (Array.isArray(item.children) && item.children.length > 0) {
+          const children = transform(item.children, visited);
+          if (children.length > 0) {
+            node.children = children;
+          }
+        }
+        return node;
+      });
+  };
+  return transform(list);
+}
+exports.formatCatTreeData = formatCatTreeData;
+

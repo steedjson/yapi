@@ -1,9 +1,10 @@
 import React, { useState } from 'react'
 import PropTypes from 'prop-types'
-import { Input, Select, Button, Form } from 'antd';
+import { Input, Select, Button, Form, TreeSelect } from 'antd';
 
 import constants from '../../../../constants/variable.js'
 import { handleApiPath, nameLengthLimit } from '../../../../common.js'
+import { formatCatTreeData } from 'common/utils.js';
 const HTTP_METHOD = constants.HTTP_METHOD;
 const HTTP_METHOD_KEYS = Object.keys(HTTP_METHOD);
 
@@ -63,11 +64,12 @@ function AddInterfaceForm(props) {
         name="catid"
         initialValue={props.catid ? props.catid + '' : props.catdata[0]._id + ''}
       >
-        <Select>
-          {props.catdata.map(item => {
-            return <Option key={item._id} value={item._id + ""}>{item.name}</Option>
-          })}
-        </Select>
+        <TreeSelect
+          treeData={formatCatTreeData(props.catdata)}
+          placeholder="请选择接口分类"
+          treeDefaultExpandAll={true}
+          dropdownStyle={{ maxHeight: 400, overflow: 'auto' }}
+        />
       </FormItem>
       <FormItem
         {...formItemLayout}

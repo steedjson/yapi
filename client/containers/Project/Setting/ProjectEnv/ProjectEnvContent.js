@@ -173,15 +173,16 @@ function ProjectEnvContent(props) {
   const headerTpl = (item, index) => {
     const headerLength = rows.header.length - 1;
     return (
-      <Row gutter={2} key={index}>
+      <Row gutter={8} key={index} style={{ marginBottom: 8, alignItems: 'center' }}>
         <Col span={10}>
           <FormItem
             name={['header', index, 'name']}
             initialValue={item.name || ''}
             validateTrigger={['onChange', 'onBlur']}
+            style={{ marginBottom: 0 }}
           >
             <AutoComplete
-              style={{ width: '200px' }}
+              style={{ width: '100%' }}
               allowClear={true}
               options={constants.HTTP_REQUEST_HEADER.map(item => ({ value: item, label: item }))}
               placeholder="请输入header名称"
@@ -197,11 +198,12 @@ function ProjectEnvContent(props) {
             name={['header', index, 'value']}
             initialValue={item.value || ''}
             validateTrigger={['onChange', 'onBlur']}
+            style={{ marginBottom: 0 }}
           >
-            <Input placeholder="请输入参数内容" style={{ width: '90%', marginRight: 8 }} />
+            <Input placeholder="请输入参数内容" style={{ width: '100%' }} />
           </FormItem>
         </Col>
-        <Col span={2} className={index === headerLength ? ' env-last-row' : null}>
+        <Col span={2} className={index === headerLength ? ' env-last-row' : null} style={{ textAlign: 'center' }}>
           {/* 新增的项中，只有最后一项没有有删除按钮 */}
           <DeleteOutlined
             className="dynamic-delete-button delete"
@@ -218,16 +220,17 @@ function ProjectEnvContent(props) {
   const commonTpl = (item, index, name) => {
     const length = rows[name].length - 1;
     return (
-      <Row gutter={2} key={index}>
+      <Row gutter={8} key={index} style={{ marginBottom: 8, alignItems: 'center' }}>
         <Col span={10}>
           <FormItem
             name={[name, index, 'name']}
             initialValue={item.name || ''}
             validateTrigger={['onChange', 'onBlur']}
+            style={{ marginBottom: 0 }}
           >
             <Input
               placeholder={`请输入 ${name} Name`}
-              style={{ width: '200px' }}
+              style={{ width: '100%' }}
               onChange={() => addHeader(item, index, name)}
             />
           </FormItem>
@@ -237,11 +240,12 @@ function ProjectEnvContent(props) {
             name={[name, index, 'value']}
             initialValue={item.value || ''}
             validateTrigger={['onChange', 'onBlur']}
+            style={{ marginBottom: 0 }}
           >
-            <Input placeholder="请输入参数内容" style={{ width: '90%', marginRight: 8 }} />
+            <Input placeholder="请输入参数内容" style={{ width: '100%' }} />
           </FormItem>
         </Col>
-        <Col span={2} className={index === length ? ' env-last-row' : null}>
+        <Col span={2} className={index === length ? ' env-last-row' : null} style={{ textAlign: 'center' }}>
           {/* 新增的项中，只有最后一项没有有删除按钮 */}
           <DeleteOutlined
             className="dynamic-delete-button delete"
@@ -256,79 +260,87 @@ function ProjectEnvContent(props) {
   };
 
   return (
-    <div>
+    <div className="project-env-content">
       <Form form={form} preserve={false}>
         <h3 className="env-label">环境名称</h3>
-        <FormItem
-          required={false}
-          name={['env', 'name']}
-          validateTrigger={['onChange', 'onBlur']}
-          initialValue={props.projectMsg.name === '新环境' ? '' : props.projectMsg.name || ''}
-          rules={[
-            {
-              required: false,
-              whitespace: true,
-              validator(rule, value, callback) {
-                if (value) {
-                  if (value.length === 0) {
-                    callback('请输入环境名称');
-                  } else if (!/\S/.test(value)) {
-                    callback('请输入环境名称');
-                  } else {
-                    return callback();
+        <Row gutter={8}>
+          <Col span={22}>
+            <FormItem
+              required={false}
+              name={['env', 'name']}
+              validateTrigger={['onChange', 'onBlur']}
+              initialValue={props.projectMsg.name === '新环境' ? '' : props.projectMsg.name || ''}
+              rules={[
+                {
+                  required: false,
+                  whitespace: true,
+                  validator(rule, value, callback) {
+                    if (value) {
+                      if (value.length === 0) {
+                        callback('请输入环境名称');
+                      } else if (!/\S/.test(value)) {
+                        callback('请输入环境名称');
+                      } else {
+                        return callback();
+                      }
+                    } else {
+                      callback('请输入环境名称');
+                    }
                   }
-                } else {
-                  callback('请输入环境名称');
                 }
-              }
-            }
-          ]}
-        >
-          <Input
-            onChange={e => props.handleEnvInput(e.target.value)}
-            placeholder="请输入环境名称"
-            style={{ width: '90%', marginRight: 8 }}
-          />
-        </FormItem>
+              ]}
+            >
+              <Input
+                onChange={e => props.handleEnvInput(e.target.value)}
+                placeholder="请输入环境名称"
+                style={{ width: '100%' }}
+              />
+            </FormItem>
+          </Col>
+        </Row>
         <h3 className="env-label">环境域名</h3>
-        <FormItem
-          required={false}
-          name={['env', 'domain']}
-          validateTrigger={['onChange', 'onBlur']}
-          initialValue={
-            props.projectMsg.domain ? props.projectMsg.domain.split('//')[1] : ''
-          }
-          rules={[
-            {
-              required: false,
-              whitespace: true,
-              validator(rule, value, callback) {
-                if (value) {
-                  if (value.length === 0) {
-                    callback('请输入环境域名!');
-                  } else if (/\s/.test(value)) {
-                    callback('环境域名不允许出现空格!');
-                  } else {
-                    return callback();
-                  }
-                } else {
-                  callback('请输入环境域名!');
-                }
+        <Row gutter={8}>
+          <Col span={22}>
+            <FormItem
+              required={false}
+              name={['env', 'domain']}
+              validateTrigger={['onChange', 'onBlur']}
+              initialValue={
+                props.projectMsg.domain ? props.projectMsg.domain.split('//')[1] : ''
               }
-            }
-          ]}
-        >
-          <Input
-            placeholder="请输入环境域名"
-            style={{ width: '90%', marginRight: 8 }}
-            addonBefore={
-              <Select value={protocol} onChange={v => setProtocol(v)}>
-                <Option value="http://">{'http://'}</Option>
-                <Option value="https://">{'https://'}</Option>
-              </Select>
-            }
-          />
-        </FormItem>
+              rules={[
+                {
+                  required: false,
+                  whitespace: true,
+                  validator(rule, value, callback) {
+                    if (value) {
+                      if (value.length === 0) {
+                        callback('请输入环境域名!');
+                      } else if (/\s/.test(value)) {
+                        callback('环境域名不允许出现空格!');
+                      } else {
+                        return callback();
+                      }
+                    } else {
+                      callback('请输入环境域名!');
+                    }
+                  }
+                }
+              ]}
+            >
+              <Input
+                placeholder="请输入环境域名"
+                style={{ width: '100%' }}
+                addonBefore={
+                  <Select value={protocol} onChange={v => setProtocol(v)}>
+                    <Option value="http://">{'http://'}</Option>
+                    <Option value="https://">{'https://'}</Option>
+                  </Select>
+                }
+              />
+            </FormItem>
+          </Col>
+        </Row>
         <h3 className="env-label">Header</h3>
         {rows.header.map((item, index) => {
           return headerTpl(item, index);

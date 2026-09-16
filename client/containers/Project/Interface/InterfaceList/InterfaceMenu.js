@@ -730,7 +730,11 @@ class InterfaceMenu extends Component {
             className="addcatmodal"
           >
             <AddInterfaceForm
-              catdata={this.props.curProject.cat}
+              catdata={
+                this.props.list && this.props.list.length
+                  ? this.props.list
+                  : this.props.curProject.cat
+              }
               catid={this.state.curCatid}
               onCancel={() => this.changeModal('visible', false)}
               onSubmit={this.handleAddInterface}

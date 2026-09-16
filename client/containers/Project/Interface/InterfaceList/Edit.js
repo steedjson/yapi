@@ -19,6 +19,7 @@ import ProjectTag from '../../Setting/ProjectMessage/ProjectTag.js';
   (/** @type {any} */ state) => {
     return {
       curdata: state.inter.curdata,
+      catList: state.inter.list,
       currProject: state.project.currProject
     };
   },
@@ -31,6 +32,7 @@ import ProjectTag from '../../Setting/ProjectMessage/ProjectTag.js';
 class InterfaceEdit extends Component {
   static propTypes = {
     curdata: PropTypes.object,
+    catList: PropTypes.array,
     currProject: PropTypes.object,
     fetchInterfaceListMenu: PropTypes.func,
     fetchInterfaceData: PropTypes.func,
@@ -106,6 +108,10 @@ class InterfaceEdit extends Component {
    */
   componentDidMount() {
     this._isMounted = true;
+    // Redux 中尚无分类树时主动加载，保证编辑表单能拿到带 children 的多级分类。
+    if (!this.props.catList || this.props.catList.length === 0) {
+      this.props.fetchInterfaceListMenu(this.props.match.params.id);
+    }
     let domain = location.hostname + (location.port !== '' ? ':' + location.port : '');
     let s,
       initData = false;
@@ -238,7 +244,7 @@ class InterfaceEdit extends Component {
       <div className="interface-edit">
         {this.state.status === 1 ? (
           <InterfaceEditForm
-            cat={cat}
+            cat={this.props.catList && this.props.catList.length ? this.props.catList : cat}
             mockUrl={this.state.mockUrl}
             basepath={basepath}
             noticed={switch_notice}

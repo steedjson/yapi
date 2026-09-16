@@ -6,6 +6,7 @@ import _ from 'underscore';
 import constants from '../../../../constants/variable.js';
 import { handlePath as handlePathUtil, nameLengthLimit } from '../../../../common.js';
 import { changeEditStatus } from '../../../../reducer/modules/interface.js';
+import { formatCatTreeData } from 'common/utils.js';
 import json5 from 'json5';
 import { message, Affix, Tabs, Modal } from 'antd';
 import EasyDragSort from '../../../../components/EasyDragSort/EasyDragSort.js';
@@ -69,6 +70,7 @@ const validJson = json => {
 
 import {
   Select,
+  TreeSelect,
   Input,
   Tooltip,
   Button,
@@ -926,15 +928,12 @@ function InterfaceEditForm(/** @type {any} */ props) {
             initialValue={state.catid + ''}
             rules={[{ required: true, message: '请选择一个分类' }]}
           >
-            <Select placeholder="请选择一个分类">
-              {props.cat.map((/** @type {any} */ item) => {
-                return (
-                  <Option key={item._id} value={item._id + ''}>
-                    {item.name}
-                  </Option>
-                );
-              })}
-            </Select>
+            <TreeSelect
+              treeData={formatCatTreeData(props.cat)}
+              placeholder="请选择一个分类"
+              treeDefaultExpandAll={true}
+              dropdownStyle={{ maxHeight: 400, overflow: 'auto' }}
+            />
           </FormItem>
 
           <FormItem

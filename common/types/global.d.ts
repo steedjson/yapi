@@ -163,11 +163,18 @@ declare module 'antd' {
   export const Tooltip: any;
   export const Affix: any;
   export const Select: any;
+  export const TreeSelect: any;
   export const AutoComplete: any;
   export const Switch: any;
   export const Upload: any;
   export const Spin: any;
   export const Checkbox: any;
+}
+
+// webpack 别名 common -> 仓库根 common/，tsc 无对应 paths，按项目惯例用模块声明兜底
+declare module 'common/utils.js' {
+  export function flattenCatList(list: any[]): any[];
+  export function formatCatTreeData(list: any[]): any[];
 }
 
 /**

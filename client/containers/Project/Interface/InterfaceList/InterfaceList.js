@@ -2,7 +2,7 @@ import React, { PureComponent as Component } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import axios from 'axios';
-import { Table, Button, Modal, message, Tooltip, Select } from 'antd';
+import { Table, Button, Modal, message, Tooltip, Select, TreeSelect } from 'antd';
 import { EyeOutlined } from '@ant-design/icons';
 import AddInterfaceForm from './AddInterfaceForm';
 import {
@@ -15,7 +15,7 @@ import { Link } from 'react-router-dom';
 import variable from '../../../../constants/variable';
 import './Edit.scss';
 import Label from '../../../../components/Label/Label.js';
-import { flattenCatList } from 'common/utils.js';
+import { formatCatTreeData } from 'common/utils.js';
 
 const Option = Select.Option;
 const limit = 20;
@@ -268,19 +268,14 @@ class InterfaceList extends Component {
         width: 28,
         render: (item, record) => {
           return (
-            <Select
-              value={item + ''}
+            <TreeSelect
               className="select path"
+              treeData={formatCatTreeData(this.props.catList)}
+              value={item + ''}
+              dropdownStyle={{ maxHeight: 400, overflow: 'auto', minWidth: 200 }}
+              treeDefaultExpandAll={true}
               onChange={catid => this.changeInterfaceCat(record._id, catid)}
-            >
-              {flattenCatList(this.props.catList).map(cat => {
-                return (
-                  <Option key={cat._id + ''} value={cat._id + ''}>
-                    <span>{cat.name}</span>
-                  </Option>
-                );
-              })}
-            </Select>
+            />
           );
         }
       },
@@ -416,7 +411,7 @@ class InterfaceList extends Component {
           >
             <AddInterfaceForm
               catid={this.state.catid}
-              catdata={cat}
+              catdata={this.props.catList && this.props.catList.length ? this.props.catList : cat}
               onCancel={() => this.setState({ visible: false })}
               onSubmit={this.handleAddInterface}
             />
