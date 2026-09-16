@@ -118,13 +118,25 @@
     font-size: .5rem;
     color: var(--sk-primary-contrast);
     background-color: var(--sk-primary);
-    line-height: 1rem;
     box-shadow: 0 4px 6px rgba(50,50,93,.11), 0 1px 3px rgba(0,0,0,.08);
     position: relative;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    line-height: normal;
+
+    // antd v5 图标是包含 svg 的 span，需确保 svg 完全水平垂直居中
+    svg {
+      display: block;
+      margin: auto;
+    }
+
     &:after {
       opacity: 0;
       content: '点击修改';
-      display: block;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       transition: all .4s;
       position: absolute;
       left: 0;
@@ -134,7 +146,8 @@
       color: var(--sk-primary-contrast);
       width: 100%;
       height: 100%;
-      background-color: rgba(0,0,0, .25);
+      background-color: rgba(0,0,0, .45);
+      line-height: normal;
     }
     &:hover:after {
       opacity: 1;
