@@ -1,53 +1,39 @@
 import './Breadcrumb.scss';
-import withRouter from '../../withRouter';
 import { Breadcrumb, ConfigProvider } from 'antd';
-import PropTypes from 'prop-types';
-import React, { PureComponent as Component } from 'react';
-import { connect } from 'react-redux';
+import React from 'react';
+import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 
-@connect(state => {
-  return {
-    breadcrumb: state.user.breadcrumb
-  };
-})
-@withRouter
-export default class BreadcrumbNavigation extends Component {
-  constructor(props) {
-    super(props);
-  }
+// 函数组件 + Hooks 版：breadcrumb 取自 redux；
+// 渲染不依赖路由 props，旧版 @withRouter 包装已一并移除
+export default function BreadcrumbNavigation() {
+  const breadcrumb = useSelector(state => state.user.breadcrumb);
 
-  static propTypes = {
-    breadcrumb: PropTypes.array
-  };
+  const items = (breadcrumb || []).map((item, index) => {
+    return {
+      key: index,
+      title: item.href ? <Link to={item.href}>{item.name}</Link> : item.name
+    };
+  });
 
-  render() {
-    const items = (this.props.breadcrumb || []).map((item, index) => {
-      return {
-        key: index,
-        title: item.href ? <Link to={item.href}>{item.name}</Link> : item.name
-      };
-    });
-
-    return (
-      <div className="breadcrumb-container">
-        <ConfigProvider
-          theme={{
-            components: {
-              Breadcrumb: {
-                itemColor: '#ffffff',
-                lastItemColor: '#ffffff',
-                separatorColor: 'rgba(255, 255, 255, 0.7)',
-                linkColor: '#ffffff',
-                linkHoverColor: '#2395f1',
-                fontSize: 16
-              }
+  return (
+    <div className="breadcrumb-container">
+      <ConfigProvider
+        theme={{
+          components: {
+            Breadcrumb: {
+              itemColor: '#ffffff',
+              lastItemColor: '#ffffff',
+              separatorColor: 'rgba(255, 255, 255, 0.7)',
+              linkColor: '#ffffff',
+              linkHoverColor: '#2395f1',
+              fontSize: 16
             }
-          }}
-        >
-          <Breadcrumb items={items} />
-        </ConfigProvider>
-      </div>
-    );
-  }
+          }
+        }}
+      >
+        <Breadcrumb items={items} />
+      </ConfigProvider>
+    </div>
+  );
 }
