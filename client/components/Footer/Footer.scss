@@ -1,18 +1,20 @@
 @import '../../styles/common.scss';
 @import '../../styles/mixin.scss';
 
+// 页脚整体收紧：由固定 2.4rem 高降为随内容自适应，
+// 上下 padding 由 .48rem 收紧到 .24rem，减少页面底部无效占用。
+// 注意：不可设置固定高度或 overflow:hidden——wrapper 高度必须完全由
+// 内容撑开，否则像"反馈"列的三行链接会被裁掉最后一行。
 .footer-wrapper{
-  height: 2.4rem;
   width: 100%;
   background-color: var(--sk-bg-header);
-  overflow: hidden;
   position: relative;
   z-index: 0;
 }
 
 .footer-container{
   margin: 0 auto !important;
-  padding: .48rem .24rem;
+  padding: .24rem .24rem;
   max-width: 12.2rem;
   .icon {
     font-size: .16rem;
@@ -21,17 +23,20 @@
   .title {
     color: #8898aa;
     font-size: .14rem;
-    margin-bottom: .08rem;
+    margin-bottom: .04rem;
   }
   .link {
     font-size: .14rem;
     font-weight: 200;
     color: #8898aa;
-    line-height: .3rem;
+    line-height: .24rem;
     transition: color .2s;
     &:hover {
       color: $color-bg-gray;
     }
+  }
+  p {
+    margin: 0;
   }
 }
 .footItem{

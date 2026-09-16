@@ -1,9 +1,19 @@
 @import '../../../styles/mixin.scss';
 
 .group-bar {
+  // 高度撑满 Sider（Sider 为 height:100%，跟随外层 Layout 的 minHeight），使
+  // 左栏底边与右侧内容区底边对齐；5rem 仅作内容不足时的兜底最小高度。
   min-height: 5rem;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
   box-sizing: border-box;
   min-width: 0;
+
+  .group-list {
+    // 菜单占据剩余高度，让整栏自然拉伸到与右侧内容区等高
+    flex: 1 1 auto;
+  }
 
   .curr-group {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
@@ -104,7 +114,8 @@
       color: #fff;
       background-color: #34495E;
       border: 1px solid #415b76;
-      border-radius: 4px;
+      // 输入框右缘与搜索按钮拼接处为直角、外侧为圆角，保证组合圆角一致
+      border-radius: 4px 0 0 4px;
     }
     .ant-input::-webkit-input-placeholder { /* Chrome/Opera/Safari */
       color: rgba(255, 255, 255, 0.6);
@@ -112,9 +123,33 @@
     .ant-input-suffix {
       color: rgba(255, 255, 255, 0.75);
     }
+    // 搜索按钮：透明底融入深色栏，放大镜用亮色形成反差，右侧独立圆角。
+    // antd5 运行时注入 .css-xxx.ant-btn 样式，需提高特异性确保覆盖生效
+    .ant-input-group-addon .ant-input-search-button.ant-btn {
+      background: transparent;
+      border: 1px solid #415b76;
+      border-left: none;
+      border-radius: 0 4px 4px 0;
+      color: rgba(255, 255, 255, 0.85);
+
+      .anticon-search {
+        color: rgba(255, 255, 255, 0.85);
+      }
+
+      &:hover,
+      &:focus {
+        background: rgba(255, 255, 255, 0.08);
+        color: #fff;
+
+        .anticon-search {
+          color: #fff;
+        }
+      }
+    }
   }
   .group-list {
     overflow-x: hidden;
+    overflow-y: auto;
     border-bottom: 1px solid var(--sk-border-split);
     padding: 8px 0 24px;
     border: none;
@@ -150,6 +185,32 @@
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+
+      // 图标与分组名之间保持 10px 呼吸间距，避免图标紧贴文字
+      .anticon {
+        font-size: 15px;
+        margin-right: 10px;
+        flex: 0 0 auto;
+      }
+
+      > span {
+        display: inline-flex;
+        align-items: center;
+        min-width: 0;
+      }
+
+      // 统一分组名文字盒：私有组名字外层的 Popover 引导节点会带入
+      // antd 默认 padding，固定 0 保证所有分组行文字起点严格一致
+      .group-name-text,
+      .group-name-text + span {
+        padding: 0 !important;
+        margin: 0 !important;
+        display: inline-block;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
     }
     .group-name {
       float: left;

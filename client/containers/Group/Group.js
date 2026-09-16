@@ -78,7 +78,9 @@ export default class Group extends Component {
     if (this.state.loadError) return <ErrMsg type="groupError" />;
     if (this.state.groupId === -1) return <Spin />
     const GroupContent = (
-      <Layout style={{ minHeight: 'calc(100vh - 100px)', marginLeft: '24px', marginTop: '24px' }}>
+      <Layout
+        style={{ minHeight: 'calc(100vh - 190px)', marginLeft: '24px', marginTop: '24px' }}
+      >
         <Sider style={{ height: '100%' }} width={300}>
           <div className="logo" />
           <GroupList />

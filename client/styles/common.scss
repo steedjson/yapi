@@ -85,18 +85,20 @@ em {
   height: 100%;
 }
 // 页面最外层元素 样式
+// 页脚采用 sticky-footer 结构：.g-main 为最小 100vh 的纵向 flex 容器，
+// .router-main flex:1 占据页脚以上全部空间，页脚自然贴底且高度随内容自适应。
+// 原负 margin + ::after 固定 2.4rem 占位的写法随页脚降高一并移除。
+.g-main {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
 .router-main {
   padding-bottom: .24rem;
-  min-height: 100%;
   height: auto !important;
   height: 100%;
-  margin-bottom: -2.4rem;
+  flex: 1 0 auto;
   background-color: var(--sk-bg-body);
-  &::after {
-    content: '';
-    display: block;
-    height: 2.4rem;
-  }
 }
 .m-tab {
   .ant-tabs-nav-wrap {

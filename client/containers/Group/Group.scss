@@ -9,6 +9,27 @@
   width: 75% !important;
 }
 
+/* 左右两栏等高：Sider 的 height:100% 只有在父级 Layout 有确定高度时才生效，
+   外层 Layout 只有 minHeight，Sider 会塌回内容高导致左栏底边短于右侧内容区。
+   给外层与内层 Layout 显式拉伸，Sider 及 .group-bar 即可撑满与右侧底边对齐 */
+.projectGround > .ant-layout.ant-layout-has-sider {
+  display: flex;
+  align-items: stretch;
+}
+
+.projectGround .ant-layout.ant-layout-has-sider > .ant-layout-sider {
+  height: auto !important;
+}
+
+.projectGround .ant-layout.ant-layout-has-sider > .ant-layout-sider .ant-layout-sider-children {
+  height: 100%;
+}
+
+.projectGround .ant-layout.ant-layout-has-sider > .ant-layout-sider .m-group {
+  height: 100%;
+}
+
+
 @media (max-width: 768px) {
   .ant-layout {
     flex-wrap: wrap;

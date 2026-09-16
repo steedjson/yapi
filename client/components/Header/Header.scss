@@ -15,26 +15,35 @@
 /* .header-box.css */
 .header-box {
   background: var(--sk-bg-header, #32363a);
-  height: .56rem;
+  // antd5 运行时注入 .css-xxx.ant-layout-header{height:64px} 会压过本文件的 .56rem(56px)，
+  // 导致按 56px 写死的子元素在 64px 头部里整体偏上。此处统一钉死为 64px 并改用 flex 垂直居中，
+  // 头部内所有元素不再依赖固定行高对齐。
+  height: 64px;
   min-width: 0;
   box-sizing: border-box;
   overflow-x: auto;
   overflow-y: hidden;
-  line-height: .56rem;
+  line-height: normal;
   padding: 0;
+  display: flex;
+  align-items: center;
   // antd5 运行时注入 .css-xxx.ant-layout-header{background:#001529;padding:0 50px}，特异性 (0,2,0)
   // 且晚于构建产物：背景会把头部染成默认藏蓝，padding 会让头部内容比下方内容区(左右各 24px)
   // 多出 50px 偏移、左右无法对齐。此处以同特异性 + !important 一并钉死。
   &.ant-layout-header {
     background: var(--sk-bg-header, #32363a) !important;
     padding: 0 !important;
+    height: 64px !important;
   }
   // 头部内容行与下方内容区共用同一水平基准：左侧 24px 对齐"个人空间"侧栏，
-  // 右侧 24px 对齐内容卡片右边框
+  // 右侧 24px 对齐内容卡片右边框；flex 布局让子元素自动垂直居中
   .content.g-row {
+    display: flex;
+    align-items: center;
     min-width: 0;
     width: 100%;
     max-width: none;
+    height: 100%;
     margin: 0;
     padding: 0 24px;
     box-sizing: border-box;
@@ -111,16 +120,20 @@
     margin-top: 20px;
   }
   .user-toolbar{
-    float: right;
+    // flex 容器内 float 失效，用 margin-left:auto 贴齐内容行右缘（= 内容区右边框）
+    margin-left: auto;
+    float: none;
     min-width: 0;
-    max-width: 55%;
-    height: .56rem;
+    height: 100%;
     display: flex;
     align-items: center;
+    // 防止继承头部旧行高把图标行撑到 56px 导致 ul 溢出头部
+    line-height: normal;
     // 皮肤主题 CSS(后注入)中的 antd 全局规则 ul{margin-bottom:1em} 会晚于
     // index.css 的通用重置生效,导致工具栏垂直居中偏移;此处显式归零,与皮肤无关。
     ul {
       margin: 0;
+      height: 100%;
       display: flex;
       align-items: center;
     }
@@ -155,7 +168,9 @@
         //   height: auto;
         // }
         .avatar-image{
-          margin-bottom: -10px;
+          // 旧浮动布局靠 -10px 底边距补偿头像基线；头部改 flex 垂直居中后
+          // 该补偿会变成向下 5px 的偏移，必须归零
+          margin-bottom: 0;
           display: inline-block;
           text-align: center;
           background: #ccc;
