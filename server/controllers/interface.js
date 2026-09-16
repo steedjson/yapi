@@ -10,7 +10,6 @@ const interfaceCatModel = requireAny('../models/interfaceCat.js');
 const interfaceCaseModel = requireAny('../models/interfaceCase.js');
 const followModel = requireAny('../models/follow.js');
 const groupModel = requireAny('../models/group.js');
-const _ = require('underscore');
 const url = requireAny('url');
 const baseController = require('./base.js');
 const yapi = requireAny('../yapi.js');
@@ -407,7 +406,7 @@ class interfaceController extends baseController {
       let needUpdate = false;
       if (tagsInProject && Array.isArray(tagsInProject) && tagsInProject.length > 0) {
         tags.forEach(tag => {
-          if (!_.find(tagsInProject, item => {
+          if (!tagsInProject.find((/** @type {any} */ item) => {
             return item.name === tag;
           })) {//tag不存在
             needUpdate = true;

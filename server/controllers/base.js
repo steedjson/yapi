@@ -12,7 +12,6 @@ const userModel = requireAny('../models/user.js');
 const interfaceModel = requireAny('../models/interface.js');
 const groupModel = requireAny('../models/group.js');
 const tokenModel = requireAny('../models/token.js');
-const _ = require('underscore');
 const jwt = require('jsonwebtoken');
 const {parseToken} = require('../utils/token')
 
@@ -305,7 +304,7 @@ class baseController {
           // 建立项目的人
           return 'owner';
         }
-        let memberData = _.find(projectData.members, m => {
+        let memberData = projectData.members.find((/** @type {any} */ m) => {
           if (m && m.uid === this.getUid()) {
             return true;
           }
@@ -332,7 +331,7 @@ class baseController {
           return 'owner';
         }
 
-        let groupMemberData = _.find(groupData.members, m => {
+        let groupMemberData = groupData.members.find((/** @type {any} */ m) => {
           if (m.uid === this.getUid()) {
             return true;
           }

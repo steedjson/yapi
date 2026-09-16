@@ -7,7 +7,6 @@ const requireAny = name => require(name);
 
 const projectModel = requireAny('../models/project.js');
 const yapi = requireAny('../yapi.js');
-const _ = require('underscore');
 const baseController = require('./base.js');
 const interfaceModel = requireAny('../models/interface.js');
 const interfaceColModel = requireAny('../models/interfaceCol.js');
@@ -633,7 +632,7 @@ class projectController extends baseController {
           }
         }
 
-        let f = _.find(follow, fol => {
+        let f = follow.find((/** @type {any} */ fol) => {
           return fol.projectid === item._id;
         });
         // 排序：收藏的项目放前面
@@ -652,10 +651,15 @@ class projectController extends baseController {
         item.follow = true;
         return item;
       });
-      project_list = /** @type {any} */ (_).uniq(
-        follow.concat(result),
-        (/** @type {any} */ item) => item._id
-      );
+      // 等价于 _.uniq(list, item => item._id): 按 _id 去重, 保留首次出现
+      const seenProjectIds = new Set();
+      project_list = follow.concat(result).filter((/** @type {any} */ item) => {
+        if (seenProjectIds.has(item._id)) {
+          return false;
+        }
+        seenProjectIds.add(item._id);
+        return true;
+      });
     }
 
     ctx.body = yapi.commons.resReturn({

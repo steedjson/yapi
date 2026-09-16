@@ -3,7 +3,6 @@ const advModel = require('./advMockModel.js');
 const caseModel = require('./caseModel.js');
 const yapi = require('yapi.js');
 const mongoose = require('mongoose');
-const _ = require('underscore');
 const path = require('path');
 const lib = require(path.resolve(yapi.WEBROOT, 'common/lib.js'));
 const Mock = require('mockjs');
@@ -81,7 +80,11 @@ module.exports = function() {
     }
 
     if (matchList.length > 0) {
-      let maxItem = _.max(matchList, item => (item.params && Object.keys(item.params).length) || 0);
+      // 等价于 _.max(matchList, item => ...): 取匹配参数最多的一条, 并列时保留先出现者
+      let maxItem = matchList.reduce((best, item) => {
+        const score = item => (item.params && Object.keys(item.params).length) || 0;
+        return score(item) > score(best) ? item : best;
+      });
       return maxItem;
     }
     return null;

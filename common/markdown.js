@@ -1,5 +1,4 @@
 const schema = require('./schema-transformTo-table.js');
-const _ = require('underscore');
 
 const json_parse = function(json) {
   try {
@@ -10,7 +9,7 @@ const json_parse = function(json) {
 };
 // 处理字符串换行
 const handleWrap = str => {
-  return _.isString(str) ? str.replace(/\n/gi, '<br/>') : str;
+  return typeof str === 'string' ? str.replace(/\n/gi, '<br/>') : str;
 };
 const messageMap = {
   desc: '备注',
@@ -70,7 +69,7 @@ function createBaseMessage(basepath, inter) {
   // 基本信息
   let baseMessage = `### 基本信息\n\n**Path：** ${basepath + inter.path}\n\n**Method：** ${
     inter.method
-  }\n\n**接口描述：**\n${_.isUndefined(inter.desc) ? '' : inter.desc}\n`;
+  }\n\n**接口描述：**\n${inter.desc === undefined ? '' : inter.desc}\n`;
   return baseMessage;
 }
 
@@ -151,14 +150,14 @@ function tableHeader(columns) {
 }
 
 function handleObject(text) {
-  if (!_.isObject(text)) {
+  if (!text || typeof text !== 'object') {
     return text;
   }
   let tpl = ``;
   Object.keys(text || {}).map((item, index) => {
     let name = messageMap[item];
     let value = text[item];
-    tpl += _.isUndefined(text[item])
+    tpl += text[item] === undefined
       ? ''
       : `<p key=${index}><span style="font-weight: '700'">${name}: </span><span>${value.toString()}</span></p>`;
   });
@@ -171,7 +170,7 @@ function tableCol(col, columns, level) {
   columns.map((item, index) => {
     let dataIndex = item.dataIndex;
     let value = col[dataIndex];
-    value = _.isUndefined(value) ? '' : value;
+    value = value === undefined ? '' : value;
     let text = ``;
 
     switch (dataIndex) {
@@ -188,7 +187,7 @@ function tableCol(col, columns, level) {
         text = value ? '必须' : '非必须';
         break;
       case 'desc':
-        text = _.isUndefined(col.childrenDesc)
+        text = col.childrenDesc === undefined
           ? `<span style="white-space: pre-wrap">${value}</span>`
           : `<span style="white-space: pre-wrap">${col.childrenDesc}</span>`;
         break;
@@ -212,7 +211,7 @@ function tableBody(dataSource, columns, level) {
   dataSource.map(col => {
     let child = null;
     tpl += `<tr key=${col.key}>${tableCol(col, columns, level)}</tr>`;
-    if (!_.isUndefined(col.children) && _.isArray(col.children)) {
+    if (col.children !== undefined && Array.isArray(col.children)) {
       let index = level + 1;
       child = tableBody(col.children, columns, index);
     }

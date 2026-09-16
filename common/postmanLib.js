@@ -1,5 +1,6 @@
 const { isJson5, json_parse, handleJson, joinPath, safeArray } = require('./utils');
 const constants = require('../client/constants/variable.js');
+// underscore 仅用于沙箱脚本 utils._ 公开 API(YApi 文档承诺), 内部代码禁用 underscore
 const _ = require('underscore');
 const URL = require('url');
 const utils = require('./power-string.js').utils;
@@ -167,7 +168,7 @@ function checkNameIsExistInArray(name, arr) {
 }
 
 function handleCurrDomain(domains, case_env) {
-  let currDomain = _.find(domains, item => item.name === case_env);
+  let currDomain = domains.find(item => item.name === case_env);
 
   if (!currDomain) {
     currDomain = domains[0];

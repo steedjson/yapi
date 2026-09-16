@@ -4,10 +4,18 @@ const projectModel = require('models/project.js');
 const syncModel = require('./syncModel.js');
 const tokenModel = require('models/token.js');
 const yapi = require('yapi.js')
-const sha = require('sha.js');
-const md5 = require('md5');
+const crypto = require('crypto');
 const { getToken } = require('utils/token');
 const jobMap = new Map();
+
+// 输出与原 md5 / sha.js 库保持一致的 hex 摘要
+function md5Hex(str) {
+  return crypto.createHash('md5').update(String(str)).digest('hex');
+}
+
+function sha1Hex(str) {
+  return crypto.createHash('sha1').update(String(str)).digest('hex');
+}
 
 class syncUtils {
 
@@ -94,7 +102,7 @@ class syncUtils {
         let oldSyncJob = await this.syncModel.getByProjectId(projectId);
 
         //更新之前判断本次swagger json数据是否跟上次的相同,相同则不更新
-        if (newSwaggerJsonData && oldSyncJob.old_swagger_content && oldSyncJob.old_swagger_content == md5(newSwaggerJsonData)) {
+        if (newSwaggerJsonData && oldSyncJob.old_swagger_content && oldSyncJob.old_swagger_content == md5Hex(newSwaggerJsonData)) {
             //记录日志
             // this.saveSyncLog(0, syncMode, "接口无更新", uid, projectId);
             oldSyncJob.last_sync_time = yapi.commons.time();
@@ -118,7 +126,7 @@ class syncUtils {
         if (requestObj.body.errcode == 0) {
             //修改sync_model的属性
             oldSyncJob.last_sync_time = yapi.commons.time();
-            oldSyncJob.old_swagger_content = md5(newSwaggerJsonData);
+            oldSyncJob.old_swagger_content = md5Hex(newSwaggerJsonData);
             await this.syncModel.upById(oldSyncJob._id, oldSyncJob);
         }
         //记录日志
@@ -165,10 +173,7 @@ class syncUtils {
             let token;
             if (!data) {
                 let passsalt = yapi.commons.randStr();
-                token = sha('sha1')
-                    .update(passsalt)
-                    .digest('hex')
-                    .substr(0, 20);
+                token = sha1Hex(passsalt).substr(0, 20);
 
                 await this.tokenModel.save({ project_id, token });
             } else {

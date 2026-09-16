@@ -3,7 +3,6 @@ const projectModel = require('../models/project.js');
 const interfaceModel = require('../models/interface.js');
 const mockExtra = require('../../common/mock-extra.js');
 const { schemaValidator } = require('../../common/utils.js');
-const _ = require('underscore');
 const Mock = require('mockjs');
 const variable = require('../../client/constants/variable.js')
 /**
@@ -108,11 +107,8 @@ function mockValidator(interfaceData, ctx) {
     for (j = 0, len = interfaceData.req_body_form.length; j < len; j++) {
       let curForm = interfaceData.req_body_form[j];
       if (curForm && typeof curForm === 'object' && curForm.required === '1') {
-        if (
-          ctx.request.body[curForm.name] ||
-          (ctx.request.body.fields && ctx.request.body.fields[curForm.name]) ||
-          (ctx.request.body.files && ctx.request.body.files[curForm.name])
-        ) {
+        // koa-body v8: 表单字段并入 ctx.request.body, 文件在 ctx.request.files
+        if (ctx.request.body[curForm.name] || (ctx.request.files && ctx.request.files[curForm.name])) {
           continue;
         }
 
@@ -228,7 +224,7 @@ module.exports = async (ctx, next) => {
 
       let findInterface;
       let weight = 0;
-      _.each(newData, item => {
+      newData.forEach(item => {
         let m = matchApi(newpath, item.path);
         if (m !== false) {
           if(m.__weight >= weight){
@@ -288,17 +284,7 @@ module.exports = async (ctx, next) => {
             alwaysFakeOptionals: true
           });
         } else {
-          // console.log('header', ctx.request.header['content-type'].indexOf('multipart/form-data'))
-          // 处理 format-data
-
-          if (
-            _.isString(ctx.request.header['content-type']) &&
-            ctx.request.header['content-type'].indexOf('multipart/form-data') > -1
-          ) {
-            ctx.request.body = ctx.request.body.fields;
-          }
-          // console.log('body', ctx.request.body)
-
+          // koa-body v8 下 multipart 表单字段已直接并入 ctx.request.body, 无需再从 body.fields 取
           res = mockExtra(yapi.commons.json_parse(interfaceData.res_body), {
             query: ctx.request.query,
             body: ctx.request.body,

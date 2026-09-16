@@ -63,26 +63,39 @@ class userController extends baseController {
     } else if (result.disabled === true) {
       //被禁用的账号不允许登录
       return (ctx.body = yapi.commons.resReturn(null, 403, '账号已被禁用，请联系管理员'));
-    } else if (yapi.commons.generatePassword(password, result.passsalt) === result.password) {
-      this.setLoginCookie(result._id, result.passsalt);
+    }
 
-      return (ctx.body = yapi.commons.resReturn(
-        {
-          username: result.username,
-          role: result.role,
-          uid: result._id,
-          email: result.email,
-          add_time: result.add_time,
-          up_time: result.up_time,
-          type: 'site',
-          study: result.study
-        },
-        0,
-        'logout success...'
-      ));
-    } else {
+    const check = yapi.commons.verifyPassword(password, result.passsalt, result.password);
+    if (!check.valid) {
       return (ctx.body = yapi.commons.resReturn(null, 405, '密码错误'));
     }
+
+    // 旧 sha1 格式口令在首次登录成功后自动升级为 scrypt 格式(passsalt 保持不变, setLoginCookie 依赖它)
+    if (check.legacy) {
+      try {
+        await userInst.update(result._id, { password: yapi.commons.hashPassword(password) });
+      } catch (/** @type {any} */ e) {
+        // 升级失败不影响本次登录
+        yapi.commons.log('password auto upgrade failed: ' + e.message, 'error');
+      }
+    }
+
+    this.setLoginCookie(result._id, result.passsalt);
+
+    return (ctx.body = yapi.commons.resReturn(
+      {
+        username: result.username,
+        role: result.role,
+        uid: result._id,
+        email: result.email,
+        add_time: result.add_time,
+        up_time: result.up_time,
+        type: 'site',
+        study: result.study
+      },
+      0,
+      'logout success...'
+    ));
   }
 
   /**
@@ -224,7 +237,8 @@ class userController extends baseController {
         passsalt = yapi.commons.randStr();
         data = {
           username: username,
-          password: yapi.commons.generatePassword(passsalt, passsalt),
+          // 第三方登录无口令, 占位密码使用 scrypt 随机串, 不可被反推或登录
+          password: yapi.commons.hashPassword(yapi.commons.randStr()),
           email: email,
           passsalt: passsalt,
           role: 'member',
@@ -291,7 +305,7 @@ class userController extends baseController {
         return (ctx.body = yapi.commons.resReturn(null, 400, '旧密码不能为空'));
       }
 
-      if (yapi.commons.generatePassword(params.old_password, user.passsalt) !== user.password) {
+      if (!yapi.commons.verifyPassword(params.old_password, user.passsalt, user.password).valid) {
         return (ctx.body = yapi.commons.resReturn(null, 402, '旧密码错误'));
       }
     }
@@ -299,7 +313,7 @@ class userController extends baseController {
     let passsalt = yapi.commons.randStr();
     let data = {
       up_time: yapi.commons.time(),
-      password: yapi.commons.generatePassword(params.password, passsalt),
+      password: yapi.commons.hashPassword(params.password),
       passsalt: passsalt
     };
     try {
@@ -391,7 +405,7 @@ class userController extends baseController {
     let passsalt = yapi.commons.randStr();
     let data = {
       username: params.username,
-      password: yapi.commons.generatePassword(params.password, passsalt), //加密
+      password: yapi.commons.hashPassword(params.password), //加密
       email: params.email,
       passsalt: passsalt,
       role: 'member',

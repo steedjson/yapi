@@ -151,9 +151,10 @@ class interfaceColController extends baseController {
    */
   async testFilesUpload(ctx) {
     try {
-      let file = ctx.request.body.files.file;
+      // koa-body v8: 文件在 ctx.request.files(formidable File 对象, 路径属性为 filepath)
+      let file = ctx.request.files.file;
       let newPath = path.join(yapi.WEBROOT_RUNTIME, 'test.text');
-      fs.renameSync(file.path, newPath);
+      fs.renameSync(file.filepath, newPath);
       ctx.body = yapi.commons.resReturn({ res: '上传成功' });
     } catch (/** @type {any} */ e) {
       ctx.body = yapi.commons.resReturn(null, 402, e.message);

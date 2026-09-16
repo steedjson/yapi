@@ -2,7 +2,26 @@ const Mock = require('mockjs');
 const filter = require('./power-string.js').filter;
 const stringUtils = require('./power-string.js').utils;
 const json5 = require('json5');
-const Ajv = require('ajv');
+// ajv-draft-04 为 ajv8 官方 draft-04 配套实现, 保持对存量 draft-04 语法的兼容
+const Ajv = require('ajv-draft-04');
+const localize = require('ajv-i18n');
+
+// schemaValidator 编译缓存: 以 schema JSON 串为 key, 容量上限 500, 超限后清空重来
+const schemaValidatorCache = new Map();
+const SCHEMA_VALIDATOR_CACHE_MAX = 500;
+
+let sharedAjv = null;
+
+function getSharedAjv() {
+  if (!sharedAjv) {
+    sharedAjv = new Ajv({
+      validateFormats: false,
+      validateSchema: false,
+      strict: false
+    });
+  }
+  return sharedAjv;
+}
 /**
  * 作用：解析规则串 key ，然后根据规则串的规则以及路径找到在 json 中对应的数据
  * 规则串：$.{key}.{body||params}.{dataPath} 其中 body 为返回数据，params 为请求数据，datapath 为数据的路径
@@ -251,22 +270,24 @@ exports.timeago = function(timestamp) {
 // json schema 验证器
 exports.schemaValidator = function(schema, params) {
   try {
-    const ajv = new Ajv({
-      format: false,
-      meta: false
-    });
-    let metaSchema = require('ajv/lib/refs/json-schema-draft-04.json');
-    ajv.addMetaSchema(metaSchema);
-    ajv._opts.defaultMeta = metaSchema.id;
-    ajv._refs['http://json-schema.org/schema'] = 'http://json-schema.org/draft-04/schema';
-    var localize = require('ajv-i18n');
+    const ajv = getSharedAjv();
 
     schema = schema || {
       type: 'object',
       title: 'empty object',
       properties: {}
     };
-    const validate = ajv.compile(schema);
+
+    const cacheKey = JSON.stringify(schema);
+    let validate = schemaValidatorCache.get(cacheKey);
+    if (!validate) {
+      validate = ajv.compile(schema);
+      if (schemaValidatorCache.size >= SCHEMA_VALIDATOR_CACHE_MAX) {
+        schemaValidatorCache.clear();
+      }
+      schemaValidatorCache.set(cacheKey, validate);
+    }
+
     let valid = validate(params);
 
     let message = '';

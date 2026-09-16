@@ -1,5 +1,3 @@
-const _ = require('underscore');
-
 function getPluginConfig(name, type) {
   let pluginConfig;
   if (type === 'ext') {
@@ -50,5 +48,13 @@ exports.initPlugins = function (plugins, type) {
     return item.enable === true && (item.server || item.client)
   })
 
-  return _.uniq(plugins, item => item.name)
+  // 等价于 _.uniq(plugins, item => item.name): 按 name 去重, 保留首次出现
+  const seenNames = new Set()
+  return plugins.filter(item => {
+    if (seenNames.has(item.name)) {
+      return false
+    }
+    seenNames.add(item.name)
+    return true
+  })
 }

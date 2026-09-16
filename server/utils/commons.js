@@ -1,7 +1,7 @@
 const fs = require('fs-extra');
 const path = require('path');
+const crypto = require('crypto');
 const yapi = require('../yapi.js');
-const sha1 = require('sha1');
 const logModel = require('../models/log.js');
 const projectModel = require('../models/project.js');
 const interfaceColModel = require('../models/interfaceCol.js');
@@ -10,8 +10,7 @@ const interfaceModel = require('../models/interface.js');
 const userModel = require('../models/user.js');
 const followModel = require('../models/follow.js');
 const json5 = require('json5');
-const _ = require('underscore');
-const Ajv = require('ajv');
+const Ajv = require('ajv-draft-04');
 const Mock = require('mockjs');
 const sandboxFn = require('./sandbox')
 
@@ -168,8 +167,60 @@ exports.getIp = ctx => {
   return ip;
 };
 
-exports.generatePassword = (password, passsalt) => {
-  return sha1(password + sha1(passsalt));
+// legacy 口令摘要: sha1(password + sha1(passsalt)), 与历史 sha1 npm 包输出保持一致
+function legacyPasswordDigest(password, passsalt) {
+  const sha1Hex = str => crypto.createHash('sha1').update(String(str)).digest('hex');
+  return sha1Hex(password + sha1Hex(passsalt));
+}
+
+exports.generatePassword = legacyPasswordDigest;
+
+// scrypt 参数(自描述存储格式 scrypt$N$r$p$saltHex$hashHex)
+const SCRYPT_COST_PARAMS = { N: 16384, r: 8, p: 1 };
+
+/**
+ * 生成 scrypt 口令哈希, 存储为自描述字符串, 盐内嵌于哈希串中。
+ * @param {string} password 明文口令
+ * @returns {string} scrypt$N$r$p$saltHex$hashHex
+ */
+exports.hashPassword = password => {
+  const salt = crypto.randomBytes(16);
+  const hash = crypto.scryptSync(String(password), salt, 64, SCRYPT_COST_PARAMS);
+  return `scrypt$${SCRYPT_COST_PARAMS.N}$${SCRYPT_COST_PARAMS.r}$${SCRYPT_COST_PARAMS.p}$${salt.toString(
+    'hex'
+  )}$${hash.toString('hex')}`;
+};
+
+/**
+ * 校验口令。
+ * storedHash 以 scrypt$ 开头时按自描述参数校验; 否则按 legacy sha1 公式校验。
+ * @param {string} password 明文口令
+ * @param {string} passsalt 用户盐(legacy 校验使用)
+ * @param {string} storedHash 存储的口令哈希
+ * @returns {{valid: boolean, legacy: boolean}} legacy 为 true 表示命中旧格式
+ */
+exports.verifyPassword = (password, passsalt, storedHash) => {
+  if (typeof storedHash === 'string' && storedHash.startsWith('scrypt$')) {
+    const parts = storedHash.split('$');
+    if (parts.length !== 6) {
+      return { valid: false, legacy: false };
+    }
+    const expected = Buffer.from(parts[5], 'hex');
+    try {
+      const actual = crypto.scryptSync(String(password), Buffer.from(parts[4], 'hex'), expected.length, {
+        N: parseInt(parts[1], 10),
+        r: parseInt(parts[2], 10),
+        p: parseInt(parts[3], 10)
+      });
+      return {
+        valid: actual.length === expected.length && crypto.timingSafeEqual(actual, expected),
+        legacy: false
+      };
+    } catch (e) {
+      return { valid: false, legacy: false };
+    }
+  }
+  return { valid: legacyPasswordDigest(password, passsalt) === storedHash, legacy: true };
 };
 
 exports.expireDate = day => {
@@ -234,7 +285,7 @@ exports.filterRes = (list, rules) => {
 
 exports.handleVarPath = (pathname, params) => {
   function insertParams(name) {
-    if (!_.find(params, { name: name })) {
+    if (!params.find(item => item.name === name)) {
       params.push({
         name: name,
         desc: ''
@@ -360,28 +411,71 @@ exports.handleParams = (params, keys) => {
   return params;
 };
 
+// ajv 编译缓存: 以规范化后的 schema JSON 串为 key, 容量上限 500, 超限后清空重来
+const validatorCache = new Map();
+const VALIDATOR_CACHE_MAX = 500;
+
+function cacheValidator(cacheKey, build) {
+  let compiled = validatorCache.get(cacheKey);
+  if (compiled) {
+    return compiled;
+  }
+  const { ajv, validate } = build();
+  compiled = { validate, errorsText: ajv.errorsText.bind(ajv) };
+  if (validatorCache.size >= VALIDATOR_CACHE_MAX) {
+    validatorCache.clear();
+  }
+  validatorCache.set(cacheKey, compiled);
+  return compiled;
+}
+
+// easy-json-schema 对无必填项的对象也会生成 required: [], draft-04 meta 不允许, 递归剥离
+function stripEmptyRequired(node) {
+  if (!node || typeof node !== 'object') {
+    return node;
+  }
+  if (Array.isArray(node.required) && node.required.length === 0) {
+    delete node.required;
+  }
+  if (node.properties) {
+    Object.keys(node.properties).forEach(key => stripEmptyRequired(node.properties[key]));
+  }
+  if (node.items) {
+    stripEmptyRequired(node.items);
+  }
+  return node;
+}
+
 exports.validateParams = (schema2, params) => {
-  const flag = schema2.closeRemoveAdditional;
-  const ajv = new Ajv({
-    allErrors: true,
-    coerceTypes: true,
-    useDefaults: true,
-    removeAdditional: flag ? false : true
+  const flag = schema2 && schema2.closeRemoveAdditional === true;
+  // 不再原地修改入参 schema: 复制后剥离 closeRemoveAdditional, 使 schemaMap 可安全复用
+  const cloned = structuredClone(schema2);
+  delete cloned.closeRemoveAdditional;
+
+  const schema = stripEmptyRequired(ejs(cloned));
+  schema.additionalProperties = flag ? true : false;
+
+  const { validate, errorsText } = cacheValidator(JSON.stringify(schema), () => {
+    const ajv = new Ajv({
+      allErrors: true,
+      coerceTypes: true,
+      useDefaults: true,
+      removeAdditional: flag ? false : true,
+      validateFormats: false,
+      // 对齐 ajv5 默认行为: 不按 meta-schema 严格校验 schema 本身, 仅告警级别的差异直接忽略
+      validateSchema: false,
+      strict: false
+    });
+    return { ajv, validate: ajv.compile(schema) };
   });
 
-  var localize = require('ajv-i18n');
-  delete schema2.closeRemoveAdditional;
-
-  const schema = ejs(schema2);
-
-  schema.additionalProperties = flag ? true : false;
-  const validate = ajv.compile(schema);
   let valid = validate(params);
 
   let message = '请求参数 ';
   if (!valid) {
+    var localize = require('ajv-i18n');
     localize.zh(validate.errors);
-    message += ajv.errorsText(validate.errors, { separator: '\n' });
+    message += errorsText(validate.errors, { separator: '\n' });
   }
 
   return {
@@ -468,7 +562,7 @@ function handleParamsValue(params, val) {
   params.forEach((item, index) => {
     if (!value[item.name] || typeof value[item.name] !== 'object') return null;
     params[index].value = value[item.name].value;
-    if (!_.isUndefined(value[item.name].enable)) {
+    if (value[item.name].enable !== undefined) {
       params[index].enable = value[item.name].enable;
     }
   });

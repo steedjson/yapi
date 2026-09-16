@@ -1,11 +1,10 @@
-const _ = require('underscore');
 let fieldNum = 1;
 
 exports.schemaTransformToTable = schema => {
   try {
     schema = checkJsonSchema(schema);
     let result = Schema(schema, 0);
-    result = _.isArray(result) ? result : [result];
+    result = Array.isArray(result) ? result : [result];
     return result;
   } catch (err) {
     console.log(err);
@@ -16,7 +15,7 @@ exports.schemaTransformToTable = schema => {
 
 function checkJsonSchema(json) {
   let newJson = Object.assign({}, json);
-  if (_.isUndefined(json.type) && _.isObject(json.properties)) {
+  if (json.type === undefined && typeof json.properties === 'object') {
     newJson.type = 'object';
   }
 
@@ -69,7 +68,7 @@ const Schema = (data, key) => {
       sub: result
     };
 
-    if (_.isArray(children)) {
+    if (Array.isArray(children)) {
       item = Object.assign({}, item, { children });
     }
 
@@ -96,7 +95,7 @@ const SchemaObject = (data, key) => {
       required: required.indexOf(name) != -1
     };
 
-    if (value.type === 'object' || (_.isUndefined(value.type) && _.isArray(optionForm))) {
+    if (value.type === 'object' || (value.type === undefined && Array.isArray(optionForm))) {
       item = Object.assign({}, item, { type: 'object', children: optionForm });
       delete item.sub;
     } else {
@@ -129,7 +128,7 @@ const SchemaArray = (data, index) => {
   let optionForm = mapping(items, index);
   //  处理array嵌套array的问题
   let children =optionForm ;
-  if (!_.isArray(optionForm) && !_.isUndefined(optionForm)) {
+  if (!Array.isArray(optionForm) && optionForm !== undefined) {
     optionForm.key = 'array-' + fieldNum++;
     children = [optionForm];
   }

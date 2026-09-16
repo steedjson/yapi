@@ -24,7 +24,6 @@ const { handleParamsValue, ArrayToObject } = requireAny('../../common/utils.js')
 const renderToHtml = require('../utils/reportHtml');
 const axios = requireAny('axios');
 const HanldeImportData = requireAny('../../common/HandleImportData');
-const _ = require('underscore');
 const createContex = require('../../common/createContext')
 
 /**
@@ -253,7 +252,7 @@ class openController extends baseController {
       let projectEvn = await this.projectModel.getByEnv(item.project_id);
 
       item.id = item._id;
-      let curEnvItem = _.find(curEnvList, key => {
+      let curEnvItem = curEnvList.find(key => {
         return key.project_id == item.project_id;
       });
 

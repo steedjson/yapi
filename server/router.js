@@ -1,4 +1,4 @@
-const koaRouter = require('koa-router');
+const koaRouter = require('@koa/router');
 const interfaceController = require('./controllers/interface.js');
 const groupController = require('./controllers/group.js');
 const userController = require('./controllers/user.js');
@@ -12,7 +12,8 @@ const followController = require('./controllers/follow.js');
 const openController = require('./controllers/open.js');
 const { createAction } = require('./utils/commons.js');
 
-const router = koaRouter();
+// @koa/router v15 导出为 class, 必须使用 new 调用(旧 koa-router 允许省略)
+const router = new koaRouter();
 
 let INTERFACE_CONFIG = {
   interface: {

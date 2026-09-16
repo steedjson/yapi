@@ -1,4 +1,3 @@
-const _ = require('underscore')
 const swagger = require('swagger-client');
 const compareVersions = require('compare-versions');
 
@@ -41,9 +40,10 @@ const compareVersions = require('compare-versions');
 
   function openapi2swagger(data) {
     data.swagger = '2.0';
-    _.each(data.paths, apis => {
-      _.each(apis, api => {
-        _.each(api.responses, res => {
+    // 缺失 paths 的畸形文档按空导入处理（原 underscore _.each 对 undefined 为 no-op）
+    Object.values(data.paths || {}).forEach(apis => {
+      Object.values(apis).forEach(api => {
+        Object.values(api.responses || {}).forEach(res => {
           const responseContent = getJsonContent(res.content);
           if (responseContent && typeof responseContent === 'object') {
             Object.assign(res, responseContent);
@@ -119,17 +119,18 @@ const compareVersions = require('compare-versions');
         res.tags = []
       }
 
-      _.each(res.paths, (apis, path) => {
+      // 缺失 paths 的畸形文档按空导入处理（原 underscore _.each 对 undefined 为 no-op）
+      Object.entries(res.paths || {}).forEach(([path, apis]) => {
         // parameters is common parameters, not a method
         delete apis.parameters;
-        _.each(apis, (api, method) => {
+        Object.entries(apis).forEach(([method, api]) => {
           api.path = path;
           api.method = method;
           let data = null;
           try {
             data = handleSwagger(api, res.tags);
             if (data.catname) {
-              if (!_.find(interfaceData.cats, item => item.name === data.catname)) {
+              if (!interfaceData.cats.find(item => item.name === data.catname)) {
                 if(res.tags.length === 0){
                   interfaceData.cats.push({
                     name: data.catname,
@@ -167,7 +168,7 @@ const compareVersions = require('compare-versions');
       });
       interfaceData.cats = Object.keys(categoryMap).map(key => categoryMap[key]);
       interfaceData.cats = interfaceData.cats.filter(catData=>{
-        return _.find(interfaceData.apis, apiData=>{
+        return interfaceData.apis.find(apiData=>{
           return apiData.catname === catData.path ||
             (apiData.catname && apiData.catname.indexOf(catData.path + '/') === 0);
         });
@@ -192,7 +193,7 @@ const compareVersions = require('compare-versions');
         }
 
         // 如果根路径有 tags，使用根路径 tags,不使用每个接口定义的 tag 做完分类
-        if(originTags.length > 0 && _.find(originTags, item=>{
+        if(originTags.length > 0 && originTags.find(item=>{
           return item.name === data.tags[i]
         })){
           api.catname = data.tags[i];

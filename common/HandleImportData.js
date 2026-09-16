@@ -1,9 +1,20 @@
-const _ = require('underscore');
 const axios = require('axios');
 
 const isNode = typeof global == 'object' && global.global === global;
 // 测试和嵌入式调用可能不传端口，此时使用相对路径，避免拼出 undefined 地址。
 const getApiPrefix = port => (isNode && port !== undefined && port !== null ? 'http://127.0.0.1:' + port : '');
+
+// 极简 throttle: 首次立即执行, 间隔内的后续调用丢弃(仅覆盖本文件的原 _.throttle 用法)
+function throttle(fn, wait) {
+  let lastExecTime = 0;
+  return function(...args) {
+    const now = Date.now();
+    if (now - lastExecTime >= wait) {
+      lastExecTime = now;
+      fn.apply(this, args);
+    }
+  };
+}
 
 async function handle(
   res,
@@ -18,7 +29,7 @@ async function handle(
   token,
   port
 ) {
-  const taskNotice = _.throttle((index, len) => {
+  const taskNotice = throttle((index, len) => {
     messageSuccess('正在导入，已执行任务 ' + (index + 1) + ' 个，共 ' + len + ' 个');
   }, 3000);
   const errors = [];

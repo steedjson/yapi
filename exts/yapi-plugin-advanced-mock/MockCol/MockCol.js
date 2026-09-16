@@ -10,7 +10,6 @@ import { formatTime } from 'client/common.js';
 import constants from 'client/constants/variable.js';
 import CaseDesModal from './CaseDesModal';
 import { json5_parse } from '../../../client/common';
-import _ from 'underscore';
 
 @connect(
   state => {
@@ -151,7 +150,7 @@ export default class MockCol extends Component {
     let ipObj = {};
     let userFilters = [];
     let userObj = {};
-    _.isArray(data) &&
+    Array.isArray(data) &&
       data.forEach(item => {
         ipObj[item.ip_enable ? item.ip : ''] = '';
         userObj[item.username] = '';

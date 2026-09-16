@@ -14,7 +14,6 @@ const userModel = requireAny('../models/user.js');
 const interfaceModel = requireAny('../models/interface.js');
 const interfaceColModel = requireAny('../models/interfaceCol.js');
 const interfaceCaseModel = requireAny('../models/interfaceCase.js');
-const _ = require('underscore')
 
 /** @type {{ [key: string]: string }} */
 const rolename = {
@@ -494,7 +493,7 @@ class groupController extends baseController {
       if(groupByProject && groupByProject.length > 0){
         groupByProject.forEach(( /** @type {any} */ _data)=>{
           const _temp = [...groupIds, ...newGroupIds];
-          if(!_.find(_temp, id=> id === _data.group_id)){
+          if(!_temp.find(id=> id === _data.group_id)){
             newGroupIds.push(_data.group_id)
           }
         })

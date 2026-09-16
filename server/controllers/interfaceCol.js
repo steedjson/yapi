@@ -11,7 +11,6 @@ const interfaceModel = requireAny('../models/interface.js');
 const projectModel = requireAny('../models/project.js');
 const baseController = require('./base.js');
 const yapi = requireAny('../yapi.js');
-const _ = require('underscore');
 
 class interfaceColController extends baseController {
   /**
