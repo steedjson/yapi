@@ -3,6 +3,7 @@ import { EditOutlined } from '@ant-design/icons';
 import PropTypes from 'prop-types';
 import { Button } from 'antd';
 import { Link } from 'react-router-dom';
+import 'client/components/MarkdownEditor/contents.scss';
 
 const WikiView = props => {
   const { editorEable, onEditor, uid, username, editorTime, desc } = props;
@@ -23,7 +24,7 @@ const WikiView = props => {
         )}
       </div>
       <div
-        className="tui-editor-contents"
+        className="markdown-contents"
         dangerouslySetInnerHTML={{ __html: desc }}
       />
     </div>

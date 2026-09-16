@@ -1,6 +1,5 @@
 import { message } from 'antd';
 import URL from 'url';
-import _ from 'underscore';
 const GenerateSchema = require('generate-schema/src/schemas/json.js');
 import { json_parse } from '../../common/utils.js';
 
@@ -102,7 +101,7 @@ function postman(importDataModule) {
         });
       }
 
-      if (_.find(res.folders, item => item.collectionId === res.id)) {
+      if (Array.isArray(res.folders) && res.folders.find(item => item.collectionId === res.id)) {
         folders = res.folders;
       }
 
@@ -163,14 +162,14 @@ function postman(importDataModule) {
           if (data[reflect[item]] === 'urlencoded' || data[reflect[item]] === 'params') {
             res[item] = 'form';
           } else {
-            if (_.isString(data.headers) && data.headers.indexOf('application/json') > -1) {
+            if (typeof data.headers === 'string' && data.headers.indexOf('application/json') > -1) {
               res[item] = 'json';
             } else {
               res[item] = 'raw';
             }
           }
         } else if (item === 'req_body_other') {
-          if (_.isString(data.headers) && data.headers.indexOf('application/json') > -1) {
+          if (typeof data.headers === 'string' && data.headers.indexOf('application/json') > -1) {
             res.req_body_is_json_schema = true;
             res[item] = transformJsonToSchema(data[reflect[item]]);
           } else {

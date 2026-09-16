@@ -6,12 +6,12 @@ import { FileOutlined, CopyOutlined } from '@ant-design/icons';
 import { Table, Row, Col, Tooltip, message } from 'antd';
 import { Link } from 'react-router-dom';
 import AceEditor from 'client/components/AceEditor/AceEditor';
-import { formatTime, safeArray } from '../../../../common.js';
+import { formatTime, safeArray, copyText } from '../../../../common.js';
 import ErrMsg from '../../../../components/ErrMsg/ErrMsg.js';
 import variable from '../../../../constants/variable';
 import constants from '../../../../constants/variable.js';
-import copy from 'copy-to-clipboard';
 import SchemaTable from '../../../../components/SchemaTable/SchemaTable.js';
+import 'client/components/MarkdownEditor/contents.scss';
 
 const HTTP_METHOD = constants.HTTP_METHOD;
 
@@ -238,7 +238,7 @@ class View extends Component {
   };
 
   copyUrl = url => {
-    copy(url);
+    copyText(url);
     message.success('已经成功复制到剪切板');
   };
 
@@ -496,7 +496,7 @@ class View extends Component {
         {this.props.curData.desc && <h2 className="interface-title">备注</h2>}
         {this.props.curData.desc && (
           <div
-            className="tui-editor-contents"
+            className="markdown-contents"
             style={{ margin: '0px', padding: '0px 20px', float: 'none' }}
             dangerouslySetInnerHTML={{ __html: this.props.curData.desc }}
           />

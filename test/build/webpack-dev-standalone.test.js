@@ -201,22 +201,28 @@ test.serial('webpack 中间件已命中的产物请求不被回退劫持', async
   }
 });
 
-test.serial('tui-editor 图标雪碧图按别名映射 static/prd 提供', async t => {
+test.serial('静态图标资源按 /image/ 与 /iconfont/ 路径直接提供', async t => {
   const server = await startHandlerServer(
     createRequestHandler({ hot: passThrough, middleware: passThrough, readDevHtml: () => devHtmlStub })
   );
   try {
     const res = await request(server.address().port, {
       method: 'GET',
-      path: '/common/tui-editor/dist/tui-editor.png'
+      path: '/image/avatar-1.png'
     });
     t.is(res.status, 200);
     t.is(res.headers['content-type'], 'image/png');
     // PNG 魔数第 2-4 字节为 "PNG"（0x89 经 utf8 解码会变成替换符，不作断言）。
     t.is(res.text.slice(1, 4), 'PNG');
+    const icon = await request(server.address().port, {
+      method: 'GET',
+      path: '/iconfont/iconfont.svg'
+    });
+    t.is(icon.status, 200);
+    t.is(icon.headers['content-type'], 'image/svg+xml');
     const missing = await request(server.address().port, {
       method: 'GET',
-      path: '/common/tui-editor/dist/missing.png'
+      path: '/image/missing.png'
     });
     t.is(missing.status, 404);
   } finally {

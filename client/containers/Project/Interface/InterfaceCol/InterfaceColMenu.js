@@ -21,13 +21,21 @@ import {
   PlusOutlined
 } from '@ant-design/icons';
 import { arrayChangeIndex } from '../../../../common.js';
-import _ from 'underscore'
 
 const FormItem = Form.Item;
 const confirm = Modal.confirm;
 const headHeight = 240; // menu顶部到网页顶部部分的高度
 
 import './InterfaceColMenu.scss';
+
+// 极简防抖：延迟 wait 毫秒执行最后一次调用，透传参数（替代 underscore 的 debounce）
+function debounce(fn, wait) {
+  let timer = null;
+  return function(...args) {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn.apply(this, args), wait);
+  };
+}
 
 const ColModalForm = props => {
   const { visible, onCancel, onCreate, title, saveFormRef } = props;
@@ -162,7 +170,7 @@ export default class InterfaceColMenu extends Component {
     this.setState({ expands: keys });
   };
 
-  onSelect = _.debounce(keys => {
+  onSelect = debounce(keys => {
     if (keys.length) {
       const type = keys[0].split('_')[0];
       const id = keys[0].split('_')[1];

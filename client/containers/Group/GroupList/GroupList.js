@@ -23,7 +23,6 @@ import {
   setCurrGroup,
   fetchGroupMsg
 } from '../../../reducer/modules/group.js';
-import _ from 'underscore';
 
 import './GroupList.scss';
 
@@ -159,7 +158,7 @@ export default class GroupList extends Component {
       await this.props.fetchGroupList();
 
       this.setState({ groupList: this.props.groupList });
-      const currGroup = _.find(this.props.groupList, group => {
+      const currGroup = this.props.groupList.find(group => {
         return +group._id === +id;
       });
 

@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import withRouter from '../../../../withRouter';
 import { Link } from 'react-router-dom';
 //import constants from '../../../../constants/variable.js'
-import { Tooltip, Input, Button, Row, Col, Spin, Modal, message, Select, Switch } from 'antd';
+import { Tooltip, Input, Button, Row, Col, Spin, Modal, message, Select, Switch, Table } from 'antd';
 import {
   CheckCircleFilled,
   InfoCircleFilled,
@@ -17,18 +17,20 @@ import {
   setColData,
   fetchCaseEnvList
 } from '../../../../reducer/modules/interfaceCol';
-import HTML5Backend from 'react-dnd-html5-backend';
 import { getToken, getEnv } from '../../../../reducer/modules/project';
-import { DragDropContext } from 'react-dnd';
 import AceEditor from 'client/components/AceEditor/AceEditor';
-import * as Table from 'reactabular-table';
-import * as dnd from 'reactabular-dnd';
-import * as resolve from 'table-resolver';
+import { DndContext, PointerSensor } from '@dnd-kit/core';
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable,
+  arrayMove
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import axios from 'axios';
 import CaseReport from './CaseReport.js';
-import _ from 'underscore';
 import { initCrossRequest } from 'client/components/Postman/CheckCrossInstall.js';
-import produce from 'immer';
+import { produce } from 'immer';
 import {InsertCodeMap} from 'client/components/Postman/Postman.js'
 
 const plugin = require('client/plugin.js');
@@ -45,11 +47,39 @@ import Label from '../../../../components/Label/Label.js';
 const Option = Select.Option;
 const createContext = require('common/createContext')
 
-import copy from 'copy-to-clipboard';
+import { copyText } from '../../../../common.js';
 
 const defaultModalStyle = {
   top: 10
 }
+
+// 拖拽传感器：5px 激活距离，保证行内链接/按钮的单击不受拖拽影响。
+const dndSensors = [
+  {
+    sensor: PointerSensor,
+    options: { activationConstraint: { distance: 5 } }
+  }
+];
+
+// 可排序行组件：整行拖拽（等价原 dnd.Row 的整行拖拽交互）。
+const SortableRow = props => {
+  const { children, ...restProps } = props;
+  const rowId = restProps['data-row-key'];
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: rowId
+  });
+  const style = {
+    ...restProps.style,
+    transform: CSS.Transform.toString(transform && { ...transform, scaleY: 1 }),
+    transition,
+    ...(isDragging ? { position: 'relative', zIndex: 999 } : {})
+  };
+  return (
+    <tr {...restProps} {...attributes} {...listeners} ref={setNodeRef} style={style}>
+      {children}
+    </tr>
+  );
+};
 
 function handleReport(json) {
   try {
@@ -86,7 +116,6 @@ function handleReport(json) {
   }
 )
 @withRouter
-@DragDropContext(HTML5Backend)
 class InterfaceColContent extends Component {
   static propTypes = {
     match: PropTypes.object,
@@ -146,8 +175,6 @@ class InterfaceColContent extends Component {
         }
       }
     };
-    this.onRow = this.onRow.bind(this);
-    this.onMoveRow = this.onMoveRow.bind(this);
   }
 
   async handleColIdChange(newColId){
@@ -217,7 +244,7 @@ class InterfaceColContent extends Component {
 
   // 整合header信息
   handleReqHeader = (project_id, req_header, case_env) => {
-    let envItem = _.find(this.props.envList, item => {
+    let envItem = this.props.envList.find(item => {
       return item._id === project_id;
     });
 
@@ -256,7 +283,7 @@ class InterfaceColContent extends Component {
     for (let i = 0, l = this.state.rows.length, newRows, curitem; i < l; i++) {
       let { rows } = this.state;
 
-      let envItem = _.find(this.props.envList, item => {
+      let envItem = this.props.envList.find(item => {
         return item._id === rows[i].project_id;
       });
 
@@ -450,10 +477,6 @@ class InterfaceColContent extends Component {
     return obj;
   };
 
-  onRow(row) {
-    return { rowId: row.id, onMove: this.onMoveRow, onDrop: this.onDrop };
-  }
-
   onDrop = () => {
     let changes = [];
     this.state.rows.forEach((item, index) => {
@@ -463,13 +486,27 @@ class InterfaceColContent extends Component {
       this.props.fetchInterfaceColList(this.props.match.params.id);
     });
   };
-  onMoveRow({ sourceRowId, targetRowId }) {
-    let rows = dnd.moveRows({ sourceRowId, targetRowId })(this.state.rows);
-
-    if (rows) {
-      this.setState({ rows });
+  // 拖拽经过其它行时实时重排（等价原 dnd.Row 的 hover 换位体验）
+  onDragOver = event => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) {
+      return;
     }
-  }
+    const rows = this.state.rows;
+    const oldIndex = rows.findIndex(item => item.id === active.id);
+    const newIndex = rows.findIndex(item => item.id === over.id);
+    if (oldIndex === -1 || newIndex === -1) {
+      return;
+    }
+    this.setState({ rows: arrayMove(rows, oldIndex, newIndex) });
+  };
+  // 拖拽结束持久化新顺序（未发生换位时不发冗余请求）
+  onDragEnd = event => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      this.onDrop();
+    }
+  };
 
   onChangeTest = d => {
     
@@ -519,7 +556,7 @@ class InterfaceColContent extends Component {
   };
 
   openAdv = id => {
-    let findCase = _.find(this.props.currCaseList, item => item.id === id);
+    let findCase = this.props.currCaseList.find(item => item.id === id);
 
     this.setState({
       enableScript: findCase.enable_script,
@@ -589,7 +626,7 @@ class InterfaceColContent extends Component {
   };
 
   copyUrl = url => {
-    copy(url);
+    copyText(url);
     message.success('已经成功复制到剪切板');
   };
 
@@ -670,204 +707,136 @@ class InterfaceColContent extends Component {
     const currProjectId = this.props.currProject._id;
     const columns = [
       {
-        property: 'casename',
-        header: {
-          label: '用例名称'
-        },
-        props: {
-          style: {
-            width: '250px'
-          }
-        },
-        cell: {
-          formatters: [
-            (text, { rowData }) => {
-              let record = rowData;
-              return (
-                <Link to={'/project/' + currProjectId + '/interface/case/' + record._id}>
-                  {record.casename.length > 23
-                    ? record.casename.substr(0, 20) + '...'
-                    : record.casename}
-                </Link>
-              );
-            }
-          ]
+        title: '用例名称',
+        dataIndex: 'casename',
+        width: 250,
+        render: (text, record) => {
+          return (
+            <Link to={'/project/' + currProjectId + '/interface/case/' + record._id}>
+              {record.casename.length > 23 ? record.casename.substr(0, 20) + '...' : record.casename}
+            </Link>
+          );
         }
       },
       {
-        header: {
-          label: 'key',
-          formatters: [
-            () => {
-              return (
-                <Tooltip
-                  title={
-                    <span>
-                      {' '}
-                      每个用例都有唯一的key，用于获取所匹配接口的响应数据，例如使用{' '}
-                      <a
-                        href="https://hellosean1025.github.io/yapi/documents/case.html#%E7%AC%AC%E4%BA%8C%E6%AD%A5%EF%BC%8C%E7%BC%96%E8%BE%91%E6%B5%8B%E8%AF%95%E7%94%A8%E4%BE%8B"
-                        className="link-tooltip"
-                        target="blank"
-                      >
-                        {' '}
-                        变量参数{' '}
-                      </a>{' '}
-                      功能{' '}
-                    </span>
-                  }
+        title: (
+          <Tooltip
+            title={
+              <span>
+                {' '}
+                每个用例都有唯一的key，用于获取所匹配接口的响应数据，例如使用{' '}
+                <a
+                  href="https://hellosean1025.github.io/yapi/documents/case.html#%E7%AC%AC%E4%BA%8C%E6%AD%A5%EF%BC%8C%E7%BC%96%E8%BE%91%E6%B5%8B%E8%AF%95%E7%94%A8%E4%BE%8B"
+                  className="link-tooltip"
+                  target="blank"
                 >
-                  Key
-                </Tooltip>
-              );
+                  {' '}
+                  变量参数{' '}
+                </a>{' '}
+                功能{' '}
+              </span>
             }
-          ]
-        },
-        props: {
-          style: {
-            width: '100px'
-          }
-        },
-        cell: {
-          formatters: [
-            (value, { rowData }) => {
-              return <span>{rowData._id}</span>;
-            }
-          ]
-        }
+          >
+            Key
+          </Tooltip>
+        ),
+        dataIndex: '_id',
+        width: 100
       },
       {
-        property: 'test_status',
-        header: {
-          label: '状态'
-        },
-        props: {
-          style: {
-            width: '100px'
+        title: '状态',
+        dataIndex: 'test_status',
+        width: 100,
+        render: (value, record) => {
+          let id = record._id;
+          let code = this.reports[id] ? this.reports[id].code : 0;
+          if (record.test_status === 'loading') {
+            return (
+              <div>
+                <Spin />
+              </div>
+            );
           }
-        },
-        cell: {
-          formatters: [
-            (value, { rowData }) => {
-              let id = rowData._id;
-              let code = this.reports[id] ? this.reports[id].code : 0;
-              if (rowData.test_status === 'loading') {
-                return (
-                  <div>
-                    <Spin />
-                  </div>
-                );
-              }
 
-              switch (code) {
-                case 0:
-                  return (
-                    <div>
-                      <Tooltip title="Pass">
-                        <CheckCircleFilled
-                          style={{
-                            color: '#00a854'
-                          }}
-                        />
-                      </Tooltip>
-                    </div>
-                  );
-                case 400:
-                  return (
-                    <div>
-                      <Tooltip title="请求异常">
-                        <InfoCircleFilled
-                          style={{
-                            color: '#f04134'
-                          }}
-                        />
-                      </Tooltip>
-                    </div>
-                  );
-                case 1:
-                  return (
-                    <div>
-                      <Tooltip title="验证失败">
-                        <ExclamationCircleFilled
-                          style={{
-                            color: '#ffbf00'
-                          }}
-                        />
-                      </Tooltip>
-                    </div>
-                  );
-                default:
-                  return (
-                    <div>
-                      <CheckCircleFilled
-                        style={{
-                          color: '#00a854'
-                        }}
-                      />
-                    </div>
-                  );
-              }
-            }
-          ]
-        }
-      },
-      {
-        property: 'path',
-        header: {
-          label: '接口路径'
-        },
-        cell: {
-          formatters: [
-            (text, { rowData }) => {
-              let record = rowData;
+          switch (code) {
+            case 0:
               return (
-                <Tooltip title="跳转到对应接口">
-                  <Link to={`/project/${record.project_id}/interface/api/${record.interface_id}`}>
-                    {record.path && record.path.length > 23 ? record.path.substr(0, 20) + '...' : record.path}
-                  </Link>
-                </Tooltip>
+                <div>
+                  <Tooltip title="Pass">
+                    <CheckCircleFilled
+                      style={{
+                        color: '#00a854'
+                      }}
+                    />
+                  </Tooltip>
+                </div>
               );
-            }
-          ]
+            case 400:
+              return (
+                <div>
+                  <Tooltip title="请求异常">
+                    <InfoCircleFilled
+                      style={{
+                        color: '#f04134'
+                      }}
+                    />
+                  </Tooltip>
+                </div>
+              );
+            case 1:
+              return (
+                <div>
+                  <Tooltip title="验证失败">
+                    <ExclamationCircleFilled
+                      style={{
+                        color: '#ffbf00'
+                      }}
+                    />
+                  </Tooltip>
+                </div>
+              );
+            default:
+              return (
+                <div>
+                  <CheckCircleFilled
+                    style={{
+                      color: '#00a854'
+                    }}
+                  />
+                </div>
+              );
+          }
         }
       },
       {
-        header: {
-          label: '测试报告'
-        },
-        props: {
-          style: {
-            width: '200px'
-          }
-        },
-        cell: {
-          formatters: [
-            (text, { rowData }) => {
-              let reportFun = () => {
-                if (!this.reports[rowData.id]) {
-                  return null;
-                }
-                return <Button onClick={() => this.openReport(rowData.id)}>测试报告</Button>;
-              };
-              return <div className="interface-col-table-action">{reportFun()}</div>;
+        title: '接口路径',
+        dataIndex: 'path',
+        render: (text, record) => {
+          return (
+            <Tooltip title="跳转到对应接口">
+              <Link to={`/project/${record.project_id}/interface/api/${record.interface_id}`}>
+                {record.path && record.path.length > 23 ? record.path.substr(0, 20) + '...' : record.path}
+              </Link>
+            </Tooltip>
+          );
+        }
+      },
+      {
+        title: '测试报告',
+        dataIndex: 'id',
+        width: 200,
+        render: (text, record) => {
+          let reportFun = () => {
+            if (!this.reports[record.id]) {
+              return null;
             }
-          ]
+            return <Button onClick={() => this.openReport(record.id)}>测试报告</Button>;
+          };
+          return <div className="interface-col-table-action">{reportFun()}</div>;
         }
       }
     ];
     const { rows } = this.state;
-    const components = {
-      header: {
-        cell: dnd.Header
-      },
-      body: {
-        row: dnd.Row
-      }
-    };
-    const resolvedColumns = resolve.columnChildren({ columns });
-    const resolvedRows = resolve.resolve({ columns: resolvedColumns, method: resolve.nested })(
-      rows
-    );
 
     const localUrl =
       location.protocol +
@@ -1087,26 +1056,22 @@ class InterfaceColContent extends Component {
           <Label onChange={val => this.handleChangeInterfaceCol(val, col_name)} desc={col_desc} />
         </div>
 
-        <Table.Provider
-          components={components}
-          columns={resolvedColumns}
-          style={{
-            width: '100%',
-            borderCollapse: 'collapse'
-          }}
+        <DndContext
+          sensors={dndSensors}
+          onDragOver={this.onDragOver}
+          onDragEnd={this.onDragEnd}
         >
-          <Table.Header
-            className="interface-col-table-header"
-            headerRows={resolve.headerRows({ columns })}
-          />
-
-          <Table.Body
-            className="interface-col-table-body"
-            rows={resolvedRows}
-            rowKey="id"
-            onRow={this.onRow}
-          />
-        </Table.Provider>
+          <SortableContext items={rows.map(item => item.id)} strategy={verticalListSortingStrategy}>
+            <Table
+              className="interface-col-table"
+              columns={columns}
+              dataSource={rows}
+              rowKey="id"
+              pagination={false}
+              components={{ body: { row: SortableRow } }}
+            />
+          </SortableContext>
+        </DndContext>
         <Modal
           title="测试报告"
           width="900px"

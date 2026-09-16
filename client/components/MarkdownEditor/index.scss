@@ -1,0 +1,4 @@
+// Markdown 编辑器容器：占满父容器宽度，避免被父级 flex 布局压缩
+.markdown-editor-wrapper {
+  width: 100%;
+}

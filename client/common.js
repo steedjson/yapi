@@ -194,6 +194,32 @@ exports.entries = obj => {
   return res;
 };
 
+// 原生剪贴板写入：优先 Clipboard API，失败或弱环境降级 execCommand('copy')
+function fallbackCopyText(text) {
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  textarea.setAttribute('readonly', '');
+  textarea.style.position = 'fixed';
+  textarea.style.opacity = '0';
+  document.body.appendChild(textarea);
+  textarea.select();
+  let success = false;
+  try {
+    success = document.execCommand('copy');
+  } catch (e) {
+    success = false;
+  }
+  document.body.removeChild(textarea);
+  return success;
+}
+
+exports.copyText = text => {
+  if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+    return navigator.clipboard.writeText(text).catch(() => fallbackCopyText(text));
+  }
+  return Promise.resolve(fallbackCopyText(text));
+};
+
 exports.getMockText = mockTpl => {
   try {
     return JSON.stringify(Mock.mock(MockExtra(json5.parse(mockTpl), {})), null, '  ');

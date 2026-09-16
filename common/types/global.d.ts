@@ -107,7 +107,8 @@ declare module 'redux-promise' {
 }
 
 declare module 'immer' {
-  export default function produce(base: any, recipe: (draft: any) => void): any;
+  // immer@10 移除了默认导出，仅保留命名导出（produce 等）
+  export function produce(base: any, recipe: (draft: any) => void): any;
 }
 
 declare module 'react' {
@@ -230,9 +231,4 @@ declare module '*/HandleImportData' {
 declare module '*/AceEditor' {
   const AceEditor: any;
   export default AceEditor;
-}
-
-declare module '*/tui-editor-Editor-all.min.js' {
-  const Editor: any;
-  export default Editor;
 }

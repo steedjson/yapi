@@ -100,12 +100,6 @@ function proxyApiRequest(req, res, target) {
   req.pipe(upstream);
 }
 
-// 静态资源别名：tui-editor 样式引用固定的 /common/tui-editor/dist/ 图标雪碧图路径，
-// 本地未安装 tui-editor 包，映射到 static/prd/ 下已补齐的两张雪碧图，避免编辑器工具栏图标 404。
-const staticAliasPrefixes = {
-  '/common/tui-editor/dist/': '/prd/'
-};
-
 // 请求处理器：hot/middleware/readDevHtml 可注入，便于测试覆盖路由回退行为。
 function createRequestHandler(options) {
   const hot = options.hot;
@@ -136,23 +130,6 @@ function createRequestHandler(options) {
         const ext = path.extname(filePath).toLowerCase();
         res.setHeader('Content-Type', mimeTypes[ext] || 'application/octet-stream');
         res.setHeader('Access-Control-Allow-Origin', '*');
-        fs.createReadStream(filePath).pipe(res);
-        return;
-      }
-    }
-
-    for (const [prefix, target] of Object.entries(staticAliasPrefixes)) {
-      if (!reqUrl.startsWith(prefix)) {
-        continue;
-      }
-      const filePath = path.join(staticRoot, target, reqUrl.slice(prefix.length));
-      // 解析结果必须仍在 static 目录内，阻止 ../ 路径穿越。
-      if (!filePath.startsWith(staticRoot + path.sep)) {
-        break;
-      }
-      if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
-        const ext = path.extname(filePath).toLowerCase();
-        res.setHeader('Content-Type', mimeTypes[ext] || 'application/octet-stream');
         fs.createReadStream(filePath).pipe(res);
         return;
       }

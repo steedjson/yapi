@@ -38,7 +38,6 @@ import constants from '../../../../constants/variable.js';
 const confirm = Modal.confirm;
 import { nameLengthLimit, entries, trim, htmlFilter } from '../../../../common';
 import '../Setting.scss';
-import _ from 'underscore';
 import ProjectTag from './ProjectTag.js';
 // layout
 const formItemLayout = {
@@ -76,7 +75,7 @@ function ProjectMessage(props) {
 
       values.protocol = protocol.split(':')[0];
       const group_id = assignValue.group_id;
-      const selectGroup = _.find(groupList, item => {
+      const selectGroup = groupList.find(item => {
         return item._id == group_id;
       });
 

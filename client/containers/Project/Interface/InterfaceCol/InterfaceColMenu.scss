@@ -105,24 +105,21 @@
 
 .interface-col {
   padding: 24px;
-  .interface-col-table-header {
-    background-color: rgb(238, 238, 238);
-    height: 50px;
-    line-height: 50px;
-    text-align: left;
-  }
+  // antd Table 接管用例列表后的表头/表体样式，保持原表格的视觉
+  .interface-col-table {
+    .ant-table-thead > tr > th {
+      background-color: rgb(238, 238, 238);
+      height: 50px;
+      line-height: 50px;
+      text-align: left;
+      padding-left: 5px;
+    }
 
-  .interface-col-table-body {
-    height: 50px;
-    line-height: 50px;
-  }
-
-  .interface-col-table-header th {
-    padding-left: 5px;
-  }
-
-  .interface-col-table-body td {
-    padding-left: 5px;
+    .ant-table-tbody > tr > td {
+      height: 50px;
+      line-height: 50px;
+      padding-left: 5px;
+    }
   }
 
   .interface-col-table-action button {

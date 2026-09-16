@@ -5,7 +5,7 @@ import { getToken, updateToken } from '../../../../reducer/modules/project';
 import { connect } from 'react-redux';
 import { Tooltip, message, Modal } from 'antd';
 import { CopyOutlined, ReloadOutlined } from '@ant-design/icons';
-import copy from 'copy-to-clipboard';
+import { copyText } from '../../../../common.js';
 const confirm = Modal.confirm;
 
 @connect(
@@ -33,7 +33,7 @@ class ProjectToken extends Component {
   }
 
   copyToken = () => {
-    copy(this.props.token);
+    copyText(this.props.token);
     message.success('已经成功复制到剪切板');
   };
 

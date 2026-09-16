@@ -1,4 +1,5 @@
-.ace_editor.fullScreen {
+// CodeMirror 6 引擎容器：F9 全屏时容器与 body 同时挂 fullScreen class
+.yapi-editor.fullScreen {
   height: auto;
   width: auto;
   border: 0;
@@ -9,17 +10,18 @@
   left: 0;
   right: 0;
   z-index: 1000008;
-}
 
-.ace_editor .ace_print-margin{
-  visibility: hidden !important 
+  .cm-editor {
+    height: 100%;
+  }
 }
 
 .fullScreen {
   overflow: hidden
 }
 
-.ace_editor.ace-xcode {
+// 对齐原 ace/theme/xcode 的浅色视觉
+.yapi-editor .cm-editor {
   background-color: #f5f5f5;
   color: #000000;
 }

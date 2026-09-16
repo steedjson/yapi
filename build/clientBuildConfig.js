@@ -2,8 +2,8 @@
 
 function getPluginExclude(isWin) {
   return isWin
-    ? /(tui-editor|node_modules\\(?!_?(yapi-plugin|json-schema-editor-visual)))/
-    : /(tui-editor|node_modules\/(?!_?(yapi-plugin|json-schema-editor-visual)))/;
+    ? /(node_modules\\(?!_?(yapi-plugin|json-schema-editor-visual)))/
+    : /(node_modules\/(?!_?(yapi-plugin|json-schema-editor-visual)))/;
 }
 
 // 生产页 static/index.html 读取 WEBPACK_ASSETS['index.js']，独立构建入口名是 index，需改写键名。

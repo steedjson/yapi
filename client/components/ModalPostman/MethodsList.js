@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { Row, Input, Select, Tooltip } from 'antd';
 import { DownOutlined } from '@ant-design/icons';
-import _ from 'underscore';
 const Option = Select.Option;
 
 // 深拷贝
@@ -49,7 +48,7 @@ class MethodsList extends Component {
   };
 
   componentDidMount() {
-    var index = _.findIndex(METHODS_LIST, { name: this.props.clickValue });
+    var index = METHODS_LIST.findIndex(item => item.name === this.props.clickValue);
 
     let moreFlag = index > 3 ? false : true;
     this.setState({

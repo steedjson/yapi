@@ -2,7 +2,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import _ from 'underscore';
 import constants from '../../../../constants/variable.js';
 import { handlePath as handlePathUtil, nameLengthLimit } from '../../../../common.js';
 import { changeEditStatus } from '../../../../reducer/modules/interface.js';
@@ -12,20 +11,15 @@ import { message, Affix, Tabs, Modal } from 'antd';
 import EasyDragSort from '../../../../components/EasyDragSort/EasyDragSort.js';
 import mockEditor from 'client/components/AceEditor/mockEditor';
 import AceEditor from 'client/components/AceEditor/AceEditor';
+import MarkdownEditor from '../../../../components/MarkdownEditor/index';
 import axios from 'axios';
 import { MOCK_SOURCE } from '../../../../constants/variable.js';
-import Editor from 'common/tui-editor/dist/tui-editor-Editor-all.min.js';
 const jSchema = require('json-schema-editor-visual');
 const ResBodySchema = jSchema({ lang: 'zh_CN', mock: MOCK_SOURCE });
 const ReqBodySchema = jSchema({ lang: 'zh_CN', mock: MOCK_SOURCE });
 // 编辑器内嵌 antd3 的全量样式:经 build/json-schema-css-scope-loader.js 把选择器
 // 前缀化为 `.json-schema-editor-scope `,仅作用于下方编辑器容器,不再全局加载。
 import 'json-schema-editor-visual/node_modules/antd/dist/antd.css';
-
-
-require('common/tui-editor/dist/tui-editor.min.css'); // editor ui
-require('common/tui-editor/dist/tui-editor-contents.min.css'); // editor content
-require('./editor.css');
 
 
 /**
@@ -250,13 +244,6 @@ function InterfaceEditForm(/** @type {any} */ props) {
       container: 'mock-preview',
       data: '',
       readOnly: true
-    });
-
-    editorRef.current = new Editor({
-      el: document.querySelector('#desc'),
-      initialEditType: 'wysiwyg',
-      height: '500px',
-      initialValue: state.markdown || state.desc
     });
 
     return () => {
@@ -487,7 +474,7 @@ function InterfaceEditForm(/** @type {any} */ props) {
      * @param {any} name
      */
     let insertParams = name => {
-      let findExist = _.find(state.req_params, { name: name });
+      let findExist = state.req_params.find((/** @type {any} */ item) => item.name === name);
       if (findExist) {
         queue.push(findExist);
       } else {
@@ -1374,7 +1361,12 @@ function InterfaceEditForm(/** @type {any} */ props) {
         <div className="panel-sub">
           <FormItem className={'interface-edit-item'}>
             <div>
-              <div id="desc" style={{ lineHeight: '20px' }} className="remark-editor" />
+              <MarkdownEditor
+                ref={editorRef}
+                className="remark-editor"
+                value={state.markdown || state.desc}
+                height={500}
+              />
             </div>
           </FormItem>
         </div>

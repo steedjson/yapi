@@ -3,12 +3,13 @@ import mockEditor from './mockEditor';
 import PropTypes from 'prop-types';
 import './AceEditor.scss';
 
+// mode 直接以字符串传给 CodeMirror 6 引擎（javascript/json/text/xml/html）
 const ModeMap = {
-  javascript: 'ace/mode/javascript',
-  json: 'ace/mode/json',
-  text: 'ace/mode/text',
-  xml: 'ace/mode/xml',
-  html: 'ace/mode/html'
+  javascript: 'javascript',
+  json: 'json',
+  text: 'text',
+  xml: 'xml',
+  html: 'html'
 };
 
 const defaultStyle = { width: '100%', height: '200px' };
@@ -43,7 +44,7 @@ class AceEditor extends React.PureComponent {
       fullScreen: this.props.fullScreen
     });
     let mode = this.props.mode || 'javascript';
-    this.editor.editor.getSession().setMode(getMode(mode));
+    this.editor.editor.setMode(getMode(mode));
     if (typeof this.props.callback === 'function') {
       this.props.callback(this.editor.editor);
     }
@@ -56,7 +57,7 @@ class AceEditor extends React.PureComponent {
     if (nextProps.data !== this.props.data && this.editor.getValue() !== nextProps.data) {
       this.editor.setValue(nextProps.data);
       let mode = nextProps.mode || 'javascript';
-      this.editor.editor.getSession().setMode(getMode(mode));
+      this.editor.editor.setMode(getMode(mode));
       this.editor.editor.clearSelection();
     }
   }

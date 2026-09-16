@@ -2,14 +2,10 @@ import React, { Component } from 'react';
 import { UploadOutlined } from '@ant-design/icons';
 import PropTypes from 'prop-types';
 import { Button, Checkbox } from 'antd';
-import Editor from 'common/tui-editor/dist/tui-editor-Editor-all.min.js';
-require('common/tui-editor/dist/tui-editor.min.css'); // editor ui
-require('common/tui-editor/dist/tui-editor-contents.min.css'); // editor content
-class WikiEditor extends Component {
-  constructor(props) {
-    super(props);
-  }
+import MarkdownEditor from 'client/components/MarkdownEditor';
+import 'client/components/MarkdownEditor/contents.scss';
 
+class WikiEditor extends Component {
   static propTypes = {
     isConflict: PropTypes.bool,
     onUpload: PropTypes.func,
@@ -19,15 +15,6 @@ class WikiEditor extends Component {
     desc: PropTypes.string
   };
 
-  componentDidMount() {
-    this.editor = new Editor({
-      el: document.querySelector('#desc'),
-      initialEditType: 'wysiwyg',
-      height: '500px',
-      initialValue: this.props.desc
-    });
-  }
-
   onUpload = () => {
     let desc = this.editor.getHtml();
     let markdown = this.editor.getMarkdown();
@@ -35,14 +22,15 @@ class WikiEditor extends Component {
   };
 
   render() {
-    const { isConflict, onCancel, notice, onEmailNotice } = this.props;
+    const { isConflict, onCancel, notice, onEmailNotice, desc } = this.props;
     return (
       <div>
         <div
-          id="desc"
           className="wiki-editor"
           style={{ display: !isConflict ? 'block' : 'none' }}
-        />
+        >
+          <MarkdownEditor ref={el => (this.editor = el)} value={desc} height={500} />
+        </div>
         <div className="wiki-title wiki-up">
           <Button
             icon={<UploadOutlined />}

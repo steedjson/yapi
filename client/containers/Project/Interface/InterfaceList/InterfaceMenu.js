@@ -26,7 +26,7 @@ import AddInterfaceCatForm from './AddInterfaceCatForm';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 import withRouter from '../../../../withRouter';
-import produce from 'immer';
+import { produce } from 'immer';
 import { arrayChangeIndex } from '../../../../common.js';
 
 import './interfaceMenu.scss';

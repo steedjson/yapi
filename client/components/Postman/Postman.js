@@ -18,7 +18,6 @@ import {
 import { EditOutlined, PlusOutlined, QuestionCircleOutlined } from '@ant-design/icons';
 import constants from '../../constants/variable.js';
 import AceEditor from 'client/components/AceEditor/AceEditor';
-import _ from 'underscore';
 import { isJson, deepCopyJson, json5_parse } from '../../common.js';
 import axios from 'axios';
 import ModalPostman from '../ModalPostman/index.js';
@@ -260,7 +259,7 @@ export default class Run extends Component {
         env: env
       },
       () => {
-        let s = !_.find(env, item => item.name === this.state.case_env);
+        let s = !env.find(item => item.name === this.state.case_env);
         if (!this.state.case_env || s) {
           this.setState({
             case_env: this.state.env[0].name
@@ -458,8 +457,8 @@ export default class Run extends Component {
     let cursurPosition;
     if (type === 'req_body_other') {
       // req_body
-      let editor = this.aceEditor.editor.editor;
-      cursurPosition = editor.session.doc.positionToIndex(editor.selection.getCursor());
+      // 编辑器适配层提供光标绝对偏移（等价原 ace positionToIndex(getCursor())）
+      cursurPosition = this.aceEditor.editor.editor.getCursorIndex();
       // 获取选中的数据
       inputValue = this.getInstallValue(val || '', cursurPosition).val;
     } else {

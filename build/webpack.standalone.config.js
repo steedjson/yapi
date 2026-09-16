@@ -41,10 +41,23 @@ const config = {
       dependOn: 'lib3',
       import: [ ...(isDevelopment ? ['webpack-hot-middleware/client?path=http://127.0.0.1:4000/__webpack_hmr&reload=true'] : []), './index.js' ]
     },
-    lib: ['react', 'react-dom', 'redux', 'redux-promise', 'react-router', 'react-router-dom', 'prop-types', 'react-dnd-html5-backend', 'react-dnd', 'reactabular-table', 'reactabular-dnd', 'table-resolver'],
+    lib: ['react', 'react-dom', 'redux', 'redux-promise', 'react-router', 'react-router-dom', 'prop-types'],
     lib2: {
       dependOn: 'lib',
-      import: ['brace', 'json5', 'url', 'axios']
+      import: [
+        '@codemirror/state',
+        '@codemirror/view',
+        '@codemirror/language',
+        '@codemirror/commands',
+        '@codemirror/autocomplete',
+        '@codemirror/lang-javascript',
+        '@codemirror/lang-json',
+        '@codemirror/lang-xml',
+        '@codemirror/lang-html',
+        'json5',
+        'url',
+        'axios'
+      ]
     },
     lib3: {
       dependOn: 'lib2',
@@ -75,8 +88,12 @@ const config = {
     },
     // webpack 5 移除 node 内置模块自动 polyfill：sha.js/js-base64 等在浏览器端
     // 确实需要 Buffer 实现（webpack 4 经 node-libs-browser 自动注入 buffer 包），
-    // 显式声明等价 fallback。
-    fallback: { buffer: require.resolve('buffer/') }
+    // 显式声明等价 fallback。markdown-it 依赖的 linkify-it 引用 node 内置 punycode，
+    // 同样以 punycode.js 包（punycode/ 入口）补齐。
+    fallback: {
+      buffer: require.resolve('buffer/'),
+      punycode: require.resolve('punycode/')
+    }
   },
   module: {
     noParse: /node_modules\/jsondiffpatch\/public\/build\/.*js/,
@@ -114,10 +131,8 @@ const config = {
       },
       {
         // webpack 5 资源模块替代 url-loader（语义对齐：<8KB 内联 data URI，否则产出文件）。
-        // 不用 url-loader 4 的原因：其 CommonJS 导出与 css-loader 7 的 ESM 消费方式
-        // 不兼容，会把导出包装文件本身当作图片地址产出（tui-editor 工具栏图标损坏）。
-        // 资源模块是 css-loader 7 的原生搭配。原 `?[sha256#base64:8]` 缓存查询串随
-        // loader 体系一并移除（当前仅 tui-editor 两张工具栏图超过 8KB 阈值）。
+        // 资源模块是 css-loader 7 的原生搭配；原 `?[sha256#base64:8]` 缓存查询串
+        // 随 loader 体系一并移除。
         test: /.(gif|jpg|jpeg|png|woff|woff2|eot|ttf|svg)$/,
         type: 'asset',
         parser: { dataUrlCondition: { maxSize: 8192 } },
@@ -140,7 +155,7 @@ const config = {
     }),
     ...(isDevelopment ? [new webpack.HotModuleReplacementPlugin()] : []),
     // webpack 4 的 node.Buffer/node.setImmediate 默认垫片在 webpack 5 已移除，
-    // 用 ProvidePlugin 显式补齐（tui-editor 预构建产物等引用了这些自由变量）。
+    // 用 ProvidePlugin 显式补齐（部分依赖的预构建产物会引用这些自由变量）。
     new webpack.ProvidePlugin({
       Buffer: ['buffer', 'Buffer'],
       setImmediate: path.join(__dirname, 'shims/setImmediate.js')
