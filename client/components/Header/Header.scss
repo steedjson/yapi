@@ -54,8 +54,8 @@
     line-height: .56rem;
     height: .56rem;
     width: 56px;
-    border-right: 1px solid #55616d;
-    border-left: 1px solid #55616d;
+    border-right: 1px solid var(--sk-border-header-logo);
+    border-left: 1px solid var(--sk-border-header-logo);
     background-color: inherit;
     transition: all .2s;
     &:hover{

@@ -32,7 +32,18 @@
   --sk-border: #d9dce3;
   --sk-border-split: #e5e8ef;
   --sk-border-light: #eef0f4;
+  --sk-border-header-logo: #23477d;   // 政务深蓝顶栏下的深蓝灰分割线
   --sk-radius: 2px;
+
+  // ---- 分组侧栏头部配对 ----
+  --sk-bg-group-head: #1e4f9c;
+  --sk-text-group-head: #fff;
+  --sk-text-group-head-desc: rgba(255, 255, 255, 0.8);
+  --sk-bg-group-search: #163d7a;
+  --sk-bg-group-input: #1e4f9c;
+  --sk-border-group-input: #2960b5;
+  --sk-bg-group-selected: #eaf1fb;
+  --sk-text-group-selected: #1e4f9c;
 }
 
 // ---- 二次元风:粉紫浅色,大圆角 ----
@@ -58,7 +69,18 @@
   --sk-border: #eec9de;
   --sk-border-split: #f5d9e9;
   --sk-border-light: #fae8f1;
+  --sk-border-header-logo: rgba(112, 61, 89, 0.18); // 二次元浅粉顶栏下的柔和深玫瑰半透明分割线
   --sk-radius: 12px;
+
+  // ---- 分组侧栏头部配对:与浅粉顶栏/紫色主色呼应 ----
+  --sk-bg-group-head: #8a48c9;          // 饱满二次元主紫作为分组头
+  --sk-text-group-head: #fff;
+  --sk-text-group-head-desc: rgba(255, 255, 255, 0.85);
+  --sk-bg-group-search: #7b3fb7;        // 稍深一档的紫色搜索条
+  --sk-bg-group-input: rgba(255, 255, 255, 0.2);      // 半透明白输入框底
+  --sk-border-group-input: rgba(255, 255, 255, 0.35); // 半透明白边框
+  --sk-bg-group-selected: #f7ebfc;      // 二次元淡粉紫选中底
+  --sk-text-group-selected: #a05ce6;    // 二次元紫色文字与高亮边框
 }
 
 // ---- 暗色(尽力而为的半成品,已知限制:antd 组件内部深色依赖 themes/dark.less,
@@ -80,5 +102,16 @@
   --sk-border: #434343;
   --sk-border-split: #3a3a3a;
   --sk-border-light: #333333;
+  --sk-border-header-logo: #282828;   // 暗色顶栏下的微弱分割线
   // primary 与 primary-contrast 沿用默认(#2395f1/#fff),在暗色底上成立
+
+  // ---- 分组侧栏头部配对 ----
+  --sk-bg-group-head: #222222;
+  --sk-text-group-head: #d9d9d9;
+  --sk-text-group-head-desc: #828a96;
+  --sk-bg-group-search: #1c1c1c;
+  --sk-bg-group-input: #2a2a2a;
+  --sk-border-group-input: #3a3a3a;
+  --sk-bg-group-selected: #111b26;
+  --sk-text-group-selected: #177ddc;
 }

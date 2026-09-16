@@ -36,6 +36,17 @@
   --sk-border: #d9d9d9;             // 常规边框(theme.less @border-color-base)
   --sk-border-split: #e9e9e9;       // 组件内分隔线(theme.less @border-color-split)
   --sk-border-light: #eee;          // 更浅分隔线/描边
+  --sk-border-header-logo: #55616d; // 顶部导航栏 logo 分割线(默认深蓝黑顶栏下的灰黑边框)
+
+  // ---- 分组侧栏头部 ----
+  --sk-bg-group-head: #34495e;          // 当前分组信息块底色
+  --sk-text-group-head: #fff;           // 分组信息块文字颜色
+  --sk-text-group-head-desc: rgba(255, 255, 255, 0.75); // 分组简介文字
+  --sk-bg-group-search: #2c3e50;        // 搜索条区域底色
+  --sk-bg-group-input: #34495e;         // 搜索框背景色
+  --sk-border-group-input: #415b76;     // 搜索框边框色
+  --sk-bg-group-selected: #e6f7ff;      // 选中项背景底色(默认经典浅蓝)
+  --sk-text-group-selected: #1890ff;    // 选中项文字与右边框颜色(默认经典蓝)
 
   // ---- 形状 ----
   --sk-radius: 4px;                 // 常规组件圆角(theme.less @border-radius-base 同值)
