@@ -1,6 +1,19 @@
 
 .form-item {
   margin-bottom: .16rem;
+
+  // 表单行默认对齐
+  .ant-form-item-row {
+    align-items: flex-start;
+  }
+
+  // 权限单选组改为纵向排列，单选项上下堆叠
+  .ant-radio-group {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-start;
+    vertical-align: middle;
+  }
 }
 .breakline {
   margin-top: .18rem;
@@ -222,6 +235,50 @@
   }
 }
 
-.radio.ant-radio-wrapper{
-  line-height: unset
+// 权限单选卡片化：与新建项目页（Addproject.scss）同套视觉，
+// 内部元素 flex 垂直居中，说明文字紧跟"私有/公开"标题同行显示；私有/公开上下分行
+.radio.ant-radio-wrapper {
+  line-height: unset;
+  display: inline-flex !important;
+  align-items: center;
+  height: auto;
+  min-height: 44px;
+  padding: 8px 14px;
+  border: 1px solid var(--sk-border-light);
+  border-radius: var(--sk-radius, 4px);
+  transition: border-color 0.2s, background-color 0.2s;
+
+  .ant-radio {
+    align-self: center;
+    margin-top: 0;
+    top: 0;
+  }
+
+  .ant-radio-label {
+    display: inline-flex;
+    align-items: center;
+    line-height: 1.5;
+  }
+
+  .anticon {
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+
+  &:hover {
+    border-color: var(--sk-primary);
+  }
+}
+
+// 相邻权限卡片之间保留 10px 间距
+.radio.ant-radio-wrapper + .radio.ant-radio-wrapper {
+  margin-top: 10px;
+}
+
+.radio-desc {
+  display: inline-block;
+  margin-left: 10px; // 与标题文字保持间距
+  font-weight: normal;
+  color: var(--sk-text-muted);
+  line-height: 1.5;
 }

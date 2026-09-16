@@ -8,6 +8,17 @@
 
 .form-item {
   margin-bottom: .16rem;
+
+  .ant-form-item-row {
+    align-items: flex-start;
+  }
+
+  .ant-radio-group {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-start;
+    vertical-align: middle;
+  }
 }
 
 .breakline {
@@ -19,19 +30,30 @@
 
 
 .radio {
-  // 权限单选整体留白：图标/标题与说明文字分行后保留呼吸空间，
-  // 不再挤成 42px 的两行密排
-  display: block;
+  display: inline-flex !important;
+  align-items: center;
   height: auto;
-  padding: 10px 14px;
-  line-height: 1.8;
+  min-height: 44px;
+  padding: 8px 14px;
   border: 1px solid var(--sk-border-light);
   border-radius: var(--sk-radius, 4px);
   transition: border-color 0.2s, background-color 0.2s;
 
+  .ant-radio {
+    align-self: center;
+    margin-top: 0;
+    top: 0;
+  }
+
+  .ant-radio-label {
+    display: inline-flex;
+    align-items: center;
+    line-height: 1.5;
+  }
+
   .anticon {
     margin-right: 6px;
-    vertical-align: -0.125em;
+    vertical-align: middle;
   }
 
   &:hover {
@@ -40,9 +62,9 @@
 }
 
 .radio-desc {
-  display: block;
-  margin: 2px 0 0 22px; // 与单选圆点对齐
+  display: inline-block;
+  margin-left: 10px; // 与标题文字保持间距
   font-weight: normal;
   color: var(--sk-text-muted);
-  line-height: 1.6;
+  line-height: 1.5;
 }
