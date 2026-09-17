@@ -1,3 +1,11 @@
+// @ts-check
+
+/**
+ * 读取插件配置
+ * @param {string} name - 插件名
+ * @param {string} type - 插件类型：'ext' 为内部插件，其余为外部插件
+ * @returns {{ server?: Function, client?: Function }} 插件的 server/client 配置
+ */
 function getPluginConfig(name, type) {
   let pluginConfig;
   if (type === 'ext') {
@@ -20,12 +28,18 @@ function getPluginConfig(name, type) {
 /**
    * type @string enum[plugin, ext] plugin是外部插件，ext是内部插件
    */
+/**
+ * 初始化插件列表
+ * @param {any[]} plugins - 插件名数组或插件配置对象数组
+ * @param {string} type - 插件类型：'ext' 为内部插件，其余为外部插件
+ * @returns {any[]} 已启用且带有 server/client 的去重插件列表
+ */
 exports.initPlugins = function (plugins, type) {
   if (!plugins) {
     return [];
   }
   if (typeof plugins !== 'object' || !Array.isArray(plugins)) {
-    throw new Error('插件配置有误，请检查', plugins);
+    throw new (/** @type {*} */ (Error))('插件配置有误，请检查', plugins);
   }
 
   plugins = plugins.map(item => {

@@ -1,5 +1,12 @@
+// @ts-check
+
 const schema = require('./schema-transformTo-table.js');
 
+/**
+ * 解析 JSON 字符串，失败时返回空对象
+ * @param {string} json - JSON 字符串
+ * @returns {any} 解析结果
+ */
 const json_parse = function(json) {
   try {
     return JSON.parse(json);
@@ -8,9 +15,15 @@ const json_parse = function(json) {
   }
 };
 // 处理字符串换行
+/**
+ * 将换行符替换为 HTML 换行标签
+ * @param {string} str - 原始字符串
+ * @returns {string} 替换后的字符串
+ */
 const handleWrap = str => {
   return typeof str === 'string' ? str.replace(/\n/gi, '<br/>') : str;
 };
+/** @type {Record<string, string>} */
 const messageMap = {
   desc: '备注',
   default: '实例',
@@ -61,10 +74,22 @@ const columns = [
   }
 ];
 
+/**
+ * 目录模式下转义标题字符串
+ * @param {string} str - 原始字符串
+ * @param {boolean} isToc - 是否为目录模式
+ * @returns {string} 处理后的字符串
+ */
 function escapeStr(str, isToc) {
   return isToc ? escape(str) : str;
 }
 
+/**
+ * 生成接口基本信息段落
+ * @param {string} basepath - 接口基础路径
+ * @param {Record<string, any>} inter - 接口数据
+ * @returns {string} Markdown 片段
+ */
 function createBaseMessage(basepath, inter) {
   // 基本信息
   let baseMessage = `### 基本信息\n\n**Path：** ${basepath + inter.path}\n\n**Method：** ${
@@ -73,6 +98,11 @@ function createBaseMessage(basepath, inter) {
   return baseMessage;
 }
 
+/**
+ * 生成请求头表格
+ * @param {any[]} req_headers - 请求头列表
+ * @returns {string} Markdown 表格
+ */
 function createReqHeaders(req_headers) {
   // Request-headers
   if (req_headers && req_headers.length) {
@@ -89,6 +119,11 @@ function createReqHeaders(req_headers) {
   return '';
 }
 
+/**
+ * 生成路径参数表格
+ * @param {any[]} req_params - 路径参数列表
+ * @returns {string} Markdown 表格
+ */
 function createPathParams(req_params) {
   if (req_params && req_params.length) {
     let paramsTable = `**路径参数**\n\n`;
@@ -102,6 +137,11 @@ function createPathParams(req_params) {
   return '';
 }
 
+/**
+ * 生成 Query 参数表格
+ * @param {any[]} req_query - Query 参数列表
+ * @returns {string} Markdown 表格
+ */
 function createReqQuery(req_query) {
   if (req_query && req_query.length) {
     let headersTable = `**Query**\n\n`;
@@ -117,6 +157,14 @@ function createReqQuery(req_query) {
   return '';
 }
 
+/**
+ * 生成请求 Body 段落
+ * @param {string} req_body_type - 请求体类型
+ * @param {any[]} req_body_form - form 数据列表
+ * @param {string} req_body_other - 其他类型请求体
+ * @param {boolean} req_body_is_json_schema - 是否为 JSON Schema
+ * @returns {string} Markdown 片段
+ */
 function createReqBody(req_body_type, req_body_form, req_body_other, req_body_is_json_schema) {
   if (req_body_type === 'form' && req_body_form.length) {
     let bodyTable = `**Body**\n\n`;
@@ -140,6 +188,11 @@ function createReqBody(req_body_type, req_body_form, req_body_other, req_body_is
   return '';
 }
 
+/**
+ * 生成表格表头
+ * @param {any[]} columns - 列配置
+ * @returns {string} HTML 表头片段
+ */
 function tableHeader(columns) {
   let header = ``;
   columns.map(item => {
@@ -149,6 +202,11 @@ function tableHeader(columns) {
   return header;
 }
 
+/**
+ * 渲染对象其他信息为 HTML 段落
+ * @param {Record<string, any>} text - 属性键值对
+ * @returns {*} HTML 片段或原始入参
+ */
 function handleObject(text) {
   if (!text || typeof text !== 'object') {
     return text;
@@ -165,6 +223,13 @@ function handleObject(text) {
   return tpl;
 }
 
+/**
+ * 渲染表格单行
+ * @param {Record<string, any>} col - 行数据
+ * @param {any[]} columns - 列配置
+ * @param {number} level - 嵌套层级
+ * @returns {string} HTML 行片段
+ */
 function tableCol(col, columns, level) {
   let tpl = ``;
   columns.map((item, index) => {
@@ -205,6 +270,13 @@ function tableCol(col, columns, level) {
   return tpl;
 }
 
+/**
+ * 渲染表格主体，递归处理子节点
+ * @param {any[]} dataSource - 行数据列表
+ * @param {any[]} columns - 列配置
+ * @param {number} level - 嵌套层级
+ * @returns {string} HTML 行片段
+ */
 function tableBody(dataSource, columns, level) {
   //  按照columns的顺序排列数据
   let tpl = ``;
@@ -221,6 +293,11 @@ function tableBody(dataSource, columns, level) {
   return tpl;
 }
 
+/**
+ * 由 JSON Schema 生成 HTML 表格
+ * @param {string} body - JSON 字符串
+ * @returns {string} HTML 表格
+ */
 function createSchemaTable(body) {
   let template = ``;
   let dataSource = schema.schemaTransformToTable(json_parse(body));
@@ -239,6 +316,13 @@ function createSchemaTable(body) {
   return template;
 }
 
+/**
+ * 生成返回数据段落
+ * @param {string} res_body - 返回数据定义
+ * @param {boolean} res_body_is_json_schema - 是否为 JSON Schema
+ * @param {string} res_body_type - 返回数据类型
+ * @returns {string} Markdown 片段
+ */
 function createResponse(res_body, res_body_is_json_schema, res_body_type) {
   let resTitle = `\n### 返回数据\n\n`;
   if (res_body) {
@@ -253,6 +337,13 @@ function createResponse(res_body, res_body_is_json_schema, res_body_type) {
   return '';
 }
 
+/**
+ * 生成单个接口的 Markdown 文档
+ * @param {string} basepath - 接口基础路径
+ * @param {Record<string, any>} listItem - 接口数据
+ * @param {boolean} isToc - 是否生成目录
+ * @returns {string} Markdown 文档片段
+ */
 function createInterMarkdown(basepath, listItem, isToc) {
   let mdTemplate = ``;
   const toc = `[TOC]\n\n`;
@@ -287,6 +378,12 @@ function createInterMarkdown(basepath, listItem, isToc) {
   return mdTemplate;
 }
 
+/**
+ * 生成项目级 Markdown 文档
+ * @param {Record<string, any>} curProject - 项目数据
+ * @param {Record<string, any>} wikiData - 公共 wiki 数据
+ * @returns {string} Markdown 文档片段
+ */
 function createProjectMarkdown(curProject, wikiData) {
   let mdTemplate = ``;
   // 项目名、项目描述
@@ -299,6 +396,13 @@ function createProjectMarkdown(curProject, wikiData) {
   return mdTemplate;
 }
 
+/**
+ * 生成接口分类列表的 Markdown 文档
+ * @param {Record<string, any>} curProject - 项目数据
+ * @param {any[]} list - 接口分类列表
+ * @param {boolean} isToc - 是否生成目录
+ * @returns {string} Markdown 文档
+ */
 function createClassMarkdown(curProject, list, isToc) {
   let mdTemplate = ``;
   const toc = `[TOC]\n\n`;

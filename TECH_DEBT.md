@@ -46,6 +46,7 @@
 | TypeScript 覆盖扩大（第 1 批） | `common/types/global.d.ts` 手写 Node 垫片（Buffer/process/require/crypto 模块）与 `@types/node@24` 冲突；5 个文件被 `@ts-nocheck` 或未纳入检查 | 显式依赖 `@types/node@^24` + `@types/fs-extra@^11`；移除手写垫片；5 个文件转为 `// @ts-check` 并纳入 `include` | 类型错误 **91 → 0**（`client/common.js` 47、`sandbox.js` 21、`sandbox_child.js` 17、`yapi.js` 4、`messageMiddleware.js` 2），且顺带消除 `token.js` 的 Buffer 泛型冲突错误。**门禁有效性已证明**：向 5 个文件逐个注入类型错误，typecheck 均立即报错，恢复后回 0。改动经审查**全部为编译期注解/断言**（无运行时逻辑变更），416 项测试与沙箱并发/超时自愈实测均正常 |
 | TypeScript 覆盖扩大（第 2 批） | `common/` 顶层工具库四件套未纳入检查 | 4 文件加 `// @ts-check` + 纳入 include + JSDoc 注解 | 错误 **82 → 0**（`utils.js` 45、`lib.js` 13、`diff-view.js` 15、`mock-extra.js` 9）。三重独立等价性证明：语义 AST 归纳、HEAD 运行时差分（409+7 例逐字节一致）、**产物级双构建编译结果逐字节相同**；门禁有效性用 6 个自研变异 + 3 项反向对照证实（含"删 pragma/删 include 后同一违规不再可见"）。评审后又收紧 3 处注解强度（`schemaValidatorCache` 注解使核心校验调用**首次进入检查**、`newFilters` 收紧为 `string[]`、`Compare*` 返回 `boolean`），并用反向对照证明收紧确实新增了捕获能力 |
 | TypeScript 覆盖扩大（第 3 批） | `common/HandleImportData.js` 与 `common/power-string.js` 未受类型检查 | 加 `// @ts-check` + 纳入 include + 声明补全 | 类型错误 **87 → 0**（`HandleImportData.js` 46、`power-string.js` 41）；`global.d.ts` 补齐 `md5`、`sha.js`、`js-base64`、`axios.post`；AST 语义比对与 86 项差分测试证明零运行时行为变更；复核证实 `power-string.js` 的 `lconcat` 多参数覆盖为历史存量缺陷 |
+| TypeScript 覆盖扩大（第 4 批） | `common/` 剩余核心模块（`config`、`plugin`、`schema-transformTo-table`、`markdown`）未受类型检查 | 加 `// @ts-check` + 纳入 include + 补全 JSDoc 与返回类型 | 类型错误 **69 → 0**（`markdown.js` 39、`schema-transformTo-table.js` 25、`plugin.js` 5、`config.js` 0）。独立 acorn/espree 双重 AST 语义比对证明 4/4 STRICT-IDENTICAL，运行时 A/B 7/7 一致；至此除 `postmanLib.js` 外 `common/` 目录下全部公共模块均已处于 `@ts-check` 门禁保护下 |
 
 ## 二、评估后暂缓（含推进路径）
 
@@ -68,7 +69,7 @@
 
 - 现状：`tsconfig.json` 按文件白名单 + `checkJs: false`（**仅有 `// @ts-check` 指令的文件被检查**）。白名单 + 5 个新纳入文件已全量绿，`npm run typecheck` 0 错误。
 - 已完成的现代化：Node API 类型改由显式 `@types/node@^24`（与 .nvmrc 一致）提供，删除了 `global.d.ts` 中手写且与真实类型冲突的 Buffer/process/require/crypto 垫片。
-- 推进路径：每次触碰旧文件顺手加 `// @ts-check` 并清零其错误。**实测剩余工作量基线**（开启 `checkJs` 后的错误数）：`client/containers` 1183、`client/components` 588、`server/utils/commons.js` 87、`common/postmanLib.js` 85、`server/models/interface.js` 54、`common/HandleImportData.js` 46、`server/models/project.js` 44、`common/power-string.js` 41、`common/markdown.js` 39、`server/middleware/mockServer.js` 31 等（`server/controllers`、`client/reducer` 及已完成的 4 个 common 文件为 0）。
+- 推进路径：每次触碰旧文件顺手加 `// @ts-check` 并清零其错误。**实测剩余工作量基线**（开启 `checkJs` 后的错误数）：`client/containers` 1183、`client/components` 588、`server/utils/commons.js` 87、`common/postmanLib.js` 85、`server/models/interface.js` 54、`server/models/project.js` 44、`server/middleware/mockServer.js` 31 等（`server/controllers`、`client/reducer` 及已完成的全部 12 个 common 文件为 0）。
 - 遗留技术细节：① `common/*` 等 webpack 别名仍靠 `global.d.ts` 手写模块声明兜底，且**该 ambient 存根优先于模块解析**：正向会掩盖导出漂移（真实文件里 `formatCatTreeData` 改名后 typecheck 仍 exit 0，仅靠测试兜底）、反向会让受检的裸标识符导入方拿到伪 `TS2305`；**正确修法已实测**为「`tsconfig.paths` + 删除对应 ambient 存根」（注意 TS 7.0.2 已移除 `baseUrl`，`paths` 值须带 `./`），并需把裸标识符导入方（如 `client/containers/.../InterfaceList.js`）一并纳入 include；② `json5@2` 自带类型只导出 `{parse, stringify}` 无 default，而项目内 CJS/ESM 两种用法并存，故仍保留等价声明——若统一改命名导入即可删除；③ `mockjs` 与 `json-schema-editor-visual` 无自带类型，仍需声明；④ `common/lib.js` 的 `Compare*` 三个函数 `@param {*} flag` 尚可收紧为 `boolean`（本次只收紧了 `@returns`）。
 
 ### 4. 状态管理 Redux+redux-promise → 轻量方案（暂缓）

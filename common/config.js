@@ -1,3 +1,9 @@
+// @ts-check
+
+/**
+ * 插件装配配置
+ * @type {{ exts: Array<{ name: string }> }}
+ */
 module.exports = {
   exts: [{
     name: 'import-postman'
