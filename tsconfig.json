@@ -21,6 +21,8 @@
     "common/lib.js",
     "common/mock-extra.js",
     "common/diff-view.js",
+    "common/power-string.js",
+    "common/HandleImportData.js",
     "server/utils/ttlCache.js",
     "server/utils/categoryTree.js",
     "server/utils/token.js",

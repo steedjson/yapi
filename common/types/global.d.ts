@@ -43,9 +43,14 @@ declare module 'url' {
   export default url;
 }
 
+// 两种前端/服务端写法并存：client 侧普遍用 `import axios from 'axios'`（默认导出），
+// 而 common/HandleImportData.js 用 `require('axios')`——axios 的 CJS 产物即
+// `module.exports = axios`，require 拿到的是实例本身，故此处按使用到的成员补充声明。
+// 新增成员时需同步补充。
 declare module 'axios' {
   const axios: any;
   export default axios;
+  export function post(url: string, data?: any, config?: any): Promise<{ data: any }>;
 }
 
 declare module 'mockjs' {
@@ -69,6 +74,35 @@ declare module 'json5' {
 declare module 'qs' {
   function stringify(obj: any, options?: any): string;
   export default { stringify };
+}
+
+// md5@2 / sha.js@2 / js-base64@2 均未内置类型且无对应 @types 包。
+// 以下按运行时实际导出形态声明使用到的最小子集（当前仅 common/power-string.js 使用），
+// 新增用法时需同步补充声明。
+declare module 'md5' {
+  function md5(input: string | Buffer): string;
+  export = md5;
+}
+
+declare module 'sha.js' {
+  // export = 与其它导出互斥，故用「函数 + 同名命名空间」合并，
+  // 使 Algorithm/Hash 可通过 import('sha.js').Algorithm 引用。
+  namespace sha {
+    type Algorithm = 'sha' | 'sha1' | 'sha224' | 'sha256' | 'sha384' | 'sha512';
+    interface Hash {
+      update(data: string | Buffer): Hash;
+      digest(encoding: 'hex'): string;
+    }
+  }
+  function sha(algorithm: sha.Algorithm): sha.Hash;
+  export = sha;
+}
+
+declare module 'js-base64' {
+  export const Base64: {
+    encode(input: string): string;
+    decode(input: string): string;
+  };
 }
 
 declare module 'redux' {
