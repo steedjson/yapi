@@ -1,8 +1,20 @@
+// @ts-check
 // const json5_parse = require('../client/common.js').json5_parse;
 
 const json5 = require('json5');
 
+/**
+ * 构造接口差异视图的数据函数
+ * @param {*} jsondiffpatch 差异计算库实例
+ * @param {*} formattersHtml 差异 HTML 格式化器
+ * @param {*} curDiffData 差异上下文数据
+ * @returns {*} 差异视图相关方法集合
+ */
 module.exports = function(jsondiffpatch, formattersHtml, curDiffData) {
+  /**
+   * @param {*} json 待解析值（已是对象则原样返回）
+   * @returns {*} 解析结果
+   */
   const json5_parse = json => {
     if (typeof json === 'object' && json) return json;
     try {
@@ -12,6 +24,11 @@ module.exports = function(jsondiffpatch, formattersHtml, curDiffData) {
     }
   };
 
+  /**
+   * @param {*} left 左文本
+   * @param {*} right 右文本
+   * @returns {*} 差异 HTML，无差异返回 null
+   */
   const diffText = (left, right) => {
     left = left || '';
     right = right || '';
@@ -26,6 +43,11 @@ module.exports = function(jsondiffpatch, formattersHtml, curDiffData) {
     return result;
   };
 
+  /**
+   * @param {*} left 左侧 JSON
+   * @param {*} right 右侧 JSON
+   * @returns {*} 差异 HTML
+   */
   const diffJson = (left, right) => {
     left = json5_parse(left);
     right = json5_parse(right);
@@ -34,6 +56,7 @@ module.exports = function(jsondiffpatch, formattersHtml, curDiffData) {
     // return '';
   };
 
+  /** @type {Record<string, string>} */
   const valueMaps = {
     '1': '必需',
     '0': '非必需',
@@ -43,6 +66,10 @@ module.exports = function(jsondiffpatch, formattersHtml, curDiffData) {
     done: '已完成'
   };
 
+  /**
+   * @param {*} item 表单项
+   * @returns {*} 去除 _id 并翻译枚举值后的副本
+   */
   const handleParams = item => {
     let newItem = Object.assign({}, item);
     newItem._id = undefined;
@@ -60,6 +87,11 @@ module.exports = function(jsondiffpatch, formattersHtml, curDiffData) {
     return newItem;
   };
 
+  /**
+   * @param {*} arr1 左侧数组
+   * @param {*} arr2 右侧数组
+   * @returns {*} 差异 HTML
+   */
   const diffArray = (arr1, arr2) => {
     arr1 = arr1 || [];
     arr2 = arr2 || [];

@@ -44,6 +44,7 @@
 | ESLint 门禁与豁免清理 | 无 lint 脚本、29 error 常驻、3 条规则被全局关闭、4 文件豁免 | `npm run lint` + pre-commit 卡点；错误全清零；规则全部重启用 | 顺带修复 `mock-extra.js` 判空恒假的真实 bug（`typeof x === undefined`）；`verifyPath` 等正则改动经 384 + 9131 样本穷举证明等价 |
 | 前端组件测试基建 | 前端组件零渲染覆盖（UI 白屏也能全绿） | AVA + jsdom + @testing-library/react；新增 `test/helpers/jsdom-setup.js` 基建与组件单测 | 全量测试 379 → **416** 项。首批覆盖 `copyText`（含 DOM 零残留）、`MarkdownEditor`（ref 契约、onChange 含清空回调空串、`html/linkify/breaks` 选项、className/height/preview、`value` 仅作初始值的钉死契约）、`mockEditor` 兼容层（构造期 readOnly、setMode 真实 language facet、insertCode 精确光标位置、mockData 真实产出、getCursorIndex/setShowGutter/clearSelection）、`GuideBtns`（动作序列）、`Breadcrumb`。**核心断言经变异自检（累计 26 次注入全部击杀）**；仍有未覆盖点见遗留观察项 |
 | TypeScript 覆盖扩大（第 1 批） | `common/types/global.d.ts` 手写 Node 垫片（Buffer/process/require/crypto 模块）与 `@types/node@24` 冲突；5 个文件被 `@ts-nocheck` 或未纳入检查 | 显式依赖 `@types/node@^24` + `@types/fs-extra@^11`；移除手写垫片；5 个文件转为 `// @ts-check` 并纳入 `include` | 类型错误 **91 → 0**（`client/common.js` 47、`sandbox.js` 21、`sandbox_child.js` 17、`yapi.js` 4、`messageMiddleware.js` 2），且顺带消除 `token.js` 的 Buffer 泛型冲突错误。**门禁有效性已证明**：向 5 个文件逐个注入类型错误，typecheck 均立即报错，恢复后回 0。改动经审查**全部为编译期注解/断言**（无运行时逻辑变更），416 项测试与沙箱并发/超时自愈实测均正常 |
+| TypeScript 覆盖扩大（第 2 批） | `common/` 顶层工具库四件套未纳入检查 | 4 文件加 `// @ts-check` + 纳入 include + JSDoc 注解 | 错误 **82 → 0**（`utils.js` 45、`lib.js` 13、`diff-view.js` 15、`mock-extra.js` 9）。三重独立等价性证明：语义 AST 归纳、HEAD 运行时差分（409+7 例逐字节一致）、**产物级双构建编译结果逐字节相同**；门禁有效性用 6 个自研变异 + 3 项反向对照证实（含"删 pragma/删 include 后同一违规不再可见"）。评审后又收紧 3 处注解强度（`schemaValidatorCache` 注解使核心校验调用**首次进入检查**、`newFilters` 收紧为 `string[]`、`Compare*` 返回 `boolean`），并用反向对照证明收紧确实新增了捕获能力 |
 
 ## 二、评估后暂缓（含推进路径）
 
@@ -66,8 +67,8 @@
 
 - 现状：`tsconfig.json` 按文件白名单 + `checkJs: false`（**仅有 `// @ts-check` 指令的文件被检查**）。白名单 + 5 个新纳入文件已全量绿，`npm run typecheck` 0 错误。
 - 已完成的现代化：Node API 类型改由显式 `@types/node@^24`（与 .nvmrc 一致）提供，删除了 `global.d.ts` 中手写且与真实类型冲突的 Buffer/process/require/crypto 垫片。
-- 推进路径：每次触碰旧文件顺手加 `// @ts-check` 并清零其错误。**实测剩余工作量基线**（全局打开 `checkJs` 的错误数）：`client/containers` 1183、`client/components` 588、`server/utils` 501、`common` 340、`server/middleware` 282、`server/models` 270；`server/controllers` 与 `client/reducer` 已为 0。
-- 遗留技术细节：① `common/*` 等 webpack 别名仍靠 `global.d.ts` 手写模块声明兜底（tsc 无 `paths`），未来可迁 `tsconfig.paths` 并删除这些声明；② `json5@2` 自带类型只导出 `{parse, stringify}` 无 default，而项目内 CJS/ESM 两种用法并存，故仍保留等价声明——若统一改命名导入即可删除；③ `mockjs` 与 `json-schema-editor-visual` 无自带类型，仍需声明。
+- 推进路径：每次触碰旧文件顺手加 `// @ts-check` 并清零其错误。**实测剩余工作量基线**（开启 `checkJs` 后的错误数）：`client/containers` 1183、`client/components` 588、`server/utils/commons.js` 87、`common/postmanLib.js` 85、`server/models/interface.js` 54、`common/HandleImportData.js` 46、`server/models/project.js` 44、`common/power-string.js` 41、`common/markdown.js` 39、`server/middleware/mockServer.js` 31 等（`server/controllers`、`client/reducer` 及已完成的 4 个 common 文件为 0）。
+- 遗留技术细节：① `common/*` 等 webpack 别名仍靠 `global.d.ts` 手写模块声明兜底，且**该 ambient 存根优先于模块解析**：正向会掩盖导出漂移（真实文件里 `formatCatTreeData` 改名后 typecheck 仍 exit 0，仅靠测试兜底）、反向会让受检的裸标识符导入方拿到伪 `TS2305`；**正确修法已实测**为「`tsconfig.paths` + 删除对应 ambient 存根」（注意 TS 7.0.2 已移除 `baseUrl`，`paths` 值须带 `./`），并需把裸标识符导入方（如 `client/containers/.../InterfaceList.js`）一并纳入 include；② `json5@2` 自带类型只导出 `{parse, stringify}` 无 default，而项目内 CJS/ESM 两种用法并存，故仍保留等价声明——若统一改命名导入即可删除；③ `mockjs` 与 `json-schema-editor-visual` 无自带类型，仍需声明；④ `common/lib.js` 的 `Compare*` 三个函数 `@param {*} flag` 尚可收紧为 `boolean`（本次只收紧了 `@returns`）。
 
 ### 4. 状态管理 Redux+redux-promise → 轻量方案（暂缓）
 
@@ -79,6 +80,12 @@
 
 ## 三、遗留观察项（MINOR，不阻塞）
 
+- **【建议单独小批次】webpack JS chunk 用 `[chunkhash]`，导致纯注释改动也会改文件名**：`build/webpack.standalone.config.js:74,77` 是 `[chunkhash]`，而 CSS 用 `[contenthash]`（`:157`）。实测同一次纯注释改动下 CSS 文件名全部不变、4 个 JS 文件名变化。修法是把 JS 也改为 `[contenthash]`（评审更正：`realContentHash` 在 webpack 5 production 下**已是默认开启**，按原诊断去开它无效）。风险低：`assets.js` 不带 hash、`index.html` 走运行时映射并以 `?v=random` 破缓存，全仓无硬编码 chunk 文件名。
+- **构建产物与提交策略**：`static/prd/` 受 Git 跟踪且构建会清空重建。纯注解类改动**不必提交产物**（评审实测：其编译结果与已提交产物的编译结果逐字节相同），否则产生 ~19-33 条文件级噪声 diff；但仓库存在相反先例（`8d8ee461` 提交过产物），若发布流程要求产物始终对应一次全新构建，应另开 `chore(build)` 提交。
+- **测试缺口（存量）**：`common/diff-view.js` **完全没有测试**；`common/utils.js` 的 `timeago` 无测试；`schemaValidator` 只断言过 `valid === true`，**错误分支与 catch 分支从未执行**、500 条缓存清空分支无覆盖。
+- `common/utils.js` 的 `schemaValidator` catch 分支声明 `message: string`，但抛出非 Error 时实为 `undefined`（已在源码注释说明；收紧需改运行时，未做）。
+- `common/lib.js` 的 `Compare*` 三个函数 `@param {*} flag` 尚可收紧为 `boolean`（本批只收紧了 `@returns`，`return flag` 一句因 `flag` 为 `*` 仍不受检）。
+- `common/*` 别名仍靠 ambient 存根兜底，存在「导出漂移不可见」与「伪 TS2305」两类问题（修法见上文 TypeScript 章节）。
 - 测试覆盖仍有空白（评审实测存活变异点）：`mockEditor` 的 `wordList` 与 F9 全屏交互、`fullScreen` 选项；`jsdom-setup` 未注入 `XMLHttpRequest`，故 axios 在测试中走 Node http adapter，**未来渲染未 stub axios 的组件会真实联网**（建议基建默认禁网或注入 XHR）。
 - `MarkdownEditor` 的 `value` 为「仅初始值」语义（已由测试钉死，依据调用方 `InterfaceContent.js:173-174` 的 `key={actionId}` 重挂载）。但 **wiki 插件调用方**（`exts/yapi-plugin-wiki/wikiPage/Editor.js:32` 的 `value={desc}`）存在挂载后 prop 变更路径（websocket 冲突消息、上传后写 desc），这些场景编辑区不跟随更新，需浏览器验证后决定是否补 prop 同步。
 - `test/server/httpApp.test.js` 既有 flake：人为 CPU 争抢下偶发 mongoose `MongoClientClosedError`（其 `after.always` 200ms 宽限不足），与本轮改动无关，建议单独修复。
