@@ -2,6 +2,11 @@ import test from 'ava';
 
 const sandboxFn = require('../../server/utils/sandbox.js');
 
+// 销毁常驻沙箱进程池，避免 AVA 因存活的子进程挂起
+test.after(() => {
+  sandboxFn.destroy();
+});
+
 // 子进程隔离沙箱：验证脚本执行、上下文改写回传、内建注入与超时行为
 test('脚本可改写上下文并按 return this 语义返回', async t => {
   const result = await sandboxFn({ a: 1 }, 'a = 2');

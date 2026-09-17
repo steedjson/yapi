@@ -62,6 +62,11 @@ class projectModel extends baseModel {
     };
   }
 
+  // 项目列表按分组筛选的高频查询索引
+  initIndexes() {
+    this.schema.index({ group_id: 1 });
+  }
+
   updateMember(data) {
     return this.model.updateOne(
       {

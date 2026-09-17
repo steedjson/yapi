@@ -103,6 +103,13 @@ class interfaceModel extends baseModel {
     };
   }
 
+  // MockServer 路由匹配（getByPath/checkRepeat）与接口菜单、列表排序的高频复合索引
+  initIndexes() {
+    this.schema.index({ project_id: 1, path: 1, method: 1 });
+    this.schema.index({ project_id: 1, catid: 1, index: 1 });
+    this.schema.index({ project_id: 1, index: 1 });
+  }
+
   save(data) {
     let m = new this.model(data);
     return m.save();

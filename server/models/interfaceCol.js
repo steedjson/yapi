@@ -52,6 +52,11 @@ class interfaceCol extends baseModel {
     };
   }
 
+  // 接口集列表按项目筛选后按排序号排列的高频复合索引
+  initIndexes() {
+    this.schema.index({ project_id: 1, index: 1 });
+  }
+
   save(data) {
     let m = new this.model(data);
     return m.save();

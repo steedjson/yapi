@@ -20,8 +20,16 @@ class baseModel {
       });
     }
 
+    this.initIndexes();
+
     this.model = yapi.db(this.name, this.schema);
   }
+
+  /**
+   * 业务复合索引声明，子模型按需覆盖。autoIndex 已在 db.js 中关闭，
+   * Schema 声明用于集中表达查询路径，实际创建由 install.js 同步完成。
+   */
+  initIndexes() {}
 
   isNeedAutoIncrement() {
     return true;

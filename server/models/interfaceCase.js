@@ -56,6 +56,12 @@ class interfaceCase extends baseModel {
     };
   }
 
+  // 接口集内用例排序与按项目删除/统计的高频复合索引
+  initIndexes() {
+    this.schema.index({ col_id: 1, index: 1 });
+    this.schema.index({ project_id: 1 });
+  }
+
   save(data) {
     let m = new this.model(data);
     return m.save();

@@ -76,6 +76,10 @@ function setupSql() {
       interfaceColCol.createIndex({
         project_id: 1
       });
+      interfaceColCol.createIndex({
+        project_id: 1,
+        index: 1
+      });
 
       let interfaceCatCol = mongoose.connection.db.collection('interface_cat');
       interfaceCatCol.createIndex({
@@ -83,6 +87,10 @@ function setupSql() {
       });
       interfaceCatCol.createIndex({
         project_id: 1
+      });
+      interfaceCatCol.createIndex({
+        project_id: 1,
+        index: 1
       });
 
       let interfaceCaseCol = mongoose.connection.db.collection('interface_case');
@@ -95,6 +103,10 @@ function setupSql() {
       interfaceCaseCol.createIndex({
         project_id: 1
       });
+      interfaceCaseCol.createIndex({
+        col_id: 1,
+        index: 1
+      });
 
       let interfaceCol = mongoose.connection.db.collection('interface');
       interfaceCol.createIndex({
@@ -106,6 +118,20 @@ function setupSql() {
       });
       interfaceCol.createIndex({
         project_id: 1
+      });
+      interfaceCol.createIndex({
+        project_id: 1,
+        path: 1,
+        method: 1
+      });
+      interfaceCol.createIndex({
+        project_id: 1,
+        catid: 1,
+        index: 1
+      });
+      interfaceCol.createIndex({
+        project_id: 1,
+        index: 1
       });
 
       let groupCol = mongoose.connection.db.collection('group');
