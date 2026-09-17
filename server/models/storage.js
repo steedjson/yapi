@@ -1,10 +1,11 @@
+// @ts-check
 const baseModel = require('./base.js');
 const mongoose = require('mongoose');
 
 class stroageModel extends baseModel {
   constructor() {
     super()
-    let storageCol = mongoose.connection.db.collection('storage');
+    let storageCol = (/** @type {*} */ (mongoose.connection.db)).collection('storage');
     storageCol.createIndex(
       {
         key: 1
@@ -30,6 +31,12 @@ class stroageModel extends baseModel {
       } //用于原始数据存储
     };
   }
+  /**
+   * 保存键值数据（isInsert 为 true 时插入新文档，否则按 key 更新）
+   * @param {String} key 字符串命名空间标识
+   * @param {*} data 待存储的对象数据
+   * @param {Boolean} [isInsert] 是否以插入方式保存
+   */
   save(key, data = {}, isInsert = false) {
 
     let saveData = {
@@ -45,18 +52,26 @@ class stroageModel extends baseModel {
     }, saveData)
   }
 
+  /**
+   * 按key删除存储数据
+   * @param {String} key 字符串命名空间标识
+   */
   del(key) {
     return this.model.deleteMany({
       key
     });
   }
 
+  /**
+   * 按key读取存储数据（无数据时自动初始化为空对象）
+   * @param {String} key 字符串命名空间标识
+   */
   get(key) {
     return this.model
       .findOne({
         key
       })
-      .exec().then(data => {
+      .exec().then(/** @param {any} data */ data => {
         this.save(key, {})
         if (!data) return null;
         data = data.toObject().data;

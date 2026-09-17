@@ -1,3 +1,4 @@
+// @ts-check
 const yapi = require('../yapi.js');
 const mongoose = require('mongoose');
 const autoIncrement = require('../utils/mongoose-auto-increment');
@@ -47,6 +48,8 @@ class baseModel {
    */
   getSchema() {
     yapi.commons.log('Model Class need getSchema function', 'error');
+    // 基类占位返回空对象：子模型必须覆写 getSchema 提供真实 schema 定义
+    return (/** @type {any} */ ({}));
   }
 
   getName() {

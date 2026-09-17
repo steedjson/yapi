@@ -8,6 +8,10 @@
     "strict": true,
     "skipLibCheck": true,
     "noEmit": true,
+    // webpack 别名 common -> 仓库根 common/；TS 7.0.2 在无 baseUrl 时 paths 值须以 ./ 开头
+    "paths": {
+      "common/*": ["./common/*"]
+    },
     // 实测（TypeScript 7.0.2）：缺省 types 不会自动枚举 node_modules/@types，
     // 移除该字段后 server/utils/sandbox_child.js 立即出现 TS2591
     // （Cannot find name 'process' / 'require'）。故须显式声明 node 以使用 Node API 类型。
@@ -72,6 +76,12 @@
     "server/utils/sandbox.js",
     "server/utils/sandbox_child.js",
     "client/common.js",
-    "client/reducer/middleware/messageMiddleware.js"
+    "client/reducer/middleware/messageMiddleware.js",
+    "server/models/base.js",
+    "server/models/avatar.js",
+    "server/models/token.js",
+    "server/models/storage.js",
+    "server/models/interfaceCat.js",
+    "server/models/interfaceCol.js"
   ]
 }

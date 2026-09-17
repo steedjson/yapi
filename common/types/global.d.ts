@@ -182,17 +182,8 @@ declare module 'antd' {
   export const Checkbox: any;
 }
 
-// webpack 别名 common -> 仓库根 common/，tsc 无对应 paths，按项目惯例用模块声明兜底
-declare module 'common/utils.js' {
-  export function flattenCatList(list: any[]): any[];
-  export function formatCatTreeData(list: any[]): any[];
-}
-
-declare module 'common/mock-extra.js' {
-  // 该文件是 CJS 形态（module.exports = mock），须用 export = 声明方可直接调用
-  function MockExtra(data: any, context?: any): any;
-  export = MockExtra;
-}
+// webpack 别名 common -> 仓库根 common/ 已通过 tsconfig paths 映射到真实文件，
+// 不再用模块声明存根兜底（存根会压制真实文件类型，导致别名引用的类型盲区）。
 
 /**
  * React 16 运行时的微量类型声明（项目未安装 @types/react，

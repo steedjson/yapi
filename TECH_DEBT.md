@@ -50,6 +50,7 @@
 | 质量与工程化强化 | Webpack JS chunk 用 `[chunkhash]`、ESLint 不覆盖 `test/`、`diff-view`/`timeago` 零测试 | JS chunk 统一为 `[contenthash]`；修复 `test/` 存量问题并纳入 lint 门禁；补齐 `diff-view` (7项)、`timeago` (8项)、`schemaValidator` 负向测试 | 全量测试增至 **431** 项；`npm run lint` 门禁覆盖全仓（含 test/）；彻底消除纯注释改动导致 JS chunk hash 变化的问题 |
 | 缺陷修复与路由防御 | `lconcat` 多参数时仅最后一个参数生效；React.lazy 异步 chunk 失败无防御兜底 | 修复 `lconcat`（单参兼容+多参前缀累加，新增 `test/common/power-string.test.js` 24项全覆盖）；实现 `ErrorBoundary` 并接入 `Application.js` 异步路由（新增 `test/client/components/ErrorBoundary.test.js` 5项单测） | 全量测试增至 **460** 项；ChunkLoadError 异常时友好展示刷新卡片，防整树白屏；power-string 全部 16 种 stringHandles 获得完整单测覆盖 |
 | 叶子组件 Hooks 现代化 | 7 个组件（Loading, Footer, ErrMsg, Notify, Label, Subnav, MyPopConfirm）使用类组件与废弃的 UNSAFE_cWRP / @withRouter | 全量改为 React 18 函数组件 + Hooks；清除所有 UNSAFE_ 生命周期与 @withRouter；消除 Footer defaultProps 弃用告警 | 彻底消灭 `client/components/` 下全部 UNSAFE_ 生命周期；新增 5 个组件单测（20 项用例），全量测试增至 **480** 项 |
+| TypeScript 覆盖扩大（第 5 批） | 数据层 6 个核心基础模型未受类型检查；`common/*` 别名仍靠 `global.d.ts` ambient 存根兜底 | 在 `tsconfig.json` 配置 `paths: {"common/*": ["./common/*"]}` 并彻底移除存根；将 6 个模型（`base`, `avatar`, `token`, `storage`, `interfaceCat`, `interfaceCol`）加 `// @ts-check` 并纳入 include | 35 处类型错误清零；消除别名存根覆盖真实文件导致导出漂移不可见的隐患；数据层基础 CRUD 获得编译期类型保护 |
 
 ## 二、评估后暂缓（含推进路径）
 
@@ -73,8 +74,8 @@
 
 - 现状：`tsconfig.json` 按文件白名单 + `checkJs: false`（**仅有 `// @ts-check` 指令的文件被检查**）。白名单 + 5 个新纳入文件已全量绿，`npm run typecheck` 0 错误。
 - 已完成的现代化：Node API 类型改由显式 `@types/node@^24`（与 .nvmrc 一致）提供，删除了 `global.d.ts` 中手写且与真实类型冲突的 Buffer/process/require/crypto 垫片。
-- 推进路径：每次触碰旧文件顺手加 `// @ts-check` 并清零其错误。**实测剩余工作量基线**（开启 `checkJs` 后的错误数）：`client/containers` 1183、`client/components` 588、`server/utils/commons.js` 87、`common/postmanLib.js` 85、`server/models/interface.js` 54、`server/models/project.js` 44、`server/middleware/mockServer.js` 31 等（`server/controllers`、`client/reducer` 及已完成的全部 12 个 common 文件为 0）。
-- 遗留技术细节：① `common/*` 等 webpack 别名仍靠 `global.d.ts` 手写模块声明兜底，且**该 ambient 存根优先于模块解析**：正向会掩盖导出漂移（真实文件里 `formatCatTreeData` 改名后 typecheck 仍 exit 0，仅靠测试兜底）、反向会让受检的裸标识符导入方拿到伪 `TS2305`；**正确修法已实测**为「`tsconfig.paths` + 删除对应 ambient 存根」（注意 TS 7.0.2 已移除 `baseUrl`，`paths` 值须带 `./`），并需把裸标识符导入方（如 `client/containers/.../InterfaceList.js`）一并纳入 include；② `json5@2` 自带类型只导出 `{parse, stringify}` 无 default，而项目内 CJS/ESM 两种用法并存，故仍保留等价声明——若统一改命名导入即可删除；③ `mockjs` 与 `json-schema-editor-visual` 无自带类型，仍需声明；④ `common/lib.js` 的 `Compare*` 三个函数 `@param {*} flag` 尚可收紧为 `boolean`（本次只收紧了 `@returns`）。
+- 推进路径：每次触碰旧文件顺手加 `// @ts-check` 并清零其错误。**实测剩余工作量基线**（开启 `checkJs` 后的错误数）：`client/containers` 1183、`client/components` 588、`server/utils/commons.js` 87、`common/postmanLib.js` 85、`server/models/interface.js` 54、`server/models/project.js` 44、`server/models/log.js` 32、`server/models/group.js` 22、`server/models/follow.js` 15、`server/models/interfaceCase.js` 14、`server/models/user.js` 13、`server/middleware/mockServer.js` 31 等（`server/controllers`、`client/reducer`、`common/` 全部 12 个模块及已完成的 6 个核心基础模型均为 0）。
+- 遗留技术细节：① `json5@2` 自带类型只导出 `{parse, stringify}` 无 default，而项目内 CJS/ESM 两种用法并存，故仍保留等价声明——若统一改命名导入即可删除；② `mockjs` 与 `json-schema-editor-visual` 无自带类型，仍需声明；③ `common/lib.js` 的 `Compare*` 三个函数 `@param {*} flag` 尚可收紧为 `boolean`（本次只收紧了 `@returns`）。
 
 ### 4. 状态管理 Redux+redux-promise → 轻量方案（暂缓）
 
@@ -90,7 +91,6 @@
 - **测试缺口（存量）**：`common/HandleImportData.js` 缺少 3 处 axios 异常 catch 分支、`dataSync !== 'normal'` 分支及 BasePath 更新分支测试；`timeago` 实现中 `seconds <= 0` 兜底 else 分支未覆盖。
 - `common/utils.js` 的 `schemaValidator` catch 分支声明 `message: string`，但抛出非 Error 时实为 `undefined`（已在源码注释说明；收紧需改运行时，未做）。
 - `common/lib.js` 的 `Compare*` 三个函数 `@param {*} flag` 尚可收紧为 `boolean`（本批只收紧了 `@returns`，`return flag` 一句因 `flag` 为 `*` 仍不受检）。
-- `common/*` 别名仍靠 ambient 存根兜底，存在「导出漂移不可见」与「伪 TS2305」两类问题（修法见上文 TypeScript 章节）。
 - 测试覆盖仍有空白（评审实测存活变异点）：`mockEditor` 的 `wordList` 与 F9 全屏交互、`fullScreen` 选项；`jsdom-setup` 未注入 `XMLHttpRequest`，故 axios 在测试中走 Node http adapter，**未来渲染未 stub axios 的组件会真实联网**（建议基建默认禁网或注入 XHR）。
 - `MarkdownEditor` 的 `value` 为「仅初始值」语义（已由测试钉死，依据调用方 `InterfaceContent.js:173-174` 的 `key={actionId}` 重挂载）。但 **wiki 插件调用方**（`exts/yapi-plugin-wiki/wikiPage/Editor.js:32` 的 `value={desc}`）存在挂载后 prop 变更路径（websocket 冲突消息、上传后写 desc），这些场景编辑区不跟随更新，需浏览器验证后决定是否补 prop 同步。
 - `test/server/httpApp.test.js` 既有 flake：人为 CPU 争抢下偶发 mongoose `MongoClientClosedError`（其 `after.always` 200ms 宽限不足），与本轮改动无关，建议单独修复。

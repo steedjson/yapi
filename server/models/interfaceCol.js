@@ -1,3 +1,4 @@
+// @ts-check
 const yapi = require('../yapi.js');
 const baseModel = require('./base.js');
 
@@ -57,11 +58,19 @@ class interfaceCol extends baseModel {
     this.schema.index({ project_id: 1, index: 1 });
   }
 
+  /**
+   * 新增接口集
+   * @param {*} data 接口集数据
+   */
   save(data) {
     let m = new this.model(data);
     return m.save();
   }
 
+  /**
+   * 按id查询单个接口集
+   * @param {Number} id 接口集id
+   */
   get(id) {
     return this.model
       .findOne({
@@ -70,12 +79,20 @@ class interfaceCol extends baseModel {
       .exec();
   }
 
+  /**
+   * 按名称统计接口集数量（查重）
+   * @param {String} name 接口集名称
+   */
   checkRepeat(name) {
     return this.model.countDocuments({
       name: name
     });
   }
 
+  /**
+   * 按项目id查询接口集列表
+   * @param {Number} project_id 项目id
+   */
   list(project_id) {
     return this.model
       .find({
@@ -85,18 +102,31 @@ class interfaceCol extends baseModel {
       .exec();
   }
 
+  /**
+   * 按id删除接口集
+   * @param {Number} id 接口集id
+   */
   del(id) {
     return this.model.deleteMany({
       _id: id
     });
   }
 
+  /**
+   * 按项目id删除该项目下全部接口集
+   * @param {Number} id 项目id
+   */
   delByProjectId(id) {
     return this.model.deleteMany({
       project_id: id
     });
   }
 
+  /**
+   * 更新接口集并刷新更新时间
+   * @param {Number} id 接口集id
+   * @param {*} data 待更新的接口集字段
+   */
   up(id, data) {
     data.up_time = yapi.commons.time();
     return this.model.updateOne(
@@ -107,6 +137,11 @@ class interfaceCol extends baseModel {
     );
   }
 
+  /**
+   * 更新接口集排序号
+   * @param {Number} id 接口集id
+   * @param {Number} index 排序号
+   */
   upColIndex(id, index) {
     return this.model.updateOne(
       {
