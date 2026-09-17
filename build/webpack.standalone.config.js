@@ -71,10 +71,12 @@ const config = {
     // 统一开发与生产均为 /prd/：异步 chunk 的运行时下载 URL 由 publicPath 决定，
     // 生产若为空串，深度嵌套路由（如 /project/:id/*）下会按相对路径请求导致 404
     publicPath: '/prd/',
-    filename: isDevelopment ? '[name]@dev.js' : '[name]@[chunkhash].js',
+    // 生产用 [contenthash] 而非 [chunkhash]：contenthash 基于 chunk 内容本身，
+    // 纯注释/无关模块变更不会导致 JS 产物文件名变化（与 CSS 的 [contenthash] 统一）。
+    filename: isDevelopment ? '[name]@dev.js' : '[name]@[contenthash].js',
     // webpack 5 下 runtimeChunk 与 splitChunks 产出的非 entry chunk 均可按 [name] 命名；
     // entry 与拆分 chunk 使用同一模板，产物文件名与 webpack 3/4 时代保持一致。
-    chunkFilename: isDevelopment ? '[name]@dev.js' : '[name]@[chunkhash].js'
+    chunkFilename: isDevelopment ? '[name]@dev.js' : '[name]@[contenthash].js'
   },
   resolve: {
     extensions: ['.js', '.jsx', '.css', '.json', '.string', '.tpl'],

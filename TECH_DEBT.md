@@ -47,6 +47,7 @@
 | TypeScript 覆盖扩大（第 2 批） | `common/` 顶层工具库四件套未纳入检查 | 4 文件加 `// @ts-check` + 纳入 include + JSDoc 注解 | 错误 **82 → 0**（`utils.js` 45、`lib.js` 13、`diff-view.js` 15、`mock-extra.js` 9）。三重独立等价性证明：语义 AST 归纳、HEAD 运行时差分（409+7 例逐字节一致）、**产物级双构建编译结果逐字节相同**；门禁有效性用 6 个自研变异 + 3 项反向对照证实（含"删 pragma/删 include 后同一违规不再可见"）。评审后又收紧 3 处注解强度（`schemaValidatorCache` 注解使核心校验调用**首次进入检查**、`newFilters` 收紧为 `string[]`、`Compare*` 返回 `boolean`），并用反向对照证明收紧确实新增了捕获能力 |
 | TypeScript 覆盖扩大（第 3 批） | `common/HandleImportData.js` 与 `common/power-string.js` 未受类型检查 | 加 `// @ts-check` + 纳入 include + 声明补全 | 类型错误 **87 → 0**（`HandleImportData.js` 46、`power-string.js` 41）；`global.d.ts` 补齐 `md5`、`sha.js`、`js-base64`、`axios.post`；AST 语义比对与 86 项差分测试证明零运行时行为变更；复核证实 `power-string.js` 的 `lconcat` 多参数覆盖为历史存量缺陷 |
 | TypeScript 覆盖扩大（第 4 批） | `common/` 剩余核心模块（`config`、`plugin`、`schema-transformTo-table`、`markdown`）未受类型检查 | 加 `// @ts-check` + 纳入 include + 补全 JSDoc 与返回类型 | 类型错误 **69 → 0**（`markdown.js` 39、`schema-transformTo-table.js` 25、`plugin.js` 5、`config.js` 0）。独立 acorn/espree 双重 AST 语义比对证明 4/4 STRICT-IDENTICAL，运行时 A/B 7/7 一致；至此除 `postmanLib.js` 外 `common/` 目录下全部公共模块均已处于 `@ts-check` 门禁保护下 |
+| 质量与工程化强化 | Webpack JS chunk 用 `[chunkhash]`、ESLint 不覆盖 `test/`、`diff-view`/`timeago` 零测试 | JS chunk 统一为 `[contenthash]`；修复 `test/` 存量问题并纳入 lint 门禁；补齐 `diff-view` (7项)、`timeago` (8项)、`schemaValidator` 负向测试 | 全量测试增至 **431** 项；`npm run lint` 门禁覆盖全仓（含 test/）；彻底消除纯注释改动导致 JS chunk hash 变化的问题 |
 
 ## 二、评估后暂缓（含推进路径）
 
@@ -82,10 +83,9 @@
 
 ## 三、遗留观察项（MINOR，不阻塞）
 
-- **【建议单独小批次】webpack JS chunk 用 `[chunkhash]`，导致纯注释改动也会改文件名**：`build/webpack.standalone.config.js:74,77` 是 `[chunkhash]`，而 CSS 用 `[contenthash]`（`:157`）。实测同一次纯注释改动下 CSS 文件名全部不变、4 个 JS 文件名变化。修法是把 JS 也改为 `[contenthash]`（评审更正：`realContentHash` 在 webpack 5 production 下**已是默认开启**，按原诊断去开它无效）。风险低：`assets.js` 不带 hash、`index.html` 走运行时映射并以 `?v=random` 破缓存，全仓无硬编码 chunk 文件名。
-- **构建产物与提交策略**：`static/prd/` 受 Git 跟踪且构建会清空重建。纯注解类改动**不必提交产物**（评审实测：其编译结果与已提交产物的编译结果逐字节相同），否则产生 ~19-33 条文件级噪声 diff；但仓库存在相反先例（`8d8ee461` 提交过产物），若发布流程要求产物始终对应一次全新构建，应另开 `chore(build)` 提交。
+- **构建产物与提交策略**：`static/prd/` 受 Git 跟踪且构建会清空重建。纯注解/配置类改动**不必提交产物**（评审实测：其编译结果与已提交产物的编译结果逐字节相同），否则产生 ~19-33 条文件级噪声 diff；但仓库存在相反先例（`8d8ee461` 提交过产物），若发布流程要求产物始终对应一次全新构建，应另开 `chore(build)` 提交。
 - **存量缺陷（历史遗留）**：`common/power-string.js` 的 `lconcat` 多参数时仅最后一个参数生效（`str = item + this._string` 循环内整体覆盖导致前面参数丢失，本批未改变该存量行为，后续可单独修复并补充用例）。
-- **测试缺口（存量）**：`common/HandleImportData.js` 缺少 3 处 axios 异常 catch 分支、`dataSync !== 'normal'` 分支及 BasePath 更新分支测试；`common/diff-view.js` **完全没有测试**；`common/utils.js` 的 `timeago` 无测试；`schemaValidator` 只断言过 `valid === true`，**错误分支与 catch 分支从未执行**、500 条缓存清空分支无覆盖。
+- **测试缺口（存量）**：`common/HandleImportData.js` 缺少 3 处 axios 异常 catch 分支、`dataSync !== 'normal'` 分支及 BasePath 更新分支测试；`timeago` 实现中 `seconds <= 0` 兜底 else 分支未覆盖。
 - `common/utils.js` 的 `schemaValidator` catch 分支声明 `message: string`，但抛出非 Error 时实为 `undefined`（已在源码注释说明；收紧需改运行时，未做）。
 - `common/lib.js` 的 `Compare*` 三个函数 `@param {*} flag` 尚可收紧为 `boolean`（本批只收紧了 `@returns`，`return flag` 一句因 `flag` 为 `*` 仍不受检）。
 - `common/*` 别名仍靠 ambient 存根兜底，存在「导出漂移不可见」与「伪 TS2305」两类问题（修法见上文 TypeScript 章节）。
@@ -93,7 +93,6 @@
 - `MarkdownEditor` 的 `value` 为「仅初始值」语义（已由测试钉死，依据调用方 `InterfaceContent.js:173-174` 的 `key={actionId}` 重挂载）。但 **wiki 插件调用方**（`exts/yapi-plugin-wiki/wikiPage/Editor.js:32` 的 `value={desc}`）存在挂载后 prop 变更路径（websocket 冲突消息、上传后写 desc），这些场景编辑区不跟随更新，需浏览器验证后决定是否补 prop 同步。
 - `test/server/httpApp.test.js` 既有 flake：人为 CPU 争抢下偶发 mongoose `MongoClientClosedError`（其 `after.always` 200ms 宽限不足），与本轮改动无关，建议单独修复。
 - 新增测试文件存在超 100 列行（约 11 行/文件，高于既有测试基线），仓库无 format 门禁；修正时**勿**运行 `prettier --write`（会把 `function(` 改成 `function (`，与仓库主流风格相反）。
-- lint 脚本范围尚未包含 `test/`：test/server/userManage.test.js 等存在 4 个基线 unused-vars，修复后应把 test/ 纳入 lint 门禁范围。
 - pre-commit 无 ErrorBoundary：React.lazy 异步 chunk 下载失败（网络抖动/发版后旧 hash 失效）会整树卸载白屏，应用根补 ErrorBoundary 并做 chunk 重载兜底。
 - `mockEditor.js` 模块级 wordList 多实例累积重复项 —— 忠实移植的既有瑕疵。
 - 历史接口无 `markdown` 字段时，编辑页备注以 HTML 原文形态呈现，重新保存后完成迁移（设计取舍）。
@@ -106,5 +105,5 @@
 ## 四、验证基线
 
 - Node：`.nvmrc` 24.21.0（engines `>=18 <25`）。
-- 门禁：`npm run lint`（0 error 0 warning，pre-commit 卡点）、`npm test`（**416**）、`npm run typecheck`（0 错，覆盖白名单 + 5 个新纳入文件）、`npm run build-client`（0 error）。
+- 门禁：`npm run lint`（覆盖全仓含 test/，0 error 0 warning，pre-commit 卡点）、`npm test`（**431**）、`npm run typecheck`（0 错）、`npm run build-client`（0 error）。
 - 浏览器冒烟（本轮）：注册/登录（scrypt + legacy 自动升级）、接口编辑页编辑器、用例表格拖拽持久化、Markdown 双写、Wiki 编辑器、面包屑、路由分包按需加载，全部通过。

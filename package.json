@@ -11,7 +11,7 @@
     "dev": "npm run dev-server & npm run dev-client",
     "start": " node server/app.js",
     "test": "ava",
-    "lint": "eslint client/ server/ common/ exts/",
+    "lint": "eslint client/ server/ common/ exts/ test/",
     "typecheck": "tsc --noEmit",
     "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s",
     "build-client": "npm run build-client-standalone",

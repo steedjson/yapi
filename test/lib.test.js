@@ -116,14 +116,6 @@ test('testJsonEqual', t=>{
     }
   };
 
-  let json2 = {    
-    c:{
-      x: [11,22],
-      t:3
-    },
-    b:2,
-    a:"1"
-  }
   t.true(lib.jsonEqual(json1, json1));
 })
 

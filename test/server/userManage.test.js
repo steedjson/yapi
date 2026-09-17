@@ -635,7 +635,7 @@ test.serial('handleThirdLogin 既有用户被禁用时抛错且不发登录 cook
     errorCalls.push(args);
   };
   try {
-    const { inst, ctx, cookieCalls, calls } = createInst({
+    const { inst, cookieCalls, calls } = createInst({
       findByEmailResult: buildLoginUser(true)
     });
 
@@ -656,7 +656,7 @@ test.serial('handleThirdLogin 既有用户被禁用时抛错且不发登录 cook
 });
 
 test.serial('handleThirdLogin 既有正常用户直接复用登录态并写 cookie', async t => {
-  const { inst, ctx, cookieCalls, calls } = createInst({
+  const { inst, cookieCalls, calls } = createInst({
     findByEmailResult: buildLoginUser(undefined)
   });
 

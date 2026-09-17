@@ -1,7 +1,8 @@
 import test from 'ava';
 import http from 'http';
 
-const app = require('../../server/app');
+// 加载 app.js 的副作用: 完成 yapi 初始化与路由注册, 供下方 router 注册断言使用
+require('../../server/app');
 // app.js 已加载过 router(同一模块缓存), 这里取回实例校验 @koa/router 的注册结果
 const router = require('../../server/router.js');
 const Router = require('@koa/router');

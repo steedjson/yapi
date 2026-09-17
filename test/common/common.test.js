@@ -195,5 +195,24 @@ test('schemaValidator', t => {
   }
 
   t.is(schemaValidator(schema2, data2).valid, true);
+
+  // 负向分支: 缺少必填字段时校验失败且 message 指出缺失字段
+  const missingRequired = schemaValidator(schema1, { errcode: 0 });
+  t.is(missingRequired.valid, false);
+  t.true(typeof missingRequired.message === 'string' && missingRequired.message.length > 0);
+  t.true(missingRequired.message.indexOf('errmsg') > -1);
+
+  // 负向分支: 字段类型不匹配(要求 integer 却传入 string)时校验失败且 message 非空
+  const typeMismatch = schemaValidator(
+    { type: 'object', properties: { id: { type: 'integer' } }, required: ['id'] },
+    { id: 'abc' }
+  );
+  t.is(typeMismatch.valid, false);
+  t.true(typeof typeMismatch.message === 'string' && typeMismatch.message.length > 0);
+
+  // 异常分支: 非法 schema 在 ajv 编译阶段抛错, 应被内部捕获并安全返回, 不向外抛异常
+  const illegalSchema = schemaValidator({ type: 'not-a-type' }, { a: 1 });
+  t.is(illegalSchema.valid, false);
+  t.true(typeof illegalSchema.message === 'string' && illegalSchema.message.length > 0);
 })
 
