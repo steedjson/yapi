@@ -67,6 +67,63 @@ function installAssetStubs() {
 
 function noop() {}
 
+/**
+ * rc-overflow（antd Menu 横向溢出测量依赖）通过 MessageChannel.port1.onmessage
+ * 常驻监听来调度测量回调。Node 下该端口被隐式 start() 后会 ref 住事件循环，
+ * 导致渲染过 Menu 的 ava worker 永远无法退出。
+ * 测试环境做两层补丁（不改变库的消息投递语义，测试期间 ava 自身句柄足以
+ * 维持事件循环），仅取消端口对进程存活的影响：
+ *   1. MessageChannel 构造出的两个端口立即 unref；
+ *   2. onmessage 赋值 / start() 的隐式启动会重新 ref，故在调用后再次 unref。
+ */
+function installMessageChannelUnref() {
+  const RealMessageChannel = globalThis.MessageChannel;
+  if (typeof RealMessageChannel !== 'function') {
+    return;
+  }
+  function unrefPort(port) {
+    if (port && typeof port.unref === 'function') {
+      port.unref();
+    }
+  }
+  const sample = new RealMessageChannel();
+  const portProto = (sample.port1 && Object.getPrototypeOf(sample.port1)) || null;
+  unrefPort(sample.port1);
+  unrefPort(sample.port2);
+  if (!portProto) {
+    return;
+  }
+  function UnrefedMessageChannel() {
+    const channel = new RealMessageChannel();
+    unrefPort(channel.port1);
+    unrefPort(channel.port2);
+    return channel;
+  }
+  UnrefedMessageChannel.prototype = RealMessageChannel.prototype;
+  globalThis.MessageChannel = UnrefedMessageChannel;
+
+  const onmessageDesc = Object.getOwnPropertyDescriptor(portProto, 'onmessage');
+  if (onmessageDesc && onmessageDesc.set) {
+    Object.defineProperty(portProto, 'onmessage', {
+      configurable: true,
+      enumerable: onmessageDesc.enumerable,
+      get: onmessageDesc.get,
+      set: function(value) {
+        onmessageDesc.set.call(this, value);
+        unrefPort(this);
+      }
+    });
+  }
+  if (typeof portProto.start === 'function') {
+    const originalStart = portProto.start;
+    portProto.start = function() {
+      const result = originalStart.call(this);
+      unrefPort(this);
+      return result;
+    };
+  }
+}
+
 function createMatchMedia() {
   return function matchMedia(query) {
     return {
@@ -161,6 +218,7 @@ const GLOBAL_KEYS = [
   'HTMLAnchorElement',
   'HTMLButtonElement',
   'SVGElement',
+  'ShadowRoot',
   'Text',
   'Comment',
   'DocumentFragment',
@@ -275,6 +333,7 @@ function cleanupDom() {
 
 installModuleAliases();
 installAssetStubs();
+installMessageChannelUnref();
 setupDom();
 
 module.exports = {

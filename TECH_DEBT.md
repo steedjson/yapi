@@ -49,6 +49,7 @@
 | TypeScript 覆盖扩大（第 4 批） | `common/` 剩余核心模块（`config`、`plugin`、`schema-transformTo-table`、`markdown`）未受类型检查 | 加 `// @ts-check` + 纳入 include + 补全 JSDoc 与返回类型 | 类型错误 **69 → 0**（`markdown.js` 39、`schema-transformTo-table.js` 25、`plugin.js` 5、`config.js` 0）。独立 acorn/espree 双重 AST 语义比对证明 4/4 STRICT-IDENTICAL，运行时 A/B 7/7 一致；至此除 `postmanLib.js` 外 `common/` 目录下全部公共模块均已处于 `@ts-check` 门禁保护下 |
 | 质量与工程化强化 | Webpack JS chunk 用 `[chunkhash]`、ESLint 不覆盖 `test/`、`diff-view`/`timeago` 零测试 | JS chunk 统一为 `[contenthash]`；修复 `test/` 存量问题并纳入 lint 门禁；补齐 `diff-view` (7项)、`timeago` (8项)、`schemaValidator` 负向测试 | 全量测试增至 **431** 项；`npm run lint` 门禁覆盖全仓（含 test/）；彻底消除纯注释改动导致 JS chunk hash 变化的问题 |
 | 缺陷修复与路由防御 | `lconcat` 多参数时仅最后一个参数生效；React.lazy 异步 chunk 失败无防御兜底 | 修复 `lconcat`（单参兼容+多参前缀累加，新增 `test/common/power-string.test.js` 24项全覆盖）；实现 `ErrorBoundary` 并接入 `Application.js` 异步路由（新增 `test/client/components/ErrorBoundary.test.js` 5项单测） | 全量测试增至 **460** 项；ChunkLoadError 异常时友好展示刷新卡片，防整树白屏；power-string 全部 16 种 stringHandles 获得完整单测覆盖 |
+| 叶子组件 Hooks 现代化 | 7 个组件（Loading, Footer, ErrMsg, Notify, Label, Subnav, MyPopConfirm）使用类组件与废弃的 UNSAFE_cWRP / @withRouter | 全量改为 React 18 函数组件 + Hooks；清除所有 UNSAFE_ 生命周期与 @withRouter；消除 Footer defaultProps 弃用告警 | 彻底消灭 `client/components/` 下全部 UNSAFE_ 生命周期；新增 5 个组件单测（20 项用例），全量测试增至 **480** 项 |
 
 ## 二、评估后暂缓（含推进路径）
 
@@ -62,9 +63,10 @@
   4. 观察期后删除 webpack 相关依赖与 build/ 旧脚本。
 - 暂缓理由：构建迁移无法靠测试套件充分验证（需全功能回归），本会话以浏览器冒烟覆盖不到该风险面。
 
-### 2. 剩余 61 个 Class 组件 → Hooks（持续进行）
+### 2. 剩余 54 个 Class 组件 → Hooks（持续进行）
 
-- 模板已建立（GuideBtns/Breadcrumb）。优先顺序建议：叶子组件（TimeLine、ProjectCard 等）→ 容器组件（配合状态层选型）。
+- 累计已完成 9 个组件迁移（GuideBtns、Breadcrumb、Loading、Footer、ErrMsg、Notify、Label、Subnav、MyPopConfirm），彻底消灭了 `client/components/` 下全部已废弃的 UNSAFE_ 生命周期与 `@withRouter` 装饰器。
+- 优先顺序建议：叶子组件（TimeLine、ProjectCard 等）→ 容器组件（配合状态层选型）。
 - 迁移中顺带清理 `core-decorators` 的 `@autobind`（改箭头函数属性）与 `@connect`（改 hooks）。
 
 ### 3. TypeScript 健全化（持续进行）
@@ -104,5 +106,5 @@
 ## 四、验证基线
 
 - Node：`.nvmrc` 24.21.0（engines `>=18 <25`）。
-- 门禁：`npm run lint`（覆盖全仓含 test/，0 error 0 warning，pre-commit 卡点）、`npm test`（**460**）、`npm run typecheck`（0 错）、`npm run build-client`（0 error）。
+- 门禁：`npm run lint`（覆盖全仓含 test/，0 error 0 warning，pre-commit 卡点）、`npm test`（**480**）、`npm run typecheck`（0 错）、`npm run build-client`（0 error）。
 - 浏览器冒烟（本轮）：注册/登录（scrypt + legacy 自动升级）、接口编辑页编辑器、用例表格拖拽持久化、Markdown 双写、Wiki 编辑器、面包屑、路由分包按需加载，全部通过。

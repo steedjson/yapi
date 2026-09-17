@@ -1,117 +1,109 @@
 import './Footer.scss';
-import React, { PureComponent as Component } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
 import { Row, Col } from 'antd';
 import { getV4Icon } from '../../constants/v4IconMap';
 
 const version = process.env.version;
-class Footer extends Component {
-  constructor(props) {
-    super(props);
+
+const defaultFootList = [
+  {
+    title: 'GitHub',
+    iconType: 'github',
+    linkList: [
+      {
+        itemTitle: 'YApi 源码仓库',
+        itemLink: 'https://github.com/YMFE/yapi'
+      }
+    ]
+  },
+  {
+    title: '团队',
+    iconType: 'team',
+    linkList: [
+      {
+        itemTitle: 'YMFE',
+        itemLink: 'https://ymfe.org'
+      }
+    ]
+  },
+  {
+    title: '反馈',
+    iconType: 'aliwangwang-o',
+    linkList: [
+      {
+        itemTitle: 'Github Issues',
+        itemLink: 'https://github.com/YMFE/yapi/issues'
+      },
+      {
+        itemTitle: 'Github Pull Requests',
+        itemLink: 'https://github.com/YMFE/yapi/pulls'
+      }
+    ]
+  },
+  {
+    title: `Copyright © 2018-${new Date().getFullYear()} YMFE`,
+    linkList: [
+      {
+        itemTitle: `版本: ${version} `,
+        itemLink: 'https://github.com/YMFE/yapi/blob/master/CHANGELOG.md'
+      },
+      {
+        itemTitle: '使用文档',
+        itemLink: 'https://hellosean1025.github.io/yapi/'
+      }
+    ]
   }
-  static propTypes = {
-    footList: PropTypes.array
-  };
-  render() {
-    return (
-      <div className="footer-wrapper">
-        <Row className="footer-container">
-          {this.props.footList.map(function(item, i) {
-            return (
-              <FootItem
-                key={i}
-                linkList={item.linkList}
-                title={item.title}
-                iconType={item.iconType}
-              />
-            );
-          })}
-        </Row>
-      </div>
-    );
-  }
+];
+
+function FootItem(props) {
+  return (
+    <Col span={6}>
+      <h4 className="title">
+        {props.iconType ? React.createElement(getV4Icon(props.iconType), { className: 'icon' }) : ''}
+        {props.title}
+      </h4>
+      {props.linkList.map(function(item, i) {
+        return (
+          <p key={i}>
+            <a href={item.itemLink} className="link">
+              {item.itemTitle}
+            </a>
+          </p>
+        );
+      })}
+    </Col>
+  );
 }
 
-class FootItem extends Component {
-  constructor(props) {
-    super(props);
-  }
-  static propTypes = {
-    linkList: PropTypes.array,
-    title: PropTypes.string,
-    iconType: PropTypes.string
-  };
-  render() {
-    return (
-      <Col span={6}>
-        <h4 className="title">
-          {this.props.iconType ? React.createElement(getV4Icon(this.props.iconType), { className: 'icon' }) : ''}
-          {this.props.title}
-        </h4>
-        {this.props.linkList.map(function(item, i) {
+FootItem.propTypes = {
+  linkList: PropTypes.array,
+  title: PropTypes.string,
+  iconType: PropTypes.string
+};
+
+function Footer(props) {
+  const footList = props.footList || defaultFootList;
+  return (
+    <div className="footer-wrapper">
+      <Row className="footer-container">
+        {footList.map(function(item, i) {
           return (
-            <p key={i}>
-              <a href={item.itemLink} className="link">
-                {item.itemTitle}
-              </a>
-            </p>
+            <FootItem
+              key={i}
+              linkList={item.linkList}
+              title={item.title}
+              iconType={item.iconType}
+            />
           );
         })}
-      </Col>
-    );
-  }
+      </Row>
+    </div>
+  );
 }
 
-Footer.defaultProps = {
-  footList: [
-    {
-      title: 'GitHub',
-      iconType: 'github',
-      linkList: [
-        {
-          itemTitle: 'YApi 源码仓库',
-          itemLink: 'https://github.com/YMFE/yapi'
-        }
-      ]
-    },
-    {
-      title: '团队',
-      iconType: 'team',
-      linkList: [
-        {
-          itemTitle: 'YMFE',
-          itemLink: 'https://ymfe.org'
-        }
-      ]
-    },
-    {
-      title: '反馈',
-      iconType: 'aliwangwang-o',
-      linkList: [
-        {
-          itemTitle: 'Github Issues',
-          itemLink: 'https://github.com/YMFE/yapi/issues'
-        },
-        {
-          itemTitle: 'Github Pull Requests',
-          itemLink: 'https://github.com/YMFE/yapi/pulls'
-        }
-      ]
-    },
-    {
-      title: `Copyright © 2018-${new Date().getFullYear()} YMFE`,
-      linkList: [
-        {
-          itemTitle: `版本: ${version} `,
-          itemLink: 'https://github.com/YMFE/yapi/blob/master/CHANGELOG.md'
-        },
-        {
-          itemTitle: '使用文档',
-          itemLink: 'https://hellosean1025.github.io/yapi/'
-        }
-      ]
-    }
-  ]
+Footer.propTypes = {
+  footList: PropTypes.array
 };
 
 export default Footer;

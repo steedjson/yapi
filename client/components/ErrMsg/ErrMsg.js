@@ -1,8 +1,8 @@
-import React, { PureComponent as Component } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
+import { useNavigate } from 'react-router-dom';
 import { getV4Icon } from '../../constants/v4IconMap';
 import './ErrMsg.scss';
-import withRouter from '../../withRouter';
 
 /**
  * 错误信息提示
@@ -24,78 +24,71 @@ import withRouter from '../../withRouter';
  * @description 一般用于描述错误信息名称
  * @returns {object}
  */
-@withRouter
-class ErrMsg extends Component {
-  constructor(props) {
-    super(props);
-  }
-
-  static propTypes = {
-    type: PropTypes.string,
-    history: PropTypes.object,
-    title: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
-    desc: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
-    opration: PropTypes.oneOfType([PropTypes.string, PropTypes.object])
-  };
-
-  render() {
-    let { type, title, desc, opration } = this.props;
-    let icon = 'frown-o';
-    if (type) {
-      switch (type) {
-        case 'noFollow':
-          title = '你还没有关注项目呢';
-          desc = (
-            <span>
-              先去 <a onClick={() => this.props.history.push('/group')}>“项目广场”</a> 逛逛吧,
-              那里可以添加关注。
-            </span>
-          );
-          break;
-        case 'noInterface':
-          title = '该项目还没有接口呢';
-          desc = '在左侧 “接口列表” 中添加接口';
-          break;
-        case 'noMemberInProject':
-          title = '该项目还没有成员呢';
-          break;
-        case 'noMemberInGroup':
-          title = '该分组还没有成员呢';
-          break;
-        case 'noProject':
-          title = '该分组还没有项目呢';
-          desc = <span>请点击右上角添加项目按钮新建项目</span>;
-          break;
-        case 'projectError':
-          title = '项目加载失败';
-          desc = '项目不存在或您没有访问权限';
-          break;
-        case 'groupError':
-          title = '分组加载失败';
-          desc = '请稍后重试';
-          break;
-        case 'noData':
-          title = '暂无数据';
-          desc = '先去别处逛逛吧';
-          break;
-        case 'noChange':
-          title = '没有改动';
-          desc = '该操作未改动 Api 数据';
-          icon = 'meh-o';
-          break;
-        default:
-          console.log('default');
-      }
+function ErrMsg(props) {
+  const navigate = useNavigate();
+  let { type, title, desc, opration } = props;
+  let icon = 'frown-o';
+  if (type) {
+    switch (type) {
+      case 'noFollow':
+        title = '你还没有关注项目呢';
+        desc = (
+          <span>
+            先去 <a onClick={() => navigate('/group')}>“项目广场”</a> 逛逛吧,
+            那里可以添加关注。
+          </span>
+        );
+        break;
+      case 'noInterface':
+        title = '该项目还没有接口呢';
+        desc = '在左侧 “接口列表” 中添加接口';
+        break;
+      case 'noMemberInProject':
+        title = '该项目还没有成员呢';
+        break;
+      case 'noMemberInGroup':
+        title = '该分组还没有成员呢';
+        break;
+      case 'noProject':
+        title = '该分组还没有项目呢';
+        desc = <span>请点击右上角添加项目按钮新建项目</span>;
+        break;
+      case 'projectError':
+        title = '项目加载失败';
+        desc = '项目不存在或您没有访问权限';
+        break;
+      case 'groupError':
+        title = '分组加载失败';
+        desc = '请稍后重试';
+        break;
+      case 'noData':
+        title = '暂无数据';
+        desc = '先去别处逛逛吧';
+        break;
+      case 'noChange':
+        title = '没有改动';
+        desc = '该操作未改动 Api 数据';
+        icon = 'meh-o';
+        break;
+      default:
+        console.log('default');
     }
-    return (
-      <div className="err-msg">
-        {React.createElement(getV4Icon(icon), { className: "icon" })}
-        <p className="title">{title}</p>
-        <p className="desc">{desc}</p>
-        <p className="opration">{opration}</p>
-      </div>
-    );
   }
+  return (
+    <div className="err-msg">
+      {React.createElement(getV4Icon(icon), { className: "icon" })}
+      <p className="title">{title}</p>
+      <p className="desc">{desc}</p>
+      <p className="opration">{opration}</p>
+    </div>
+  );
 }
+
+ErrMsg.propTypes = {
+  type: PropTypes.string,
+  title: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
+  desc: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
+  opration: PropTypes.oneOfType([PropTypes.string, PropTypes.object])
+};
 
 export default ErrMsg;
