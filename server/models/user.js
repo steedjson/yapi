@@ -1,3 +1,4 @@
+// @ts-check
 const baseModel = require('./base.js');
 
 class userModel extends baseModel {
@@ -29,11 +30,19 @@ class userModel extends baseModel {
     };
   }
 
+  /**
+   * 新增用户
+   * @param {*} data 用户数据
+   */
   save(data) {
     let user = new this.model(data);
     return user.save();
   }
 
+  /**
+   * 按邮箱统计用户数量（查重）
+   * @param {String} email 邮箱
+   */
   checkRepeat(email) {
     return this.model.countDocuments({
       email: email
@@ -47,6 +56,10 @@ class userModel extends baseModel {
       .exec(); //显示id name email role
   }
 
+  /**
+   * 按用户id数组批量查询用户
+   * @param {Number[]} uids 用户id数组
+   */
   findByUids(uids) {
     return this.model
       .find({
@@ -56,6 +69,12 @@ class userModel extends baseModel {
       .exec();
   }
 
+  /**
+   * 分页查询用户列表，支持按email/username关键字过滤
+   * @param {*} page 页码
+   * @param {*} limit 每页条数
+   * @param {String} [keyword] 可选过滤关键字，按email/username不区分大小写匹配
+   */
   listWithPaging(page, limit, keyword) {
     page = parseInt(page);
     limit = parseInt(limit);
@@ -75,6 +94,10 @@ class userModel extends baseModel {
       .exec();
   }
 
+  /**
+   * 统计用户总数，支持按email/username关键字过滤
+   * @param {String} [keyword] 可选过滤关键字
+   */
   listCount(keyword) {
     let query = {};
     if (keyword) {
@@ -85,22 +108,39 @@ class userModel extends baseModel {
     return this.model.countDocuments(query);
   }
 
+  /**
+   * 按邮箱查询单个用户
+   * @param {String} email 邮箱
+   */
   findByEmail(email) {
     return this.model.findOne({ email: email });
   }
 
+  /**
+   * 按id查询单个用户
+   * @param {Number} id 用户id
+   */
   findById(id) {
     return this.model.findOne({
       _id: id
     });
   }
 
+  /**
+   * 按id删除用户
+   * @param {Number} id 用户id
+   */
   del(id) {
     return this.model.deleteMany({
       _id: id
     });
   }
 
+  /**
+   * 更新用户信息
+   * @param {Number} id 用户id
+   * @param {*} data 待更新的用户字段
+   */
   update(id, data) {
     return this.model.updateOne(
       {
@@ -110,6 +150,10 @@ class userModel extends baseModel {
     );
   }
 
+  /**
+   * 按关键字搜索用户，按email/username不区分大小写匹配
+   * @param {String} keyword 搜索关键字
+   */
   search(keyword) {
     return this.model
       .find(

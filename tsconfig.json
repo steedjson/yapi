@@ -82,6 +82,10 @@
     "server/models/token.js",
     "server/models/storage.js",
     "server/models/interfaceCat.js",
-    "server/models/interfaceCol.js"
+    "server/models/interfaceCol.js",
+    "server/models/user.js",
+    "server/models/interfaceCase.js",
+    "server/models/follow.js",
+    "server/models/group.js"
   ]
 }

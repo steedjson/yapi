@@ -1,3 +1,4 @@
+// @ts-check
 const yapi = require('../yapi.js');
 const baseModel = require('./base.js');
 
@@ -38,11 +39,19 @@ class groupModel extends baseModel {
     };
   }
 
+  /**
+   * 新增分组
+   * @param {*} data 分组数据
+   */
   save(data) {
     let m = new this.model(data);
     return m.save();
   }
 
+  /**
+   * 按id查询单个分组
+   * @param {Number} id 分组id
+   */
   get(id) {
     return this.model
       .findOne({
@@ -51,6 +60,10 @@ class groupModel extends baseModel {
       .exec();
   }
 
+  /**
+   * 按成员uid批量更新分组内成员的用户名与邮箱
+   * @param {*} data 成员更新数据，含 uid/username/email
+   */
   updateMember(data) {
     return this.model.updateMany(
       {
@@ -65,6 +78,10 @@ class groupModel extends baseModel {
     );
   }
 
+  /**
+   * 按用户id查询其个人分组
+   * @param {Number} uid 用户id
+   */
   getByPrivateUid(uid) {
     return this.model
       .findOne({
@@ -75,6 +92,10 @@ class groupModel extends baseModel {
       .exec();
   }
 
+  /**
+   * 按id查询单个分组
+   * @param {Number} id 分组id
+   */
   getGroupById(id) {
     return this.model
       .findOne({
@@ -84,6 +105,10 @@ class groupModel extends baseModel {
       .exec();
   }
 
+  /**
+   * 按名称统计分组数量（查重）
+   * @param {String} name 分组名称
+   */
   checkRepeat(name) {
     return this.model.countDocuments({
       group_name: name
@@ -94,6 +119,11 @@ class groupModel extends baseModel {
     return this.model.countDocuments({ type: 'public' });
   }
 
+  /**
+   * 向分组批量添加成员
+   * @param {Number} id 分组id
+   * @param {Object[]} data 待添加的成员数组
+   */
   addMember(id, data) {
     return this.model.updateOne(
       {
@@ -106,6 +136,11 @@ class groupModel extends baseModel {
     );
   }
 
+  /**
+   * 按成员uid从分组中删除成员
+   * @param {Number} id 分组id
+   * @param {Number} uid 成员用户id
+   */
   delMember(id, uid) {
     return this.model.updateOne(
       {
@@ -117,6 +152,12 @@ class groupModel extends baseModel {
     );
   }
 
+  /**
+   * 修改分组内成员角色
+   * @param {Number} id 分组id
+   * @param {Number} uid 成员用户id
+   * @param {String} role 角色，仅允许owner|dev
+   */
   changeMemberRole(id, uid, role) {
     return this.model.updateOne(
       {
@@ -129,6 +170,11 @@ class groupModel extends baseModel {
     );
   }
 
+  /**
+   * 按分组id与成员uid统计成员记录（查重）
+   * @param {Number} id 分组id
+   * @param {Number} uid 成员用户id
+   */
   checkMemberRepeat(id, uid) {
     return this.model.countDocuments({
       _id: id,
@@ -145,6 +191,10 @@ class groupModel extends baseModel {
       .exec();
   }
 
+  /**
+   * 按用户id查询其有权限访问的公开分组
+   * @param {Number} uid 用户id
+   */
   getAuthList(uid){
     return this.model.find({
       $or: [{
@@ -156,9 +206,13 @@ class groupModel extends baseModel {
       }]
     }).select(' _id group_name group_desc add_time up_time type uid custom_field1')
     .exec();
-    
+
   }
 
+  /**
+   * 按分组id数组查询公开分组
+   * @param {Number[]} [ids] 分组id数组，默认为空数组
+   */
   findByGroups(ids = []){
     return this.model.find({
       _id: {
@@ -168,12 +222,21 @@ class groupModel extends baseModel {
     })
   }
 
+  /**
+   * 按id删除分组
+   * @param {Number} id 分组id
+   */
   del(id) {
     return this.model.deleteMany({
       _id: id
     });
   }
 
+  /**
+   * 更新分组基础信息并刷新更新时间
+   * @param {Number} id 分组id
+   * @param {*} data 待更新的分组字段，含 custom_field1/group_name/group_desc
+   */
   up(id, data) {
     return this.model.updateOne(
       {
@@ -188,6 +251,10 @@ class groupModel extends baseModel {
     );
   }
 
+  /**
+   * 按名称查询启用的自定义字段分组
+   * @param {String} name 自定义字段名称
+   */
   getcustomFieldName(name) {
     return this.model
       .find({
@@ -198,6 +265,10 @@ class groupModel extends baseModel {
       .exec();
   }
 
+  /**
+   * 按关键字搜索分组，按group_name不区分大小写匹配
+   * @param {String} keyword 搜索关键字
+   */
   search(keyword) {
     return this.model
       .find({
