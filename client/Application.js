@@ -9,6 +9,7 @@ import { Alert } from 'antd';
 import Header from './components/Header/Header';
 import Footer from './components/Footer/Footer';
 import Loading from './components/Loading/Loading';
+import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary';
 import { checkLoginState } from './reducer/modules/user';
 import { requireAuthentication } from './components/AuthenticatedComponent';
 import Notify from './components/Notify/Notify';
@@ -22,12 +23,16 @@ const LOADING_STATUS = 0;
 // 路由级代码分割：React.lazy + Suspense 的轻量封装，加载期展示全局 Loading。
 // loader 内必须带 webpackChunkName 注释以命名异步 chunk（project/group/user 等），
 // 使 static/prd/ 下产出独立分包，缩小首屏主包体积。
+// 外层 ErrorBoundary 兜住分包加载失败（线上发版后旧 chunk 404 / 网络中断）与
+// 路由渲染异常：就地展示友好刷新卡片，而不是整树卸载白屏。
 const createAsyncComponent = (loader, chunkName) => {
   const LazyComponent = React.lazy(loader);
   const AsyncComponent = props => (
-    <React.Suspense fallback={<Loading visible />}>
-      <LazyComponent {...props} />
-    </React.Suspense>
+    <ErrorBoundary>
+      <React.Suspense fallback={<Loading visible />}>
+        <LazyComponent {...props} />
+      </React.Suspense>
+    </ErrorBoundary>
   );
   AsyncComponent.displayName = `Async(${chunkName})`;
   return AsyncComponent;

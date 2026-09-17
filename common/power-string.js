@@ -118,16 +118,18 @@ const stringHandles = {
   },
 
   /**
-   * 挂载为原型方法后由实例调用，this 即 PowerString 实例（故可读 _string）。
+   * 左拼接：args 依次作为前缀整体累加后再拼接原字符串。
+   * 历史缺陷：循环内曾误用 this._string 覆盖累积结果，导致多参数时仅最后一个参数生效。
    * @this {PowerString}
    * @param {string} str
    * @param {...*} args
    */
   lconcat: function(str, ...args) {
+    let prefix = '';
     args.forEach(item => {
-      str = item + this._string;
+      prefix += item;
     });
-    return str;
+    return prefix + str;
   },
 
   /** @param {string} str */
