@@ -196,6 +196,26 @@ function patchRangeMeasure(window) {
   }
 }
 
+/**
+ * 测试网络防护：jsdom 的 XMLHttpRequest 默认会真实发出网络请求，是单测
+ * 网络 flake 的根源。这里直接替换 XMLHttpRequest.prototype.open，让任何
+ * 未打桩的请求在发起前立即抛错，把隐患前移为显式失败。
+ * 还原函数记录在模块级 restoreNetworkInterceptor 上，由 cleanupDom 负责还原。
+ */
+let restoreNetworkInterceptor = null;
+
+function installNetworkInterceptor(window) {
+  if (!window || !window.XMLHttpRequest) return;
+  const proto = window.XMLHttpRequest.prototype;
+  const originalOpen = proto.open;
+  proto.open = function(method, url) {
+    throw new Error(`[测试网络拦截] 单元测试中禁止未打桩的网络请求: ${method} ${url}`);
+  };
+  restoreNetworkInterceptor = function() {
+    proto.open = originalOpen;
+  };
+}
+
 const GLOBAL_KEYS = [
   'window',
   'Window',
@@ -233,6 +253,7 @@ const GLOBAL_KEYS = [
   'UIEvent',
   'DOMParser',
   'XMLSerializer',
+  'XMLHttpRequest',
   'CSSStyleDeclaration',
   'FileReader',
   'Blob',
@@ -286,6 +307,7 @@ function setupDom() {
     };
   }
   patchRangeMeasure(window);
+  installNetworkInterceptor(window);
 
   GLOBAL_KEYS.forEach(function(key) {
     if (window[key] !== undefined) {
@@ -328,6 +350,15 @@ function cleanupDom() {
   }
   if (document) {
     delete document.execCommand;
+  }
+  // 网络防护先还原再重新布防：既擦掉用例期可能注入到原型上的 stub，
+  // 又保证拦截器在后续用例中持续生效
+  if (typeof restoreNetworkInterceptor === 'function') {
+    restoreNetworkInterceptor();
+    restoreNetworkInterceptor = null;
+  }
+  if (globalThis.window) {
+    installNetworkInterceptor(globalThis.window);
   }
 }
 

@@ -38,3 +38,7 @@ test('timeago: 60 天前返回 2月前', t => {
 test('timeago: 400 天前返回 1年前', t => {
   t.is(timeago(nowInSeconds() - 86400 * 400), '1年前');
 });
+
+test('timeago: 未来时间戳 (seconds <= 0) 兜底返回 刚刚', t => {
+  t.is(timeago(nowInSeconds() + 100), '刚刚');
+});

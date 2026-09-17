@@ -56,8 +56,18 @@ test.after.always('cleanup lingering handles', async () => {
     });
   } catch (e) {}
   const mongoose = require('mongoose');
+  const yapi = require('../../server/yapi.js');
+  try {
+    // 等待初始连接与建库流程真正结束，避免后台任务尚未完成就开始关连接
+    if (yapi.connect) {
+      await yapi.connect;
+    }
+  } catch (e) {}
   if (mongoose.connection && mongoose.connection.readyState !== 0) {
-    await new Promise(r => setTimeout(r, 200));
-    await mongoose.connection.close();
+    // 缓冲等待后台创建索引等收尾任务结束，防止 close 时触发 MongoClientClosedError
+    await new Promise(r => setTimeout(r, 500));
+    try {
+      await mongoose.connection.close();
+    } catch (e) {}
   }
 });
