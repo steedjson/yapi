@@ -125,7 +125,7 @@ class interfaceColController extends baseController {
         fs.writeFileSync(
           path.join(yapi.WEBROOT_RUNTIME, 'test.text'),
           data,
-          function(/** @type {any} */ err) {
+          function() {
             return (ctx.body = yapi.commons.resReturn(null, 402, '写入失败'));
           }
         );

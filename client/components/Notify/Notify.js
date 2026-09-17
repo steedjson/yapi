@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import axios from 'axios';
-import { Alert, message } from 'antd';
+import { Alert } from 'antd';
 
 export default class Notify extends Component {
   constructor(props) {

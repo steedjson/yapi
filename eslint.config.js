@@ -16,6 +16,8 @@ module.exports = [
       'log/**',
       'runtime/**',
       'iconfont/**',
+      // ydoc 文档目录，index.jsx 为 front matter 配置而非源码
+      'docs/**',
       'common/json-schema-mockjs.js',
       // 第三方 vendored 压缩产物，不属于本项目代码
       'common/tui-editor/dist/**'
@@ -75,24 +77,7 @@ module.exports = [
         }
       ],
       // withRouter 注入的 history/location/match props 无法被 prop-types 识别，且存量代码未声明 propTypes
-      'react/prop-types': 'off',
-      // 存量正则含 5 处多余转义（Login/Reg/Project/User），修复需改动历史源码，超出本步范围
-      'no-useless-escape': 'off',
-      // 存量 1 处直接调用 hasOwnProperty（MockDoc.js）
-      'no-prototype-builtins': 'off'
-    }
-  },
-  {
-    // 历史文件存量未用 import（Notify.js/AddProject.js/index.js/theme.js），
-    // 修复属源码改动，超出本步范围，按计划对该类文件关闭此规则
-    files: [
-      'client/components/Notify/Notify.js',
-      'client/containers/AddProject/AddProject.js',
-      'client/index.js',
-      'client/theme.js'
-    ],
-    rules: {
-      'no-unused-vars': 'off'
+      'react/prop-types': 'off'
     }
   }
 ];

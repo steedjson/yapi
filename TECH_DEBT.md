@@ -74,17 +74,18 @@
 
 ## 三、遗留观察项（MINOR，不阻塞）
 
-- `server/utils/commons.js:11` 未使用 `followModel`、`:336` no-useless-catch —— 既有 eslint error（HEAD 比对确认非本轮引入）。
-- `exts/yapi-plugin-wiki/wikiModel.js:1` eslint 未使用变量 —— 既有。
+- lint 脚本范围尚未包含 `test/`：test/server/userManage.test.js 等存在 4 个基线 unused-vars，修复后应把 test/ 纳入 lint 门禁范围。
+- pre-commit 无 ErrorBoundary：React.lazy 异步 chunk 下载失败（网络抖动/发版后旧 hash 失效）会整树卸载白屏，应用根补 ErrorBoundary 并做 chunk 重载兜底。
 - `mockEditor.js` 模块级 wordList 多实例累积重复项 —— 忠实移植的既有瑕疵。
 - 历史接口无 `markdown` 字段时，编辑页备注以 HTML 原文形态呈现，重新保存后完成迁移（设计取舍）。
 - 动画库 `rc-queue-anim`/`rc-scroll-anim`/`rc-tween-one`（停更）—— 未列入本轮范围，建议随组件 Hooks 化顺带替换为 CSS/Framer Motion。
 - `json-schema-editor-visual@1.0.23`（内嵌 antd3 样式 + brace 传递依赖）—— 替换需自定义 JSON Schema 编辑器，工作量单独评估。
 - 登录路径 scryptSync 同步阻塞约几十毫秒；`verifyPassword` 尊重 storedHash 自述参数但受 Node maxmem 兜底 —— 观察即可。
 - old 兼容：`add`/`resetPassword` 生成 legacy 密码格式（首次登录自动升级）—— 如后续可改既有测试，可一并 scrypt 化。
+- 沙箱进程池边界收窄观察项：常驻 Worker 下恶意脚本可篡改注入的 assert/Random 模块对象（影响同 Worker 后续任务直至 1000 次轮换）；任务队列无背压上限；context 不可序列化时误判为崩溃换 Worker —— 均为低风险设计取舍，知悉即可。
 
 ## 四、验证基线
 
 - Node：`.nvmrc` 24.21.0（engines `>=18 <25`）。
-- 门禁：`npm test`（378）、`npm run typecheck`（0 错）、`npm run build-client`（0 error）。
-- 浏览器冒烟（本轮）：注册/登录（scrypt + legacy 自动升级）、接口编辑页编辑器、用例表格拖拽持久化、Markdown 双写、Wiki 编辑器、面包屑，全部通过。
+- 门禁：`npm run lint`（0 error 0 warning，pre-commit 卡点）、`npm test`（379）、`npm run typecheck`（0 错）、`npm run build-client`（0 error）。
+- 浏览器冒烟（本轮）：注册/登录（scrypt + legacy 自动升级）、接口编辑页编辑器、用例表格拖拽持久化、Markdown 双写、Wiki 编辑器、面包屑、路由分包按需加载，全部通过。

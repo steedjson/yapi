@@ -10,7 +10,7 @@ import axios from 'axios';
 
 const Search = Input.Search;
 const limit = 20;
-const emailReg = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{1,})+$/;
+const emailReg = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{1,})+$/;
 @connect(
   state => {
     return {

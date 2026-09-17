@@ -41,7 +41,7 @@ function CompareArray(objA, objB, flag) {
 function CompareObj(objA, objB, flag) {
   for (var key in objA) {
     if (!flag) break;
-    if (!objB.hasOwnProperty(key)) {
+    if (!Object.prototype.hasOwnProperty.call(objB, key)) {
       flag = false;
       break;
     }

@@ -6,7 +6,6 @@ import { Button, Input, Tooltip, Select, message, Row, Col, Radio, Form } from '
 import {
   QuestionCircleOutlined,
   LockOutlined,
-  UnlockOutlined,
   PlusOutlined
 } from '@ant-design/icons';
 import { addProject } from '../../reducer/modules/project.js';

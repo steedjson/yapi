@@ -8,7 +8,6 @@ const interfaceColModel = require('../models/interfaceCol.js');
 const interfaceCaseModel = require('../models/interfaceCase.js');
 const interfaceModel = require('../models/interface.js');
 const userModel = require('../models/user.js');
-const followModel = require('../models/follow.js');
 const json5 = require('json5');
 const Ajv = require('ajv-draft-04');
 const Mock = require('mockjs');
@@ -80,16 +79,16 @@ exports.log = (msg, type) => {
 
   switch (type) {
     case 'log':
-      f = console.log; // eslint-disable-line
+      f = console.log;
       break;
     case 'warn':
-      f = console.warn; // eslint-disable-line
+      f = console.warn;
       break;
     case 'error':
-      f = console.error; // eslint-disable-line
+      f = console.error;
       break;
     default:
-      f = console.log; // eslint-disable-line
+      f = console.log;
       break;
   }
 
@@ -255,7 +254,7 @@ exports.sendMail = (options, cb) => {
     );
   } catch (e) {
     yapi.commons.log(e.message, 'error');
-    console.error(e.message); // eslint-disable-line
+    console.error(e.message);
   }
 };
 
@@ -320,7 +319,7 @@ exports.verifyPath = path => {
   // } else {
   //   return false;
   // }
-  return /^\/[a-zA-Z0-9\-\/_:!\.\{\}\=]*$/.test(path);
+  return /^\/[a-zA-Z0-9\-/_:.!{}=]*$/.test(path);
 };
 
 /**
@@ -333,18 +332,14 @@ exports.verifyPath = path => {
  * a = {a: 2}
  */
 exports.sandbox = (sandbox, script) => {
-  try {
-    const vm = require('vm');
-    sandbox = sandbox || {};	
-    script = new vm.Script(script);	
-    const context = new vm.createContext(sandbox);	
-    script.runInContext(context, {	
-      timeout: 3000	
-    });	      
-    return sandbox
-  } catch (err) {
-    throw err
-  }
+  const vm = require('vm');
+  sandbox = sandbox || {};
+  script = new vm.Script(script);
+  const context = new vm.createContext(sandbox);
+  script.runInContext(context, {
+    timeout: 3000
+  });
+  return sandbox;
 };
 
 function trim(str) {
@@ -498,7 +493,7 @@ exports.saveLog = logData => {
 
     logInst.save(data).then();
   } catch (e) {
-    yapi.commons.log(e, 'error'); // eslint-disable-line
+    yapi.commons.log(e, 'error');
   }
 };
 

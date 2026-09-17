@@ -9,7 +9,7 @@
  *
  * 优先级:localStorage 个人偏好 > 服务端全局默认 > enterprise(默认皮肤,零 token 覆盖)。
  */
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { message, theme as antdTheme } from 'antd';
 

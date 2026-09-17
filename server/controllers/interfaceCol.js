@@ -507,8 +507,6 @@ class interfaceColController extends baseController {
         data.req_body_type = interfaceData.req_body_type;
         let caseResultData = await this.caseModel.save(data);
         let username = this.getUsername();
-        const caseName = data.casename;
-        const caseId = caseResultData._id;
         Promise.resolve().then(() => {
           yapi.commons.saveLog({
             content: `<a href="/user/profile/${this.getUid()}">${username}</a> 在接口集 <a href="/project/${
@@ -603,7 +601,7 @@ class interfaceColController extends baseController {
         if (str.indexOf('$') !== -1) {
           str = str.replace(/\$\.([0-9]+)\./g, function(/** @type {any} */ match, /** @type {any} */ p1) {
             p1 = p1.toString();
-            return `$.${newCaseList[oldCaseObj[p1]]}.` || '';
+            return `$.${newCaseList[oldCaseObj[p1]]}.`;
           });
         }
         return str;
@@ -845,7 +843,7 @@ class interfaceColController extends baseController {
       params.forEach((/** @type {any} */ item) => {
         if (item.id) {
           this.caseModel.upCaseIndex(item.id, item.index).then(
-            (/** @type {any} */ res) => {},
+            () => {},
             (/** @type {any} */ err) => {
               yapi.commons.log(err.message, 'error');
             }
@@ -889,7 +887,7 @@ class interfaceColController extends baseController {
       params.forEach((/** @type {any} */ item) => {
         if (item.id) {
           this.colModel.upColIndex(item.id, item.index).then(
-            (/** @type {any} */ res) => {},
+            () => {},
             (/** @type {any} */ err) => {
               yapi.commons.log(err.message, 'error');
             }
@@ -1015,7 +1013,7 @@ class interfaceColController extends baseController {
     /** @type {Record<string, any>} */
     let hash = {};
     let arr = array.reduce(function(/** @type {any} */ item, /** @type {any} */ next) {
-      hash[next[compare]] ? '' : (hash[next[compare]] = true && item.push(next));
+      hash[next[compare]] ? '' : (hash[next[compare]] = item.push(next));
       // console.log('item',item.project_id)
       return item;
     }, []);

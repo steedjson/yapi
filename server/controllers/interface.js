@@ -1406,7 +1406,7 @@ class interfaceController extends baseController {
       params.forEach((/** @type {any} */ item) => {
         if (item.id) {
           this.Model.upIndex(item.id, item.index).then(
-            (/** @type {any} */ res) => {},
+            () => {},
             (/** @type {any} */ err) => {
               yapi.commons.log(err.message, 'error');
             }

@@ -5,7 +5,7 @@ counterSchema,
 IdentityCounter;
 
 // Initialize plugin by creating counter collection in database.
-exports.initialize = function (connection) {
+exports.initialize = function () {
   try {
     IdentityCounter = mongoose.model('IdentityCounter');
   } catch (ex) {
@@ -84,7 +84,7 @@ exports.plugin = function (schema, options) {
             ready = true;
           },
           function (err) {
-            console.error('[mongoose-auto-increment] 初始化计数器失败:', err && err.message); // eslint-disable-line
+            console.error('[mongoose-auto-increment] 初始化计数器失败:', err && err.message);
           }
         );
       }
@@ -93,7 +93,7 @@ exports.plugin = function (schema, options) {
       }
     })
     .catch(function (err) {
-      console.error('[mongoose-auto-increment] 计数器查询失败:', err && err.message); // eslint-disable-line
+      console.error('[mongoose-auto-increment] 计数器查询失败:', err && err.message);
     });
 
   // Declare a function to get the next counter for the model/schema.

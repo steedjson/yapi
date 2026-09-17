@@ -126,7 +126,7 @@ function handleParamsValue(val, context = {}) {
   }
   val = val.trim();
 
-  let match = val.match(/^\{\{([^\}]+)\}\}$/);
+  let match = val.match(/^\{\{([^}]+)\}\}$/);
   if (!match) {
     // val ==> @name 或者 $.body
     if (val[0] === '@' || val[0] === '$') {

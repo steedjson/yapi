@@ -2,7 +2,7 @@
  * @author suxiaoxin
  * @info  mockJs 功能增强脚本
  */
-var strRegex = /\${([a-zA-Z]+)\.?([a-zA-Z0-9_\.]*)\}/i;
+var strRegex = /\${([a-zA-Z]+)\.?([a-zA-Z0-9_.]*)\}/i;
 var varSplit = '.';
 var mockSplit = '|';
 var Mock = require('mockjs');
@@ -30,7 +30,7 @@ function mock(mockJSON, context) {
     }
 
     for (var i in p) {
-      if (!p.hasOwnProperty(i)) {
+      if (!Object.prototype.hasOwnProperty.call(p, i)) {
         continue;
       }
       if (p[i] && typeof p[i] === 'object') {
@@ -75,7 +75,7 @@ function mock(mockJSON, context) {
       var names = name.split(varSplit);
       var data = context;
       
-      if(typeof context[names[0]] === undefined){
+      if(typeof context[names[0]] === 'undefined'){
         return str;
       }
       names.forEach(function (n) {

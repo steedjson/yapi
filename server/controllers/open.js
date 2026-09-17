@@ -22,7 +22,6 @@ const {
 } = requireAny('../../common/postmanLib');
 const { handleParamsValue, ArrayToObject } = requireAny('../../common/utils.js');
 const renderToHtml = require('../utils/reportHtml');
-const axios = requireAny('axios');
 const HanldeImportData = requireAny('../../common/HandleImportData');
 const createContex = require('../../common/createContext')
 

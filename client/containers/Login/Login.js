@@ -70,7 +70,7 @@ function Login(props) {
       : {
           required: true,
           message: '请输入正确的email!',
-          pattern: /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{1,})+$/
+          pattern: /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{1,})+$/
         };
   return (
     <Form onFinish={handleSubmit}>

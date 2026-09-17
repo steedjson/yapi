@@ -36,7 +36,7 @@ function delInst(m) {
   try {
     insts.delete(m);
   } catch (err) {
-    console.error(err); // eslint-disable-line
+    console.error(err);
   }
 }
 

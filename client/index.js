@@ -6,7 +6,7 @@ import 'antd/dist/reset.css';
 // 以 .json-schema-editor-scope 作用域加载,避免 antd3 全局规则污染应用。
 import './styles/common.scss';
 import './plugin';
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { ConfigProvider } from 'antd';
 import { StyleProvider } from '@ant-design/cssinjs';

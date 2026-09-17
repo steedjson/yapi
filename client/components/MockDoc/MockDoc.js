@@ -148,7 +148,7 @@ function mockToArr(mock, html, space, key) {
     }
   }
   for (var i in mock) {
-    if (!mock.hasOwnProperty(i)) {
+    if (!Object.prototype.hasOwnProperty.call(mock, i)) {
       continue;
     }
     var index = i;
