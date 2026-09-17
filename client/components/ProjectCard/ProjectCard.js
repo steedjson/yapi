@@ -1,12 +1,12 @@
 import './ProjectCard.scss';
-import React, { PureComponent as Component } from 'react';
+import React, { useMemo, useRef } from 'react';
 import { Card, Tooltip, Modal, Alert, Input, message } from 'antd';
 import { CopyOutlined, StarFilled, StarOutlined } from '@ant-design/icons';
 import { getV4Icon } from '../../constants/v4IconMap';
-import { connect } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { delFollow, addFollow } from '../../reducer/modules/follow';
 import PropTypes from 'prop-types';
-import withRouter from '../../withRouter';
+import { useNavigate } from 'react-router-dom';
 import { debounce } from '../../common';
 import constants from '../../constants/variable.js';
 import { produce } from 'immer';
@@ -14,73 +14,44 @@ import { getProject, checkProjectName, copyProjectMsg } from '../../reducer/modu
 import { trim } from '../../common.js';
 const confirm = Modal.confirm;
 
-@connect(
-  state => {
-    return {
-      uid: state.user.uid,
-      currPage: state.project.currPage
-    };
-  },
-  {
-    delFollow,
-    addFollow,
-    getProject,
-    checkProjectName,
-    copyProjectMsg
-  }
-)
-@withRouter
-class ProjectCard extends Component {
-  constructor(props) {
-    super(props);
-    this.add = debounce(this.add, 400);
-    this.del = debounce(this.del, 400);
-  }
+export default function ProjectCard(props) {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const uid = useSelector(state => state.user.uid);
+  // currPage 与旧 @connect 映射保持一致(历史遗留仅声明未消费),保留订阅避免行为差异
+  useSelector(state => state.project.currPage);
+  const { projectData, inFollowPage, isShow, callbackResult } = props;
 
-  static propTypes = {
-    projectData: PropTypes.object,
-    uid: PropTypes.number,
-    inFollowPage: PropTypes.bool,
-    callbackResult: PropTypes.func,
-    history: PropTypes.object,
-    delFollow: PropTypes.func,
-    addFollow: PropTypes.func,
-    isShow: PropTypes.bool,
-    getProject: PropTypes.func,
-    checkProjectName: PropTypes.func,
-    copyProjectMsg: PropTypes.func,
-    currPage: PropTypes.number
-  };
+  // 用 ref 始终指向最新 props,防抖回调经 useMemo 只创建一次,避免闭包读到陈旧值
+  const latestRef = useRef({});
+  latestRef.current = { projectData, uid, callbackResult, dispatch };
 
-  copy = async projectName => {
-    const id = this.props.projectData._id;
+  // 复制项目
+  async function copy(projectName) {
+    const id = latestRef.current.projectData._id;
 
-    let projectData = await this.props.getProject(id);
-    let data = projectData.payload.data.data;
+    let projectDataRes = await dispatch(getProject(id));
+    let data = projectDataRes.payload.data.data;
     let newData = produce(data, draftData => {
       draftData.preName = draftData.name;
       draftData.name = projectName;
     });
 
-    await this.props.copyProjectMsg(newData);
+    await dispatch(copyProjectMsg(newData));
     message.success('项目复制成功');
-    this.props.callbackResult();
-  };
+    latestRef.current.callbackResult();
+  }
 
   // 复制项目的二次确认
-  showConfirm = () => {
-    const that = this;
-
+  function showConfirm() {
     confirm({
-      title: '确认复制 ' + that.props.projectData.name + ' 项目吗？',
+      title: '确认复制 ' + projectData.name + ' 项目吗？',
       okText: '确认',
       cancelText: '取消',
       content: (
         <div style={{ marginTop: '10px', fontSize: '13px', lineHeight: '25px' }}>
           <Alert
-            message={`该操作将会复制 ${
-              that.props.projectData.name
-            } 下的所有接口集合，但不包括测试集合中的接口`}
+            message={`该操作将会复制 ${projectData.name} 下的所有接口集合，但不包括测试集合中的接口`}
             type="info"
           />
           <div style={{ marginTop: '16px' }}>
@@ -95,94 +66,97 @@ class ProjectCard extends Component {
         const projectName = trim(document.getElementById('project_name').value);
 
         // 查询项目名称是否重复
-        const group_id = that.props.projectData.group_id;
-        await that.props.checkProjectName(projectName, group_id);
-        that.copy(projectName);
+        const group_id = projectData.group_id;
+        await dispatch(checkProjectName(projectName, group_id));
+        copy(projectName);
       },
       iconType: 'copy',
       onCancel() {}
     });
-  };
+  }
 
-  del = () => {
-    const id = this.props.projectData.projectid || this.props.projectData._id;
-    this.props.delFollow(id).then(res => {
-      if (res.payload.data.errcode === 0) {
-        this.props.callbackResult();
-        // message.success('已取消关注！');  // 星号已做出反馈 无需重复提醒用户
-      }
-    });
-  };
-
-  add = () => {
-    const { uid, projectData } = this.props;
-    const param = {
-      uid,
-      projectid: projectData._id,
-      projectname: projectData.name,
-      icon: projectData.icon || constants.PROJECT_ICON[0],
-      color: projectData.color || constants.PROJECT_COLOR.blue
-    };
-    this.props.addFollow(param).then(res => {
-      if (res.payload.data.errcode === 0) {
-        this.props.callbackResult();
-        // message.success('已添加关注！');  // 星号已做出反馈 无需重复提醒用户
-      }
-    });
-  };
-
-  render() {
-    const { projectData, inFollowPage, isShow } = this.props;
-    return (
-      <div className="card-container">
-        <Card
-          hoverable
-          variant="outlined"
-          className="m-card"
-          onClick={() =>
-            this.props.history.push('/project/' + (projectData.projectid || projectData._id))
+  const del = useMemo(
+    () =>
+      debounce(() => {
+        const { projectData: data, dispatch: d, callbackResult: cb } = latestRef.current;
+        const id = data.projectid || data._id;
+        d(delFollow(id)).then(res => {
+          if (res.payload.data.errcode === 0) {
+            cb();
+            // message.success('已取消关注！');  // 星号已做出反馈 无需重复提醒用户
           }
-        >
-          <div className="project-card-content">
-            <div
-              className="ui-logo"
-              style={{
-                backgroundColor:
-                  constants.PROJECT_COLOR[projectData.color] || constants.PROJECT_COLOR.blue
-              }}
-            >
-              {React.createElement(getV4Icon(projectData.icon || 'star-o'))}
-            </div>
-            <h4 className="ui-title" title={projectData.name || projectData.projectname}>
-              {projectData.name || projectData.projectname}
-            </h4>
-          </div>
-        </Card>
-        <div
-          className="card-btns"
-          onClick={projectData.follow || inFollowPage ? this.del : this.add}
-        >
-          <Tooltip
-            placement="rightTop"
-            title={projectData.follow || inFollowPage ? '取消关注' : '添加关注'}
+        });
+      }, 400),
+    []
+  );
+
+  const add = useMemo(
+    () =>
+      debounce(() => {
+        const { projectData: data, uid: currentUid, dispatch: d, callbackResult: cb } =
+          latestRef.current;
+        const param = {
+          uid: currentUid,
+          projectid: data._id,
+          projectname: data.name,
+          icon: data.icon || constants.PROJECT_ICON[0],
+          color: data.color || constants.PROJECT_COLOR.blue
+        };
+        d(addFollow(param)).then(res => {
+          if (res.payload.data.errcode === 0) {
+            cb();
+            // message.success('已添加关注！');  // 星号已做出反馈 无需重复提醒用户
+          }
+        });
+      }, 400),
+    []
+  );
+
+  return (
+    <div className="card-container">
+      <Card
+        hoverable
+        variant="outlined"
+        className="m-card"
+        onClick={() => navigate('/project/' + (projectData.projectid || projectData._id))}
+      >
+        <div className="project-card-content">
+          <div
+            className="ui-logo"
+            style={{
+              backgroundColor: constants.PROJECT_COLOR[projectData.color] || constants.PROJECT_COLOR.blue
+            }}
           >
-            {projectData.follow || inFollowPage ? (
-              <StarFilled className="icon active" />
-            ) : (
-              <StarOutlined className="icon" />
-            )}
+            {React.createElement(getV4Icon(projectData.icon || 'star-o'))}
+          </div>
+          <h4 className="ui-title" title={projectData.name || projectData.projectname}>
+            {projectData.name || projectData.projectname}
+          </h4>
+        </div>
+      </Card>
+      <div className="card-btns" onClick={projectData.follow || inFollowPage ? del : add}>
+        <Tooltip placement="rightTop" title={projectData.follow || inFollowPage ? '取消关注' : '添加关注'}>
+          {projectData.follow || inFollowPage ? (
+            <StarFilled className="icon active" />
+          ) : (
+            <StarOutlined className="icon" />
+          )}
+        </Tooltip>
+      </div>
+      {isShow && (
+        <div className="copy-btns" onClick={showConfirm}>
+          <Tooltip placement="rightTop" title="复制项目">
+            <CopyOutlined className="icon" />
           </Tooltip>
         </div>
-        {isShow && (
-          <div className="copy-btns" onClick={this.showConfirm}>
-            <Tooltip placement="rightTop" title="复制项目">
-              <CopyOutlined className="icon" />
-            </Tooltip>
-          </div>
-        )}
-      </div>
-    );
-  }
+      )}
+    </div>
+  );
 }
 
-export default ProjectCard;
+ProjectCard.propTypes = {
+  projectData: PropTypes.object,
+  inFollowPage: PropTypes.bool,
+  callbackResult: PropTypes.func,
+  isShow: PropTypes.bool
+};

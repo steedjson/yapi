@@ -55,6 +55,7 @@
 | TypeScript 覆盖扩大（第 7 批） | 数据层剩余 3 个大型模型（`log`, `project`, `interface`）未受类型检查 | 加 `// @ts-check` + 纳入 include + 清理 `log.js` 错位 JSDoc + 补全全部方法注解 | 清零 130 处类型错误；**达成 server/models/ 全仓 13 个数据模型 100% 完整受检里程碑**；全部改动经 AST 归一化比对证实 100% 零运行时逻辑变更 |
 | 测试基建防御与 Flake 根治 | jsdom 测试未屏蔽外部网络请求隐患；`httpApp.test.js` 并发偶发 Mongoose 断连异常 | 在 `jsdom-setup.js` 注入 `XMLHttpRequest` 网络拦截器并持续守护；显式等待 `yapi.connect` 与平滑关闭 | 彻底拦截任何意外的外部真实网络请求；根治 MongoDB 连接池提前关闭 flake；补齐 `timeago` 未来时间戳边缘用例；全量测试增至 **482** 项 |
 | TypeScript 覆盖扩大（第 8 批） | `server/utils/commons.js` 与 `server/middleware/mockServer.js` 未受类型检查 | 加 `// @ts-check` + 纳入 include + global.d.ts 补齐 `easy-json-schema`/`json-schema-faker` 声明 | 清零约 **118 处**类型错误；服务端核心通用工具库与动态路由 Mock 中间件全面受检，AST 归一化比对证实零业务逻辑变更 |
+| 通用核心组件 Hooks 现代化 | 4 个通用核心组件（`ProjectCard`, `TimeLine`, `Header`, `Search`）仍使用类组件与 `@connect` / `@withRouter` 装饰器 | 重构为 React 18 函数组件 + Hooks；消除 `TimeLine` 全部 UNSAFE_ 生命周期；新增 4 个组件单测（27 项用例） | 全量测试增至 **509** 项；彻底清理 4 处 `@connect` 与 `@withRouter` 包装；`add`/`del` 防抖经 useRef+useMemo 消除陈旧闭包；TimeLine 分页与 Diff 弹窗全覆盖 |
 
 ## 二、评估后暂缓（含推进路径）
 
@@ -68,10 +69,10 @@
   4. 观察期后删除 webpack 相关依赖与 build/ 旧脚本。
 - 暂缓理由：构建迁移无法靠测试套件充分验证（需全功能回归），本会话以浏览器冒烟覆盖不到该风险面。
 
-### 2. 剩余 54 个 Class 组件 → Hooks（持续进行）
+### 2. 剩余 50 个 Class 组件 → Hooks（持续进行）
 
-- 累计已完成 9 个组件迁移（GuideBtns、Breadcrumb、Loading、Footer、ErrMsg、Notify、Label、Subnav、MyPopConfirm），彻底消灭了 `client/components/` 下全部已废弃的 UNSAFE_ 生命周期与 `@withRouter` 装饰器。
-- 优先顺序建议：叶子组件（TimeLine、ProjectCard 等）→ 容器组件（配合状态层选型）。
+- 累计已完成 13 个组件迁移（GuideBtns、Breadcrumb、Loading、Footer、ErrMsg、Notify、Label、Subnav、MyPopConfirm、ProjectCard、TimeLine、Header、Search），消灭了全部 UNSAFE_ 生命周期，大幅收敛了 `@connect` / `@withRouter` 装饰器使用。
+- 优先顺序建议：叶子组件（MockDoc 等）→ 容器组件（配合状态层选型）。
 - 迁移中顺带清理 `core-decorators` 的 `@autobind`（改箭头函数属性）与 `@connect`（改 hooks）。
 
 ### 3. TypeScript 健全化（持续进行）
@@ -109,5 +110,5 @@
 ## 四、验证基线
 
 - Node：`.nvmrc` 24.21.0（engines `>=18 <25`）。
-- 门禁：`npm run lint`（覆盖全仓含 test/，0 error 0 warning，pre-commit 卡点）、`npm test`（**482**）、`npm run typecheck`（0 错）、`npm run build-client`（0 error）。
+- 门禁：`npm run lint`（覆盖全仓含 test/，0 error 0 warning，pre-commit 卡点）、`npm test`（**509**）、`npm run typecheck`（0 错）、`npm run build-client`（0 error）。
 - 浏览器冒烟（本轮）：注册/登录（scrypt + legacy 自动升级）、接口编辑页编辑器、用例表格拖拽持久化、Markdown 双写、Wiki 编辑器、面包屑、路由分包按需加载，全部通过。

@@ -1,7 +1,7 @@
-import React, { PureComponent as Component } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Timeline, Spin, Row, Col, Tag, Avatar, Button, Modal, AutoComplete } from 'antd';
 import PropTypes from 'prop-types';
-import { connect } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { formatTime } from '../../common.js';
 import showDiffMsg from '../../../common/diff-view.js';
 import variable from '../../constants/variable';
@@ -42,248 +42,213 @@ AddDiffView.propTypes = {
 
 // timeago(new Date().getTime() - 40);
 
-@connect(
-  state => {
-    return {
-      newsData: state.news.newsData,
-      curpage: state.news.curpage,
-      curUid: state.user.uid
-    };
-  },
-  {
-    fetchNewsData,
-    fetchMoreNews,
-    fetchInterfaceList
-  }
-)
-class TimeTree extends Component {
-  static propTypes = {
-    newsData: PropTypes.object,
-    fetchNewsData: PropTypes.func,
-    fetchMoreNews: PropTypes.func,
-    setLoading: PropTypes.func,
-    loading: PropTypes.bool,
-    curpage: PropTypes.number,
-    typeid: PropTypes.number,
-    curUid: PropTypes.number,
-    type: PropTypes.string,
-    fetchInterfaceList: PropTypes.func
-  };
+export default function TimeTree(props) {
+  const dispatch = useDispatch();
+  const newsData = useSelector(state => state.news.newsData);
+  const curpage = useSelector(state => state.news.curpage);
+  // curUid 与旧 @connect 映射保持一致(历史遗留仅声明未消费),保留订阅避免行为差异
+  useSelector(state => state.user.uid);
 
-  constructor(props) {
-    super(props);
-    this.state = {
-      bidden: '',
-      loading: false,
-      visible: false,
-      curDiffData: {},
-      apiList: []
-    };
-    this.curSelectValue = '';
-  }
+  // 旧版 state.bidden 仅被写入从未被读取(死状态),迁移时一并移除
+  const [loading, setLoading] = useState(false);
+  const [visible, setVisible] = useState(false);
+  const [curDiffData, setCurDiffData] = useState({});
+  const [apiList, setApiList] = useState([]);
+  // 非响应式的实例字段,改用 ref 承载
+  const curSelectValueRef = useRef('');
 
-  getMore() {
-    const that = this;
+  // 用 ref 始终指向最新 props/state,异步回调(getMore)中读取时不会拿到陈旧值
+  const latestRef = useRef({});
+  latestRef.current = { typeid: props.typeid, type: props.type, newsData, curpage, dispatch };
 
-    if (this.props.curpage <= this.props.newsData.total) {
-      this.setState({ loading: true });
-      this.props
-        .fetchMoreNews(
-          this.props.typeid,
-          this.props.type,
-          this.props.curpage + 1,
-          10,
-          this.curSelectValue
+  useEffect(() => {
+    // 对应原 UNSAFE_componentWillMount + UNSAFE_componentWillReceiveProps:
+    // 首次挂载与 typeid 变化时都重新拉取动态数据
+    const current = latestRef.current;
+    current.dispatch(fetchNewsData(current.typeid, current.type, 1, 10));
+    if (current.type === 'project') {
+      getApiList();
+    }
+  }, [props.typeid, props.type]);
+
+  function getMore() {
+    const current = latestRef.current;
+
+    if (current.curpage <= current.newsData.total) {
+      setLoading(true);
+      current
+        .dispatch(
+          fetchMoreNews(current.typeid, current.type, current.curpage + 1, 10, curSelectValueRef.current)
         )
         .then(function() {
-          that.setState({ loading: false });
-          if (that.props.newsData.total === that.props.curpage) {
-            that.setState({ bidden: 'logbidden' });
-          }
+          setLoading(false);
         });
     }
   }
 
-  handleCancel = () => {
-    this.setState({
-      visible: false
-    });
-  };
-
-  UNSAFE_componentWillMount() {
-    this.props.fetchNewsData(this.props.typeid, this.props.type, 1, 10);
-    if (this.props.type === 'project') {
-      this.getApiList();
-    }
+  function handleCancel() {
+    setVisible(false);
   }
 
-  UNSAFE_componentWillReceiveProps(nextProps) {
-    if (nextProps.typeid !== this.props.typeid) {
-      this.props.fetchNewsData(nextProps.typeid, this.props.type, 1, 10);
-    }
+  function openDiff(data) {
+    setCurDiffData(data);
+    setVisible(true);
   }
 
-  openDiff = data => {
-    this.setState({
-      curDiffData: data,
-      visible: true
-    });
-  };
-
-  async getApiList() {
-    let result = await this.props.fetchInterfaceList({
-      project_id: this.props.typeid,
-      limit: 'all'
-    });
-    this.setState({
-      apiList: result.payload.data.data.list
-    });
+  async function getApiList() {
+    let result = await latestRef.current.dispatch(
+      fetchInterfaceList({
+        project_id: latestRef.current.typeid,
+        limit: 'all'
+      })
+    );
+    setApiList(result.payload.data.data.list);
   }
 
-  handleSelectApi = selectValue => {
-    this.curSelectValue = selectValue;
-    this.props.fetchNewsData(this.props.typeid, this.props.type, 1, 10, selectValue);
+  function handleSelectApi(selectValue) {
+    curSelectValueRef.current = selectValue;
+    latestRef.current.dispatch(fetchNewsData(props.typeid, props.type, 1, 10, selectValue));
+  }
+
+  let data = newsData ? newsData.list : [];
+
+  let logType = {
+    project: '项目',
+    group: '分组',
+    interface: '接口',
+    interface_col: '接口集',
+    user: '用户',
+    other: '其他'
   };
 
-  render() {
-    let data = this.props.newsData ? this.props.newsData.list : [];
-
-    const curDiffData = this.state.curDiffData;
-    let logType = {
-      project: '项目',
-      group: '分组',
-      interface: '接口',
-      interface_col: '接口集',
-      user: '用户',
-      other: '其他'
-    };
-
-    const children = this.state.apiList.map(item => {
-      let methodColor = variable.METHOD_COLOR[item.method ? item.method.toLowerCase() : 'get'];
-      return (
-        <Option title={item.title} value={item._id + ''} path={item.path} key={item._id}>
-          {item.title}{' '}
-          <Tag
-            style={{ color: methodColor ? methodColor.color : '#cfefdf', backgroundColor: methodColor ? methodColor.bac : '#00a854', border: 'unset' }}
-          >
-            {item.method}
-          </Tag>
-        </Option>
-      );
-    });
-
-    children.unshift(
-      <Option value="" key="all">
-        选择全部
+  const children = apiList.map(item => {
+    let methodColor = variable.METHOD_COLOR[item.method ? item.method.toLowerCase() : 'get'];
+    return (
+      <Option title={item.title} value={item._id + ''} path={item.path} key={item._id}>
+        {item.title}{' '}
+        <Tag
+          style={{ color: methodColor ? methodColor.color : '#cfefdf', backgroundColor: methodColor ? methodColor.bac : '#00a854', border: 'unset' }}
+        >
+          {item.method}
+        </Tag>
       </Option>
     );
+  });
 
-    let timelineItems = [];
-    if (data && data.length) {
-      timelineItems = data.map((item, i) => {
-        let interfaceDiff = false;
-        if (item.data && typeof item.data === 'object') {
-          interfaceDiff = true;
-        }
-        return {
-          key: i,
-          dot: (
-            <Link to={`/user/profile/${item.uid}`}>
-              <Avatar src={`/api/user/avatar?uid=${item.uid}`} />
-            </Link>
-          ),
-          children: (
-            <div>
-              <div className="logMesHeade">
-                <span className="logoTimeago">{timeago(item.add_time)}</span>
-                <span className="logtype">{logType[item.type]}动态</span>
-                <span className="logtime">{formatTime(item.add_time)}</span>
-              </div>
-              <span className="logcontent" dangerouslySetInnerHTML={{ __html: item.content }} />
-              <div style={{ padding: '10px 0 0 10px' }}>
-                {interfaceDiff && <Button onClick={() => this.openDiff(item.data)}>改动详情</Button>}
-              </div>
+  children.unshift(
+    <Option value="" key="all">
+      选择全部
+    </Option>
+  );
+
+  let timelineItems = [];
+  if (data && data.length) {
+    timelineItems = data.map((item, i) => {
+      let interfaceDiff = false;
+      if (item.data && typeof item.data === 'object') {
+        interfaceDiff = true;
+      }
+      return {
+        key: i,
+        dot: (
+          <Link to={`/user/profile/${item.uid}`}>
+            <Avatar src={`/api/user/avatar?uid=${item.uid}`} />
+          </Link>
+        ),
+        children: (
+          <div>
+            <div className="logMesHeade">
+              <span className="logoTimeago">{timeago(item.add_time)}</span>
+              <span className="logtype">{logType[item.type]}动态</span>
+              <span className="logtime">{formatTime(item.add_time)}</span>
             </div>
-          )
-        };
-      });
-    }
-    let pending =
-      this.props.newsData.total <= this.props.curpage ? (
-        <a className="logbidden">以上为全部内容</a>
-      ) : (
-        <a className="loggetMore" onClick={this.getMore.bind(this)}>
-          查看更多
-        </a>
-      );
-    if (this.state.loading) {
-      pending = <Spin />;
-    }
-    let diffView = showDiffMsg(jsondiffpatch, formattersHtml, curDiffData);
-
-    return (
-      <section className="news-timeline">
-        <Modal
-          style={{ minWidth: '800px' }}
-          title="Api 改动日志"
-          open={this.state.visible}
-          footer={null}
-          onCancel={this.handleCancel}
-        >
-          <i>注： 绿色代表新增内容，红色代表删除内容</i>
-          <div className="project-interface-change-content">
-            {diffView.map((item, index) => {
-              return (
-                <AddDiffView
-                  className="item-content"
-                  title={item.title}
-                  key={index}
-                  content={item.content}
-                />
-              );
-            })}
-            {diffView.length === 0 && <ErrMsg type="noChange" />}
+            <span className="logcontent" dangerouslySetInnerHTML={{ __html: item.content }} />
+            <div style={{ padding: '10px 0 0 10px' }}>
+              {interfaceDiff && <Button onClick={() => openDiff(item.data)}>改动详情</Button>}
+            </div>
           </div>
-        </Modal>
-        {this.props.type === 'project' && (
-          <Row className="news-search">
-            <Col span="3">选择查询的 Api：</Col>
-            <Col span="10">
-              <AutoComplete
-                onSelect={this.handleSelectApi}
-                style={{ width: '100%' }}
-                placeholder="Select Api"
-                optionLabelProp="title"
-                filterOption={(inputValue, options) => {
-                  if (options.props.value == '') return true;
-                  if (
-                    options.props.path.indexOf(inputValue) !== -1 ||
-                    options.props.title.indexOf(inputValue) !== -1
-                  ) {
-                    return true;
-                  }
-                  return false;
-                }}
-              >
-                {/* {children} */}
-                <OptGroup label="other">
-                  <Option value="wiki" path="" title="wiki">
-                    wiki
-                  </Option>
-                </OptGroup>
-                <OptGroup label="api">{children}</OptGroup>
-              </AutoComplete>
-            </Col>
-          </Row>
-        )}
-        {timelineItems && timelineItems.length > 0 ? (
-          <Timeline className="news-content" pending={pending} items={timelineItems} />
-        ) : (
-          <ErrMsg type="noData" />
-        )}
-      </section>
-    );
+        )
+      };
+    });
   }
+  let pending =
+    newsData.total <= curpage ? (
+      <a className="logbidden">以上为全部内容</a>
+    ) : (
+      <a className="loggetMore" onClick={getMore}>
+        查看更多
+      </a>
+    );
+  if (loading) {
+    pending = <Spin />;
+  }
+  let diffView = showDiffMsg(jsondiffpatch, formattersHtml, curDiffData);
+
+  return (
+    <section className="news-timeline">
+      <Modal
+        style={{ minWidth: '800px' }}
+        title="Api 改动日志"
+        open={visible}
+        footer={null}
+        onCancel={handleCancel}
+      >
+        <i>注： 绿色代表新增内容，红色代表删除内容</i>
+        <div className="project-interface-change-content">
+          {diffView.map((item, index) => {
+            return (
+              <AddDiffView
+                className="item-content"
+                title={item.title}
+                key={index}
+                content={item.content}
+              />
+            );
+          })}
+          {diffView.length === 0 && <ErrMsg type="noChange" />}
+        </div>
+      </Modal>
+      {props.type === 'project' && (
+        <Row className="news-search">
+          <Col span="3">选择查询的 Api：</Col>
+          <Col span="10">
+            <AutoComplete
+              onSelect={handleSelectApi}
+              style={{ width: '100%' }}
+              placeholder="Select Api"
+              optionLabelProp="title"
+              filterOption={(inputValue, options) => {
+                if (options.props.value == '') return true;
+                if (
+                  options.props.path.indexOf(inputValue) !== -1 ||
+                  options.props.title.indexOf(inputValue) !== -1
+                ) {
+                  return true;
+                }
+                return false;
+              }}
+            >
+              {/* {children} */}
+              <OptGroup label="other">
+                <Option value="wiki" path="" title="wiki">
+                  wiki
+                </Option>
+              </OptGroup>
+              <OptGroup label="api">{children}</OptGroup>
+            </AutoComplete>
+          </Col>
+        </Row>
+      )}
+      {timelineItems && timelineItems.length > 0 ? (
+        <Timeline className="news-content" pending={pending} items={timelineItems} />
+      ) : (
+        <ErrMsg type="noData" />
+      )}
+    </section>
+  );
 }
 
-export default TimeTree;
+TimeTree.propTypes = {
+  typeid: PropTypes.number,
+  type: PropTypes.string
+};

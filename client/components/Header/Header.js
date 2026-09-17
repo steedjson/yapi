@@ -1,7 +1,7 @@
 import './Header.scss';
-import React, { PureComponent as Component } from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-import { connect } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { Layout, Dropdown, message, Tooltip, Popover, Tag } from 'antd';
 import {
@@ -14,9 +14,9 @@ import {
   DownOutlined
 } from '@ant-design/icons';
 import { getV4Icon } from '../../constants/v4IconMap';
-import { checkLoginState, logoutActions, loginTypeAction } from '../../reducer/modules/user';
+import { logoutActions } from '../../reducer/modules/user';
 import { changeMenuItem } from '../../reducer/modules/menu';
-import withRouter from '../../withRouter';
+import { useNavigate } from 'react-router-dom';
 import Srch from './Search/Search';
 import { SKINS, getSkin, setSkin } from '../../theme';
 const { Header } = Layout;
@@ -118,7 +118,7 @@ const ToolUser = props => {
   return (
     <ul>
       <li className="toolbar-li item-search">
-        <Srch groupList={props.groupList} />
+        <Srch />
       </li>
       <Popover
         overlayClassName="popover-index"
@@ -200,91 +200,46 @@ const ToolUser = props => {
 };
 ToolUser.propTypes = {
   user: PropTypes.string,
-  msg: PropTypes.string,
   role: PropTypes.string,
   uid: PropTypes.number,
   skin: PropTypes.string,
   onSelectSkin: PropTypes.func,
   relieveLink: PropTypes.func,
   logout: PropTypes.func,
-  groupList: PropTypes.array,
   studyTip: PropTypes.number,
   study: PropTypes.bool,
   imageUrl: PropTypes.any
 };
 
-@connect(
-  state => {
-    return {
-      user: state.user.userName,
-      uid: state.user.uid,
-      msg: null,
-      role: state.user.role,
-      login: state.user.isLogin,
-      studyTip: state.user.studyTip,
-      study: state.user.study,
-      imageUrl: state.user.imageUrl
-    };
-  },
-  {
-    loginTypeAction,
-    logoutActions,
-    checkLoginState,
-    changeMenuItem
-  }
-)
-@withRouter
-export default class HeaderCom extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      skin: getSkin()
-    };
-  }
+export default function HeaderCom() {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const user = useSelector(state => state.user.userName);
+  const uid = useSelector(state => state.user.uid);
+  const role = useSelector(state => state.user.role);
+  const login = useSelector(state => state.user.isLogin);
+  const studyTip = useSelector(state => state.user.studyTip);
+  const study = useSelector(state => state.user.study);
+  const imageUrl = useSelector(state => state.user.imageUrl);
+  const [skin, setSkinState] = useState(getSkin());
 
-  selectSkin = name => {
+  function selectSkin(name) {
     if (setSkin(name)) {
-      this.setState({ skin: getSkin() });
+      setSkinState(getSkin());
     }
-  };
+  }
 
-  static propTypes = {
-    router: PropTypes.object,
-    user: PropTypes.string,
-    msg: PropTypes.string,
-    uid: PropTypes.number,
-    role: PropTypes.string,
-    login: PropTypes.bool,
-    relieveLink: PropTypes.func,
-    logoutActions: PropTypes.func,
-    checkLoginState: PropTypes.func,
-    loginTypeAction: PropTypes.func,
-    changeMenuItem: PropTypes.func,
-    history: PropTypes.object,
-    location: PropTypes.object,
-    study: PropTypes.bool,
-    studyTip: PropTypes.number,
-    imageUrl: PropTypes.any
-  };
-  linkTo = e => {
-    if (e.key != '/doc') {
-      this.props.changeMenuItem(e.key);
-      if (!this.props.login) {
-        message.info('请先登录', 1);
-      }
-    }
-  };
-  relieveLink = () => {
-    this.props.changeMenuItem('');
-  };
-  logout = e => {
+  function relieveLink() {
+    dispatch(changeMenuItem(''));
+  }
+
+  function logout(e) {
     e.preventDefault();
-    this.props
-      .logoutActions()
+    dispatch(logoutActions())
       .then(res => {
         if (res.payload.data.errcode == 0) {
-          this.props.history.push('/');
-          this.props.changeMenuItem('/');
+          navigate('/');
+          dispatch(changeMenuItem('/'));
           message.success('退出成功! ');
         } else {
           message.error(res.payload.data.errmsg);
@@ -293,58 +248,36 @@ export default class HeaderCom extends Component {
       .catch(err => {
         message.error(err);
       });
-  };
-  handleLogin = e => {
-    e.preventDefault();
-    this.props.loginTypeAction('1');
-  };
-  handleReg = e => {
-    e.preventDefault();
-    this.props.loginTypeAction('2');
-  };
-  checkLoginState = () => {
-    this.props.checkLoginState
-      .then(res => {
-        if (res.payload.data.errcode !== 0) {
-          this.props.history.push('/');
-        }
-      })
-      .catch(err => {
-        console.log(err);
-      });
-  };
-
-  render() {
-    const { login, user, msg, uid, role, studyTip, study, imageUrl } = this.props;
-    return (
-      <Header className="header-box m-header">
-        <div className="content g-row">
-          <Link onClick={this.relieveLink} to="/group" className="logo">
-            <div className="href">
-              <span className="img">
-                <LogoSVG length="32px" />
-              </span>
-            </div>
-          </Link>
-          <Breadcrumb />
-          <div
-            className="user-toolbar"
-            style={{ position: 'relative', zIndex: this.props.studyTip > 0 ? 3 : 1 }}
-          >
-            {login ? (
-              <ToolUser
-                {...{ studyTip, study, user, msg, uid, role, imageUrl }}
-                skin={this.state.skin}
-                onSelectSkin={this.selectSkin}
-                relieveLink={this.relieveLink}
-                logout={this.logout}
-              />
-            ) : (
-              ''
-            )}
-          </div>
-        </div>
-      </Header>
-    );
   }
+
+  return (
+    <Header className="header-box m-header">
+      <div className="content g-row">
+        <Link onClick={relieveLink} to="/group" className="logo">
+          <div className="href">
+            <span className="img">
+              <LogoSVG length="32px" />
+            </span>
+          </div>
+        </Link>
+        <Breadcrumb />
+        <div
+          className="user-toolbar"
+          style={{ position: 'relative', zIndex: studyTip > 0 ? 3 : 1 }}
+        >
+          {login ? (
+            <ToolUser
+              {...{ studyTip, study, user, uid, role, imageUrl }}
+              skin={skin}
+              onSelectSkin={selectSkin}
+              relieveLink={relieveLink}
+              logout={logout}
+            />
+          ) : (
+            ''
+          )}
+        </div>
+      </div>
+    </Header>
+  );
 }
