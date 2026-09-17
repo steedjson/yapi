@@ -1,3 +1,4 @@
+// @ts-check
 const fs = require('fs-extra');
 const path = require('path');
 const crypto = require('crypto');
@@ -9,6 +10,8 @@ const interfaceCaseModel = require('../models/interfaceCase.js');
 const interfaceModel = require('../models/interface.js');
 const userModel = require('../models/user.js');
 const json5 = require('json5');
+// ajv-draft-04 的导出类型与 CJS 构造用法不匹配, 按 any 处理
+/** @type {any} */
 const Ajv = require('ajv-draft-04');
 const Mock = require('mockjs');
 const sandboxFn = require('./sandbox')
@@ -23,7 +26,7 @@ const http = require('http');
 
 jsf.extend('mock', function () {
   return {
-    mock: function (xx) {
+    mock: function (/** @type {any} */ xx) {
       return Mock.mock(xx);
     }
   };
@@ -44,6 +47,12 @@ const defaultOptions = {
 //   });
 // });
 
+/**
+ * 按 JSON Schema 生成 mock 数据
+ * @param {any} schema JSON Schema
+ * @param {object} [options] json-schema-faker 选项
+ * @returns {any} mock 结果, 生成失败时返回错误信息
+ */
 exports.schemaToJson = function (schema, options = {}) {
   Object.assign(options, defaultOptions);
 
@@ -51,13 +60,20 @@ exports.schemaToJson = function (schema, options = {}) {
   let result;
   try {
     result = jsf(schema);
-  } catch (err) {
+  } catch (/** @type {any} */ err) {
     result = err.message;
   }
   jsf.option(defaultOptions);
   return result;
 };
 
+/**
+ * 统一响应结构
+ * @param {any} data 响应数据
+ * @param {number} [num] 错误码, 缺省为 0
+ * @param {string} [errmsg] 错误信息, 缺省为 '成功！'
+ * @returns {{errcode: number, errmsg: string, data: any}} 响应体
+ */
 exports.resReturn = (data, num, errmsg) => {
   num = num || 0;
 
@@ -68,6 +84,12 @@ exports.resReturn = (data, num, errmsg) => {
   };
 };
 
+/**
+ * 写入日志文件
+ * @param {any} msg 日志内容, 对象会被序列化
+ * @param {string} [type] 日志级别: log | warn | error, 缺省为 log
+ * @returns {void}
+ */
 exports.log = (msg, type) => {
   if (!msg) {
     return;
@@ -113,6 +135,11 @@ exports.log = (msg, type) => {
   });
 };
 
+/**
+ * 判断给定路径是否存在且为文件
+ * @param {string} filePath 文件路径
+ * @returns {boolean} 存在且为文件时返回 true
+ */
 exports.fileExist = filePath => {
   try {
     return fs.statSync(filePath).isFile();
@@ -121,15 +148,26 @@ exports.fileExist = filePath => {
   }
 };
 
+/**
+ * 当前时间戳(秒)
+ * @returns {number} 秒级时间戳
+ */
 exports.time = () => {
-  return Date.parse(new Date()) / 1000;
+  return Date.parse(/** @type {any} */ (new Date())) / 1000;
 };
 
+/**
+ * 从对象中挑选指定字段
+ * @param {Record<string, any>} data 源数据
+ * @param {string[]} field 字段名列表
+ * @returns {Record<string, any>|null} 仅包含命名字段的对象, 入参非法时返回 null
+ */
 exports.fieldSelect = (data, field) => {
   if (!data || !field || !Array.isArray(field)) {
     return null;
   }
 
+  /** @type {Record<string, any>} */
   var arr = {};
 
   field.forEach(f => {
@@ -139,10 +177,21 @@ exports.fieldSelect = (data, field) => {
   return arr;
 };
 
+/**
+ * 生成 [min, max) 区间内的随机整数
+ * @param {number} min 下界
+ * @param {number} max 上界
+ * @returns {number} 随机整数
+ */
 exports.rand = (min, max) => {
   return Math.floor(Math.random() * (max - min) + min);
 };
 
+/**
+ * 解析 JSON 字符串, 失败时原样返回入参
+ * @param {string} json JSON 字符串
+ * @returns {any} 解析结果
+ */
 exports.json_parse = json => {
   try {
     return json5.parse(json);
@@ -151,11 +200,20 @@ exports.json_parse = json => {
   }
 };
 
+/**
+ * 生成随机字符串
+ * @returns {string} 随机字符串
+ */
 exports.randStr = () => {
   return Math.random()
     .toString(36)
     .substr(2);
 };
+/**
+ * 从 koa 上下文中提取客户端 ip
+ * @param {any} ctx koa 上下文
+ * @returns {string|null} 客户端 ip, 解析失败时返回 null
+ */
 exports.getIp = ctx => {
   let ip;
   try {
@@ -167,8 +225,14 @@ exports.getIp = ctx => {
 };
 
 // legacy 口令摘要: sha1(password + sha1(passsalt)), 与历史 sha1 npm 包输出保持一致
+/**
+ * 计算 legacy 口令摘要
+ * @param {string} password 明文口令
+ * @param {string} passsalt 用户盐
+ * @returns {string} sha1 摘要
+ */
 function legacyPasswordDigest(password, passsalt) {
-  const sha1Hex = str => crypto.createHash('sha1').update(String(str)).digest('hex');
+  const sha1Hex = (/** @type {string} */ str) => crypto.createHash('sha1').update(String(str)).digest('hex');
   return sha1Hex(password + sha1Hex(passsalt));
 }
 
@@ -222,12 +286,23 @@ exports.verifyPassword = (password, passsalt, storedHash) => {
   return { valid: legacyPasswordDigest(password, passsalt) === storedHash, legacy: true };
 };
 
+/**
+ * 计算口令过期时间
+ * @param {number} day 有效天数
+ * @returns {Date} 过期时间点
+ */
 exports.expireDate = day => {
   let date = new Date();
   date.setTime(date.getTime() + day * 86400000);
   return date;
 };
 
+/**
+ * 发送邮件
+ * @param {any} options 邮件选项, 含 to / subject / contents
+ * @param {(err: any) => void} [cb] 发送回调, 缺省时记录日志
+ * @returns {boolean|undefined} 未配置邮件服务时返回 false
+ */
 exports.sendMail = (options, cb) => {
   if (!yapi.mail) return false;
   options.subject = options.subject ? options.subject + '-YApi 平台' : 'YApi 平台';
@@ -252,12 +327,17 @@ exports.sendMail = (options, cb) => {
       },
       cb
     );
-  } catch (e) {
+  } catch (/** @type {any} */ e) {
     yapi.commons.log(e.message, 'error');
     console.error(e.message);
   }
 };
 
+/**
+ * 校验搜索关键字是否合法
+ * @param {string} keyword 搜索关键字
+ * @returns {boolean} 合法时返回 true
+ */
 exports.validateSearchKeyword = keyword => {
   if (/^\*|\?|\+|\$|\^|\\|\.$/.test(keyword)) {
     return false;
@@ -266,8 +346,15 @@ exports.validateSearchKeyword = keyword => {
   return true;
 };
 
+/**
+ * 按规则列表过滤接口返回数据
+ * @param {any[]} list 数据列表
+ * @param {any[]} rules 字段规则列表, 项为字段名或 {alias, key}
+ * @returns {any[]} 过滤后的数据列表
+ */
 exports.filterRes = (list, rules) => {
   return list.map(item => {
+    /** @type {Record<string, any>} */
     let filteredRes = {};
 
     rules.forEach(rule => {
@@ -282,7 +369,17 @@ exports.filterRes = (list, rules) => {
   });
 };
 
+/**
+ * 从 path 中提取动态路由参数并追加到参数列表
+ * @param {string} pathname 接口 path
+ * @param {any[]} params 参数列表
+ * @returns {void}
+ */
 exports.handleVarPath = (pathname, params) => {
+  /**
+   * 追加同名参数
+   * @param {string} name 参数名
+   */
   function insertParams(name) {
     if (!params.find(item => item.name === name)) {
       params.push({
@@ -304,14 +401,20 @@ exports.handleVarPath = (pathname, params) => {
       }
     }
   }
-  pathname.replace(/\{(.+?)\}/g, function (str, match) {
-    insertParams(match);
-  });
+  pathname.replace(
+    /\{(.+?)\}/g,
+    /** @type {(substring: string, ...args: any[]) => any} */
+    (function (/** @type {string} */ str, /** @type {string} */ match) {
+      insertParams(match);
+    })
+  );
 };
 
 /**
  * 验证一个 path 是否合法
  * path第一位必需为 /, path 只允许由 字母数字-/_:.{}= 组成
+ * @param {string} path 待校验 path
+ * @returns {boolean} 合法时返回 true
  */
 exports.verifyPath = path => {
   // if (/^\/[a-zA-Z0-9\-\/_:!\.\{\}\=]*$/.test(path)) {
@@ -326,12 +429,15 @@ exports.verifyPath = path => {
  * 沙盒执行 js 代码
  * @sandbox Object context
  * @script String script
- * @return sandbox
  *
  * @example let a = sandbox({a: 1}, 'a=2')
  * a = {a: 2}
+ * @param {Record<string, any>} sandbox 沙盒上下文对象
+ * @param {any} script 待执行脚本, 编译后为 vm.Script
+ * @returns {Record<string, any>} 执行后的沙盒上下文
  */
 exports.sandbox = (sandbox, script) => {
+  /** @type {any} */
   const vm = require('vm');
   sandbox = sandbox || {};
   script = new vm.Script(script);
@@ -342,6 +448,11 @@ exports.sandbox = (sandbox, script) => {
   return sandbox;
 };
 
+/**
+ * 去除字符串两端空白
+ * @param {string} str 输入
+ * @returns {string} 结果
+ */
 function trim(str) {
   if (!str) {
     return str;
@@ -352,6 +463,11 @@ function trim(str) {
   return str.replace(/(^\s*)|(\s*$)/g, '');
 }
 
+/**
+ * 去除字符串左侧空白
+ * @param {string} str 输入
+ * @returns {string} 结果
+ */
 function ltrim(str) {
   if (!str) {
     return str;
@@ -362,6 +478,11 @@ function ltrim(str) {
   return str.replace(/(^\s*)/g, '');
 }
 
+/**
+ * 去除字符串右侧空白
+ * @param {string} str 输入
+ * @returns {string} 结果
+ */
 function rtrim(str) {
   if (!str) {
     return str;
@@ -380,7 +501,10 @@ exports.rtrim = rtrim;
  * 处理请求参数类型，String 字符串去除两边空格，Number 使用parseInt 转换为数字
  * @params Object {a: ' ab ', b: ' 123 '}
  * @keys Object {a: 'string', b: 'number'}
- * @return Object {a: 'ab', b: 123}
+ * Result Object: {a: 'ab', b: 123}
+ * @param {Record<string, any>} params 请求参数
+ * @param {Record<string, any>} keys 字段类型映射
+ * @returns {Record<string, any>|boolean} 转换后的参数, 入参非法时返回 false
  */
 exports.handleParams = (params, keys) => {
   if (!params || typeof params !== 'object' || !keys || typeof keys !== 'object') {
@@ -410,6 +534,12 @@ exports.handleParams = (params, keys) => {
 const validatorCache = new Map();
 const VALIDATOR_CACHE_MAX = 500;
 
+/**
+ * 编译缓存辅助: 命中缓存直接返回, 否则构建并写入缓存
+ * @param {string} cacheKey 缓存键
+ * @param {() => {ajv: any, validate: any}} build 编译函数
+ * @returns {{validate: any, errorsText: any}} 编译产物
+ */
 function cacheValidator(cacheKey, build) {
   let compiled = validatorCache.get(cacheKey);
   if (compiled) {
@@ -425,6 +555,11 @@ function cacheValidator(cacheKey, build) {
 }
 
 // easy-json-schema 对无必填项的对象也会生成 required: [], draft-04 meta 不允许, 递归剥离
+/**
+ * 递归剥离空的 required 数组
+ * @param {any} node schema 节点
+ * @returns {any} 处理后的节点
+ */
 function stripEmptyRequired(node) {
   if (!node || typeof node !== 'object') {
     return node;
@@ -441,6 +576,12 @@ function stripEmptyRequired(node) {
   return node;
 }
 
+/**
+ * 请求参数 JSON Schema 校验
+ * @param {Record<string, any>} schema2 JSON Schema, 可带 closeRemoveAdditional 开关
+ * @param {any} params 待校验参数
+ * @returns {{valid: boolean, message: string}} 校验结果与错误信息
+ */
 exports.validateParams = (schema2, params) => {
   const flag = schema2 && schema2.closeRemoveAdditional === true;
   // 不再原地修改入参 schema: 复制后剥离 closeRemoveAdditional, 使 schemaMap 可安全复用
@@ -468,6 +609,7 @@ exports.validateParams = (schema2, params) => {
 
   let message = '请求参数 ';
   if (!valid) {
+    /** @type {any} */
     var localize = require('ajv-i18n');
     localize.zh(validate.errors);
     message += errorsText(validate.errors, { separator: '\n' });
@@ -479,6 +621,11 @@ exports.validateParams = (schema2, params) => {
   };
 };
 
+/**
+ * 保存操作日志
+ * @param {any} logData 日志数据, 含 content / type / uid / username / typeid / data
+ * @returns {void}
+ */
 exports.saveLog = logData => {
   try {
     let logInst = yapi.getInst(logModel);
@@ -499,16 +646,17 @@ exports.saveLog = logData => {
 
 /**
  *
- * @param {*} router router
- * @param {*} baseurl base_url_path
- * @param {*} routerController controller
- * @param {*} path  routerPath
- * @param {*} method request_method , post get put delete ...
- * @param {*} action controller action_name
- * @param {*} ws enable ws
+ * @param {any} router router
+ * @param {string} baseurl base_url_path
+ * @param {any} routerController controller
+ * @param {string} action controller action_name
+ * @param {string} path  routerPath
+ * @param {string} method request_method , post get put delete ...
+ * @param {boolean} ws enable ws
+ * @returns {void}
  */
 exports.createAction = (router, baseurl, routerController, action, path, method, ws) => {
-  router[method](baseurl + path, async ctx => {
+  router[method](baseurl + path, async (/** @type {any} */ ctx) => {
     let inst = new routerController(ctx);
     try {
       await inst.init(ctx);
@@ -540,10 +688,12 @@ exports.createAction = (router, baseurl, routerController, action, path, method,
 
 /**
  *
- * @param {*} params 接口定义的参数
- * @param {*} val  接口case 定义的参数值
+ * @param {any} params 接口定义的参数
+ * @param {any} val  接口case 定义的参数值
+ * @returns {any} 参数值合并后的参数列表
  */
 function handleParamsValue(params, val) {
+  /** @type {Record<string, any>} */
   let value = {};
   try {
     params = params.toObject();
@@ -551,10 +701,10 @@ function handleParamsValue(params, val) {
   if (params.length === 0 || val.length === 0) {
     return params;
   }
-  val.forEach(item => {
+  val.forEach((/** @type {any} */ item) => {
     value[item.name] = item;
   });
-  params.forEach((item, index) => {
+  params.forEach((/** @type {any} */ item, /** @type {number} */ index) => {
     if (!value[item.name] || typeof value[item.name] !== 'object') return null;
     params[index].value = value[item.name].value;
     if (value[item.name].enable !== undefined) {
@@ -566,6 +716,11 @@ function handleParamsValue(params, val) {
 
 exports.handleParamsValue = handleParamsValue;
 
+/**
+ * 获取接口集合下的用例列表, 并回填接口 path/method 等信息
+ * @param {any} id 接口集合 id
+ * @returns {Promise<any>} 用例列表响应体
+ */
 exports.getCaseList = async function getCaseList(id) {
   const caseInst = yapi.getInst(interfaceCaseModel);
   const colInst = yapi.getInst(interfaceColModel);
@@ -593,7 +748,7 @@ exports.getCaseList = async function getCaseList(id) {
     result.req_params = handleParamsValue(data.req_params, result.req_params);
     resultList[index] = result;
   }
-  resultList = resultList.sort((a, b) => {
+  resultList = resultList.sort((/** @type {any} */ a, /** @type {any} */ b) => {
     return a.index - b.index;
   });
   let ctxBody = yapi.commons.resReturn(resultList);
@@ -601,6 +756,11 @@ exports.getCaseList = async function getCaseList(id) {
   return ctxBody;
 };
 
+/**
+ * 将变量转为日志用字符串
+ * @param {any} variable 任意值
+ * @returns {string} 字符串形式
+ */
 function convertString(variable) {
   if (variable instanceof Error) {
     return variable.name + ': ' + variable.message;
@@ -616,9 +776,17 @@ function convertString(variable) {
 }
 
 
+/**
+ * 运行断言/测试脚本
+ * @param {any} params 用例执行参数, 含 response / records / params / script
+ * @param {any} colId 测试集 id
+ * @param {any} interfaceId 接口 id
+ * @returns {Promise<any>} 执行结果响应体
+ */
 exports.runCaseScript = async function runCaseScript(params, colId, interfaceId) {
   const colInst = yapi.getInst(interfaceColModel);
   let colData = await colInst.get(colId);
+  /** @type {any[]} */
   const logs = [];
   const context = {
     assert: require('assert'),
@@ -627,11 +795,12 @@ exports.runCaseScript = async function runCaseScript(params, colId, interfaceId)
     header: params.response.header,
     records: params.records,
     params: params.params,
-    log: msg => {
+    log: (/** @type {any} */ msg) => {
       logs.push('log: ' + convertString(msg));
     }
   };
 
+  /** @type {any} */
   let result = {};
   try {
 
@@ -681,13 +850,19 @@ ${JSON.stringify(schema, null, 2)}`)
     // 沙箱子进程内 log() 收集的输出并入执行日志
     result.logs = logs.concat((result && result.logs) || []);
     return yapi.commons.resReturn(result);
-  } catch (err) {
+  } catch (/** @type {any} */ err) {
     logs.push(convertString(err));
     result.logs = logs;
     return yapi.commons.resReturn(result, 400, err.name + ': ' + err.message);
   }
 };
 
+/**
+ * 查询用户信息并组装为标准角色数据
+ * @param {any} uid 用户 id
+ * @param {string} [role] 角色, 缺省为 dev
+ * @returns {Promise<any>} 用户角色数据, 用户不存在时返回 null
+ */
 exports.getUserdata = async function getUserdata(uid, role) {
   role = role || 'dev';
   let userInst = yapi.getInst(userModel);
@@ -704,7 +879,14 @@ exports.getUserdata = async function getUserdata(uid, role) {
 };
 
 // 处理mockJs脚本
+/**
+ * 在沙盒中执行 mock 脚本, 并把沙盒结果回写到 context
+ * @param {string} script mock 脚本
+ * @param {any} context mock 上下文, 含 ctx / mockJson / resHeader / httpCode / delay
+ * @returns {Promise<void>}
+ */
 exports.handleMockScript = async function (script, context) {
+  /** @type {Record<string, any>} */
   let sandbox = {
     header: context.ctx.header,
     query: context.ctx.query,
@@ -719,7 +901,7 @@ exports.handleMockScript = async function (script, context) {
   sandbox.cookie = {};
 
   context.ctx.header.cookie &&
-    context.ctx.header.cookie.split(';').forEach(function (Cookie) {
+    context.ctx.header.cookie.split(';').forEach(function (/** @type {string} */ Cookie) {
       var parts = Cookie.split('=');
       sandbox.cookie[parts[0].trim()] = (parts[1] || '').trim();
     });
@@ -734,6 +916,11 @@ exports.handleMockScript = async function (script, context) {
 
 
 
+/**
+ * 发起 GET 请求获取远程内容
+ * @param {any} ops 请求选项, 含 hostname / port / path
+ * @returns {Promise<any>} 响应内容
+ */
 exports.createWebAPIRequest = function (ops) {
   return new Promise(function (resolve, reject) {
     let req = '';

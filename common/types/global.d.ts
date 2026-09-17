@@ -239,3 +239,13 @@ declare module '*/AceEditor' {
   const AceEditor: any;
   export default AceEditor;
 }
+
+declare module 'easy-json-schema' {
+  const ejs: (schema: any) => any;
+  export = ejs;
+}
+
+declare module 'json-schema-faker' {
+  const jsf: any;
+  export = jsf;
+}

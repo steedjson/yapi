@@ -1,18 +1,24 @@
+// @ts-check
 const yapi = require('../yapi.js');
 const projectModel = require('../models/project.js');
 const interfaceModel = require('../models/interface.js');
 const mockExtra = require('../../common/mock-extra.js');
 const { schemaValidator } = require('../../common/utils.js');
 const Mock = require('mockjs');
+// method 为运行时字符串, HTTP_METHOD 索引按 any 处理以匹配动态取值方式
+/** @type {any} */
 const variable = require('../../client/constants/variable.js')
 /**
  *
- * @param {*} apiPath /user/tom
- * @param {*} apiRule /user/:username
+ * @param {string} apiPath /user/tom
+ * @param {string} apiRule /user/:username
+ * @returns {Record<string, any>|false} 匹配成功时返回路径参数集合(含 __weight 权重), 失败返回 false
  */
 function matchApi(apiPath, apiRule) {
+  /** @type {any[]} */
   let apiRules = apiRule.split('/');
   let apiPaths = apiPath.split('/');
+  /** @type {Record<string, any>} */
   let pathParams = {
     __weight: 0
   };
@@ -39,8 +45,12 @@ function matchApi(apiPath, apiRule) {
       apiRules[i].indexOf('{') > -1 &&
       apiRules[i].indexOf('}') > -1
     ) {
+      /** @type {any[]} */
       let params = [];
-      apiRules[i] = apiRules[i].replace(/\{(.+?)\}/g, function(src, match) {
+      apiRules[i] = apiRules[i].replace(/\{(.+?)\}/g, function(
+        /** @type {string} */ src,
+        /** @type {string} */ match
+      ) {
         params.push(match);
         return '([^\\/\\s]+)';
       });
@@ -49,6 +59,7 @@ function matchApi(apiPath, apiRule) {
         return false;
       }
 
+      /** @type {any} */
       let matchs = apiPaths[i].match(apiRules[i]);
 
       params.forEach((item, index) => {
@@ -65,6 +76,11 @@ function matchApi(apiPath, apiRule) {
   return pathParams;
 }
 
+/**
+ * 解析单个 cookie 字符串
+ * @param {string} str cookie 字符串
+ * @returns {{name: string, value: string}|string|null} 解析结果, 非法入参时原样返回
+ */
 function parseCookie(str) {
   if (!str || typeof str !== 'string') {
     return str;
@@ -76,6 +92,10 @@ function parseCookie(str) {
   return null;
 }
 
+/**
+ * 回应跨域预检请求
+ * @param {any} ctx koa 上下文
+ */
 function handleCorsRequest(ctx) {
   let header = ctx.request.header;
   ctx.set('Access-Control-Allow-Origin', header.origin);
@@ -86,6 +106,12 @@ function handleCorsRequest(ctx) {
   ctx.body = 'ok';
 }
 // 必填字段是否填写好
+/**
+ * mock 请求参数校验: 检查 query/form 必填项与 json-schema 请求体
+ * @param {any} interfaceData 接口定义数据
+ * @param {any} ctx koa 上下文
+ * @returns {{valid: boolean, message?: string}} 校验结果
+ */
 function mockValidator(interfaceData, ctx) {
   let i,
     j,
@@ -137,6 +163,12 @@ function mockValidator(interfaceData, ctx) {
   return { valid: true };
 }
 
+/**
+ * mock 请求处理中间件
+ * @param {any} ctx koa 上下文
+ * @param {() => Promise<any>} next 后续中间件
+ * @returns {Promise<any>}
+ */
 module.exports = async (ctx, next) => {
   // no used variable 'hostname' & 'config'
   // let hostname = ctx.hostname;
@@ -167,7 +199,7 @@ module.exports = async (ctx, next) => {
     project;
   try {
     project = await projectInst.get(projectId);
-  } catch (e) {
+  } catch (/** @type {any} */ e) {
     return (ctx.body = yapi.commons.resReturn(null, 403, e.message));
   }
 
@@ -175,7 +207,9 @@ module.exports = async (ctx, next) => {
     return (ctx.body = yapi.commons.resReturn(null, 400, '不存在的项目'));
   }
 
-  let interfaceData, newpath;
+  let interfaceData;
+  /** @type {string} */
+  let newpath;
   let interfaceInst = yapi.getInst(interfaceModel);
 
   try {
@@ -220,8 +254,10 @@ module.exports = async (ctx, next) => {
 
     //处理动态路由
     if (!interfaceData || interfaceData.length === 0) {
+      /** @type {any[]} */
       let newData = await interfaceInst.getVar(project._id, ctx.method);
 
+      /** @type {any} */
       let findInterface;
       let weight = 0;
       newData.forEach(item => {
@@ -295,7 +331,7 @@ module.exports = async (ctx, next) => {
 
         try {
           res = Mock.mock(res);
-        } catch (e) {
+        } catch (/** @type {any} */ e) {
           console.log('err', e.message);
           yapi.commons.log(e, 'error');
         }
@@ -306,7 +342,7 @@ module.exports = async (ctx, next) => {
         interfaceData: interfaceData,
         ctx: ctx,
         mockJson: res,
-        resHeader: {},
+        resHeader: /** @type {Record<string, any>} */ ({}),
         httpCode: 200,
         delay: 0
       };
@@ -338,7 +374,7 @@ module.exports = async (ctx, next) => {
                 });
               }
             } else if (context.resHeader[i] && Array.isArray(context.resHeader[i])) {
-              context.resHeader[i].forEach(item => {
+              context.resHeader[i].forEach((/** @type {any} */ item) => {
                 cookie = parseCookie(item);
                 if (cookie && typeof cookie === 'object') {
                   ctx.cookies.set(cookie.name, cookie.value, {
@@ -356,8 +392,8 @@ module.exports = async (ctx, next) => {
 
       ctx.status = context.httpCode;
       ctx.body = context.mockJson;
-      return;  
-    } catch (e) {
+      return;
+    } catch (/** @type {any} */ e) {
       yapi.commons.log(e, 'error');
       return (ctx.body = {
         errcode: 400,
@@ -365,7 +401,7 @@ module.exports = async (ctx, next) => {
         data: null
       });
     }
-  } catch (e) {
+  } catch (/** @type {any} */ e) {
     yapi.commons.log(e, 'error');
     return (ctx.body = yapi.commons.resReturn(null, 409, e.message));
   }

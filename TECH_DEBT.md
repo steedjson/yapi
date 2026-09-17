@@ -54,6 +54,7 @@
 | TypeScript 覆盖扩大（第 6 批） | 数据层业务模型（`user`, `interfaceCase`, `follow`, `group`）未受类型检查 | 加 `// @ts-check` + 纳入 include + 规范补全带参方法 JSDoc | 64 处类型错误清零；清理 `follow.js` 历史错位 JSDoc；全仓数据模型受检率达 10/13（77%）；全部改动经 AST 核验 100% 零运行时逻辑变更 |
 | TypeScript 覆盖扩大（第 7 批） | 数据层剩余 3 个大型模型（`log`, `project`, `interface`）未受类型检查 | 加 `// @ts-check` + 纳入 include + 清理 `log.js` 错位 JSDoc + 补全全部方法注解 | 清零 130 处类型错误；**达成 server/models/ 全仓 13 个数据模型 100% 完整受检里程碑**；全部改动经 AST 归一化比对证实 100% 零运行时逻辑变更 |
 | 测试基建防御与 Flake 根治 | jsdom 测试未屏蔽外部网络请求隐患；`httpApp.test.js` 并发偶发 Mongoose 断连异常 | 在 `jsdom-setup.js` 注入 `XMLHttpRequest` 网络拦截器并持续守护；显式等待 `yapi.connect` 与平滑关闭 | 彻底拦截任何意外的外部真实网络请求；根治 MongoDB 连接池提前关闭 flake；补齐 `timeago` 未来时间戳边缘用例；全量测试增至 **482** 项 |
+| TypeScript 覆盖扩大（第 8 批） | `server/utils/commons.js` 与 `server/middleware/mockServer.js` 未受类型检查 | 加 `// @ts-check` + 纳入 include + global.d.ts 补齐 `easy-json-schema`/`json-schema-faker` 声明 | 清零约 **118 处**类型错误；服务端核心通用工具库与动态路由 Mock 中间件全面受检，AST 归一化比对证实零业务逻辑变更 |
 
 ## 二、评估后暂缓（含推进路径）
 
@@ -77,7 +78,7 @@
 
 - 现状：`tsconfig.json` 按文件白名单 + `checkJs: false`（**仅有 `// @ts-check` 指令的文件被检查**）。白名单 + 5 个新纳入文件已全量绿，`npm run typecheck` 0 错误。
 - 已完成的现代化：Node API 类型改由显式 `@types/node@^24`（与 .nvmrc 一致）提供，删除了 `global.d.ts` 中手写且与真实类型冲突的 Buffer/process/require/crypto 垫片。
-- 推进路径：每次触碰旧文件顺手加 `// @ts-check` 并清零其错误。**实测剩余工作量基线**（开启 `checkJs` 后的错误数）：`client/containers` 1183、`client/components` 588、`server/utils/commons.js` 87、`common/postmanLib.js` 85、`server/middleware/mockServer.js` 31 等（`server/controllers`、`client/reducer`、`common/` 全部 12 个模块及 `server/models/` 全仓 13 个数据模型已全部达成 0 错误受检）。
+- 推进路径：每次触碰旧文件顺手加 `// @ts-check` 并清零其错误。**实测剩余工作量基线**（开启 `checkJs` 后的错误数）：`client/containers` 1183、`client/components` 588、`common/postmanLib.js` 85 等（`server/controllers`、`server/models/` 全仓 13 个数据模型、`common/` 全部 12 个模块及服务端核心工具 `commons.js` 与 `mockServer.js` 已全部达成 0 错误受检）。
 - 遗留技术细节：① `json5@2` 自带类型只导出 `{parse, stringify}` 无 default，而项目内 CJS/ESM 两种用法并存，故仍保留等价声明——若统一改命名导入即可删除；② `mockjs` 与 `json-schema-editor-visual` 无自带类型，仍需声明；③ `common/lib.js` 的 `Compare*` 三个函数 `@param {*} flag` 尚可收紧为 `boolean`（本次只收紧了 `@returns`）。
 
 ### 4. 状态管理 Redux+redux-promise → 轻量方案（暂缓）

@@ -89,6 +89,8 @@
     "server/models/group.js",
     "server/models/log.js",
     "server/models/project.js",
-    "server/models/interface.js"
+    "server/models/interface.js",
+    "server/utils/commons.js",
+    "server/middleware/mockServer.js"
   ]
 }
