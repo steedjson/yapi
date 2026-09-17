@@ -33,9 +33,12 @@
 
 **卸载**：brace、reactabular-table、reactabular-dnd、react-dnd、react-dnd-html5-backend、table-resolver、copy-to-clipboard、ghooks、validate-commit-msg、koa-router、sha1。
 
-### 第三阶段：架构升级切片（按"逐步推进"策略，本轮为首个切片）
+### 第三阶段：架构与性能升级（按"逐步推进"策略）
 
-- Class→Hooks 迁移切片：`GuideBtns.js`（connect→useDispatch）、`Breadcrumb.js`（connect+withRouter→useSelector，移除不必要的 withRouter 包装）。已浏览器实测面包屑随路由更新、零运行时错误。其余 61 个类组件按此模板随业务迭代逐个迁移。
+| 项 | 旧 | 新 | 说明 |
+| --- | --- | --- | --- |
+| 前端首屏打包 (Code Splitting) | 8.29MB 巨石单包，所有页面静态顶层 import | 路由级动态按需加载（`React.lazy` + `Suspense`） | 主包由 8.29MB 降至 **4.68MB**（瘦身 **43.6%**）；`project`、`group`、`user` 等独立按需分包；修复 Webpack `publicPath: '/prd/'` 支持深度嵌套路由异步加载，剥离 Assets 前缀避免双斜杠 |
+| Class→Hooks 迁移打样 | Class Component + `@connect` + `@withRouter` | 函数组件 + `useDispatch` / `useSelector` | `GuideBtns.js`、`Breadcrumb.js` 迁移完成，浏览器实测随路由更新零运行时报错；为剩余 61 个组件确立清晰范式 |
 
 ## 二、评估后暂缓（含推进路径）
 

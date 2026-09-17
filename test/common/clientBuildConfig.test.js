@@ -39,6 +39,20 @@ test('已有 index.js 键名时不重复改写资源清单', t => {
   t.deepEqual(normalizeAssets(assets), assets);
 });
 
+test('资源清单能够自动剥离 /prd/ 前缀避免 index.html 拼接双斜杠', t => {
+  const assetsWithPrd = {
+    index: { js: '/prd/index@abc.js', css: '/prd/index@abc.css' },
+    project: { js: '/prd/project@123.js', css: '/prd/project@123.css' },
+    manifest: { js: 'manifest@xyz.js' }
+  };
+
+  t.deepEqual(normalizeAssets(assetsWithPrd), {
+    'index.js': { js: 'index@abc.js', css: 'index@abc.css' },
+    project: { js: 'project@123.js', css: 'project@123.css' },
+    manifest: { js: 'manifest@xyz.js' }
+  });
+});
+
 // 页面契约比构建配置更稳定：独立构建必须继续满足这些历史键。
 test('生产页读取的资源清单键保持不变', t => {
   const html = fs.readFileSync(path.join(__dirname, '../../static/index.html'), 'utf8');

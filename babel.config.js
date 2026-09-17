@@ -16,7 +16,14 @@ module.exports = function (api) {
             // rewire 的 __set__ 依赖 var 形态的模块内变量，测试管线强制 const 降级
             include: ['@babel/plugin-transform-block-scoping']
           }
-        : { loose: true, targets: { ie: 11 }, modules: 'commonjs' }
+        : {
+            loose: true,
+            targets: { ie: 11 },
+            modules: 'commonjs',
+            // 排除 dynamic import 转译：保留原生 import() 语法供 webpack 5 识别为
+            // 分包点（路由级代码分割）；test 环境保持 commonjs（ava 依赖 require）
+            exclude: ['proposal-dynamic-import']
+          }
     ],
     '@babel/preset-react'
   ];

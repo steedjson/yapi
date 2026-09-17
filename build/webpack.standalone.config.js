@@ -34,8 +34,9 @@ const config = {
   // entry 的模块对下游 entry 去重共享（实测 react-dom/lodash 仅存在于 lib chunk，
   // dayjs 仅存在于 lib3 chunk），index 自身引入的 vendor（antd 等）留在 index chunk，
   // 由 runtime 依赖图保证加载顺序，index.html 固定的 5 个 script 标签顺序仍然成立。
-  // splitChunks 关闭：无动态 import()，各 entry 模块经 dependOn 去重后不存在跨 entry
-  // 重复，样式仍完整留在 index 与 theme-* 各自 chunk（index.css / theme-*@prd.css）。
+  // splitChunks 关闭：各 entry 模块经 dependOn 去重后不存在跨 entry 重复；
+  // 路由级动态 import()（Application.js）产出的异步 chunk 不受此开关影响，
+  // 样式仍完整留在 index 与 theme-* 各自 chunk（index.css / theme-*@prd.css）。
   entry: {
     index: {
       dependOn: 'lib3',
@@ -67,7 +68,9 @@ const config = {
   devtool: isProduction ? false : 'cheap-module-source-map',
   output: {
     path: path.join(root, 'static/prd'),
-    publicPath: isDevelopment ? '/prd/' : '',
+    // 统一开发与生产均为 /prd/：异步 chunk 的运行时下载 URL 由 publicPath 决定，
+    // 生产若为空串，深度嵌套路由（如 /project/:id/*）下会按相对路径请求导致 404
+    publicPath: '/prd/',
     filename: isDevelopment ? '[name]@dev.js' : '[name]@[chunkhash].js',
     // webpack 5 下 runtimeChunk 与 splitChunks 产出的非 entry chunk 均可按 [name] 命名；
     // entry 与拆分 chunk 使用同一模板，产物文件名与 webpack 3/4 时代保持一致。

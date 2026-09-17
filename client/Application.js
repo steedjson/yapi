@@ -3,9 +3,9 @@ import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 // v6：unstable_HistoryRouter 接管自定义 history 实例（供 BlockPrompt 拦截导航用）
 import { Route, Routes, unstable_HistoryRouter as HistoryRouter } from 'react-router-dom';
-import { Home, Group, Project, Follows, AddProject, Login } from './containers/index';
+import Home from './containers/Home/Home.js';
+import Login from './containers/Login/LoginContainer.js';
 import { Alert } from 'antd';
-import User from './containers/User/User.js';
 import Header from './components/Header/Header';
 import Footer from './components/Footer/Footer';
 import Loading from './components/Loading/Loading';
@@ -18,6 +18,41 @@ import history from './history';
 const plugin = require('client/plugin.js');
 
 const LOADING_STATUS = 0;
+
+// 路由级代码分割：React.lazy + Suspense 的轻量封装，加载期展示全局 Loading。
+// loader 内必须带 webpackChunkName 注释以命名异步 chunk（project/group/user 等），
+// 使 static/prd/ 下产出独立分包，缩小首屏主包体积。
+const createAsyncComponent = (loader, chunkName) => {
+  const LazyComponent = React.lazy(loader);
+  const AsyncComponent = props => (
+    <React.Suspense fallback={<Loading visible />}>
+      <LazyComponent {...props} />
+    </React.Suspense>
+  );
+  AsyncComponent.displayName = `Async(${chunkName})`;
+  return AsyncComponent;
+};
+
+const Group = createAsyncComponent(
+  () => import(/* webpackChunkName: "group" */ './containers/Group/Group.js'),
+  'Group'
+);
+const Project = createAsyncComponent(
+  () => import(/* webpackChunkName: "project" */ './containers/Project/Project.js'),
+  'Project'
+);
+const User = createAsyncComponent(
+  () => import(/* webpackChunkName: "user" */ './containers/User/User.js'),
+  'User'
+);
+const Follows = createAsyncComponent(
+  () => import(/* webpackChunkName: "follows" */ './containers/Follows/Follows.js'),
+  'Follows'
+);
+const AddProject = createAsyncComponent(
+  () => import(/* webpackChunkName: "add-project" */ './containers/AddProject/AddProject.js'),
+  'AddProject'
+);
 
 const alertContent = () => {
   const ua = window.navigator.userAgent;
