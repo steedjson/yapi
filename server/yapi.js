@@ -1,4 +1,4 @@
-// @ts-nocheck
+// @ts-check
 const path = require('path');
 const fs = require('fs-extra');
 const nodemailer = require('nodemailer');
@@ -22,6 +22,7 @@ if (WEBCONFIG.mail && WEBCONFIG.mail.enable) {
 /**
  * 获取一个model实例，如果不存在则创建一个新的返回
  * @param {*} m class
+ * @param {...*} args 传递给 model 构造函数的参数
  * @example
  * yapi.getInst(groupModel, arg1, arg2)
  */
@@ -32,6 +33,9 @@ function getInst(m, ...args) {
   return insts.get(m);
 }
 
+/**
+ * @param {*} m class
+ */
 function delInst(m) {
   try {
     insts.delete(m);
@@ -41,6 +45,7 @@ function delInst(m) {
 }
 
 
+/** @type {Record<string, any>} */
 let r = {
   fs: fs,
   path: path,

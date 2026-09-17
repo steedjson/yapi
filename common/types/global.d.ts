@@ -1,26 +1,12 @@
 /**
- * Node.js 基础运行时微量类型声明（避免引入整个 @types/node 破坏轻量性）
+ * 项目相关的全局与模块类型声明。
+ * Node.js 基础 API（Buffer / process / require / __dirname / crypto 模块等）由显式依赖的
+ * @types/node 提供；此处不再手写垫片——旧垫片与 @types/node@24 的 Buffer 泛型定义冲突
+ * （表现为 Buffer<ArrayBufferLike> 与 Uint8Array<ArrayBufferLike> 不可互赋）。
  */
-declare var Buffer: {
-  from(str: string, encoding?: string): Buffer;
-  alloc(size: number): Buffer;
-  concat(list: Uint8Array[], totalLength?: number): Buffer;
-};
-
-interface Buffer extends Uint8Array {
-  subarray(begin?: number, end?: number): Buffer;
-}
-
-declare function require(id: string): any;
-
 declare module '*.scss';
 
 declare module '*.css';
-
-declare var exports: any;
-declare var module: { exports: any };
-declare var __dirname: string;
-declare var process: any;
 
 declare module '*/yapi' {
   const yapi: any;
@@ -49,24 +35,6 @@ declare module 'underscore' {
   export default _;
 }
 
-declare module 'crypto' {
-  export interface Hash {
-    update(data: any): Hash;
-    digest(): Buffer;
-  }
-  export interface Cipher {
-    update(data: string, inputEncoding: string, outputEncoding: string): string;
-    final(outputEncoding: string): string;
-  }
-  export interface Decipher {
-    update(data: string, inputEncoding: string, outputEncoding: string): string;
-    final(outputEncoding: string): string;
-  }
-  export function createHash(algorithm: string): Hash;
-  export function createCipheriv(algorithm: string, key: any, iv: any): Cipher;
-  export function createDecipheriv(algorithm: string, key: any, iv: any): Decipher;
-}
-
 declare module 'url' {
   const url: {
     parse(urlStr: string, parseQueryString?: boolean): any;
@@ -81,12 +49,20 @@ declare module 'axios' {
 }
 
 declare module 'mockjs' {
+  export function mock(template: any): any;
+  // mockjs 同时导出 Random 命名空间（沙箱子进程注入 Random 时使用）
+  export const Random: any;
   const Mock: any;
   export default Mock;
 }
 
+// json5@2 自带类型仅导出 {parse, stringify}（无 default），而项目内既有 CJS
+// `require('json5').parse` 也有 ESM `import json5 from 'json5'`，故此处按真实形态
+// 同时声明命名导出与 default，避免任一用法报错。
 declare module 'json5' {
-  const JSON5: { parse(text: string): any };
+  export function parse(text: string): any;
+  export function stringify(value: any, replacer?: any, space?: any): string;
+  const JSON5: { parse: typeof parse; stringify: typeof stringify };
   export default JSON5;
 }
 
@@ -176,6 +152,12 @@ declare module 'antd' {
 declare module 'common/utils.js' {
   export function flattenCatList(list: any[]): any[];
   export function formatCatTreeData(list: any[]): any[];
+}
+
+declare module 'common/mock-extra.js' {
+  // 该文件是 CJS 形态（module.exports = mock），须用 export = 声明方可直接调用
+  function MockExtra(data: any, context?: any): any;
+  export = MockExtra;
 }
 
 /**

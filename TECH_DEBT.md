@@ -43,6 +43,7 @@
 | Class→Hooks 迁移打样 | Class Component + `@connect` + `@withRouter` | 函数组件 + `useDispatch` / `useSelector` | `GuideBtns.js`、`Breadcrumb.js` 迁移完成，浏览器实测随路由更新零运行时报错；为剩余 61 个组件确立清晰范式 |
 | ESLint 门禁与豁免清理 | 无 lint 脚本、29 error 常驻、3 条规则被全局关闭、4 文件豁免 | `npm run lint` + pre-commit 卡点；错误全清零；规则全部重启用 | 顺带修复 `mock-extra.js` 判空恒假的真实 bug（`typeof x === undefined`）；`verifyPath` 等正则改动经 384 + 9131 样本穷举证明等价 |
 | 前端组件测试基建 | 前端组件零渲染覆盖（UI 白屏也能全绿） | AVA + jsdom + @testing-library/react；新增 `test/helpers/jsdom-setup.js` 基建与组件单测 | 全量测试 379 → **416** 项。首批覆盖 `copyText`（含 DOM 零残留）、`MarkdownEditor`（ref 契约、onChange 含清空回调空串、`html/linkify/breaks` 选项、className/height/preview、`value` 仅作初始值的钉死契约）、`mockEditor` 兼容层（构造期 readOnly、setMode 真实 language facet、insertCode 精确光标位置、mockData 真实产出、getCursorIndex/setShowGutter/clearSelection）、`GuideBtns`（动作序列）、`Breadcrumb`。**核心断言经变异自检（累计 26 次注入全部击杀）**；仍有未覆盖点见遗留观察项 |
+| TypeScript 覆盖扩大（第 1 批） | `common/types/global.d.ts` 手写 Node 垫片（Buffer/process/require/crypto 模块）与 `@types/node@24` 冲突；5 个文件被 `@ts-nocheck` 或未纳入检查 | 显式依赖 `@types/node@^24` + `@types/fs-extra@^11`；移除手写垫片；5 个文件转为 `// @ts-check` 并纳入 `include` | 类型错误 **91 → 0**（`client/common.js` 47、`sandbox.js` 21、`sandbox_child.js` 17、`yapi.js` 4、`messageMiddleware.js` 2），且顺带消除 `token.js` 的 Buffer 泛型冲突错误。**门禁有效性已证明**：向 5 个文件逐个注入类型错误，typecheck 均立即报错，恢复后回 0。改动经审查**全部为编译期注解/断言**（无运行时逻辑变更），416 项测试与沙箱并发/超时自愈实测均正常 |
 
 ## 二、评估后暂缓（含推进路径）
 
@@ -63,8 +64,10 @@
 
 ### 3. TypeScript 健全化（持续进行）
 
-- 现状：`tsconfig.json` 按文件白名单 + `allowJs/checkJs`。已全量绿。
-- 推进路径：新文件一律 `.ts/.tsx`；每次触碰旧文件顺手纳入 include 并清零其类型错误；优先 server/utils、common（前后端共享 DTO）。
+- 现状：`tsconfig.json` 按文件白名单 + `checkJs: false`（**仅有 `// @ts-check` 指令的文件被检查**）。白名单 + 5 个新纳入文件已全量绿，`npm run typecheck` 0 错误。
+- 已完成的现代化：Node API 类型改由显式 `@types/node@^24`（与 .nvmrc 一致）提供，删除了 `global.d.ts` 中手写且与真实类型冲突的 Buffer/process/require/crypto 垫片。
+- 推进路径：每次触碰旧文件顺手加 `// @ts-check` 并清零其错误。**实测剩余工作量基线**（全局打开 `checkJs` 的错误数）：`client/containers` 1183、`client/components` 588、`server/utils` 501、`common` 340、`server/middleware` 282、`server/models` 270；`server/controllers` 与 `client/reducer` 已为 0。
+- 遗留技术细节：① `common/*` 等 webpack 别名仍靠 `global.d.ts` 手写模块声明兜底（tsc 无 `paths`），未来可迁 `tsconfig.paths` 并删除这些声明；② `json5@2` 自带类型只导出 `{parse, stringify}` 无 default，而项目内 CJS/ESM 两种用法并存，故仍保留等价声明——若统一改命名导入即可删除；③ `mockjs` 与 `json-schema-editor-visual` 无自带类型，仍需声明。
 
 ### 4. 状态管理 Redux+redux-promise → 轻量方案（暂缓）
 
@@ -93,5 +96,5 @@
 ## 四、验证基线
 
 - Node：`.nvmrc` 24.21.0（engines `>=18 <25`）。
-- 门禁：`npm run lint`（0 error 0 warning，pre-commit 卡点）、`npm test`（**416**）、`npm run typecheck`（0 错）、`npm run build-client`（0 error）。
+- 门禁：`npm run lint`（0 error 0 warning，pre-commit 卡点）、`npm test`（**416**）、`npm run typecheck`（0 错，覆盖白名单 + 5 个新纳入文件）、`npm run build-client`（0 error）。
 - 浏览器冒烟（本轮）：注册/登录（scrypt + legacy 自动升级）、接口编辑页编辑器、用例表格拖拽持久化、Markdown 双写、Wiki 编辑器、面包屑、路由分包按需加载，全部通过。

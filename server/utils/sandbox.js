@@ -1,4 +1,4 @@
-// @ts-nocheck — Node 内建模块（child_process/os/path）缺 @types/node，checkJs 下不可用；运行时逻辑由 test/server/sandbox.test.js 9 例覆盖
+// @ts-check
 // 常驻沙箱进程池（替代逐次 spawn 的冷启动）：维护 2~4 个 fork 出来的常驻
 // Worker，任务经 IPC 派发，省去每次 45ms+ 的 Node 冷启动开销。跨进程序列化
 // 会丢函数，assert/log/Random 占位符由子进程还原真实实现（见 sandbox_child.js）。
@@ -16,6 +16,23 @@ const TASK_TIMEOUT_MS = 5000;
 // 单个 Worker 累计执行任务数上限，达到后轮换重启
 const MAX_TASKS_PER_WORKER = 1000;
 
+/**
+ * @typedef {Object} SandboxTask 一次待执行的沙箱任务
+ * @property {{ id: number, script: string, context: Record<string, any> }} payload 派发给子进程的任务体
+ * @property {(value: any) => void} resolve 成功回调（脚本改写后的沙箱对象）
+ * @property {(reason: Error) => void} reject 失败回调
+ */
+
+/**
+ * @typedef {Object} PoolWorker 常驻池化 Worker
+ * @property {import('child_process').ChildProcess | null} child 常驻子进程
+ * @property {boolean} busy 是否正在执行任务
+ * @property {number} execCount 累计执行任务数（达上限后优雅轮换）
+ * @property {SandboxTask | null} current 在途任务
+ * @property {ReturnType<typeof setTimeout> | null} timer 单任务硬超时定时器
+ */
+
+/** @type {{ workers: PoolWorker[], queue: SandboxTask[] }} */
 const pool = {
   workers: [],
   queue: []
@@ -64,8 +81,10 @@ function ensurePool() {
   }
 }
 
+/** @returns {PoolWorker | null} 新建的 Worker；池已销毁时返回 null */
 function spawnWorker() {
   if (destroyed) return null;
+  /** @type {PoolWorker} */
   const worker = { child: null, busy: false, execCount: 0, current: null, timer: null };
   const child = child_process.fork(CHILD_PATH, {
     stdio: ['ignore', 'pipe', 'pipe', 'ipc'],
@@ -75,8 +94,10 @@ function spawnWorker() {
 
   // 池子进程不阻碍宿主进程退出：AVA 测试结束或服务关闭时无需等待空闲 Worker
   child.unref();
-  if (child.stdout) child.stdout.unref();
-  if (child.stderr) child.stderr.unref();
+  // stdout/stderr 在 stdio 配置下必然存在；@types/node 将其标注为 Readable，
+  // 但运行时是带 unref 的流对象，故按运行时真实能力断言
+  if (child.stdout) (/** @type {*} */ (child.stdout)).unref();
+  if (child.stderr) (/** @type {*} */ (child.stderr)).unref();
   if (child.channel && typeof child.channel.unref === 'function') {
     child.channel.unref();
   }
@@ -89,6 +110,10 @@ function spawnWorker() {
   return worker;
 }
 
+/**
+ * @param {SandboxTask} task 待派发任务
+ * @returns {void}
+ */
 function dispatch(task) {
   if (destroyed) {
     return task.reject(new Error('沙箱进程池已销毁'));
@@ -106,10 +131,15 @@ function pump() {
   while (!destroyed && pool.queue.length > 0) {
     const worker = pool.workers.find(w => !w.busy);
     if (!worker) return;
-    runTask(worker, pool.queue.shift());
+    runTask(worker, /** @type {SandboxTask} */ (pool.queue.shift()));
   }
 }
 
+/**
+ * @param {PoolWorker} worker 执行任务的 Worker
+ * @param {SandboxTask} task 任务体
+ * @returns {void}
+ */
 function runTask(worker, task) {
   worker.busy = true;
   worker.current = task;
@@ -129,7 +159,8 @@ function runTask(worker, task) {
     pump();
   }, TASK_TIMEOUT_MS);
   try {
-    worker.child.send(task.payload, err => {
+    // child 在池生命周期内非空；为空时保持原语义（抛错 → 走崩溃路径）
+    (/** @type {*} */ (worker.child)).send(task.payload, (/** @type {*} */ err) => {
       // 发送失败说明进程已死，走崩溃路径：任务 reject + 补池 + 派发队列
       if (err) onWorkerDeath(worker);
     });
@@ -138,6 +169,11 @@ function runTask(worker, task) {
   }
 }
 
+/**
+ * @param {PoolWorker} worker 上报结果的 Worker
+ * @param {*} msg 子进程 IPC 消息
+ * @returns {void}
+ */
 function onWorkerMessage(worker, msg) {
   const task = worker.current;
   // 每个 Worker 同一时刻只有一个在途任务，id 不匹配的响应直接丢弃
@@ -154,11 +190,16 @@ function onWorkerMessage(worker, msg) {
       }
       task.resolve(result);
     } catch (e) {
-      task.reject(new Error('沙箱结果解析失败: ' + e.message));
+      task.reject(new Error('沙箱结果解析失败: ' + (/** @type {*} */ (e)).message));
     }
   });
 }
 
+/**
+ * @param {PoolWorker} worker 完成任务的 Worker
+ * @param {() => void} settle 结算回调（resolve/reject 在途任务）
+ * @returns {void}
+ */
 function finishTask(worker, settle) {
   if (worker.timer) {
     clearTimeout(worker.timer);
@@ -178,7 +219,11 @@ function finishTask(worker, settle) {
   pump();
 }
 
-// Worker 意外崩溃：拒绝其在途任务并自动补齐池大小
+/**
+ * Worker 意外崩溃：拒绝其在途任务并自动补齐池大小
+ * @param {PoolWorker} worker 已崩溃的 Worker
+ * @returns {void}
+ */
 function onWorkerDeath(worker) {
   if (removeWorker(worker) === false) return;
   if (worker.current) {
@@ -190,7 +235,11 @@ function onWorkerDeath(worker) {
   pump();
 }
 
-// 从池中摘除 Worker；已不在池中（超时强杀/轮换/销毁处理过）返回 false
+/**
+ * 从池中摘除 Worker
+ * @param {PoolWorker} worker 目标 Worker
+ * @returns {boolean} 已不在池中（超时强杀/轮换/销毁处理过）返回 false
+ */
 function removeWorker(worker) {
   const idx = pool.workers.indexOf(worker);
   if (idx === -1) return false;
@@ -202,9 +251,13 @@ function removeWorker(worker) {
   return true;
 }
 
+/**
+ * @param {PoolWorker} worker 目标 Worker
+ * @returns {void}
+ */
 function killWorker(worker) {
   try {
-    worker.child.kill('SIGKILL');
+    (/** @type {*} */ (worker.child)).kill('SIGKILL');
   } catch (e) {
     // 进程已退出时忽略
   }

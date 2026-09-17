@@ -7,7 +7,11 @@
     "jsx": "preserve",
     "strict": true,
     "skipLibCheck": true,
-    "noEmit": true
+    "noEmit": true,
+    // 实测（TypeScript 7.0.2）：缺省 types 不会自动枚举 node_modules/@types，
+    // 移除该字段后 server/utils/sandbox_child.js 立即出现 TS2591
+    // （Cannot find name 'process' / 'require'）。故须显式声明 node 以使用 Node API 类型。
+    "types": ["node"]
   },
   "include": [
     "common/types/**/*.d.ts",
@@ -25,6 +29,7 @@
     "server/controllers/group.js",
     "server/controllers/test.js",
     "common/createContext.js",
+    "server/yapi.js",
     "server/utils/reportHtml/defaultTheme.js",
     "server/utils/reportHtml/index.js",
     "server/controllers/open.js",
@@ -53,6 +58,10 @@
     "client/containers/Project/Interface/InterfaceList/Edit.js",
     "client/containers/Project/Interface/InterfaceList/InterfaceEditForm.js",
     "client/containers/Project/Interface/InterfaceCol/ImportInterface.js",
-    "client/containers/Project/Setting/ProjectData/ProjectData.js"
+    "client/containers/Project/Setting/ProjectData/ProjectData.js",
+    "server/utils/sandbox.js",
+    "server/utils/sandbox_child.js",
+    "client/common.js",
+    "client/reducer/middleware/messageMiddleware.js"
   ]
 }
