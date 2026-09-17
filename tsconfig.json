@@ -86,6 +86,9 @@
     "server/models/user.js",
     "server/models/interfaceCase.js",
     "server/models/follow.js",
-    "server/models/group.js"
+    "server/models/group.js",
+    "server/models/log.js",
+    "server/models/project.js",
+    "server/models/interface.js"
   ]
 }

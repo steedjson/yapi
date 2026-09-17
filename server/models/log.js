@@ -1,3 +1,4 @@
+// @ts-check
 const yapi = require('../yapi.js');
 const baseModel = require('./base.js');
 var mongoose = require('mongoose');
@@ -25,12 +26,8 @@ class logModel extends baseModel {
   }
 
   /**
-   * @param {String} content log内容
-   * @param {Enum} type log类型， ['user', 'group', 'interface', 'project', 'other']
-   * @param {Number} uid 用户id
-   * @param {String} username 用户名
-   * @param {Number} typeid 类型id
-   * @param {Number} add_time 时间
+   * 新增日志
+   * @param {*} data 日志数据，含 content/type/uid/username/typeid/data
    */
   save(data) {
     let saveData = {
@@ -48,12 +45,21 @@ class logModel extends baseModel {
     return log.save();
   }
 
+  /**
+   * 按id删除日志
+   * @param {*} id 日志id
+   */
   del(id) {
     return this.model.deleteMany({
       _id: id
     });
   }
 
+  /**
+   * 按类型id与类型查询日志列表
+   * @param {*} typeid 类型id
+   * @param {String} type 日志类型
+   */
   list(typeid, type) {
     return this.model
       .find({
@@ -63,9 +69,18 @@ class logModel extends baseModel {
       .exec();
   }
 
+  /**
+   * 分页查询日志列表，支持按动态数据(wiki/接口id)过滤
+   * @param {*} typeid 类型id
+   * @param {String} type 日志类型
+   * @param {*} page 页码
+   * @param {*} limit 每页条数
+   * @param {*} [selectValue] 可选过滤值，'wiki' 或接口id
+   */
   listWithPaging(typeid, type, page, limit, selectValue) {
     page = parseInt(page);
     limit = parseInt(limit);
+    /** @type {Record<string, any>} */
     const params = {
       type: type,
       typeid: typeid
@@ -84,6 +99,13 @@ class logModel extends baseModel {
       .limit(limit)
       .exec();
   }
+  /**
+   * 分页查询分组及其下属项目的日志列表
+   * @param {*} typeid 分组id
+   * @param {Number[]} pidList 项目id数组
+   * @param {*} page 页码
+   * @param {*} limit 每页条数
+   */
   listWithPagingByGroup(typeid, pidList, page, limit) {
     page = parseInt(page);
     limit = parseInt(limit);
@@ -105,6 +127,11 @@ class logModel extends baseModel {
       .limit(limit)
       .exec();
   }
+  /**
+   * 统计分组及其下属项目的日志数量
+   * @param {*} typeid 分组id
+   * @param {Number[]} pidList 项目id数组
+   */
   listCountByGroup(typeid, pidList) {
     return this.model.countDocuments({
       $or: [
@@ -119,7 +146,14 @@ class logModel extends baseModel {
       ]
     });
   }
+  /**
+   * 统计日志数量，支持按动态数据(wiki/接口id)过滤
+   * @param {*} typeid 类型id
+   * @param {String} type 日志类型
+   * @param {*} [selectValue] 可选过滤值，'wiki' 或接口id
+   */
   listCount(typeid, type, selectValue) {
+    /** @type {Record<string, any>} */
     const params = {
       type: type,
       typeid: typeid
@@ -135,7 +169,14 @@ class logModel extends baseModel {
     return this.model.countDocuments(params);
   }
 
+  /**
+   * 查询某条接口最近一条日志
+   * @param {*} typeid 类型id
+   * @param {String} type 日志类型
+   * @param {*} interfaceId 接口id
+   */
   listWithCatid(typeid, type, interfaceId) {
+    /** @type {Record<string, any>} */
     const params = {
       type: type,
       typeid: typeid
