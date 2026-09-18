@@ -49,7 +49,14 @@ jobs:
               "authSource": ""
             },
             "mail": {
-              "enable": false
+              "enable": false,
+              "host": "127.0.0.1",
+              "port": 465,
+              "from": "ci@example.com",
+              "auth": {
+                "user": "ci@example.com",
+                "pass": "ci-placeholder"
+              }
             }
           }
           EOF
