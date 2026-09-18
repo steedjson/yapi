@@ -1,9 +1,8 @@
-import React, { PureComponent as Component } from 'react';
-import PropTypes from 'prop-types';
-import { connect } from 'react-redux';
-import withRouter from '../../../../../withRouter';
+import React, { useRef, useState } from 'react';
 import axios from 'axios';
 import { message } from 'antd';
+import { useSelector } from 'react-redux';
+import { useParams } from 'react-router-dom';
 import { Postman } from '../../../../../components';
 import AddColModal from './AddColModal';
 
@@ -12,37 +11,30 @@ import AddColModal from './AddColModal';
 
 import './Run.scss';
 
-@connect(state => ({
-  currInterface: state.inter.curdata,
-  currProject: state.project.currProject,
-  curUid: state.user.uid
-}))
-@withRouter
-export default class Run extends Component {
-  static propTypes = {
-    currProject: PropTypes.object,
-    currInterface: PropTypes.object,
-    match: PropTypes.object,
-    curUid: PropTypes.number
-  };
+/**
+ * 接口运行 Tab。原类组件经 Hooks 现代化迁移，渲染结构与行为保持一致：
+ * - 旧 @connect 改为 useSelector，旧 @withRouter 注入的 match.params.id 改为 useParams；
+ * - 实例引用 this.postman 改为 useRef；异步回调 saveCase 经 latestRef 镜像
+ *   读取最新 redux 值与路由参数，与旧类组件实时 this.props 语义一致；
+ * - 空实现的 UNSAFE_componentWillMount / UNSAFE_componentWillReceiveProps 随迁移移除。
+ * - 唯一行为偏差：旧实现传 open={saveCaseModalVisible}，而 AddColModal 读 props.visible，
+ *   prop 名错位导致「保存到集合」弹窗在旧版永远无法打开；迁移改为 visible={...} 修复该缺陷。
+ */
+const Run = () => {
+  const currInterface = useSelector(state => state.inter.curdata);
+  const currProject = useSelector(state => state.project.currProject);
+  const curUid = useSelector(state => state.user.uid);
+  const { id } = useParams();
 
-  state = {};
+  const [saveCaseModalVisible, setSaveCaseModalVisible] = useState(false);
+  const postmanRef = useRef(null);
 
-  constructor(props) {
-    super(props);
-  }
+  // 镜像最新 redux 值与路由参数：异步回调(saveCase)中的读取等价于旧类组件的实时 this.props
+  const latestRef = useRef({});
+  latestRef.current = { currInterface, currProject, curUid, paramsId: id };
 
-  UNSAFE_componentWillMount() {}
-
-  UNSAFE_componentWillReceiveProps() {}
-
-  savePostmanRef = postman => {
-    this.postman = postman;
-  };
-
-  saveCase = async (colId, caseName) => {
-    const project_id = this.props.match.params.id;
-    const interface_id = this.props.currInterface._id;
+  const saveCase = async (colId, caseName) => {
+    const { currInterface: interfaceData, paramsId: project_id } = latestRef.current;
     const {
       case_env,
       req_params,
@@ -51,10 +43,10 @@ export default class Run extends Component {
       req_body_type,
       req_body_form,
       req_body_other
-    } = this.postman.state;
+    } = postmanRef.current.state;
 
     let params = {
-      interface_id,
+      interface_id: interfaceData._id,
       casename: caseName,
       col_id: colId,
       project_id,
@@ -76,38 +68,37 @@ export default class Run extends Component {
       message.error(res.data.errmsg);
     } else {
       message.success('添加成功');
-      this.setState({ saveCaseModalVisible: false });
+      setSaveCaseModalVisible(false);
     }
   };
 
-  render() {
-    const { currInterface, currProject } = this.props;
-    const data = Object.assign({}, currInterface, {
-      env: currProject.env,
-      pre_script: currProject.pre_script,
-      after_script: currProject.after_script
-    });
-    data.path = currProject.basepath + currInterface.path;
-    return (
-      <div>
-        <Postman
-          data={data}
-          id={currProject._id}
-          type="inter"
-          saveTip="保存到集合"
-          save={() => this.setState({ saveCaseModalVisible: true })}
-          ref={this.savePostmanRef}
-          interfaceId={currInterface._id}
-          projectId={currInterface.project_id}
-          curUid={this.props.curUid}
-        />
-        <AddColModal
-          open={this.state.saveCaseModalVisible}
-          caseName={currInterface.title}
-          onCancel={() => this.setState({ saveCaseModalVisible: false })}
-          onOk={this.saveCase}
-        />
-      </div>
-    );
-  }
-}
+  const data = Object.assign({}, currInterface, {
+    env: currProject.env,
+    pre_script: currProject.pre_script,
+    after_script: currProject.after_script
+  });
+  data.path = currProject.basepath + currInterface.path;
+  return (
+    <div>
+      <Postman
+        data={data}
+        id={currProject._id}
+        type="inter"
+        saveTip="保存到集合"
+        save={() => setSaveCaseModalVisible(true)}
+        ref={postmanRef}
+        interfaceId={currInterface._id}
+        projectId={currInterface.project_id}
+        curUid={curUid}
+      />
+      <AddColModal
+        visible={saveCaseModalVisible}
+        caseName={currInterface.title}
+        onCancel={() => setSaveCaseModalVisible(false)}
+        onOk={saveCase}
+      />
+    </div>
+  );
+};
+
+export default Run;

@@ -1,157 +1,169 @@
-import React, { PureComponent as Component } from 'react';
-import { connect } from 'react-redux';
+import React, { useEffect, useRef, useState } from 'react';
 import { Modal, Collapse, Row, Col, Input, message, Button } from 'antd';
 import { FolderOpenOutlined } from '@ant-design/icons';
 import PropTypes from 'prop-types';
 import axios from 'axios';
-import withRouter from '../../../../../withRouter';
+import { useDispatch, useSelector } from 'react-redux';
+import { useParams } from 'react-router-dom';
 import { fetchInterfaceColList } from '../../../../../reducer/modules/interfaceCol';
 
 const { TextArea } = Input;
 
-@connect(
-  state => ({
-    interfaceColList: state.interfaceCol.interfaceColList
-  }),
-  {
-    fetchInterfaceColList
-  }
-)
-@withRouter
-export default class AddColModal extends Component {
-  static propTypes = {
-    visible: PropTypes.bool,
-    interfaceColList: PropTypes.array,
-    fetchInterfaceColList: PropTypes.func,
-    match: PropTypes.object,
-    onOk: PropTypes.func,
-    onCancel: PropTypes.func,
-    caseName: PropTypes.string
-  };
+/**
+ * 添加到集合弹窗。原类组件经 Hooks 现代化迁移，渲染结构与行为保持一致：
+ * - 旧 @connect 改为 useSelector/useDispatch，旧 @withRouter 注入的
+ *   match.params.id 改为 useParams；
+ * - 类 state 迁移为单个 useState 对象（旧 state.visible 仅初始化从未读写，
+ *   属死状态，随迁移移除）；caseName 以 props 初值（等价旧 cWM 首帧前赋值）；
+ * - 旧 UNSAFE_componentWillMount 拉取集合列表改为挂载期 useEffect；
+ * - 旧 UNSAFE_componentWillReceiveProps（任意外部 props 变化即回填列表首项
+ *   与 props.caseName；旧 withRouter 注入的 match 每次父渲染都是新引用，故
+ *   任意父渲染均触发）改为每次渲染后运行的 useEffect + 浅比较 prev ref。
+ * - 唯一行为偏差：父组件 Run 旧实现传 open={...} 而本组件读 props.visible，prop 名错位
+ *   导致弹窗在旧版永远无法打开；Run 侧迁移改为 visible={...} 修复该缺陷。
+ */
+const AddColModal = props => {
+  const { visible, caseName, onOk, onCancel } = props;
+  const interfaceColList = useSelector(state => state.interfaceCol.interfaceColList);
+  const dispatch = useDispatch();
+  const { id: projectId } = useParams();
 
-  state = {
-    visible: false,
+  const [state, setState] = useState({
     addColName: '',
     addColDesc: '',
     id: 0,
-    caseName: ''
-  };
+    caseName: caseName
+  });
+  const patchState = patch => setState(prevState => ({ ...prevState, ...patch }));
 
-  constructor(props) {
-    super(props);
-  }
+  // 对应旧 UNSAFE_componentWillMount：拉取项目集合列表
+  useEffect(() => {
+    dispatch(fetchInterfaceColList(projectId));
+  }, []);
 
-  UNSAFE_componentWillMount() {
-    this.props.fetchInterfaceColList(this.props.match.params.id);
-    this.setState({ caseName: this.props.caseName });
-  }
+  // 对应旧 UNSAFE_componentWillReceiveProps
+  const prevPropsRef = useRef(null);
+  useEffect(() => {
+    const prev = prevPropsRef.current;
+    prevPropsRef.current = { visible, caseName, onOk, onCancel, interfaceColList };
+    if (!prev) return; // 挂载期对应旧 cWM，cWRP 不执行
+    if (
+      prev.visible !== visible ||
+      prev.caseName !== caseName ||
+      prev.onOk !== onOk ||
+      prev.onCancel !== onCancel ||
+      prev.interfaceColList !== interfaceColList
+    ) {
+      patchState({ id: interfaceColList[0]._id, caseName });
+    }
+  });
 
-  UNSAFE_componentWillReceiveProps(nextProps) {
-    this.setState({ id: nextProps.interfaceColList[0]._id });
-    this.setState({ caseName: nextProps.caseName });
-  }
-
-  addCol = async () => {
-    const { addColName: name, addColDesc: desc } = this.state;
-    const project_id = this.props.match.params.id;
-    const res = await axios.post('/api/col/add_col', { name, desc, project_id });
+  const addCol = async () => {
+    const { addColName: name, addColDesc: desc } = state;
+    const res = await axios.post('/api/col/add_col', { name, desc, project_id: projectId });
     if (!res.data.errcode) {
       message.success('添加集合成功');
-      await this.props.fetchInterfaceColList(project_id);
+      await dispatch(fetchInterfaceColList(projectId));
 
-      this.setState({ id: res.data.data._id });
+      patchState({ id: res.data.data._id });
     } else {
       message.error(res.data.errmsg);
     }
   };
 
-  select = id => {
-    this.setState({ id });
+  const select = colId => {
+    patchState({ id: colId });
   };
 
-  render() {
-    const { interfaceColList = [] } = this.props;
-    const { id } = this.state;
-    return (
-      <Modal
-        className="add-col-modal"
-        title="添加到集合"
-        open={this.props.visible}
-        onOk={() => this.props.onOk(id, this.state.caseName)}
-        onCancel={this.props.onCancel}
-      >
-        <Row gutter={6} className="modal-input">
-          <Col span="5">
-            <div className="label">接口用例名：</div>
-          </Col>
-          <Col span="15">
-            <Input
-              placeholder="请输入接口用例名称"
-              value={this.state.caseName}
-              onChange={e => this.setState({ caseName: e.target.value })}
-            />
-          </Col>
-        </Row>
-        <p>请选择添加到的集合：</p>
-        <ul className="col-list">
-          {interfaceColList.length ? (
-            interfaceColList.map(col => (
-              <li
-                key={col._id}
-                className={`col-item ${col._id === id ? 'selected' : ''}`}
-                onClick={() => this.select(col._id)}
-              >
-                <FolderOpenOutlined style={{ marginRight: 6 }} />
-                {col.name}
-              </li>
-            ))
-          ) : (
-            <span>暂无集合，请添加！</span>
-          )}
-        </ul>
-        <Collapse
-          items={[
-            {
-              key: '0',
-              label: '添加新集合',
-              children: (
-                <>
-                  <Row gutter={6} className="modal-input">
-                    <Col span="5">
-                      <div className="label">集合名：</div>
-                    </Col>
-                    <Col span="15">
-                      <Input
-                        placeholder="请输入集合名称"
-                        value={this.state.addColName}
-                        onChange={e => this.setState({ addColName: e.target.value })}
-                      />
-                    </Col>
-                  </Row>
-                  <Row gutter={6} className="modal-input">
-                    <Col span="5">
-                      <div className="label">简介：</div>
-                    </Col>
-                    <Col span="15">
-                      <TextArea
-                        rows={3}
-                        placeholder="请输入集合描述"
-                        value={this.state.addColDesc}
-                        onChange={e => this.setState({ addColDesc: e.target.value })}
-                      />
-                    </Col>
-                  </Row>
-                  <Row type="flex" justify="end">
-                    <Button style={{ float: 'right' }} type="primary" onClick={this.addCol}>
-                      添 加
-                    </Button>
-                  </Row>
-                </>
-              )
-            }
-          ]}
-        />
-      </Modal>
-    );
-  }
-}
+  const { id } = state;
+  return (
+    <Modal
+      className="add-col-modal"
+      title="添加到集合"
+      open={visible}
+      onOk={() => onOk(id, state.caseName)}
+      onCancel={onCancel}
+    >
+      <Row gutter={6} className="modal-input">
+        <Col span="5">
+          <div className="label">接口用例名：</div>
+        </Col>
+        <Col span="15">
+          <Input
+            placeholder="请输入接口用例名称"
+            value={state.caseName}
+            onChange={e => patchState({ caseName: e.target.value })}
+          />
+        </Col>
+      </Row>
+      <p>请选择添加到的集合：</p>
+      <ul className="col-list">
+        {interfaceColList.length ? (
+          interfaceColList.map(col => (
+            <li
+              key={col._id}
+              className={`col-item ${col._id === id ? 'selected' : ''}`}
+              onClick={() => select(col._id)}
+            >
+              <FolderOpenOutlined style={{ marginRight: 6 }} />
+              {col.name}
+            </li>
+          ))
+        ) : (
+          <span>暂无集合，请添加！</span>
+        )}
+      </ul>
+      <Collapse
+        items={[
+          {
+            key: '0',
+            label: '添加新集合',
+            children: (
+              <>
+                <Row gutter={6} className="modal-input">
+                  <Col span="5">
+                    <div className="label">集合名：</div>
+                  </Col>
+                  <Col span="15">
+                    <Input
+                      placeholder="请输入集合名称"
+                      value={state.addColName}
+                      onChange={e => patchState({ addColName: e.target.value })}
+                    />
+                  </Col>
+                </Row>
+                <Row gutter={6} className="modal-input">
+                  <Col span="5">
+                    <div className="label">简介：</div>
+                  </Col>
+                  <Col span="15">
+                    <TextArea
+                      rows={3}
+                      placeholder="请输入集合描述"
+                      value={state.addColDesc}
+                      onChange={e => patchState({ addColDesc: e.target.value })}
+                    />
+                  </Col>
+                </Row>
+                <Row type="flex" justify="end">
+                  <Button style={{ float: 'right' }} type="primary" onClick={addCol}>
+                    添 加
+                  </Button>
+                </Row>
+              </>
+            )
+          }
+        ]}
+      />
+    </Modal>
+  );
+};
+
+AddColModal.propTypes = {
+  visible: PropTypes.bool,
+  onOk: PropTypes.func,
+  onCancel: PropTypes.func,
+  caseName: PropTypes.string
+};
+
+export default AddColModal;
