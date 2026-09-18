@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    services:
+      mongo:
+        image: mongo:7
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --quiet --eval 'db.runCommand({ ping: 1 }).ok' || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node (version from .nvmrc, npm cache)
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Write CI-only config.json (gitignored, required by server/yapi.js)
+        run: |
+          cat > config.json <<'EOF'
+          {
+            "port": "3000",
+            "adminAccount": "admin@admin.com",
+            "timeout": 120000,
+            "db": {
+              "servername": "127.0.0.1",
+              "DATABASE": "yapi_test",
+              "port": 27017,
+              "user": "",
+              "pass": "",
+              "authSource": ""
+            },
+            "mail": {
+              "enable": false
+            }
+          }
+          EOF
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
+        run: npm test
+
+      - name: Build client
+        run: npm run build-client
+
+      - name: Audit baseline diff gate
+        run: npm run audit:ci

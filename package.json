@@ -12,6 +12,7 @@
     "start": " node server/app.js",
     "test": "ava",
     "audit": "npm audit --registry=https://registry.npmjs.org",
+    "audit:ci": "node scripts/audit-check.js",
     "lint": "eslint client/ server/ common/ exts/ test/",
     "typecheck": "tsc --noEmit",
     "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s",
