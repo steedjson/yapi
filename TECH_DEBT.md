@@ -1,6 +1,6 @@
 # 技术债台账（TECH_DEBT）
 
-> 2026-09 技术债清理行动的滚动台账：记录已完成项、评估后暂缓项及其理由、后续推进的具体路径。
+> 2026-09 技术债清理行动的滚动台账：记录已完成项、评估后暂缓项及其理由、后续推进的具体路径，以及全仓扫描新发现待评估项。
 > 分支：`codex/refactor-foundation`。执行流程：主 Agent 划界 → csl-coder 实施 → csl-tester 验证 → csl-reviewer 审查 → 主 Agent 合并提交。
 
 ## 一、已完成（本轮清理）
@@ -112,7 +112,60 @@
 - old 兼容：`add`/`resetPassword` 生成 legacy 密码格式（首次登录自动升级）—— 如后续可改既有测试，可一并 scrypt 化。
 - 沙箱进程池边界收窄观察项：常驻 Worker 下恶意脚本可篡改注入的 assert/Random 模块对象（影响同 Worker 后续任务直至 1000 次轮换）；任务队列无背压上限；context 不可序列化时误判为崩溃换 Worker —— 均为低风险设计取舍，知悉即可。
 
-## 四、验证基线
+## 四、新发现技术债（2026-09-18 全仓扫描，待评估排期）
+
+> 来源：对依赖安全、CI、目录结构、同步 I/O 的补充扫描；均未纳入此前各批次范围。优先级建议见本节末。
+
+### 1. 依赖安全（npm audit 首次全量可见）
+
+- **扫描方法**：`npm audit --registry=https://registry.npmjs.org`。默认 npmmirror 源未实现 audit 接口（`NOT_IMPLEMENTED`），此前安全扫描实际处于盲区。
+- **结果**：45 项 = 9 critical / 26 high / 8 moderate / 2 low；含 dev/build 传递链，实际风险需按链判定。
+- **单点最大源头 `swagger-client@3.5.1`**：deep-extend(critical)、cross-fetch→node-fetch、cookie、isomorphic-form-data→form-data(critical)、fast-json-patch、qs@6.5.1 均由它引入；同 major 内升至 3.38.2 可清除大部分。
+- **非 major 低成本修复（建议首批）**：`sha.js` 2.4.9→2.4.12（critical，浏览器端 power-string 使用）、`underscore` 1.8.3→1.13.8（critical，沙箱公开 API 需兼容回归）、`qs` 6.7.0→6.16.0、`@babel/core` 7.28.4→7.29.7（low）。
+- **运行时相关、需 major 评估**：`markdown-it@8`→15（linkify-it 二次复杂度 DoS）、`jsondiffpatch@0.3.11`→0.7.6（HtmlFormatter XSS + 原型污染，正用于接口 diff 展示）、`koa-websocket@4`→7（ws@2 DoS）、`jsrsasign@8`→11（critical，沙箱公开 API）、`json-schema-faker 0.5.0-rc16`（jsonpath）、`react-router@6.30.6`（moderate 开放重定向）。
+- **无修复路径**：`json-schema-editor-visual` 内嵌 antd3→rc-editor-mention→draft-js/immutable/fbjs（与遗留项「需自研 JSON Schema 编辑器」同一项）。
+- **dev/build 链**：`style-loader@0.18.2`→loader-utils@1.1.0→json5@0.5.1；conventional-changelog-cli→handlebars(critical)；ava→node-fetch。
+- 推进路径：先做非 major 批（不动运行时语义，可被现有测试与浏览器冒烟覆盖），major 批随对应模块改造排期；audit 结果纳入门禁。
+
+### 2. 无 CI（门禁仅本地生效）
+
+- 现状：`.github/` 仅 ISSUE_TEMPLATE.md，无任何 workflow；`lint`/`typecheck`/`test`/`build-client` 四道门禁只挂在本地 pre-commit 与人工执行，push/PR 无强制。
+- 推进路径：加最小 GitHub Actions（四步门禁），成本约半天；同时解决 audit 源问题（官方 registry 或 osv-scanner）。
+
+### 3. 结构债（god files）
+
+- `server/controllers/interface.js` 1533 行、`client/containers/Project/Interface/InterfaceList/InterfaceEditForm.js` 1458、`server/controllers/project.js` 1272、`client/containers/Project/Interface/InterfaceCol/InterfaceColContent.js` 1224、`server/controllers/user.js` 1143、`client/components/Postman/Postman.js` 1082、`server/controllers/interfaceCol.js` 1027。
+- 推进路径：随对应模块的功能改造/Hooks 化渐进拆分（如 controller 按导入导出、用例、CRUD 拆 service），不做大爆炸重构。
+
+### 4. 测试盲区：containers 零覆盖
+
+- 现状：66 个测试文件中 **0 个覆盖 `client/containers/`**，而剩余 44 个类组件中的 39 个与 1183 处类型错误正集中于此。
+- 推进路径：类组件迁移时同步补首批 containers 测试（沿用 jsdom + @testing-library/react 基建）。
+
+### 5. exts/ 插件完全未现代化
+
+- 现状：11 个插件 63 个 JS 文件，0 个 `@ts-check`、7 个类组件、16 个文件直接引 antd；既不在类型门禁也不在 Hooks 迁移范围。
+- 推进路径：单独批次评估（插件可能被外部用户以源码/构建方式引用，需先确认兼容边界）。
+
+### 6. 请求路径同步 I/O
+
+- `server/utils/commons.js:133` 每次日志 `writeFileSync`；`server/controllers/interface.js:580/857/864` 每请求重复 `readFileSync` 静态资源（cross-request.zip、jsondiffpatch CSS，无缓存）；`server/controllers/user.js:953` 头像兜底读盘。
+- 推进路径：日志改异步/批量写入；静态资源启动期缓存。
+
+### 7. 其他遗留依赖与待审查项
+
+- 停更/弃用：`url@0.11.0`（官方弃用）、`webpack-node-externals@1.6.0`、`rewire@2.5.2`、`core-decorators@0.17.0`（仍有 3 文件使用）、`mockjs 1.0.1-beta3`、`easy-json-schema 0.0.2-beta`、`mime@2`、`compare-versions@3`；`prop-types` 仍被 73 个文件使用（React 18 已非必需）。
+- 7 处 `dangerouslySetInnerHTML`（markdown/HTML 备注渲染链路）建议做一次 XSS 专项审查。
+
+### 建议优先级（供裁决）
+
+1. 非 major 依赖安全批（swagger-client / qs / sha.js / underscore / @babel/core）+ audit 纳入门禁；
+2. 最小 CI 四步门禁；
+3. 类组件迁移优先 containers 并同步补 containers 测试；
+4. 同步 I/O 收口与 god file 拆分随改造进行；
+5. major 升级（markdown-it / jsondiffpatch / koa-websocket / react-router / antd6 / react19）单独排期。
+
+## 五、验证基线
 
 - Node：`.nvmrc` 24.21.0（engines `>=18 <25`）。
 - 门禁：`npm run lint`（覆盖全仓含 test/，0 error 0 warning，pre-commit 卡点）、`npm test`（**546**）、`npm run typecheck`（0 错）、`npm run build-client`（0 error）。
