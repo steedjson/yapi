@@ -2,6 +2,7 @@
 // Module Scope
 var mongoose = require('mongoose'),
 extend = require('extend'),
+yapi = require('../yapi.js'),
 /** @type {any} */
 counterSchema,
 /** @type {any} */
@@ -24,6 +25,10 @@ exports.initialize = function () {
         count: { type: Number, default: 0 }
       });
 
+      // autoIndex 已显式关闭：mongoose 不再在连接就绪后自动创建该索引，
+      // 避免 close() 时刻仍有在途的 createIndex 造成 unhandled rejection。
+      counterSchema.set('autoIndex', false);
+
       // Create a unique index using the "field" and "model" fields.
       counterSchema.index(
         { field: 1, model: 1 },
@@ -32,6 +37,13 @@ exports.initialize = function () {
 
       // Create model using new schema.
       IdentityCounter = mongoose.model('IdentityCounter', counterSchema);
+
+      // 唯一索引 {field:1, model:1} 是计数器正确性的依赖，必须仍然被创建：
+      // 改为注册为启动任务，由 connect() 就绪链统一执行并等待（unique 语义不变）。
+      yapi.registerStartupTask(function () {
+        return (/** @type {*} */ (IdentityCounter.collection))
+          .createIndex({ field: 1, model: 1 }, { unique: true });
+      });
     }
     else
       throw ex;
@@ -86,31 +98,31 @@ exports.plugin = function (schema, options) {
   schema.add(fields);
 
   // Find the counter for this model and the relevant field.
-  // mongoose 7 起移除 query callback 风格，统一用 promise（6/7 兼容）。
-  IdentityCounter.findOne({
-    model: settings.model,
-    field: settings.field
-  })
-    .then(function (/** @type {any} */ counter) {
+  // 计数器初始化（findOne + 缺失时 save）必须发生在 {field:1, model:1} 唯一索引
+  // 创建之后：若在连接建立瞬间就插入（原实现），多进程共享冷库时各进程会在
+  // 唯一索引生效前并发插入重复计数器文档，导致该唯一索引永远无法建立（E11000）。
+  // 注册为启动任务后由 connect() 就绪链按注册顺序执行——唯一索引任务在
+  // initialize() 中先注册，此处后注册；跨进程的并发重复插入将被已生效的
+  // 唯一索引拒绝，走既有 save 失败日志路径，不再产生重复文档。
+  yapi.registerStartupTask(function () {
+    return IdentityCounter.findOne({
+      model: settings.model,
+      field: settings.field
+    }).then(function (/** @type {any} */ counter) {
       if (!counter) {
         // If no counter exists then create one and save it.
-        counter = new IdentityCounter({ model: settings.model, field: settings.field, count: settings.startAt - settings.incrementBy });
-        counter.save().then(
-          function () {
-            ready = true;
-          },
-          function (/** @type {any} */ err) {
-            console.error('[mongoose-auto-increment] 初始化计数器失败:', err && err.message);
-          }
-        );
+        return new IdentityCounter({
+          model: settings.model,
+          field: settings.field,
+          count: settings.startAt - settings.incrementBy
+        }).save().then(function () {
+          ready = true;
+        });
       }
-      else {
-        ready = true;
-      }
-    })
-    .catch(function (/** @type {any} */ err) {
-      console.error('[mongoose-auto-increment] 计数器查询失败:', err && err.message);
+      ready = true;
+      return undefined;
     });
+  });
 
   // Declare a function to get the next counter for the model/schema.
   /**

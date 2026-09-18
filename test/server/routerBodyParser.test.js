@@ -149,16 +149,5 @@ test('koa-body v8 multipart 上传: 文件出现在 ctx.request.files 且 testFi
 });
 
 // 收尾取消定时任务并关闭 MongoDB 连接, 避免 AVA 因常驻句柄强制退出
-test.after.always('cleanup lingering handles', async () => {
-  try {
-    const schedule = require('node-schedule');
-    schedule.scheduledJobs && Object.keys(schedule.scheduledJobs).forEach(name => {
-      schedule.scheduledJobs[name].cancel();
-    });
-  } catch (e) {}
-  const mongoose = require('mongoose');
-  if (mongoose.connection && mongoose.connection.readyState !== 0) {
-    await new Promise(r => setTimeout(r, 200));
-    await mongoose.connection.close();
-  }
-});
+const closeMongoose = require('../helpers/closeMongoose.js');
+test.after.always('cleanup lingering handles', () => closeMongoose());

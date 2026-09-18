@@ -8,23 +8,27 @@ const statisModel = require('./statisMockModel.js');
 const commons = require('./util.js');
 
 module.exports = function() {
-  yapi.connect.then(function() {
+  // 启动期集合索引改为注册启动任务：由 connect() 就绪链统一执行并等待，
+  // 不再是 yapi.connect 之后的 fire-and-forget 操作（索引键与选项保持不变）。
+  yapi.registerStartupTask(function() {
     let Col = mongoose.connection.db.collection('statis_mock');
-    Col.createIndex({
-      interface_id: 1
-    });
-    Col.createIndex({
-      project_id: 1
-    });
-    Col.createIndex({
-      group_id: 1
-    });
-    Col.createIndex({
-      time: 1
-    });
-    Col.createIndex({
-      date: 1
-    });
+    return Promise.all([
+      Col.createIndex({
+        interface_id: 1
+      }),
+      Col.createIndex({
+        project_id: 1
+      }),
+      Col.createIndex({
+        group_id: 1
+      }),
+      Col.createIndex({
+        time: 1
+      }),
+      Col.createIndex({
+        date: 1
+      })
+    ]);
   });
 
   this.bindHook('add_router', function(addRouter) {
