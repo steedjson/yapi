@@ -61,6 +61,12 @@
 | TypeScript 覆盖扩大（第 10 批） | 服务端底层与安装脚本（`install.js`, `db.js`, `mongoose-auto-increment.js`, `notice.js`, `ldap.js`）未受类型检查 | 加 `// @ts-check` + 纳入 include + global.d.ts 补齐 `extend`/`ldapjs` 声明 | 清零 **86 处**类型错误；AST 深度比对证明 5 个文件 100% 逐节点一致；至此除孤立未引用的 initConfig.js 外，**server/ 全目录核心生产代码 100% 完整受检**！ |
 | ModalPostman 弹窗组 Hooks 现代化 | `ModalPostman` 弹窗组 4 个组件（`index`, `MockList`, `MethodsList`, `VariablesSelect`）仍使用类组件、`@connect` 装饰器与废弃生命周期 | 重构为 React 18 函数组件 + Hooks；消除全部 `@connect` 与 `UNSAFE_componentWillMount`/`ReceiveProps`；新增 5 项单测 | 全量测试增至 **546** 项！参数解析、常量输入、Mock 过滤与变量树异步拉取全覆盖；独立变异测试 100% 精准击杀 |
 
+### 第四阶段：按第四章优先级推进的技术债批次
+
+| 项 | 旧 | 新 | 说明 |
+| --- | --- | --- | --- |
+| 非 major 依赖安全批（commit 84cc30a5） | audit 45 项 = 9 critical / 26 high / 8 moderate / 2 low（npmmirror 未实现 audit 接口，此前无可见性） | audit **35 项 = 3 critical / 24 high / 8 moderate / 0 low**；5 个包升级 + audit 脚本入口 + 1 个回归测试 | `swagger-client` 3.5.1→3.38.2（消除其引入的 deep-extend、cross-fetch/node-fetch、cookie、form-data、fast-json-patch、qs@6.5.1 传递链）、`qs` 6.7.0→6.16.0、`sha.js` 2.4.9→2.4.12、`underscore` 1.8.3→1.13.8、`@babel/core` 7.28.4→7.29.7；新增 `scripts.audit`（固定官方 registry）；新增 `test/common/postman-utils-underscore.test.js`（沙箱公开 API `utils._` 回归保护，9 例）。业务代码与 `static/prd` 零改动；`run.js` 契约（`swagger({spec})→res.spec`）实测兼容故未改。门禁：lint 0 error / typecheck 0 错 / **npm test 555** 全绿 / build-client 0 error。三阶段独立评审结论 PASS |
+
 ## 二、评估后暂缓（含推进路径）
 
 ### 1. 构建工具 Webpack5 → Vite/Rsbuild（暂缓，工作量数天级）
@@ -111,21 +117,26 @@
 - 登录路径 scryptSync 同步阻塞约几十毫秒；`verifyPassword` 尊重 storedHash 自述参数但受 Node maxmem 兜底 —— 观察即可。
 - old 兼容：`add`/`resetPassword` 生成 legacy 密码格式（首次登录自动升级）—— 如后续可改既有测试，可一并 scrypt 化。
 - 沙箱进程池边界收窄观察项：常驻 Worker 下恶意脚本可篡改注入的 assert/Random 模块对象（影响同 Worker 后续任务直至 1000 次轮换）；任务队列无背压上限；context 不可序列化时误判为崩溃换 Worker —— 均为低风险设计取舍，知悉即可。
+- `npm test` 偶发 unhandled rejection（`test/server/routerBodyParser.test.js:162` 的 `mongoose.connection.close()` 与在途操作竞态）：非 major 依赖批验证期间出现 1 次，随后两轮全量（546/555）复跑均干净，且 lock 中 mongoose/mongodb 链零变化 —— 判定为既有测试结构导致的时序 flake，与本批无关；后续复现时建议保留完整输出再归因。
 
 ## 四、新发现技术债（2026-09-18 全仓扫描，待评估排期）
 
 > 来源：对依赖安全、CI、目录结构、同步 I/O 的补充扫描；均未纳入此前各批次范围。优先级建议见本节末。
 
-### 1. 依赖安全（npm audit 首次全量可见）
+### 1. 依赖安全（npm audit；首批已修复，见「一、第四阶段」）
 
-- **扫描方法**：`npm audit --registry=https://registry.npmjs.org`。默认 npmmirror 源未实现 audit 接口（`NOT_IMPLEMENTED`），此前安全扫描实际处于盲区。
-- **结果**：45 项 = 9 critical / 26 high / 8 moderate / 2 low；含 dev/build 传递链，实际风险需按链判定。
-- **单点最大源头 `swagger-client@3.5.1`**：deep-extend(critical)、cross-fetch→node-fetch、cookie、isomorphic-form-data→form-data(critical)、fast-json-patch、qs@6.5.1 均由它引入；同 major 内升至 3.38.2 可清除大部分。
-- **非 major 低成本修复（建议首批）**：`sha.js` 2.4.9→2.4.12（critical，浏览器端 power-string 使用）、`underscore` 1.8.3→1.13.8（critical，沙箱公开 API 需兼容回归）、`qs` 6.7.0→6.16.0、`@babel/core` 7.28.4→7.29.7（low）。
-- **运行时相关、需 major 评估**：`markdown-it@8`→15（linkify-it 二次复杂度 DoS）、`jsondiffpatch@0.3.11`→0.7.6（HtmlFormatter XSS + 原型污染，正用于接口 diff 展示）、`koa-websocket@4`→7（ws@2 DoS）、`jsrsasign@8`→11（critical，沙箱公开 API）、`json-schema-faker 0.5.0-rc16`（jsonpath）、`react-router@6.30.6`（moderate 开放重定向）。
-- **无修复路径**：`json-schema-editor-visual` 内嵌 antd3→rc-editor-mention→draft-js/immutable/fbjs（与遗留项「需自研 JSON Schema 编辑器」同一项）。
-- **dev/build 链**：`style-loader@0.18.2`→loader-utils@1.1.0→json5@0.5.1；conventional-changelog-cli→handlebars(critical)；ava→node-fetch。
-- 推进路径：先做非 major 批（不动运行时语义，可被现有测试与浏览器冒烟覆盖），major 批随对应模块改造排期；audit 结果纳入门禁。
+- **扫描方法**：`npm audit --registry=https://registry.npmjs.org`（已固化为 `npm run audit`）。默认 npmmirror 源未实现 audit 接口（`NOT_IMPLEMENTED`），此前安全扫描实际处于盲区。
+- **进展**：非 major 首批已落地（commit 84cc30a5），45 → **35 项**（critical 9→3、high 26→24、moderate 8→8、low 2→0）；消失 10 项、新增 0 项。lock 全量 76 项版本变化已逐条归因（5 个目标包 + fast-json-patch 传递升级 + swagger-client 3.38.2 的 apidom 树 + sha.js 的 to-buffer + 移除 8 个旧依赖），其他 111 个直接依赖零变化。
+- **仍保留的 3 个 critical（均需后续批次）**：
+  - `jsrsasign@8.0.12`：根直接依赖，advisory 覆盖 `<=11.1.0`、**无可用修复版本**，且同时是沙箱公开 API（`utils.jsrsasign`）——需专项评估替换方案；
+  - `handlebars@4.7.7`：嵌套于 conventional-changelog-writer（dev 工具链，非运行时），**存在非 major 修复（4.7.9+）**，低成本跟进候选；
+  - `loader-utils`：`style-loader@0.18.2` 嵌套 1.1.0（critical）+ babel-loader 下 2.0.4（已是修复版）；修复需 style-loader major，随构建迁移处理。
+- **其余待处理**：`jsonpath@1.1.1` 自带嵌套 `underscore@1.12.1`（high，来自 `json-schema-faker 0.5.0-rc16`，需升级该包才能消除）；`markdown-it@8`→15、`jsondiffpatch@0.3.11`→0.7.6、`koa-websocket@4`→7、`react-router@6.30.6`（moderate 开放重定向）、`style-loader` 构建链等 major 项，随对应模块改造排期。
+- **新增观察项**：`@scarf/scarf@1.4.0` 随 swagger-client 3.38.2 进入依赖树（默认在 install 时上报安装遥测，可用 `SCARF_ANALYTICS=false` 关闭）——建议在 CI/构建环境评估禁用。
+- **门禁建议（评审提出）**：当前 35 项未清零，`npm run audit` 有漏洞时退出码为 1；接入 CI 前应改为**基线差分门禁**（仅对新增漏洞失败，如 audit-ci allowlist 或入库基线文件）或仅作报告用途，避免误报"构建损坏"。
+- **无修复路径 / 需结构性替换**：`json-schema-editor-visual@1.0.23` 内嵌 antd3→rc-editor-mention→draft-js/immutable/fbjs（与遗留观察项「需自研 JSON Schema 编辑器」同一项）。
+- **dev/build 链**：`style-loader@0.18.2`→loader-utils@1.1.0→json5@0.5.1（critical/high，随构建迁移处理）；conventional-changelog-cli→handlebars（见上）；ava→@vercel/nft→node-fetch（dev-only）。
+- 推进路径：非 major 批已做完；剩余项按「可低成本修复（handlebars）→ 需升级依赖树（jsonpath/json-schema-faker）→ 需 major 改造（markdown-it/jsondiffpatch/koa-websocket/style-loader/jsrsasign）」三档排期。
 
 ### 2. 无 CI（门禁仅本地生效）
 
@@ -159,7 +170,7 @@
 
 ### 建议优先级（供裁决）
 
-1. 非 major 依赖安全批（swagger-client / qs / sha.js / underscore / @babel/core）+ audit 纳入门禁；
+1. ~~非 major 依赖安全批（swagger-client / qs / sha.js / underscore / @babel/core）+ audit 纳入门禁~~ → **已完成（commit 84cc30a5）**；audit 门禁接入方式待定（见第 1 节门禁建议）；
 2. 最小 CI 四步门禁；
 3. 类组件迁移优先 containers 并同步补 containers 测试；
 4. 同步 I/O 收口与 god file 拆分随改造进行；
@@ -168,5 +179,5 @@
 ## 五、验证基线
 
 - Node：`.nvmrc` 24.21.0（engines `>=18 <25`）。
-- 门禁：`npm run lint`（覆盖全仓含 test/，0 error 0 warning，pre-commit 卡点）、`npm test`（**546**）、`npm run typecheck`（0 错）、`npm run build-client`（0 error）。
+- 门禁：`npm run lint`（覆盖全仓含 test/，0 error 0 warning，pre-commit 卡点）、`npm test`（**555**）、`npm run typecheck`（0 错）、`npm run build-client`（0 error）、`npm run audit`（官方 registry 安全扫描；当前 35 项，暂作报告用途，接入 CI 前需改基线差分）。
 - 浏览器冒烟（本轮）：注册/登录（scrypt + legacy 自动升级）、接口编辑页编辑器、用例表格拖拽持久化、Markdown 双写、Wiki 编辑器、面包屑、路由分包按需加载，全部通过。
