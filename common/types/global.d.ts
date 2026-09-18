@@ -72,8 +72,10 @@ declare module 'json5' {
 }
 
 declare module 'qs' {
-  function stringify(obj: any, options?: any): string;
-  export default { stringify };
+  export function stringify(obj: any, options?: any): string;
+  // 同时保留 default 导出形态，兼容 `import qs from 'qs'` 用法
+  const qs: { stringify: typeof stringify };
+  export default qs;
 }
 
 // md5@2 / sha.js@2 / js-base64@2 均未内置类型且无对应 @types 包。
@@ -248,4 +250,26 @@ declare module 'easy-json-schema' {
 declare module 'json-schema-faker' {
   const jsf: any;
   export = jsf;
+}
+
+// 以下 4 个依赖（common/postmanLib.js 与 server/app.js 使用）未内置类型且无对应 @types 包，
+// 按运行时实际导出形态声明最小子集，新增用法时需同步补充声明。
+declare module 'crypto-js' {
+  const CryptoJS: any;
+  export = CryptoJS;
+}
+
+declare module 'jsrsasign' {
+  const jsrsasign: any;
+  export = jsrsasign;
+}
+
+declare module 'koa-websocket' {
+  function websockify(app: any, options?: any): any;
+  export = websockify;
+}
+
+declare module 'koa-static' {
+  function koaStatic(root: string, opts?: any): any;
+  export = koaStatic;
 }

@@ -1,17 +1,20 @@
+// @ts-check
 const { isJson5, json_parse, handleJson, joinPath, safeArray } = require('./utils');
 const constants = require('../client/constants/variable.js');
 // underscore 仅用于沙箱脚本 utils._ 公开 API(YApi 文档承诺), 内部代码禁用 underscore
 const _ = require('underscore');
 const URL = require('url');
 const utils = require('./power-string.js').utils;
+/** @type {Record<string, any>} */
 const HTTP_METHOD = constants.HTTP_METHOD;
-const axios = require('axios');
+const axios = /** @type {any} */ (require('axios'));
 const qs = require('qs');
 const CryptoJS = require('crypto-js');
 const jsrsasign = require('jsrsasign');
 const https = require('https');
 
 const isNode = typeof global == 'object' && global.global === global;
+/** @type {Record<string, string>} */
 const ContentTypeMap = {
   'application/json': 'json',
   'application/xml': 'xml',
@@ -21,38 +24,52 @@ const ContentTypeMap = {
   other: 'text'
 };
 
+/**
+ * 按 taskId 获取存储对象（Node 侧走 storageCreator，浏览器侧走 localStorage）
+ * @param {any} id 任务 id
+ * @returns {Promise<any>}
+ */
 const getStorage = async (id)=>{
   try{
     if(isNode){
-      let storage = global.storageCreator(id);
+      let storage = (/** @type {*} */ (global)).storageCreator(id);
       let data = await storage.getItem();
       return {
-        getItem: (name)=> data[name],
-        setItem: (name, value)=>{
+        getItem: (/** @type {any} */ name)=> data[name],
+        setItem: (/** @type {any} */ name, /** @type {any} */ value)=>{
           data[name] = value;
           storage.setItem(name, value)
         }
       }
     }else{
       return {
-        getItem: (name)=> window.localStorage.getItem(name),
-        setItem: (name, value)=>  window.localStorage.setItem(name, value)
+        getItem: (/** @type {any} */ name)=> window.localStorage.getItem(name),
+        setItem: (/** @type {any} */ name, /** @type {any} */ value)=>  window.localStorage.setItem(name, value)
       }
     }
   }catch(e){
     console.error(e)
     return {
-      getItem: (name)=>{
+      getItem: (/** @type {any} */ name)=>{
         console.error(name, e)
       },
-      setItem: (name, value)=>{
+      setItem: (/** @type {any} */ name, /** @type {any} */ value)=>{
         console.error(name, value, e)
       }
     }
   }
 }
 
+/**
+ * Node 环境下通过 axios 发送请求并归一化响应结构
+ * @param {any} options 请求配置
+ * @returns {Promise<any>} 归一化后的 { res: { header, status, body } } 结构
+ */
 async function httpRequestByNode(options) {
+  /**
+   * @param {any} response
+   * @returns {any}
+   */
   function handleRes(response) {
     if (!response || typeof response !== 'object') {
       return {
@@ -100,7 +117,7 @@ async function httpRequestByNode(options) {
   }
 
   try {
-    handleData(options);
+    (/** @type {*} */ (handleData))(options);
     let response = await axios({
       method: options.method,
       url: options.url,
@@ -113,7 +130,7 @@ async function httpRequestByNode(options) {
       data: options.data
     });
     return handleRes(response);
-  } catch (err) {
+  } catch (/** @type {any} */ err) {
     if (err.response === undefined) {
       return handleRes({
         headers: {},
@@ -125,6 +142,11 @@ async function httpRequestByNode(options) {
   }
 }
 
+/**
+ * 根据响应头推断响应体内容类型
+ * @param {any} headers 响应头
+ * @returns {string} 内容类型标识
+ */
 function handleContentType(headers) {
   if (!headers || typeof headers !== 'object') return ContentTypeMap.other;
   let contentTypeItem = 'other';
@@ -143,6 +165,12 @@ function handleContentType(headers) {
   }
 }
 
+/**
+ * 判断请求体是否为 raw 类型
+ * @param {any} method 请求方法
+ * @param {any} reqBodyType 请求体类型
+ * @returns {any} raw 类型时返回 reqBodyType，否则返回 false
+ */
 function checkRequestBodyIsRaw(method, reqBodyType) {
   if (
     reqBodyType &&
@@ -155,6 +183,12 @@ function checkRequestBodyIsRaw(method, reqBodyType) {
   return false;
 }
 
+/**
+ * 判断指定 name 是否已存在于数组中
+ * @param {any} name 待检查的名称
+ * @param {any} arr 待遍历的数组
+ * @returns {boolean} 是否已存在
+ */
 function checkNameIsExistInArray(name, arr) {
   let isRepeat = false;
   for (let i = 0; i < arr.length; i++) {
@@ -167,8 +201,14 @@ function checkNameIsExistInArray(name, arr) {
   return isRepeat;
 }
 
+/**
+ * 根据环境名挑选当前使用的域名配置
+ * @param {any} domains 域名列表
+ * @param {any} case_env 环境名称
+ * @returns {any} 命中的域名配置
+ */
 function handleCurrDomain(domains, case_env) {
-  let currDomain = domains.find(item => item.name === case_env);
+  let currDomain = domains.find((/** @type {any} */ item) => item.name === case_env);
 
   if (!currDomain) {
     currDomain = domains[0];
@@ -176,8 +216,14 @@ function handleCurrDomain(domains, case_env) {
   return currDomain;
 }
 
+/**
+ * Node 环境沙箱：在 vm 上下文中执行脚本
+ * @param {any} sandbox 沙箱上下文对象
+ * @param {any} script 待执行脚本
+ * @returns {any} 执行后的上下文
+ */
 function sandboxByNode(sandbox = {}, script) {
-  const vm = require('vm');
+  const vm = /** @type {any} */ (require('vm'));
   script = new vm.Script(script);
   const context = new vm.createContext(sandbox);
   script.runInContext(context, {
@@ -186,6 +232,12 @@ function sandboxByNode(sandbox = {}, script) {
   return sandbox;
 }
 
+/**
+ * 沙箱执行脚本（Node 走 vm，浏览器走 eval），并等待脚本产生的 promise
+ * @param {any} context 沙箱上下文对象
+ * @param {any} script 待执行脚本
+ * @returns {Promise<any>} 执行后的上下文
+ */
 async function sandbox(context = {}, script) {
   if (isNode) {
     try {
@@ -194,7 +246,7 @@ async function sandbox(context = {}, script) {
       context.Promise = Promise;
       context.setTimeout = setTimeout;
       context = sandboxByNode(context, script);
-    } catch (err) {
+    } catch (/** @type {any} */ err) {
       err.message = `Script: ${script}
       message: ${err.message}`;
       throw err;
@@ -205,7 +257,7 @@ async function sandbox(context = {}, script) {
   if (context.promise && typeof context.promise === 'object' && context.promise.then) {
     try {
       await context.promise;
-    } catch (err) {
+    } catch (/** @type {any} */ err) {
       err.message = `Script: ${script}
       message: ${err.message}`;
       throw err;
@@ -214,6 +266,12 @@ async function sandbox(context = {}, script) {
   return context;
 }
 
+/**
+ * 浏览器环境沙箱：将上下文注入全局后 eval 执行脚本
+ * @param {any} context 沙箱上下文对象
+ * @param {any} script 待执行脚本
+ * @returns {any} 执行后的上下文
+ */
 function sandboxByBrowser(context = {}, script) {
   if (!script || typeof script !== 'string') {
     return context;
@@ -224,7 +282,7 @@ function sandboxByBrowser(context = {}, script) {
   }
   try {
     eval(beginScript + script);
-  } catch (err) {
+  } catch (/** @type {any} */ err) {
     let message = `Script:
                    ----CodeBegin----:
                    ${beginScript}
@@ -240,11 +298,12 @@ function sandboxByBrowser(context = {}, script) {
 }
 
 /**
- * 
- * @param {*} defaultOptions 
- * @param {*} preScript 
- * @param {*} afterScript 
- * @param {*} commonContext  负责传递一些业务信息，crossRequest 不关注具体传什么，只负责当中间人
+ * 跨端请求入口：组装沙箱上下文、执行前后置脚本并发送请求
+ * @param {any} defaultOptions 请求配置
+ * @param {any} preScript 前置脚本
+ * @param {any} afterScript 后置脚本
+ * @param {Record<string, any>} commonContext 负责传递一些业务信息，crossRequest 不关注具体传什么，只负责当中间人
+ * @returns {Promise<any>} 请求结果
  */
 async function crossRequest(defaultOptions, preScript, afterScript, commonContext = {}) {
   let options = Object.assign({}, defaultOptions);
@@ -252,7 +311,7 @@ async function crossRequest(defaultOptions, preScript, afterScript, commonContex
   let urlObj = URL.parse(options.url, true),
     query = {};
   query = Object.assign(query, urlObj.query);
-  let context = {
+  let context = /** @type {Record<string, any>} */ ({
     isNode,
     get href() {
       return urlObj.href;
@@ -282,7 +341,7 @@ async function crossRequest(defaultOptions, preScript, afterScript, commonContex
     requestBody: options.data,
     promise: false,
     storage: await getStorage(taskId)
-  };
+  });
 
   Object.assign(context, commonContext)
 
@@ -324,7 +383,7 @@ async function crossRequest(defaultOptions, preScript, afterScript, commonContex
     data.req = options;
   } else {
     data = await new Promise((resolve, reject) => {
-      options.error = options.success = function(res, header, data) {
+      options.error = options.success = function(/** @type {any} */ res, /** @type {any} */ header, /** @type {any} */ data) {
         let message = '';
         if (res && typeof res === 'string') {
           res = json_parse(data.res.body);
@@ -341,7 +400,7 @@ async function crossRequest(defaultOptions, preScript, afterScript, commonContex
         resolve(data);
       };
 
-      window.crossRequest(options);
+      (/** @type {any} */ (window)).crossRequest(options);
     });
   }
 
@@ -359,10 +418,21 @@ async function crossRequest(defaultOptions, preScript, afterScript, commonContex
   return data;
 }
 
+/**
+ * 将接口用例数据组装为可执行的请求配置
+ * @param {any} interfaceData 接口用例数据
+ * @param {any} handleValue 变量替换函数
+ * @param {any} requestParams 收集实际请求参数的对象
+ * @returns {any} 请求配置
+ */
 function handleParams(interfaceData, handleValue, requestParams) {
   let interfaceRunData = Object.assign({}, interfaceData);
+  /**
+   * @param {any} arr
+   * @returns {Record<string, any>}
+   */
   function paramsToObjectWithEnable(arr) {
-    const obj = {};
+    const obj = /** @type {Record<string, any>} */ ({});
     safeArray(arr).forEach(item => {
       if (item && item.name && (item.enable || item.required === '1')) {
         obj[item.name] = handleValue(item.value, currDomain.global);
@@ -374,8 +444,12 @@ function handleParams(interfaceData, handleValue, requestParams) {
     return obj;
   }
 
+  /**
+   * @param {any} arr
+   * @returns {Record<string, any>}
+   */
   function paramsToObjectUnWithEnable(arr) {
-    const obj = {};
+    const obj = /** @type {Record<string, any>} */ ({});
     safeArray(arr).forEach(item => {
       if (item && item.name) {
         obj[item.name] = handleValue(item.value, currDomain.global);
@@ -388,12 +462,12 @@ function handleParams(interfaceData, handleValue, requestParams) {
   }
 
   let { case_env, path, env, _id } = interfaceRunData;
-  let currDomain,
+  /** @type {any} */ let currDomain,
     requestBody,
-    requestOptions = {};
+    requestOptions = /** @type {Record<string, any>} */ ({});
   currDomain = handleCurrDomain(env, case_env);
   interfaceRunData.req_params = interfaceRunData.req_params || [];
-  interfaceRunData.req_params.forEach(item => {
+  interfaceRunData.req_params.forEach((/** @type {any} */ item) => {
     let val = handleValue(item.value, currDomain.global);
     if (requestParams) {
       requestParams[item.name] = val;
@@ -461,7 +535,7 @@ function handleParams(interfaceData, handleValue, requestParams) {
         if (requestParams) {
           requestParams = Object.assign(requestParams, reqBody);
         }
-        requestBody = handleJson(reqBody, val => handleValue(val, currDomain.global));
+        requestBody = handleJson(reqBody, (/** @type {any} */ val) => handleValue(val, currDomain.global));
       }
     } else {
       requestBody = interfaceRunData.req_body_other;

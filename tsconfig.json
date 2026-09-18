@@ -91,6 +91,11 @@
     "server/models/project.js",
     "server/models/interface.js",
     "server/utils/commons.js",
-    "server/middleware/mockServer.js"
+    "server/middleware/mockServer.js",
+    "common/postmanLib.js",
+    "server/app.js",
+    "server/router.js",
+    "server/websocket.js",
+    "server/plugin.js"
   ]
 }

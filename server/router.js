@@ -1,3 +1,4 @@
+// @ts-check
 const koaRouter = require('@koa/router');
 const interfaceController = require('./controllers/interface.js');
 const groupController = require('./controllers/group.js');
@@ -13,8 +14,9 @@ const openController = require('./controllers/open.js');
 const { createAction } = require('./utils/commons.js');
 
 // @koa/router v15 导出为 class, 必须使用 new 调用(旧 koa-router 允许省略)
-const router = new koaRouter();
+const router = new (/** @type {*} */ (koaRouter))();
 
+/** @type {Record<string, any>} */
 let INTERFACE_CONFIG = {
   interface: {
     prefix: '/interface/',
@@ -54,6 +56,7 @@ let INTERFACE_CONFIG = {
   }
 };
 
+/** @type {Record<string, any>} */
 let routerConfig = {
   group: [
     {
@@ -617,8 +620,12 @@ let routerConfig = {
   ]
 };
 
+/** @type {any[]} */
 let pluginsRouterPath = [];
 
+/**
+ * @param {any} config
+ */
 function addPluginRouter(config) {
   if (!config.path || !config.controller || !config.action) {
     throw new Error('Plugin Route config Error');
@@ -631,17 +638,17 @@ function addPluginRouter(config) {
     throw new Error('Plugin Route path conflict, please try rename the path');
   }
   pluginsRouterPath.push(routerPath);
-  createAction(router, '/api', config.controller, config.action, routerPath, method, false);
+  (/** @type {*} */ (createAction))(router, '/api', config.controller, config.action, routerPath, method, false);
 }
 
 yapi.emitHookSync('add_router', addPluginRouter);
 
 for (let ctrl in routerConfig) {
   let actions = routerConfig[ctrl];
-  actions.forEach(item => {
+  actions.forEach((/** @type {any} */ item) => {
     let routerController = INTERFACE_CONFIG[ctrl].controller;
     let routerPath = INTERFACE_CONFIG[ctrl].prefix + item.path;
-    createAction(router, '/api', routerController, item.action, routerPath, item.method);
+    (/** @type {*} */ (createAction))(router, '/api', routerController, item.action, routerPath, item.method);
   });
 }
 

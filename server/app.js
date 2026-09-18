@@ -1,5 +1,6 @@
+// @ts-check
 process.env.NODE_PATH = __dirname;
-require('module').Module._initPaths();
+(/** @type {*} */ (require('module').Module))._initPaths();
 
 const yapi = require('./yapi.js');
 const commons = require('./utils/commons');
@@ -19,7 +20,7 @@ const koaStatic = require('koa-static');
 const { koaBody } = require('koa-body');
 const router = require('./router.js');
 
-global.storageCreator = storageCreator;
+(/** @type {*} */ (global)).storageCreator = storageCreator;
 let indexFile = process.argv[2] === 'dev' ? 'dev.html' : 'index.html';
 
 const app = websockify(new Koa());
@@ -35,7 +36,7 @@ app.use(
     formLimit: '1mb',
     textLimit: '1mb',
     jsonStrict: false,
-    parsedMethods: ['POST', 'GET', 'PUT', 'PATCH', 'DELETE', 'HEAD']
+    parsedMethods: /** @type {any} */ (['POST', 'GET', 'PUT', 'PATCH', 'DELETE', 'HEAD'])
   })
 );
 app.use(mockServer);
@@ -44,7 +45,7 @@ app.use(router.allowedMethods());
 
 websocket(app);
 
-app.use(async (ctx, next) => {
+app.use(async (/** @type {any} */ ctx, /** @type {any} */ next) => {
   if (/^\/(?!api)[a-zA-Z0-9/\-_]*$/.test(ctx.path)) {
     ctx.path = '/';
     await next();
@@ -53,7 +54,7 @@ app.use(async (ctx, next) => {
   }
 });
 
-app.use(async (ctx, next) => {
+app.use(async (/** @type {any} */ ctx, /** @type {any} */ next) => {
   if (ctx.path.indexOf('/prd') === 0) {
     ctx.set('Cache-Control', 'max-age=8640000000');
     if (yapi.commons.fileExist(yapi.path.join(yapi.WEBROOT, 'static', ctx.path + '.gz'))) {

@@ -1,14 +1,19 @@
+// @ts-check
 const koaRouter = require('@koa/router');
 const interfaceController = require('./controllers/interface.js');
 const yapi = require('./yapi.js');
 
 // @koa/router v15 导出为 class, 必须使用 new 调用(旧 koa-router 允许省略)
-const router = new koaRouter();
+const router = new (/** @type {*} */ (koaRouter))();
 const { createAction } = require("./utils/commons.js")
 
+/** @type {any[]} */
 let pluginsRouterPath = [];
 
 
+/**
+ * @param {any} config
+ */
 function addPluginRouter(config) {
   if (!config.path || !config.controller || !config.action) {
     throw new Error('Plugin Route config Error');
@@ -19,19 +24,22 @@ function addPluginRouter(config) {
     throw new Error('Plugin Route path conflict, please try rename the path')
   }
   pluginsRouterPath.push(routerPath);
-  createAction(router, "/api", config.controller, config.action, routerPath, method, true);
+  (/** @type {*} */ (createAction))(router, "/api", config.controller, config.action, routerPath, method, true);
 }
 
 
+/**
+ * @param {any} app
+ */
 function websocket(app) {
-  createAction(router, "/api", interfaceController, "solveConflict", "/interface/solve_conflict", "get")
+  (/** @type {*} */ (createAction))(router, "/api", interfaceController, "solveConflict", "/interface/solve_conflict", "get")
 
   yapi.emitHookSync('add_ws_router', addPluginRouter);
 
 
   app.ws.use(router.routes())
   app.ws.use(router.allowedMethods());
-  app.ws.use(function (ctx) {
+  app.ws.use(function (/** @type {any} */ ctx) {
     return ctx.websocket.send(JSON.stringify({
       errcode: 404,
       errmsg: 'No Fount.'

@@ -1,3 +1,4 @@
+// @ts-check
 const yapi = require('./yapi.js');
 const plugin_path = yapi.path.join(yapi.WEBROOT, 'node_modules');
 const plugin_system_path = yapi.path.join(yapi.WEBROOT, 'exts');
@@ -6,6 +7,7 @@ var extConfig = require('../common/config.js').exts;
 
 /**
  * 钩子配置
+ * @type {Record<string, any>}
  */
 var hooks = {
   /**
@@ -191,6 +193,12 @@ var hooks = {
   }
 };
 
+/**
+ * 绑定钩子监听器
+ * @param {string} name 钩子名称
+ * @param {Function} listener 监听器函数
+ * @returns {void}
+ */
 function bindHook(name, listener) {
   if (!name) throw new Error('缺少hookname');
   if (name in hooks === false) {
@@ -207,9 +215,10 @@ function bindHook(name, listener) {
 }
 
 /**
- *
- * @param {*} hookname
- * @return promise
+ * 触发钩子，返回所有监听器执行结果的 Promise
+ * @param {string} name 钩子名称
+ * @param {...any} args 传给监听器的参数
+ * @returns {Promise<any>}
  */
 function emitHook(name) {
   if (hooks[name] && typeof hooks[name] === 'object') {
@@ -254,7 +263,7 @@ pluginsConfig.forEach(plugin => {
 
 extConfig = initPlugins(extConfig, 'ext');
 
-extConfig.forEach(plugin => {
+extConfig.forEach((/** @type {any} */ plugin) => {
   if (!plugin || plugin.enable === false || plugin.server === false) return null;
 
   if (
