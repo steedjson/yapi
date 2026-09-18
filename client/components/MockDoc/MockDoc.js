@@ -1,6 +1,7 @@
 import './MockDoc.scss';
 import React from 'react';
 import PropTypes from 'prop-types';
+import sanitizeHtml from '../../utils/sanitize.js';
 
 // 组件用法 <MockDoc mock= mockData doc= docData />
 // mockData: mock数据 格式为json
@@ -100,7 +101,7 @@ function produceSpace(count) {
 }
 
 function setStrToHtml(str) {
-  return <span dangerouslySetInnerHTML={{ __html: `${str}` }} />;
+  return <span dangerouslySetInnerHTML={{ __html: sanitizeHtml(`${str}`) }} />;
 }
 function arrToHtml(mockArr, mock) {
   for (var i in mockArr) {

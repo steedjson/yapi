@@ -3,6 +3,7 @@ import { EditOutlined } from '@ant-design/icons';
 import PropTypes from 'prop-types';
 import { Button } from 'antd';
 import { Link } from 'react-router-dom';
+import sanitizeHtml from 'client/utils/sanitize.js';
 import 'client/components/MarkdownEditor/contents.scss';
 
 const WikiView = props => {
@@ -25,7 +26,7 @@ const WikiView = props => {
       </div>
       <div
         className="markdown-contents"
-        dangerouslySetInnerHTML={{ __html: desc }}
+        dangerouslySetInnerHTML={{ __html: sanitizeHtml(desc) }}
       />
     </div>
   );

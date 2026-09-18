@@ -11,6 +11,7 @@ import ErrMsg from '../../../../components/ErrMsg/ErrMsg.js';
 import variable from '../../../../constants/variable';
 import constants from '../../../../constants/variable.js';
 import SchemaTable from '../../../../components/SchemaTable/SchemaTable.js';
+import sanitizeHtml from 'client/utils/sanitize.js';
 import 'client/components/MarkdownEditor/contents.scss';
 
 const HTTP_METHOD = constants.HTTP_METHOD;
@@ -498,7 +499,7 @@ class View extends Component {
           <div
             className="markdown-contents"
             style={{ margin: '0px', padding: '0px 20px', float: 'none' }}
-            dangerouslySetInnerHTML={{ __html: this.props.curData.desc }}
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(this.props.curData.desc) }}
           />
         )}
         <h2 className="interface-title" style={{ display: requestShow ? '' : 'none' }}>

@@ -32,6 +32,7 @@
     "common/schema-transformTo-table.js",
     "common/markdown.js",
     "server/utils/ttlCache.js",
+    "server/utils/initConfig.js",
     "server/utils/categoryTree.js",
     "server/utils/token.js",
     "server/utils/storage.js",

@@ -4,6 +4,7 @@ import PropTypes from 'prop-types';
 import { useDispatch, useSelector } from 'react-redux';
 import { formatTime } from '../../common.js';
 import showDiffMsg from '../../../common/diff-view.js';
+import sanitizeHtml from '../../utils/sanitize.js';
 import variable from '../../constants/variable';
 import { Link } from 'react-router-dom';
 import { fetchNewsData, fetchMoreNews } from '../../reducer/modules/news.js';
@@ -29,7 +30,7 @@ const AddDiffView = props => {
   return (
     <div className={className}>
       <h3 className="title">{title}</h3>
-      <div dangerouslySetInnerHTML={{ __html: content }} />
+      <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(content) }} />
     </div>
   );
 };
@@ -162,7 +163,10 @@ export default function TimeTree(props) {
               <span className="logtype">{logType[item.type]}动态</span>
               <span className="logtime">{formatTime(item.add_time)}</span>
             </div>
-            <span className="logcontent" dangerouslySetInnerHTML={{ __html: item.content }} />
+            <span
+              className="logcontent"
+              dangerouslySetInnerHTML={{ __html: sanitizeHtml(item.content) }}
+            />
             <div style={{ padding: '10px 0 0 10px' }}>
               {interfaceDiff && <Button onClick={() => openDiff(item.data)}>改动详情</Button>}
             </div>

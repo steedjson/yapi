@@ -25,6 +25,7 @@ import URL from 'url';
 const Dragger = Upload.Dragger;
 import { saveImportData } from '../../../../reducer/modules/interface';
 import { fetchUpdateLogData } from '../../../../reducer/modules/news.js';
+import sanitizeHtml from '../../../../utils/sanitize.js';
 import { handleSwaggerUrlData } from '../../../../reducer/modules/project';
 import { formatCatTreeData, flattenCatList } from 'common/utils.js';
 const Option = Select.Option;
@@ -246,7 +247,10 @@ class ProjectData extends Component {
             {domainData.map((/** @type {any} */ item, /** @type {any} */ index) => {
               return (
                 <div key={index} className="postman-dataImport-show-diff">
-                  <span className="logcontent" dangerouslySetInnerHTML={{ __html: item.content }} />
+                  <span
+                    className="logcontent"
+                    dangerouslySetInnerHTML={{ __html: sanitizeHtml(item.content) }}
+                  />
                 </div>
               );
             })}
@@ -496,7 +500,7 @@ class ProjectData extends Component {
                         }}
                         dangerouslySetInnerHTML={{
                           __html: this.state.curImportType
-                            ? importDataModule[this.state.curImportType].desc
+                            ? sanitizeHtml(importDataModule[this.state.curImportType].desc)
                             : null
                         }}
                       />
