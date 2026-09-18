@@ -1,32 +1,23 @@
-import React, { PureComponent as Component } from 'react';
+import React from 'react';
 import TimeTree from '../../../components/TimeLine/TimeLine';
-import { connect } from 'react-redux';
+import { useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
-// import { Button } from 'antd'
-@connect(state => {
-  return {
-    uid: state.user.uid + '',
-    curGroupId: state.group.currGroup._id
-  };
-})
-class GroupLog extends Component {
-  constructor(props) {
-    super(props);
-  }
-  static propTypes = {
-    uid: PropTypes.string,
-    match: PropTypes.object,
-    curGroupId: PropTypes.number
-  };
-  render() {
-    return (
-      <div className="g-row">
-        <section className="news-box m-panel">
-          <TimeTree type={'group'} typeid={this.props.curGroupId} />
-        </section>
-      </div>
-    );
-  }
-}
+
+const GroupLog = () => {
+  const curGroupId = useSelector(state => state.group.currGroup._id);
+  // 旧 @connect 映射的 uid 历史遗留仅声明未消费，保留订阅避免行为差异
+  useSelector(state => state.user.uid + '');
+  return (
+    <div className="g-row">
+      <section className="news-box m-panel">
+        <TimeTree type={'group'} typeid={curGroupId} />
+      </section>
+    </div>
+  );
+};
+
+GroupLog.propTypes = {
+  match: PropTypes.object
+};
 
 export default GroupLog;

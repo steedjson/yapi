@@ -1,5 +1,5 @@
-import React, { PureComponent as Component } from 'react';
-import { connect } from 'react-redux';
+import React, { useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
 import { Menu } from 'antd';
 import { fetchNewsData } from '../../../reducer/modules/news.js';
@@ -18,60 +18,42 @@ const logList = [
     name: '项目'
   }
 ];
-@connect(
-  state => {
-    // console.log(state);
-    return {
-      uid: state.user.uid + '',
-      newsData: state.news.newsData
-    };
-  },
-  {
-    fetchNewsData
-  }
-)
-class NewsList extends Component {
-  static propTypes = {
-    fetchNewsData: PropTypes.func,
-    setLoading: PropTypes.func,
-    uid: PropTypes.string
-  };
 
-  constructor(props) {
-    super(props);
-    this.state = {
-      selectedKeys: 0
-    };
-  }
-  getLogData(e) {
+const NewsList = props => {
+  const uid = useSelector(state => state.user.uid + '');
+  const dispatch = useDispatch();
+  const [selectedKeys, setSelectedKeys] = useState(0);
+  // 旧 @connect 映射的 newsData 历史遗留仅声明未消费，保留订阅避免行为差异
+  useSelector(state => state.news.newsData);
+
+  function getLogData(e) {
     // page,size,logId
-    // console.log(e.key);
-    this.setState({
-      selectedKeys: +e.key
-    });
-    const that = this;
-    this.props.setLoading(true);
-    this.props.fetchNewsData(+this.props.uid, 0, 5).then(function() {
-      that.props.setLoading(false);
+    setSelectedKeys(+e.key);
+    props.setLoading(true);
+    dispatch(fetchNewsData(+uid, 0, 5)).then(function() {
+      props.setLoading(false);
     });
   }
-  render() {
-    return (
-      <div className="logList">
-        <h3>日志类型</h3>
-        <Menu
-          mode="inline"
-          selectedKeys={[`${this.state.selectedKeys}`]}
-          onClick={this.getLogData.bind(this)}
-          items={logList.map((item, i) => ({
-            key: `${i}`,
-            className: 'log-item',
-            label: item.name
-          }))}
-        />
-      </div>
-    );
-  }
-}
+
+  return (
+    <div className="logList">
+      <h3>日志类型</h3>
+      <Menu
+        mode="inline"
+        selectedKeys={[`${selectedKeys}`]}
+        onClick={getLogData}
+        items={logList.map((item, i) => ({
+          key: `${i}`,
+          className: 'log-item',
+          label: item.name
+        }))}
+      />
+    </div>
+  );
+};
+
+NewsList.propTypes = {
+  setLoading: PropTypes.func
+};
 
 export default NewsList;
