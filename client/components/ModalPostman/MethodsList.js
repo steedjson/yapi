@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { Row, Input, Select, Tooltip } from 'antd';
 import { DownOutlined } from '@ant-design/icons';
@@ -23,88 +23,62 @@ const METHODS_LIST = [
   { name: 'number', type: false, desc: '字符串转换为数字类型' }
 ];
 
-class MethodsList extends Component {
-  static propTypes = {
-    show: PropTypes.bool,
-    click: PropTypes.func,
-    clickValue: PropTypes.string,
-    paramsInput: PropTypes.func,
-    clickIndex: PropTypes.number,
-    params: PropTypes.array
+export default function MethodsList(props) {
+  const { click, clickValue, clickIndex, params, paramsInput } = props;
+  const [list, setList] = useState(METHODS_LIST);
+  const [moreFlag, setMoreFlag] = useState(true);
+
+  useEffect(() => {
+    const index = METHODS_LIST.findIndex(item => item.name === clickValue);
+    setMoreFlag(index > 3 ? false : true);
+  }, [clickValue]);
+
+  const showMore = () => {
+    setMoreFlag(false);
   };
 
-  constructor(props) {
-    super(props);
-    this.state = {
-      list: METHODS_LIST,
-      moreFlag: true
-    };
-  }
-
-  showMore = () => {
-    this.setState({
-      moreFlag: false
-    });
-  };
-
-  componentDidMount() {
-    var index = METHODS_LIST.findIndex(item => item.name === this.props.clickValue);
-
-    let moreFlag = index > 3 ? false : true;
-    this.setState({
-      moreFlag
-    });
-  }
-
-  inputComponent = props => {
-    let clickIndex = props.clickIndex;
-    let paramsIndex = props.paramsIndex;
-    let params = props.params;
+  const inputComponent = query => {
+    const { params: inputParams } = query;
     return (
       <Input
         size="small"
         placeholder="请输入参数"
-        value={params[0]}
-        onChange={e => this.handleParamsChange(e.target.value, clickIndex, paramsIndex, 0)}
+        value={inputParams[0]}
+        onChange={e => handleParamsChange(e.target.value, query.clickIndex, query.paramsIndex, 0)}
       />
     );
   };
 
-  doubleInputComponent = props => {
-    let clickIndex = props.clickIndex;
-    let paramsIndex = props.paramsIndex;
-    let params = props.params;
-
+  const doubleInputComponent = query => {
+    const { params: inputParams } = query;
     return (
       <div>
         <Input
           size="small"
           placeholder="start"
-          value={params[0]}
-          onChange={e => this.handleParamsChange(e.target.value, clickIndex, paramsIndex, 0)}
+          value={inputParams[0]}
+          onChange={e => handleParamsChange(e.target.value, query.clickIndex, query.paramsIndex, 0)}
         />
         <Input
           size="small"
           placeholder="length"
-          value={params[1]}
-          onChange={e => this.handleParamsChange(e.target.value, clickIndex, paramsIndex, 1)}
+          value={inputParams[1]}
+          onChange={e => handleParamsChange(e.target.value, query.clickIndex, query.paramsIndex, 1)}
         />
       </div>
     );
   };
 
-  selectComponent = props => {
+  const selectComponent = query => {
     const subname = ['sha1', 'sha224', 'sha256', 'sha384', 'sha512'];
-    let clickIndex = props.clickIndex;
-    let paramsIndex = props.paramsIndex;
-    let params = props.params;
+    const { params: selectParams } = query;
     return (
       <Select
-        value={params[0] || 'sha1'}
+        value={selectParams[0] || 'sha1'}
         placeholder="请选择"
         style={{ width: 150 }}
         size="small"
-        onChange={e => this.handleParamsChange(e, clickIndex, paramsIndex, 0)}
+        onChange={e => handleParamsChange(e, query.clickIndex, query.paramsIndex, 0)}
       >
         {subname.map((item, index) => {
           return (
@@ -118,75 +92,70 @@ class MethodsList extends Component {
   };
 
   // 处理参数输入
-  handleParamsChange(value, clickIndex, paramsIndex, index) {
-    let newList = deepEqual(this.state.list);
+  function handleParamsChange(value, changeClickIndex, paramsIndex, index) {
+    const newList = deepEqual(list);
     newList[paramsIndex].params[index] = value;
-    this.setState({
-      list: newList
-    });
-    this.props.paramsInput(value, clickIndex, index);
+    setList(newList);
+    paramsInput(value, changeClickIndex, index);
   }
 
   // 组件选择
-  handleComponent(item, clickIndex, index, params) {
-    let query = {
-      clickIndex: clickIndex,
+  function handleComponent(item, componentClickIndex, index, componentParams) {
+    const query = {
+      clickIndex: componentClickIndex,
       paramsIndex: index,
-      params
+      params: componentParams
     };
     switch (item.component) {
       case 'select':
-        return this.selectComponent(query);
+        return selectComponent(query);
       case 'input':
-        return this.inputComponent(query);
+        return inputComponent(query);
       case 'doubleInput':
-        return this.doubleInputComponent(query);
+        return doubleInputComponent(query);
       default:
         break;
     }
   }
 
-  render() {
-    const { list, moreFlag } = this.state;
-    const { click, clickValue, clickIndex, params } = this.props;
-    let showList = moreFlag ? list.slice(0, 4) : list;
+  const showList = moreFlag ? list.slice(0, 4) : list;
 
-    return (
-      <div className="modal-postman-form-method">
-        <h3 className="methods-title title">方法</h3>
-        {showList.map((item, index) => {
-          return (
-            <Row
-              key={index}
-              type="flex"
-              align="middle"
-              className={'row methods-row ' + (item.name === clickValue ? 'checked' : '')}
-              onClick={() => click(item.name, showList[index].params)}
-            >
-              <Tooltip title={item.desc}>
-                <span>{item.name}</span>
-              </Tooltip>
-              <span className="input-component">
-                {item.type &&
-                  this.handleComponent(
-                    item,
-                    clickIndex,
-                    index,
-                    item.name === clickValue ? params : []
-                  )}
-              </span>
-            </Row>
-          );
-        })}
-        {moreFlag && (
-          <div className="show-more" onClick={this.showMore}>
-            <DownOutlined />
-            <span style={{ paddingLeft: '4px' }}>更多</span>
-          </div>
-        )}
-      </div>
-    );
-  }
+  return (
+    <div className="modal-postman-form-method">
+      <h3 className="methods-title title">方法</h3>
+      {showList.map((item, index) => {
+        return (
+          <Row
+            key={index}
+            type="flex"
+            align="middle"
+            className={'row methods-row ' + (item.name === clickValue ? 'checked' : '')}
+            onClick={() => click(item.name, showList[index].params)}
+          >
+            <Tooltip title={item.desc}>
+              <span>{item.name}</span>
+            </Tooltip>
+            <span className="input-component">
+              {item.type && handleComponent(item, clickIndex, index, item.name === clickValue ? params : [])}
+            </span>
+          </Row>
+        );
+      })}
+      {moreFlag && (
+        <div className="show-more" onClick={showMore}>
+          <DownOutlined />
+          <span style={{ paddingLeft: '4px' }}>更多</span>
+        </div>
+      )}
+    </div>
+  );
 }
 
-export default MethodsList;
+MethodsList.propTypes = {
+  show: PropTypes.bool,
+  click: PropTypes.func,
+  clickValue: PropTypes.string,
+  paramsInput: PropTypes.func,
+  clickIndex: PropTypes.number,
+  params: PropTypes.array
+};

@@ -1,7 +1,7 @@
-import React, { Component } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import { Tree } from 'antd';
-import { connect } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { fetchVariableParamsList } from '../../reducer/modules/interfaceCol.js';
 
 const CanSelectPathPrefix = 'CanSelectPath-';
@@ -17,141 +17,133 @@ function deleteLastArr(str) {
   return str.replace(/\[.*?\]/g, '');
 }
 
-@connect(
-  state => {
-    return {
-      currColId: state.interfaceCol.currColId
-    };
-  },
-  {
-    fetchVariableParamsList
-  }
-)
-class VariablesSelect extends Component {
-  static propTypes = {
-    click: PropTypes.func,
-    currColId: PropTypes.number,
-    fetchVariableParamsList: PropTypes.func,
-    clickValue: PropTypes.string,
-    id: PropTypes.number
-  };
-  state = {
-    records: [],
-    expandedKeys: [],
-    selectedKeys: []
-  };
+export default function VariablesSelect(props) {
+  const { click, clickValue, id } = props;
+  const currColId = useSelector(state => state.interfaceCol.currColId);
+  const dispatch = useDispatch();
+  const [records, setRecords] = useState([]);
+  const [expandedKeys, setExpandedKeys] = useState([]);
+  const [selectedKeys, setSelectedKeys] = useState([]);
+  // 全量用例记录与已切换到的用例 id,对应原实例属性 this.records / this.id
+  const allRecordsRef = useRef([]);
+  const currentIdRef = useRef(null);
 
-  handleRecordsData(id) {
-    let newRecords = [];
-    this.id = id;
-    for (let i = 0; i < this.records.length; i++) {
-      if (this.records[i]._id === id) {
+  const handleRecordsData = useCallback(targetId => {
+    currentIdRef.current = targetId;
+    const allRecords = allRecordsRef.current;
+    const newRecords = [];
+    for (let i = 0; i < allRecords.length; i++) {
+      if (allRecords[i]._id === targetId) {
         break;
       }
-      newRecords.push(this.records[i]);
+      newRecords.push(allRecords[i]);
     }
-    this.setState({
-      records: newRecords
-    });
-  }
+    setRecords(newRecords);
+  }, []);
 
-  async componentDidMount() {
-    const { currColId, fetchVariableParamsList, clickValue } = this.props;
-    let result = await fetchVariableParamsList(currColId);
-    let records = result.payload.data.data;
-    this.records = records.sort((a, b) => {
-      return a.index - b.index;
-    });
-    this.handleRecordsData(this.props.id);
-
-    if (clickValue) {
-      let isArrayParams = clickValue.lastIndexOf(']') === clickValue.length - 1;
-      let key = isArrayParams ? deleteLastArr(clickValue) : deleteLastObject(clickValue);
-      this.setState({
-        expandedKeys: [key],
-        selectedKeys: [CanSelectPathPrefix + clickValue]
+  // 首次挂载拉取当前集合的用例变量数据(对应原 componentDidMount)
+  useEffect(() => {
+    let isMounted = true;
+    (async () => {
+      const result = await dispatch(fetchVariableParamsList(currColId));
+      if (!isMounted) {
+        return;
+      }
+      const fetchedRecords = result.payload.data.data;
+      allRecordsRef.current = fetchedRecords.sort((a, b) => {
+        return a.index - b.index;
       });
-      // this.props.click(clickValue);
-    }
-  }
+      handleRecordsData(id);
 
-  async UNSAFE_componentWillReceiveProps(nextProps) {
-    if (this.records && nextProps.id && this.id !== nextProps.id) {
-      this.handleRecordsData(nextProps.id);
-    }
-  }
+      if (clickValue) {
+        const isArrayParams = clickValue.lastIndexOf(']') === clickValue.length - 1;
+        const key = isArrayParams ? deleteLastArr(clickValue) : deleteLastObject(clickValue);
+        setExpandedKeys([key]);
+        setSelectedKeys([CanSelectPathPrefix + clickValue]);
+        // this.props.click(clickValue);
+      }
+    })();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
-  handleSelect = key => {
-    this.setState({
-      selectedKeys: [key]
-    });
+  // 当前用例 id 变化时,仅保留位于该用例之前的用例数据(对应原 UNSAFE_componentWillReceiveProps)
+  useEffect(() => {
+    if (allRecordsRef.current.length > 0 && id && currentIdRef.current !== id) {
+      handleRecordsData(id);
+    }
+  }, [id, records, handleRecordsData]);
+
+  const handleSelect = key => {
+    setSelectedKeys([key]);
     if (key && key.indexOf(CanSelectPathPrefix) === 0) {
       key = key.substr(CanSelectPathPrefix.length);
-      this.props.click(key);
+      click(key);
     } else {
-      this.setState({
-        expandedKeys: [key]
-      });
+      setExpandedKeys([key]);
     }
   };
 
-  onExpand = keys => {
-    this.setState({ expandedKeys: keys });
+  const onExpand = keys => {
+    setExpandedKeys(keys);
   };
 
-  render() {
-    // antd5 Tree 移除 TreeNode JSX,改用 treeData 配置({ key, title, disabled, children })
-    const pathSelctByTree = (data, elementKeyPrefix = '$', deepLevel = 0) => {
-      let keys = Object.keys(data);
-      let treeNodes = keys.map((key, index) => {
-        let item = data[key],
-          casename;
-        if (deepLevel === 0) {
-          elementKeyPrefix = '$';
-          elementKeyPrefix = elementKeyPrefix + '.' + item._id;
-          casename = item.casename;
-          item = {
-            params: item.params,
-            body: item.body
-          };
-        } else if (Array.isArray(data)) {
-          elementKeyPrefix =
-            index === 0
-              ? elementKeyPrefix + '[' + key + ']'
-              : deleteLastArr(elementKeyPrefix) + '[' + key + ']';
-        } else {
-          elementKeyPrefix =
-            index === 0
-              ? elementKeyPrefix + '.' + key
-              : deleteLastObject(elementKeyPrefix) + '.' + key;
-        }
-        if (item && typeof item === 'object') {
-          const isDisable = Array.isArray(item) && item.length === 0;
-          return {
-            key: elementKeyPrefix,
-            disabled: isDisable,
-            title: casename || key,
-            children: pathSelctByTree(item, elementKeyPrefix, deepLevel + 1)
-          };
-        }
-        return { key: CanSelectPathPrefix + elementKeyPrefix, title: key };
-      });
+  // antd5 Tree 移除 TreeNode JSX,改用 treeData 配置({ key, title, disabled, children })
+  const pathSelctByTree = (data, elementKeyPrefix = '$', deepLevel = 0) => {
+    const keys = Object.keys(data);
+    const treeNodes = keys.map((key, index) => {
+      let item = data[key],
+        casename;
+      if (deepLevel === 0) {
+        elementKeyPrefix = '$';
+        elementKeyPrefix = elementKeyPrefix + '.' + item._id;
+        casename = item.casename;
+        item = {
+          params: item.params,
+          body: item.body
+        };
+      } else if (Array.isArray(data)) {
+        elementKeyPrefix =
+          index === 0
+            ? elementKeyPrefix + '[' + key + ']'
+            : deleteLastArr(elementKeyPrefix) + '[' + key + ']';
+      } else {
+        elementKeyPrefix =
+          index === 0
+            ? elementKeyPrefix + '.' + key
+            : deleteLastObject(elementKeyPrefix) + '.' + key;
+      }
+      if (item && typeof item === 'object') {
+        const isDisable = Array.isArray(item) && item.length === 0;
+        return {
+          key: elementKeyPrefix,
+          disabled: isDisable,
+          title: casename || key,
+          children: pathSelctByTree(item, elementKeyPrefix, deepLevel + 1)
+        };
+      }
+      return { key: CanSelectPathPrefix + elementKeyPrefix, title: key };
+    });
 
-      return treeNodes;
-    };
+    return treeNodes;
+  };
 
-    return (
-      <div className="modal-postman-form-variable">
-        <Tree
-          expandedKeys={this.state.expandedKeys}
-          selectedKeys={this.state.selectedKeys}
-          onSelect={([key]) => this.handleSelect(key)}
-          onExpand={this.onExpand}
-          treeData={pathSelctByTree(this.state.records)}
-        />
-      </div>
-    );
-  }
+  return (
+    <div className="modal-postman-form-variable">
+      <Tree
+        expandedKeys={expandedKeys}
+        selectedKeys={selectedKeys}
+        onSelect={([key]) => handleSelect(key)}
+        onExpand={onExpand}
+        treeData={pathSelctByTree(records)}
+      />
+    </div>
+  );
 }
 
-export default VariablesSelect;
+VariablesSelect.propTypes = {
+  click: PropTypes.func,
+  clickValue: PropTypes.string,
+  id: PropTypes.number
+};

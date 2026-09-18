@@ -59,6 +59,7 @@
 | TypeScript 覆盖扩大（第 9 批） | `common/postmanLib.js` 与服务端 4 个核心入口（`app`, `router`, `websocket`, `plugin`）未受类型检查 | 加 `// @ts-check` + 纳入 include + global.d.ts 补齐 `crypto-js`/`jsrsasign`/`koa-*` 声明 | 清零 **129 处**类型错误；**达成 common/ 全部 14 个公共库与 server/ 全仓业务代码 100% 完整受检重大里程碑**！AST 语义比对证实零业务逻辑变更 |
 | 前端通用组件 Hooks 现代化（第 2 批） | 5 个通用组件（`Intro`, `MockDoc`, `UsernameAutoComplete`, `CaseEnv`, `EasyDragSort`）仍使用类组件及废弃的字符串 ref 与 `ReactDOM.findDOMNode` | 重构为 React 18 函数组件 + Hooks；淘汰字符串 ref 与 `ReactDOM.findDOMNode` 废弃 API；新增 5 个组件单测（32 项用例） | 全量测试增至 **541** 项！消灭 React 废弃调用；`CaseEnv` 折叠状态与 `EasyDragSort` 拖拽换位逻辑均获严格变异击杀覆盖 |
 | TypeScript 覆盖扩大（第 10 批） | 服务端底层与安装脚本（`install.js`, `db.js`, `mongoose-auto-increment.js`, `notice.js`, `ldap.js`）未受类型检查 | 加 `// @ts-check` + 纳入 include + global.d.ts 补齐 `extend`/`ldapjs` 声明 | 清零 **86 处**类型错误；AST 深度比对证明 5 个文件 100% 逐节点一致；至此除孤立未引用的 initConfig.js 外，**server/ 全目录核心生产代码 100% 完整受检**！ |
+| ModalPostman 弹窗组 Hooks 现代化 | `ModalPostman` 弹窗组 4 个组件（`index`, `MockList`, `MethodsList`, `VariablesSelect`）仍使用类组件、`@connect` 装饰器与废弃生命周期 | 重构为 React 18 函数组件 + Hooks；消除全部 `@connect` 与 `UNSAFE_componentWillMount`/`ReceiveProps`；新增 5 项单测 | 全量测试增至 **546** 项！参数解析、常量输入、Mock 过滤与变量树异步拉取全覆盖；独立变异测试 100% 精准击杀 |
 
 ## 二、评估后暂缓（含推进路径）
 
@@ -72,9 +73,10 @@
   4. 观察期后删除 webpack 相关依赖与 build/ 旧脚本。
 - 暂缓理由：构建迁移无法靠测试套件充分验证（需全功能回归），本会话以浏览器冒烟覆盖不到该风险面。
 
-### 2. 剩余 45 个 Class 组件 → Hooks（持续进行）
+### 2. 剩余 44 个 Class 组件 → Hooks（持续进行）
 
-- 累计已完成 18 个组件迁移（GuideBtns、Breadcrumb、Loading、Footer、ErrMsg、Notify、Label、Subnav、MyPopConfirm、ProjectCard、TimeLine、Header、Search、Intro、MockDoc、UsernameAutoComplete、CaseEnv、EasyDragSort），消灭了全部 UNSAFE_ 生命周期与 `ReactDOM.findDOMNode`/字符串 ref 废弃 API。
+- 累计已完成 22 个组件迁移（GuideBtns、Breadcrumb、Loading、Footer、ErrMsg、Notify、Label、Subnav、MyPopConfirm、ProjectCard、TimeLine、Header、Search、Intro、MockDoc、UsernameAutoComplete、CaseEnv、EasyDragSort、ModalPostman/index、MockList、MethodsList、VariablesSelect），消灭了全部 UNSAFE_ 生命周期与 `ReactDOM.findDOMNode`/字符串 ref 废弃 API。
+- 目前 `client/components/` 下仅存 4 个业务类组件（`Postman.js`, `SchemaTable.js`, `AceEditor.js`, `AuthenticatedComponent.js`，注：`ErrorBoundary.js` 按 React 18 规范必须保持为类组件）。
 - 优先顺序建议：容器组件（`client/containers/**`，配合业务需求与状态层选型逐步改造）。
 - 迁移中顺带清理 `core-decorators` 的 `@autobind`（改箭头函数属性）与 `@connect`（改 hooks）。
 
@@ -113,5 +115,5 @@
 ## 四、验证基线
 
 - Node：`.nvmrc` 24.21.0（engines `>=18 <25`）。
-- 门禁：`npm run lint`（覆盖全仓含 test/，0 error 0 warning，pre-commit 卡点）、`npm test`（**541**）、`npm run typecheck`（0 错）、`npm run build-client`（0 error）。
+- 门禁：`npm run lint`（覆盖全仓含 test/，0 error 0 warning，pre-commit 卡点）、`npm test`（**546**）、`npm run typecheck`（0 错）、`npm run build-client`（0 error）。
 - 浏览器冒烟（本轮）：注册/登录（scrypt + legacy 自动升级）、接口编辑页编辑器、用例表格拖拽持久化、Markdown 双写、Wiki 编辑器、面包屑、路由分包按需加载，全部通过。
