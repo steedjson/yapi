@@ -66,6 +66,7 @@
 | 项 | 旧 | 新 | 说明 |
 | --- | --- | --- | --- |
 | 非 major 依赖安全批（commit 84cc30a5） | audit 45 项 = 9 critical / 26 high / 8 moderate / 2 low（npmmirror 未实现 audit 接口，此前无可见性） | audit **35 项 = 3 critical / 24 high / 8 moderate / 0 low**；5 个包升级 + audit 脚本入口 + 1 个回归测试 | `swagger-client` 3.5.1→3.38.2（消除其引入的 deep-extend、cross-fetch/node-fetch、cookie、form-data、fast-json-patch、qs@6.5.1 传递链）、`qs` 6.7.0→6.16.0、`sha.js` 2.4.9→2.4.12、`underscore` 1.8.3→1.13.8、`@babel/core` 7.28.4→7.29.7；新增 `scripts.audit`（固定官方 registry）；新增 `test/common/postman-utils-underscore.test.js`（沙箱公开 API `utils._` 回归保护，9 例）。业务代码与 `static/prd` 零改动；`run.js` 契约（`swagger({spec})→res.spec`）实测兼容故未改。门禁：lint 0 error / typecheck 0 错 / **npm test 555** 全绿 / build-client 0 error。三阶段独立评审结论 PASS |
+| 最小 CI 四步门禁 + audit 基线差分（commit ff37aebe） | 仓库无任何 CI（`.github/` 仅 ISSUE_TEMPLATE.md），lint/typecheck/test/build 只靠本地 pre-commit；audit 因存量 35 项无法直接做门禁 | 新增 `.github/workflows/ci.yml`（push/PR、单 job、mongo:7 service、四步门禁）、`scripts/audit-check.js`（零依赖基线差分，退出码 0/1/2/3）、`scripts/audit-baseline.json`（3/24/8/0/35）、`test/scripts/audit-check.test.js`（7 例） | CI 步骤：checkout → setup-node(.nvmrc, cache npm) → npm ci → 写 CI 版 config.json（yapi_test、127.0.0.1:27017、mail 关闭）→ lint → typecheck → test → build-client → audit:ci；audit 仅对**新增**漏洞失败（容忍 npm audit 退出码 1）。验证：lint 0 / typecheck 0 / **npm test 562** 全绿（含 mongo:7@27019 的 CI 等价实跑）/ audit:ci 实测 delta 全 0；门禁脚本四条退出码分支均有离线回归测试；独立评审 PASS |
 
 ## 二、评估后暂缓（含推进路径）
 
@@ -117,7 +118,7 @@
 - 登录路径 scryptSync 同步阻塞约几十毫秒；`verifyPassword` 尊重 storedHash 自述参数但受 Node maxmem 兜底 —— 观察即可。
 - old 兼容：`add`/`resetPassword` 生成 legacy 密码格式（首次登录自动升级）—— 如后续可改既有测试，可一并 scrypt 化。
 - 沙箱进程池边界收窄观察项：常驻 Worker 下恶意脚本可篡改注入的 assert/Random 模块对象（影响同 Worker 后续任务直至 1000 次轮换）；任务队列无背压上限；context 不可序列化时误判为崩溃换 Worker —— 均为低风险设计取舍，知悉即可。
-- `npm test` 偶发 unhandled rejection（`test/server/routerBodyParser.test.js:162` 的 `mongoose.connection.close()` 与在途操作竞态）：非 major 依赖批验证期间出现 1 次，随后两轮全量（546/555）复跑均干净，且 lock 中 mongoose/mongodb 链零变化 —— 判定为既有测试结构导致的时序 flake，与本批无关；后续复现时建议保留完整输出再归因。
+- `npm test` 偶发 unhandled rejection（teardown 的 `mongoose.connection.close()` 与在途操作竞态，栈顶见 `test/server/base.test.js:354`）：依赖安全批验证期间出现 1 次；CI 批的 mongo:7 等价实跑中首跑复现（4 个 server 测试文件、40 个 `MongoClientClosedError`，断言全过但进程退出码 1），隔离复跑与二次全量均干净（复现率约 1/2，负载相关）。判定为既有测试结构导致的时序 flake（commit 43fe3a60 曾尝试根治），**会让 CI 的 Test 步骤偶发变红** —— 已列入 CI 后续跟踪项，建议单独批次加固 teardown（等待在途操作完成后再 close）。
 
 ## 四、新发现技术债（2026-09-18 全仓扫描，待评估排期）
 
@@ -138,10 +139,18 @@
 - **dev/build 链**：`style-loader@0.18.2`→loader-utils@1.1.0→json5@0.5.1（critical/high，随构建迁移处理）；conventional-changelog-cli→handlebars（见上）；ava→@vercel/nft→node-fetch（dev-only）。
 - 推进路径：非 major 批已做完；剩余项按「可低成本修复（handlebars）→ 需升级依赖树（jsonpath/json-schema-faker）→ 需 major 改造（markdown-it/jsondiffpatch/koa-websocket/style-loader/jsrsasign）」三档排期。
 
-### 2. 无 CI（门禁仅本地生效）
+### 2. 无 CI（门禁仅本地生效）→ 已完成（commit ff37aebe）
 
-- 现状：`.github/` 仅 ISSUE_TEMPLATE.md，无任何 workflow；`lint`/`typecheck`/`test`/`build-client` 四道门禁只挂在本地 pre-commit 与人工执行，push/PR 无强制。
-- 推进路径：加最小 GitHub Actions（四步门禁），成本约半天；同时解决 audit 源问题（官方 registry 或 osv-scanner）。
+- 原现状：`.github/` 仅 ISSUE_TEMPLATE.md，无任何 workflow；`lint`/`typecheck`/`test`/`build-client` 四道门禁只挂在本地 pre-commit 与人工执行，push/PR 无强制。
+- 已落地：`.github/workflows/ci.yml`（push + pull_request，单 job，ubuntu-latest，30min 超时，mongo:7 service 含 mongosh 健康检查）；CI 中现场写 config.json（该文件被 gitignore，测试依赖它连库）。
+- audit 门禁：按评审建议改为**基线差分**（`npm run audit:ci` → `scripts/audit-check.js`，仅对新增漏洞失败，退出码 0/1/2/3 有离线回归测试）；基线 `scripts/audit-baseline.json` 记录当前 35 项。
+- **后续跟踪项（非阻塞，来自评审）**：
+  1. server 测试 teardown flake（`MongoClientClosedError`）会让 CI 的 Test 步骤偶发变红 —— 建议单独批次加固（teardown 等待在途操作完成后再 close）；
+  2. `npm run build-client` 的 CI 首次真跑未验证（本批无构建相关改动，上一批同依赖状态已验证 0 error）；
+  3. CI 拉包走 npmmirror（lockfile resolved 全部指向镜像）：若 runner 侧不稳，可改 `npm ci --registry=https://registry.npmjs.org --replace-registry-host=always`；
+  4. `scripts/` 未纳入 `npm run lint` 范围（新脚本目前只被手工 lint）；
+  5. `audit-check.js:135` 在 `metadata.total` 为 null 时按 0 处理（severity 仍各自比对，不漏报新增）；
+  6. 官方 action 目前用主版本 tag（`@v4`），如需供应链加固可改 SHA 固定。
 
 ### 3. 结构债（god files）
 
@@ -171,7 +180,7 @@
 ### 建议优先级（供裁决）
 
 1. ~~非 major 依赖安全批（swagger-client / qs / sha.js / underscore / @babel/core）+ audit 纳入门禁~~ → **已完成（commit 84cc30a5）**；audit 门禁接入方式待定（见第 1 节门禁建议）；
-2. 最小 CI 四步门禁；
+2. ~~最小 CI 四步门禁~~ → **已完成（commit ff37aebe）**，含 audit 基线差分门禁；后续跟踪项见第 2 节；
 3. 类组件迁移优先 containers 并同步补 containers 测试；
 4. 同步 I/O 收口与 god file 拆分随改造进行；
 5. major 升级（markdown-it / jsondiffpatch / koa-websocket / react-router / antd6 / react19）单独排期。
@@ -179,5 +188,6 @@
 ## 五、验证基线
 
 - Node：`.nvmrc` 24.21.0（engines `>=18 <25`）。
-- 门禁：`npm run lint`（覆盖全仓含 test/，0 error 0 warning，pre-commit 卡点）、`npm test`（**555**）、`npm run typecheck`（0 错）、`npm run build-client`（0 error）、`npm run audit`（官方 registry 安全扫描；当前 35 项，暂作报告用途，接入 CI 前需改基线差分）。
+- 门禁：`npm run lint`（覆盖全仓含 test/，0 error 0 warning，pre-commit 卡点）、`npm test`（**562**）、`npm run typecheck`（0 错）、`npm run build-client`（0 error）、`npm run audit`（官方 registry 安全扫描，当前 35 项）、`npm run audit:ci`（基线差分门禁，仅对新增漏洞失败）。
+- CI：`.github/workflows/ci.yml`（push/PR 触发；mongo:7 service + 上述门禁全跑）。本地等价验证方式：`docker run -d --rm -p <空闲端口>:27017 mongo:7` + 按 workflow heredoc 写 config.json（改端口）+ `npm test`。
 - 浏览器冒烟（本轮）：注册/登录（scrypt + legacy 自动升级）、接口编辑页编辑器、用例表格拖拽持久化、Markdown 双写、Wiki 编辑器、面包屑、路由分包按需加载，全部通过。
