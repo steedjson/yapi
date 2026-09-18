@@ -1,5 +1,5 @@
-import React, { Component } from 'react';
-import { connect } from 'react-redux';
+import React, { useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
 import { Switch, Button, Tooltip, message, Form } from 'antd';
 
@@ -25,112 +25,92 @@ const tailFormItemLayout = {
   }
 };
 
-@connect(
-  state => {
-    return {
-      projectMsg: state.project.currProject
-    };
-  },
-  {
-    updateProjectMock,
-    getProject
-  }
-)
-export default class ProjectMock extends Component {
-  static propTypes = {
-    match: PropTypes.object,
-    projectId: PropTypes.number,
-    updateProjectMock: PropTypes.func,
-    projectMsg: PropTypes.object,
-    getProject: PropTypes.func
-  };
+/**
+ * 全局 mock 脚本配置。原类组件经 Hooks 现代化迁移，渲染结构与行为保持一致：
+ * - 旧 @connect 改为 useSelector/useDispatch；
+ * - 旧 UNSAFE_componentWillMount 首帧前回填（is_mock_open / project_mock_script）
+ *   改为 useState 惰性初始化，首帧渲染输出一致；旧实现不响应 projectMsg 后续
+ *   变化，惰性初始化仅取一次，行为保持一致。
+ */
+const ProjectMock = props => {
+  const { projectId } = props;
+  const dispatch = useDispatch();
+  const projectMsg = useSelector(state => state.project.currProject);
 
-  constructor(props) {
-    super(props);
-    this.state = {
-      is_mock_open: false,
-      project_mock_script: ''
-    };
-  }
+  const [isMockOpen, setIsMockOpen] = useState(() => projectMsg.is_mock_open);
+  const [projectMockScript, setProjectMockScript] = useState(() => projectMsg.project_mock_script);
 
-  handleSubmit = async () => {
+  const handleSubmit = async () => {
     let params = {
-      id: this.props.projectId,
-      project_mock_script: this.state.project_mock_script,
-      is_mock_open: this.state.is_mock_open
+      id: projectId,
+      project_mock_script: projectMockScript,
+      is_mock_open: isMockOpen
     };
 
-    let result = await this.props.updateProjectMock(params);
+    let result = await dispatch(updateProjectMock(params));
 
     if (result.payload.data.errcode === 0) {
       message.success('保存成功');
-      await this.props.getProject(this.props.projectId);
+      await dispatch(getProject(projectId));
     } else {
       message.success('保存失败, ' + result.payload.data.errmsg);
     }
   };
 
-  UNSAFE_componentWillMount() {
-    this.setState({
-      is_mock_open: this.props.projectMsg.is_mock_open,
-      project_mock_script: this.props.projectMsg.project_mock_script
-    });
-  }
-
   // 是否开启
-  onChange = v => {
-    this.setState({
-      is_mock_open: v
-    });
+  const onChange = v => {
+    setIsMockOpen(v);
   };
 
-  handleMockJsInput = e => {
-    this.setState({
-      project_mock_script: e.text
-    });
+  const handleMockJsInput = e => {
+    setProjectMockScript(e.text);
   };
 
-  render() {
-    return (
-      <div className="m-panel">
-        <Form>
-          <FormItem
-            label={
-              <span>
-                是否开启&nbsp;<a
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  href="https://hellosean1025.github.io/yapi/documents/project.html#%E5%85%A8%E5%B1%80mock"
-                >
-                  <Tooltip title="点击查看文档">
-                    <QuestionCircleOutlined />
-                  </Tooltip>
-                </a>
-              </span>
-            }
-            {...formItemLayout}
-          >
-            <Switch
-              checked={this.state.is_mock_open}
-              onChange={this.onChange}
-              checkedChildren="开"
-              unCheckedChildren="关"
-            />
-          </FormItem>
-          <FormItem label="Mock脚本" {...formItemLayout}>
-            <AceEditor
-              data={this.state.project_mock_script}
-              onChange={this.handleMockJsInput}
-              style={{ minHeight: '500px' }}
-            />
-          </FormItem>
-          <FormItem {...tailFormItemLayout}>
-            <Button type="primary" htmlType="submit" onClick={this.handleSubmit}>
-              保存
-            </Button>
-          </FormItem>
-        </Form>
-      </div>
-    );
-  }
-}
+  return (
+    <div className="m-panel">
+      <Form>
+        <FormItem
+          label={
+            <span>
+              是否开启&nbsp;<a
+                target="_blank"
+                rel="noopener noreferrer"
+                href="https://hellosean1025.github.io/yapi/documents/project.html#%E5%85%A8%E5%B1%80mock"
+              >
+                <Tooltip title="点击查看文档">
+                  <QuestionCircleOutlined />
+                </Tooltip>
+              </a>
+            </span>
+          }
+          {...formItemLayout}
+        >
+          <Switch
+            checked={isMockOpen}
+            onChange={onChange}
+            checkedChildren="开"
+            unCheckedChildren="关"
+          />
+        </FormItem>
+        <FormItem label="Mock脚本" {...formItemLayout}>
+          <AceEditor
+            data={projectMockScript}
+            onChange={handleMockJsInput}
+            style={{ minHeight: '500px' }}
+          />
+        </FormItem>
+        <FormItem {...tailFormItemLayout}>
+          <Button type="primary" htmlType="submit" onClick={handleSubmit}>
+            保存
+          </Button>
+        </FormItem>
+      </Form>
+    </div>
+  );
+};
+
+ProjectMock.propTypes = {
+  projectId: PropTypes.number
+};
+
+export default ProjectMock;

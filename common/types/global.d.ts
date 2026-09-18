@@ -157,6 +157,13 @@ declare module 'react-redux' {
     mergeProps?: any,
     options?: any
   ): any;
+  // react-redux 8 起提供 Hooks API；项目未对 Redux state 建模，
+  // selector 的 state 参数按 any 处理。
+  export function useDispatch(): any;
+  export function useSelector(
+    selector: (state: any) => any,
+    equalityFn?: (a: any, b: any) => boolean
+  ): any;
 }
 
 declare module 'antd' {
