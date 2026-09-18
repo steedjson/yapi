@@ -18,6 +18,10 @@ const avatarModel = requireAny('../models/avatar.js');
 
 const jwt = require('jsonwebtoken');
 
+// 默认头像图片内容固定不变，进程内缓存避免每次未设置头像的请求都同步读盘。
+/** @type {Buffer | null} */
+let defaultAvatarBuffer = null;
+
 class userController extends baseController {
   /**
    * @param {any} ctx Koa 请求上下文
@@ -950,7 +954,10 @@ class userController extends baseController {
       let data = await avatarInst.get(uid);
       let dataBuffer, type;
       if (!data || !data.basecode) {
-        dataBuffer = yapi.fs.readFileSync(yapi.path.join(yapi.WEBROOT, 'static/image/avatar.png'));
+        if (!defaultAvatarBuffer) {
+          defaultAvatarBuffer = yapi.fs.readFileSync(yapi.path.join(yapi.WEBROOT, 'static/image/avatar.png'));
+        }
+        dataBuffer = defaultAvatarBuffer;
         type = 'image/png';
       } else {
         type = data.type;

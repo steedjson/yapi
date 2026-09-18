@@ -130,8 +130,10 @@ exports.log = (msg, type) => {
   // let data = (new Date).toLocaleString() + '\t|\t' + type + '\t|\t' + msg + '\n';
   let data = `[ ${new Date().toLocaleString()} ] [ ${type} ] ${msg}\n`;
 
-  fs.writeFileSync(logfile, data, {
-    flag: 'a'
+  fs.writeFile(logfile, data, { flag: 'a' }, err => {
+    if (err) {
+      console.error('write log file failed:', err && err.message);
+    }
   });
 };
 

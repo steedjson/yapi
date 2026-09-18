@@ -1,8 +1,8 @@
 {
-  "critical": 3,
+  "critical": 2,
   "high": 24,
   "moderate": 8,
   "low": 0,
-  "total": 35,
-  "note": "基线来源：2026-09-18 在本仓库（分支 codex/refactor-foundation）以官方 registry https://registry.npmjs.org 实测 npm audit --json 的 metadata.vulnerabilities 计数。本基线仅作为 CI 基线差分门禁的对比下限，不代表这些漏洞可接受；修复后应主动下调。更新方式：本地运行 npm audit --registry=https://registry.npmjs.org --json，以其 metadata.vulnerabilities 的计数替换上述数值（total 应等于四个 severity 之和）；或运行 npm run audit:ci 查看当前计数与基线的对比结果。"
+  "total": 34,
+  "note": "基线来源：2026-09-18 在本仓库（分支 codex/refactor-foundation）以官方 registry https://registry.npmjs.org 实测 npm audit --json 的 metadata.vulnerabilities 计数。通过 npm update handlebars 将 conventional-changelog-writer 依赖的 handlebars 升级至 4.7.9，消除 1 项 critical 漏洞，critical 由 3 下调至 2、total 由 35 下调至 34。本基线仅作为 CI 基线差分门禁的对比下限，不代表这些漏洞可接受；修复后应主动下调。更新方式：本地运行 npm audit --registry=https://registry.npmjs.org --json，以其 metadata.vulnerabilities 的计数替换上述数值（total 应等于四个 severity 之和）；或运行 npm run audit:ci 查看当前计数与基线的对比结果。"
 }

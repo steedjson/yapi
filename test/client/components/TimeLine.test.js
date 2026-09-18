@@ -144,7 +144,7 @@ test.serial('挂载即拉取第一页动态, typeid 变化时重新拉取', asyn
   const newsCalls = dispatched.filter(a => a.type === FETCH_NEWS_DATA);
   // act 同步刷新会连带微任务,fulfilled 二次派发可能已入账,故对首条与最新条做稳健断言
   t.truthy(newsCalls.length >= 1, '挂载后应派发 FETCH_NEWS_DATA');
-  t.is(newsCalls[0].typeid, 42, 'action 应携带目标 typeid');
+  t.is(newsCalls[0].meta.typeid, 42, 'action 应携带目标 typeid');
   t.is(getCalls[0].url, '/api/log/list');
   t.deepEqual(
     getCalls[0].config.params,
@@ -163,7 +163,7 @@ test.serial('挂载即拉取第一页动态, typeid 变化时重新拉取', asyn
 
   const allNewsCalls = dispatched.filter(a => a.type === FETCH_NEWS_DATA);
   t.truthy(allNewsCalls.length >= 2, 'typeid 变化应再次派发 FETCH_NEWS_DATA');
-  t.is(allNewsCalls[allNewsCalls.length - 1].typeid, 43, '最新一次拉取应使用新 typeid');
+  t.is(allNewsCalls[allNewsCalls.length - 1].meta.typeid, 43, '最新一次拉取应使用新 typeid');
   await flushEffects();
 });
 
@@ -214,7 +214,7 @@ test.serial('有更多动态时展示查看更多, 点击防抖派发加载下�
   const moreActions = dispatched.filter(a => a.type === FETCH_MORE_NEWS);
   // fulfilled 二次派发可能随 act 微任务先行入账,取首条断言原始参数
   t.truthy(moreActions.length >= 1, '点击应派发 FETCH_MORE_NEWS');
-  t.is(moreActions[0].typeid, 42);
+  t.is(moreActions[0].meta.typeid, 42);
   await flushEffects();
 });
 

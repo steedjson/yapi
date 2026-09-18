@@ -25,6 +25,10 @@ const categoryCache = require('../utils/ttlCache');
 const { buildCategoryTree, attachInterfacesToCategories } = require('../utils/categoryTree');
 const handleHeaders = require('../utils/interfaceNormalizer.js');
 
+// diff 通知邮件所需的两个 CSS 内容固定不变，进程内缓存避免每次保存接口都同步读盘。
+/** @type {{ annotatedCss: string, htmlCss: string } | null} */
+let diffCssCache = null;
+
 /**
  * 仅清理当前项目的分类缓存，避免写操作导致其他项目缓存无效。
  * @param {any} [projectId]
@@ -854,17 +858,22 @@ class interfaceController extends baseController {
     });
     if (params.switch_notice === true) {
       let diffView = showDiffMsg(jsondiffpatch, formattersHtml, logData);
-      let annotatedCss = fs.readFileSync(
-        path.resolve(
-          yapi.WEBROOT,
-          'node_modules/jsondiffpatch/dist/formatters-styles/annotated.css'
-        ),
-        'utf8'
-      );
-      let htmlCss = fs.readFileSync(
-        path.resolve(yapi.WEBROOT, 'node_modules/jsondiffpatch/dist/formatters-styles/html.css'),
-        'utf8'
-      );
+      if (!diffCssCache) {
+        diffCssCache = {
+          annotatedCss: fs.readFileSync(
+            path.resolve(
+              yapi.WEBROOT,
+              'node_modules/jsondiffpatch/dist/formatters-styles/annotated.css'
+            ),
+            'utf8'
+          ),
+          htmlCss: fs.readFileSync(
+            path.resolve(yapi.WEBROOT, 'node_modules/jsondiffpatch/dist/formatters-styles/html.css'),
+            'utf8'
+          )
+        };
+      }
+      let { annotatedCss, htmlCss } = diffCssCache;
 
       let project = await this.projectModel.getBaseInfo(interfaceData.project_id);
 

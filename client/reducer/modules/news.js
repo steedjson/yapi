@@ -20,7 +20,8 @@ const initialState = {
 export default (state = initialState, action) => {
   switch (action.type) {
     case FETCH_NEWS_DATA: {
-      if (action.requestId && action.requestId < state.newsRequestId) return state;
+      const requestId = (action.meta && action.meta.requestId) || action.requestId;
+      if (requestId && requestId < state.newsRequestId) return state;
       if (!action.payload || !action.payload.data || action.payload.data.errcode !== 0) return state;
       const data = action.payload.data.data;
       const list = [...data.list].sort((a, b) => b.add_time - a.add_time);
@@ -28,11 +29,12 @@ export default (state = initialState, action) => {
         ...state,
         newsData: { total: data.total, list },
         curpage: 1,
-        newsRequestId: action.requestId
+        newsRequestId: requestId
       };
     }
     case FETCH_MORE_NEWS: {
-      if (action.requestId && action.requestId < state.newsRequestId) return state;
+      const requestId = (action.meta && action.meta.requestId) || action.requestId;
+      if (requestId && requestId < state.newsRequestId) return state;
       if (!action.payload || !action.payload.data || action.payload.data.errcode !== 0) return state;
       const data = action.payload.data.data;
       const list = [...state.newsData.list, ...data.list].sort((a, b) => b.add_time - a.add_time);
@@ -40,7 +42,7 @@ export default (state = initialState, action) => {
         ...state,
         newsData: { total: data.total, list },
         curpage: data.list && data.list.length ? state.curpage + 1 : state.curpage,
-        newsRequestId: action.requestId
+        newsRequestId: requestId
       };
     }
     default:
@@ -58,12 +60,16 @@ import variable from '../../constants/variable';
  * @param {any} page
  * @param {any} limit
  * @param {any} selectValue
- * @returns {{ type: string, payload: any, requestId: number, typeid: any }}
+ * @returns {{ type: string, payload: any, meta: { requestId: number, typeid: any } }}
  */
 export function fetchNewsData(typeid, type, page, limit, selectValue) {
   const requestId = ++newsRequestSequence;
   const param = { typeid, type, page, limit: limit ? limit : variable.PAGE_LIMIT, selectValue };
-  return { type: FETCH_NEWS_DATA, payload: axios.get('/api/log/list', { params: param }), requestId, typeid };
+  return {
+    type: FETCH_NEWS_DATA,
+    payload: axios.get('/api/log/list', { params: param }),
+    meta: { requestId, typeid }
+  };
 }
 /**
  * @param {any} typeid
@@ -71,12 +77,16 @@ export function fetchNewsData(typeid, type, page, limit, selectValue) {
  * @param {any} page
  * @param {any} limit
  * @param {any} selectValue
- * @returns {{ type: string, payload: any, requestId: number, typeid: any }}
+ * @returns {{ type: string, payload: any, meta: { requestId: number, typeid: any } }}
  */
 export function fetchMoreNews(typeid, type, page, limit, selectValue) {
   const requestId = ++newsRequestSequence;
   const param = { typeid, type, page, limit: limit ? limit : variable.PAGE_LIMIT, selectValue };
-  return { type: FETCH_MORE_NEWS, payload: axios.get('/api/log/list', { params: param }), requestId, typeid };
+  return {
+    type: FETCH_MORE_NEWS,
+    payload: axios.get('/api/log/list', { params: param }),
+    meta: { requestId, typeid }
+  };
 }
 
 /** @param {any} project_id @returns {{ type: string, payload: any }} */

@@ -70,6 +70,7 @@
 | teardown flake 根治：就绪语义覆盖全部启动期 DB 工作（commit 0d3944c1） | `npm test` 在**冷库**（CI 每次运行的形态）下 exit 1、29 个 unhandled（`MongoClientClosedError`）：`connect()` 只等 `mongoose.connect`，核心索引 / 插件索引 / 计数器索引都在就绪之后 fire-and-forget，测试 close 时打断在途操作 | `yapi.registerStartupTask(fn)` 注册表；`connect()` 就绪链 = connect → `ensureQueryIndexes()` → 全部注册任务（串行）；`IdentityCounter` 关 autoIndex，唯一索引与计数器初始化纳入启动任务；3 个插件 10 处 fire-and-forget createIndex 改为注册任务（索引键逐字未变）；helper 移除 200ms 兜底 | 验证（**冷库**，每轮 drop `yapi_test`）：4 文件合跑 ×3、完整套件 ×3（**567 passed**）、探针 delay=0 全 0 unhandled、就绪契约零 sleep 12/12、4 进程并发写 user 验证计数器唯一；独立评审在冷库复现前次 FAIL 场景并确认已解决。**顺带修复存量缺陷**：冷库多 worker 会在唯一索引建立前并发插入重复计数器文档（E11000）致唯一索引永久建不起来 |
 | CI config 形态修复（commit 253d29ab） | CI 写入的 config 只有 `mail:{enable:false}`，tsc 据此推断出 `{enable:boolean}`，`server/yapi.js:19` 的 `nodemailer.createTransport(WEBCONFIG.mail)` 因 TS weak type 检测报 TS2769 → **CI 首跑 Typecheck 必红** | 补全为符合 TransportConfig 的占位形态（`enable:false` + host/port/from/auth），mail 关闭语义不变 | 验证：用 workflow heredoc 的**完全相同内容**写入 config.json 后 `npm run typecheck` exit 0、0 错误；YAML 解析正常；config.json 已还原（sha256 与原始一致） |
 | containers 首批 5 组件 Hooks 化 + 测试基建（commit 4b810d53） | `client/containers/` 38 个类组件、**零测试覆盖**；`@connect`/`match.params`/类 state 遍布 | 迁移 GroupLog、LoginContainer、User/User、Activity、NewsList 为函数组件 + Hooks；新增 `test/helpers/containers.js` 基建与 5 个测试文件（12 用例） | `@connect`→`useSelector`/`useDispatch`；`match.params`→`useParams()`（v6 兼容层等价性已核验）；类 state→`useState`；死映射保留裸订阅。**渲染等价性：迁移前后 8/8 用例 HTML 逐字节一致**（独立 worktree 双版本对照）；lint 0 / typecheck 0 / **npm test 579** 全绿（冷库两轮，0 pending/0 unhandled）/ build 0 error。既有缺陷按 bug-for-bug 保留（NewsList 非 FSA → `dispatch(...).then` 抛错），测试显式断言而非掩盖，待单独立项 |
+| 短期高收益三项专项（commit 本次） | audit 35项（含3 critical）；日志与静态文件每次同步读盘；NewsList FSA 缺陷致 loading 永不复位 | audit 降至 **34项（critical 3→2）**；日志改异步写入、静态资源（CSS/avatar）内存缓存；NewsList 修复为标准 FSA 并经历 [true, false] 复位 | handlebars 4.7.7→4.7.9 消除 1 项 critical（基线文件下调并同步更新）；commons.log 改 fs.writeFile 消除主事件循环阻塞；interface/user 增加 diffCssCache 与 defaultAvatarBuffer；fetchNewsData/fetchMoreNews 扩展属性收敛至 meta，redux-promise 正常拦截返回 Promise，消除组件端 .then 同步抛错；更新两个测试文件。门禁：lint 0 / typecheck 0 / audit:ci delta 全 0 / npm test 579 全绿 |
 
 ## 二、评估后暂缓（含推进路径）
 
@@ -123,7 +124,7 @@
 - 登录路径 scryptSync 同步阻塞约几十毫秒；`verifyPassword` 尊重 storedHash 自述参数但受 Node maxmem 兜底 —— 观察即可。
 - old 兼容：`add`/`resetPassword` 生成 legacy 密码格式（首次登录自动升级）—— 如后续可改既有测试，可一并 scrypt 化。
 - 沙箱进程池边界收窄观察项：常驻 Worker 下恶意脚本可篡改注入的 assert/Random 模块对象（影响同 Worker 后续任务直至 1000 次轮换）；任务队列无背压上限；context 不可序列化时误判为崩溃换 Worker —— 均为低风险设计取舍，知悉即可。
-- **NewsList 既有缺陷（待单独立项，commit 4b810d53 按 bug-for-bug 保留）**：`client/reducer/modules/news.js:66` 的 `fetchNewsData` action 带 `requestId/typeid` 扩展键、非 FSA，redux-promise 透传后 `dispatch()` 返回 action 对象而非 Promise，组件内 `.then(setLoading(false))` 同步抛 `TypeError`，**loading 状态永不复位**。修复需把扩展键收编进 FSA 合法键位（payload/meta）或改组件端 `.then`，且牵连 `fetchMoreNews` 等同款 action 与 reducer 的 `newsRequestId` 竞态逻辑——单独评估。
+- ~~**NewsList 既有缺陷**~~ → **已修复（commit 本次）**：扩展属性收敛至 meta，遵循标准 FSA，dispatch 返回真实 Promise，loading 状态正常经历 [true, false] 复位，对应单测断言已更新。
 - **containers 迁移批次的跟踪项（来自 commit 4b810d53 评审）**：① 本批 5 个迁移文件中 4 个（GroupLog/Activity/NewsList/User）不在 tsconfig 白名单，不受 typecheck 覆盖（白名单策略现状，风险低）；② `test/helpers/containers.js` 的 `makeStore` 对非 FSA action 会重复记录 2 次（当前断言不受影响）；③ `flushEffects` 的 15ms 固定等待在当前用例下确定，但对接真实定时器桩时会脆弱；④ helper 暂不支持 `navigate` 跳转辅助与活 store 更新驱动断言。
 - **本机环境备注**：`config.json` 指向 27018，但用户的 `yapi-mongodb-8`（mongo:8.0 @27018）容器已停止（仅 `yapi-mongodb` mongo:4.4 @27017 在运行）——本地直跑 `npm test` 会有 5 个连库测试（dbReady×3、startupTasks×2）因 mongoose 选主 30s > AVA 超时而 pending；CI 自带 mongo service 不受影响。另：本地全量测试需要 DB（本批前端改动也如此）。
 - ~~`npm test` 偶发 unhandled rejection（teardown 与在途 DB 操作竞态）~~ → **已根治（commit 0d3944c1）**：`connect()` 就绪语义现覆盖全部启动期 DB 工作（核心索引 + 插件索引 + 计数器索引与初始化，串行），冷库 17 次启动零复现。**残余观察项（不阻塞，多进程形态才可命中）**：① 多 worker 共享冷库时，计数器初始化竞争败者进程的插件闭包 `ready` 保持 false，其后续对该模型的 save 会进入 5ms 重试循环（旧实现同位置同样如此，且旧实现还伴随数据损坏 + 索引坏死）；② 脏库若已被旧缺陷写入重复计数器文档，唯一索引任务每次启动会失败日志一次（不阻塞、不加重损坏），需一次性清洗脚本；③ `drainStartupTasks` 无单任务超时保护（依赖驱动 socket 超时兜底）；④ `dbReady.test.js` 的"索引缺失"断言在热库上效力弱化（CI 冷库形态不受影响）。
@@ -135,11 +136,11 @@
 ### 1. 依赖安全（npm audit；首批已修复，见「一、第四阶段」）
 
 - **扫描方法**：`npm audit --registry=https://registry.npmjs.org`（已固化为 `npm run audit`）。默认 npmmirror 源未实现 audit 接口（`NOT_IMPLEMENTED`），此前安全扫描实际处于盲区。
-- **进展**：非 major 首批已落地（commit 84cc30a5），45 → **35 项**（critical 9→3、high 26→24、moderate 8→8、low 2→0）；消失 10 项、新增 0 项。lock 全量 76 项版本变化已逐条归因（5 个目标包 + fast-json-patch 传递升级 + swagger-client 3.38.2 的 apidom 树 + sha.js 的 to-buffer + 移除 8 个旧依赖），其他 111 个直接依赖零变化。
-- **仍保留的 3 个 critical（均需后续批次）**：
+- **进展**：非 major 依赖安全治理持续推进，漏洞从 45 → 35 → **34 项**（critical 9→3→**2**、high 26→24、moderate 8→8、low 2→0）；通过升级 `handlebars@4.7.9` 消除了 1 项 critical。
+- **仍保留的 2 个 critical（均需后续批次）**：
   - `jsrsasign@8.0.12`：根直接依赖，advisory 覆盖 `<=11.1.0`、**无可用修复版本**，且同时是沙箱公开 API（`utils.jsrsasign`）——需专项评估替换方案；
-  - `handlebars@4.7.7`：嵌套于 conventional-changelog-writer（dev 工具链，非运行时），**存在非 major 修复（4.7.9+）**，低成本跟进候选；
   - `loader-utils`：`style-loader@0.18.2` 嵌套 1.1.0（critical）+ babel-loader 下 2.0.4（已是修复版）；修复需 style-loader major，随构建迁移处理。
+  - ~~`handlebars@4.7.7`~~ → **已修复（4.7.9，commit 本次）**。
 - **其余待处理**：`jsonpath@1.1.1` 自带嵌套 `underscore@1.12.1`（high，来自 `json-schema-faker 0.5.0-rc16`，需升级该包才能消除）；`markdown-it@8`→15、`jsondiffpatch@0.3.11`→0.7.6、`koa-websocket@4`→7、`react-router@6.30.6`（moderate 开放重定向）、`style-loader` 构建链等 major 项，随对应模块改造排期。
 - **新增观察项**：`@scarf/scarf@1.4.0` 随 swagger-client 3.38.2 进入依赖树（默认在 install 时上报安装遥测，可用 `SCARF_ANALYTICS=false` 关闭）——建议在 CI/构建环境评估禁用。
 - **门禁建议（评审提出）**：当前 35 项未清零，`npm run audit` 有漏洞时退出码为 1；接入 CI 前应改为**基线差分门禁**（仅对新增漏洞失败，如 audit-ci allowlist 或入库基线文件）或仅作报告用途，避免误报"构建损坏"。
@@ -178,10 +179,12 @@
 - 现状：11 个插件 63 个 JS 文件，0 个 `@ts-check`、7 个类组件、16 个文件直接引 antd；既不在类型门禁也不在 Hooks 迁移范围。
 - 推进路径：单独批次评估（插件可能被外部用户以源码/构建方式引用，需先确认兼容边界）。
 
-### 6. 请求路径同步 I/O
+### 6. 请求路径同步 I/O（部分已优化，见第四阶段）
 
-- `server/utils/commons.js:133` 每次日志 `writeFileSync`；`server/controllers/interface.js:580/857/864` 每请求重复 `readFileSync` 静态资源（cross-request.zip、jsondiffpatch CSS，无缓存）；`server/controllers/user.js:953` 头像兜底读盘。
-- 推进路径：日志改异步/批量写入；静态资源启动期缓存。
+- ~~`server/utils/commons.js:133` 每次日志 `writeFileSync`~~ → **已改为异步 `fs.writeFile` 非阻塞写入（commit 本次）**；
+- ~~`server/controllers/interface.js:857/864` 每请求重复 `readFileSync` 差异 CSS 静态资源~~ → **已增加 `diffCssCache` 内存缓存（commit 本次）**；
+- ~~`server/controllers/user.js:953` 头像兜底重复读盘~~ → **已增加 `defaultAvatarBuffer` 内存缓存（commit 本次）**；
+- 剩余项：`server/controllers/interface.js:580` 插件包下载等边缘文件读取，随对应业务模块优化。
 
 ### 7. 其他遗留依赖与待审查项
 
@@ -199,7 +202,7 @@
 ## 五、验证基线
 
 - Node：`.nvmrc` 24.21.0（engines `>=18 <25`）。
-- 门禁：`npm run lint`（覆盖全仓含 test/，0 error 0 warning，pre-commit 卡点）、`npm test`（**579**）、`npm run typecheck`（0 错）、`npm run build-client`（0 error）、`npm run audit`（官方 registry 安全扫描，当前 35 项）、`npm run audit:ci`（基线差分门禁，仅对新增漏洞失败）。
+- 门禁：`npm run lint`（覆盖全仓含 test/，0 error 0 warning，pre-commit 卡点）、`npm test`（**579**）、`npm run typecheck`（0 错）、`npm run build-client`（0 error）、`npm run audit`（官方 registry 安全扫描，当前 34 项）、`npm run audit:ci`（基线差分门禁，仅对新增漏洞失败）。
 - CI：`.github/workflows/ci.yml`（push/PR 触发；mongo:7 service + 上述门禁全跑）。**首次真跑全绿：run 35341995159（3m44s）**，可用 `gh run list --repo steedjson/yapi` 查看（注意本仓库有两个 remote，`gh` 需显式 `--repo steedjson/yapi`，否则会解析到 upstream）。本地等价验证方式：`docker run -d --rm -p <空闲端口>:27017 mongo:7` + 按 workflow heredoc 写 config.json（改端口）+ `npm test`。
 - **测试验证必须用冷库**（每轮前 drop `yapi_test`）：温库会掩盖启动期 DB 工作的时序问题（冷库 teardown flake 曾在温库下"通过"、在冷库必现）。
 - **临时替换 config.json 的纪律**：先 `cp config.json /tmp/<name>.bak` 并记录 sha256（原始值 `6dc9b4c27137702233d03a4d1cdb619a622dd4180ab4044b16316114ed4864a9`），结束前恢复并校验；用户容器 27017（mongo:4.4）/27018（mongo:8.0）禁止触碰。
