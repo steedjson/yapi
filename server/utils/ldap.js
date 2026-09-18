@@ -1,6 +1,13 @@
+// @ts-check
 const ldap = require('ldapjs');
 const yapi = require('../yapi.js');
 
+/**
+ * 通过 LDAP 校验用户名密码并取回用户信息。
+ * @param {string} username 用户名
+ * @param {string} password 密码
+ * @returns {Promise<{type: boolean, message: string, info?: any}>} 校验结果
+ */
 exports.ldapQuery = (username, password) => {
   // const deferred = Q.defer();
 
@@ -13,7 +20,7 @@ exports.ldapQuery = (username, password) => {
     });
 
     // ldapjs v3 连接失败时会发 connectError（而非 error），需同时监听，否则登录流程会挂起
-    const onConnectError = err => {
+    const onConnectError = (/** @type {any} */ err) => {
       if (err) {
         let msg = {
           type: false,
@@ -25,7 +32,8 @@ exports.ldapQuery = (username, password) => {
     client.once('error', onConnectError);
     client.once('connectError', onConnectError);
     // 注册事件处理函数
-    const ldapSearch = (err, search) => {
+    const ldapSearch = (/** @type {any} */ err, /** @type {any} */ search) => {
+      /** @type {any[]} */
       const users = [];
       if (err) {
         let msg = {
@@ -37,11 +45,11 @@ exports.ldapQuery = (username, password) => {
         return;
       }
       // 查询结果事件响应
-      search.on('searchEntry', entry => {
+      search.on('searchEntry', (/** @type {any} */ entry) => {
         if (entry) {
           // ldapjs v3 移除了 entry.object，改用 pojo 还原为 {dn, 属性...} 的扁平对象
-          const flat = { dn: entry.pojo.objectName };
-          entry.pojo.attributes.forEach(attr => {
+          const flat = /** @type {Record<string, any>} */ ({ dn: entry.pojo.objectName });
+          entry.pojo.attributes.forEach((/** @type {any} */ attr) => {
             flat[attr.type] = attr.values.length === 1 ? attr.values[0] : attr.values;
           });
           // 获取查询对象
@@ -49,7 +57,7 @@ exports.ldapQuery = (username, password) => {
         }
       });
       // 查询错误事件
-      search.on('error', e => {
+      search.on('error', (/** @type {any} */ e) => {
         if (e) {
           let msg = {
             type: false,
@@ -59,7 +67,7 @@ exports.ldapQuery = (username, password) => {
         }
       });
 
-      search.on('searchReference', referral => {
+      search.on('searchReference', (/** @type {any} */ referral) => {
         // if (referral) {
         //   let msg = {
         //     type: false,
@@ -72,7 +80,7 @@ exports.ldapQuery = (username, password) => {
       // 查询结束
       search.on('end', () => {
         if (users.length > 0) {
-          client.bind(users[0].dn, password, e => {
+          client.bind(users[0].dn, password, (/** @type {any} */ e) => {
             if (e) {
               let msg = {
                 type: false,
@@ -102,9 +110,9 @@ exports.ldapQuery = (username, password) => {
     // 将client绑定LDAP Server
     // 第一个参数： 是用户，必须是从根结点到用户节点的全路径
     // 第二个参数： 用户密码
-    return new Promise((resolve, reject) => {
+    return new Promise((/** @type {(v?: any) => void} */ resolve, reject) => {
       if (ldapLogin.bindPassword) {
-        client.bind(ldapLogin.baseDn, ldapLogin.bindPassword, err => {
+        client.bind(ldapLogin.baseDn, ldapLogin.bindPassword, (/** @type {any} */ err) => {
           if (err) {
             let msg = {
               type: false,

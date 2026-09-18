@@ -58,6 +58,7 @@
 | 通用核心组件 Hooks 现代化 | 4 个通用核心组件（`ProjectCard`, `TimeLine`, `Header`, `Search`）仍使用类组件与 `@connect` / `@withRouter` 装饰器 | 重构为 React 18 函数组件 + Hooks；消除 `TimeLine` 全部 UNSAFE_ 生命周期；新增 4 个组件单测（27 项用例） | 全量测试增至 **509** 项；彻底清理 4 处 `@connect` 与 `@withRouter` 包装；`add`/`del` 防抖经 useRef+useMemo 消除陈旧闭包；TimeLine 分页与 Diff 弹窗全覆盖 |
 | TypeScript 覆盖扩大（第 9 批） | `common/postmanLib.js` 与服务端 4 个核心入口（`app`, `router`, `websocket`, `plugin`）未受类型检查 | 加 `// @ts-check` + 纳入 include + global.d.ts 补齐 `crypto-js`/`jsrsasign`/`koa-*` 声明 | 清零 **129 处**类型错误；**达成 common/ 全部 14 个公共库与 server/ 全仓业务代码 100% 完整受检重大里程碑**！AST 语义比对证实零业务逻辑变更 |
 | 前端通用组件 Hooks 现代化（第 2 批） | 5 个通用组件（`Intro`, `MockDoc`, `UsernameAutoComplete`, `CaseEnv`, `EasyDragSort`）仍使用类组件及废弃的字符串 ref 与 `ReactDOM.findDOMNode` | 重构为 React 18 函数组件 + Hooks；淘汰字符串 ref 与 `ReactDOM.findDOMNode` 废弃 API；新增 5 个组件单测（32 项用例） | 全量测试增至 **541** 项！消灭 React 废弃调用；`CaseEnv` 折叠状态与 `EasyDragSort` 拖拽换位逻辑均获严格变异击杀覆盖 |
+| TypeScript 覆盖扩大（第 10 批） | 服务端底层与安装脚本（`install.js`, `db.js`, `mongoose-auto-increment.js`, `notice.js`, `ldap.js`）未受类型检查 | 加 `// @ts-check` + 纳入 include + global.d.ts 补齐 `extend`/`ldapjs` 声明 | 清零 **86 处**类型错误；AST 深度比对证明 5 个文件 100% 逐节点一致；至此除孤立未引用的 initConfig.js 外，**server/ 全目录核心生产代码 100% 完整受检**！ |
 
 ## 二、评估后暂缓（含推进路径）
 

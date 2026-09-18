@@ -1,14 +1,21 @@
+// @ts-check
 // Module Scope
 var mongoose = require('mongoose'),
 extend = require('extend'),
+/** @type {any} */
 counterSchema,
+/** @type {any} */
 IdentityCounter;
 
 // Initialize plugin by creating counter collection in database.
+/**
+ * 初始化插件：创建（或复用）IdentityCounter 计数器模型。
+ * @returns {void}
+ */
 exports.initialize = function () {
   try {
     IdentityCounter = mongoose.model('IdentityCounter');
-  } catch (ex) {
+  } catch (/** @type {any} */ ex) {
     if (ex.name === 'MissingSchemaError') {
       // Create new counter schema.
       counterSchema = new mongoose.Schema({
@@ -18,7 +25,10 @@ exports.initialize = function () {
       });
 
       // Create a unique index using the "field" and "model" fields.
-      counterSchema.index({ field: 1, model: 1 }, { unique: true, required: true, index: -1 });
+      counterSchema.index(
+        { field: 1, model: 1 },
+        /** @type {any} */ ({ unique: true, required: true, index: -1 })
+      );
 
       // Create model using new schema.
       IdentityCounter = mongoose.model('IdentityCounter', counterSchema);
@@ -29,6 +39,12 @@ exports.initialize = function () {
 };
 
 // The function to use when invoking the plugin on a custom schema.
+/**
+ * 在自定义 schema 上启用自增字段插件。
+ * @param {import('mongoose').Schema} schema 目标 schema
+ * @param {string|object} options 模型名字符串，或 { model, field, startAt, incrementBy, unique } 配置对象
+ * @returns {void}
+ */
 exports.plugin = function (schema, options) {
 
   // If we don't have reference to the counterSchema or the IdentityCounter model then the plugin was most likely not
@@ -43,13 +59,13 @@ exports.plugin = function (schema, options) {
     incrementBy: 1, // The number by which to increment the count each time.
     unique: true // Should we create a unique index for the field
   },
-  fields = {}, // A hash of fields to add properties to in Mongoose.
+  fields = /** @type {Record<string, any>} */ ({}), // A hash of fields to add properties to in Mongoose.
   ready = false; // True if the counter collection has been updated and the document is ready to be saved.
 
   switch (typeof(options)) {
     // If string, the user chose to pass in just the model name.
     case 'string':
-      settings.model = options;
+      settings.model = /** @type {any} */ (options);
     break;
     // If object, the user passed in a hash of options.
     case 'object':
@@ -75,7 +91,7 @@ exports.plugin = function (schema, options) {
     model: settings.model,
     field: settings.field
   })
-    .then(function (counter) {
+    .then(function (/** @type {any} */ counter) {
       if (!counter) {
         // If no counter exists then create one and save it.
         counter = new IdentityCounter({ model: settings.model, field: settings.field, count: settings.startAt - settings.incrementBy });
@@ -83,7 +99,7 @@ exports.plugin = function (schema, options) {
           function () {
             ready = true;
           },
-          function (err) {
+          function (/** @type {any} */ err) {
             console.error('[mongoose-auto-increment] 初始化计数器失败:', err && err.message);
           }
         );
@@ -92,23 +108,29 @@ exports.plugin = function (schema, options) {
         ready = true;
       }
     })
-    .catch(function (err) {
+    .catch(function (/** @type {any} */ err) {
       console.error('[mongoose-auto-increment] 计数器查询失败:', err && err.message);
     });
 
   // Declare a function to get the next counter for the model/schema.
+  /**
+   * 获取该模型/字段下一个自增值。
+   * 返回 promise，同时兼容传入 callback 的旧调用方式（mongoose 7 移除 query callback）。
+   * @param {(err: any, value?: number) => void} [callback] 可选回调
+   * @returns {Promise<number>} 下一个自增值
+   */
   var nextCount = function (callback) {
     // 返回 promise，同时兼容传入 callback 的旧调用方式（mongoose 7 移除 query callback）。
     return IdentityCounter.findOne({
       model: settings.model,
       field: settings.field
     }).then(
-      function (counter) {
+      function (/** @type {any} */ counter) {
         var value = counter === null ? settings.startAt : counter.count + settings.incrementBy;
         if (callback) callback(null, value);
         return value;
       },
-      function (err) {
+      function (/** @type {any} */ err) {
         if (callback) callback(err);
         throw err;
       }
@@ -119,6 +141,12 @@ exports.plugin = function (schema, options) {
   schema.static('nextCount', nextCount);
 
   // Declare a function to reset counter at the start value - increment value.
+  /**
+   * 将计数器重置为起始值减增量。
+   * 返回 promise，同时兼容传入 callback 的旧调用方式（mongoose 7 移除 query callback）。
+   * @param {(err: any, value?: number) => void} [callback] 可选回调
+   * @returns {Promise<number>} 重置后的起始值
+   */
   var resetCount = function (callback) {
     return IdentityCounter.findOneAndUpdate(
       { model: settings.model, field: settings.field },
@@ -129,7 +157,7 @@ exports.plugin = function (schema, options) {
         if (callback) callback(null, settings.startAt);
         return settings.startAt;
       },
-      function (err) {
+      function (/** @type {any} */ err) {
         if (callback) callback(err);
         throw err;
       }
@@ -140,7 +168,7 @@ exports.plugin = function (schema, options) {
   schema.static('resetCount', resetCount);
 
   // Every time documents in this schema are saved, run this logic.
-  schema.pre('save', function (next) {
+  schema.pre('save', /** @this {any} */ function (next) {
     // Get reference to the document being saved.
     var doc = this;
 
@@ -166,7 +194,7 @@ exports.plugin = function (schema, options) {
                 // Continue with default document save functionality.
                 next();
               },
-              function (err) {
+              function (/** @type {any} */ err) {
                 next(err);
               }
             );
@@ -180,13 +208,13 @@ exports.plugin = function (schema, options) {
               // new:true specifies that the callback should get the counter AFTER it is updated (incremented).
               { new: true }
             ).then(
-              function (updatedIdentityCounter) {
+              function (/** @type {any} */ updatedIdentityCounter) {
                 // If there are no errors then go ahead and set the document's field to the current count.
                 doc[settings.field] = updatedIdentityCounter.count;
                 // Continue with default document save functionality.
                 next();
               },
-              function (err) {
+              function (/** @type {any} */ err) {
                 next(err);
               }
             );

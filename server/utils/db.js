@@ -1,7 +1,14 @@
+// @ts-check
 const mongoose = require('mongoose');
 const yapi = require('../yapi.js');
 const autoIncrement = require('./mongoose-auto-increment');
 
+/**
+ * 注册或复用 Mongoose 模型（集合名与模型名相同），并关闭 autoIndex。
+ * @param {string} model 模型名，同时作为集合名
+ * @param {any} schema Schema 实例或普通定义对象
+ * @returns {import('mongoose').Model<any>} 注册后的 Mongoose 模型
+ */
 function model(model, schema) {
   if (schema instanceof mongoose.Schema === false) {
     schema = new mongoose.Schema(schema);
@@ -12,6 +19,11 @@ function model(model, schema) {
   return mongoose.model(model, schema, model);
 }
 
+/**
+ * 建立 MongoDB 连接；连接成功后补齐查询索引并执行回调。
+ * @param {Function} [callback] 连接就绪（含索引建立完成）后的回调，以连接 promise 为 this
+ * @returns {Promise<import('mongoose').Mongoose>} mongoose.connect 返回的连接 promise
+ */
 function connect(callback) {
   // mongoose 6 起移除 useNewUrlParser/useCreateIndex/useUnifiedTopology 等
   // 连接选项与 useFindAndModify 开关，连接串与认证参数保持原样即可。
@@ -54,18 +66,19 @@ function connect(callback) {
         }
       });
     },
-    function(err) {
+    function(/** @type {any} */ err) {
       yapi.commons.log(err + 'mongodb connect error', 'error');
     }
   );
 
-  autoIncrement.initialize(db);
+  (/** @type {any} */ (autoIncrement)).initialize(db);
   return db;
 }
 
 
 // 接口菜单和列表是高频查询，索引只优化查询路径，不参与业务数据迁移。
 function ensureQueryIndexes() {
+  /** @type {Record<string, any[]>} */
   const indexes = {
     interface: [
       // 接口菜单按项目筛选后再按分类和排序号排列，使用联合索引避免全表扫描。
@@ -88,16 +101,17 @@ function ensureQueryIndexes() {
     ]
   };
 
+  /** @type {Promise<any>[]} */
   const tasks = [];
   Object.keys(indexes).forEach(collectionName => {
     indexes[collectionName].forEach(key => {
       tasks.push(
-        mongoose.connection.db.collection(collectionName).createIndex(key).catch(err => {
-          yapi.commons.log(
-            `ensure ${collectionName} index failed: ${err.message}`,
-            'error'
-          );
-        })
+        (/** @type {*} */ (mongoose.connection.db))
+          .collection(collectionName)
+          .createIndex(key)
+          .catch((/** @type {any} */ err) => {
+            yapi.commons.log(`ensure ${collectionName} index failed: ${err.message}`, 'error');
+          })
       );
     });
   });

@@ -273,3 +273,13 @@ declare module 'koa-static' {
   function koaStatic(root: string, opts?: any): any;
   export = koaStatic;
 }
+
+declare module 'extend' {
+  function extend(...args: any[]): any;
+  export = extend;
+}
+
+declare module 'ldapjs' {
+  const ldap: any;
+  export = ldap;
+}

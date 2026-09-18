@@ -1,3 +1,4 @@
+// @ts-check
 const fs = require('fs-extra');
 const yapi = require('./yapi.js');
 const commons = require('./utils/commons');
@@ -35,7 +36,7 @@ function setupSql() {
 
   yapi.connect
     .then(function() {
-      let userCol = mongoose.connection.db.collection('user');
+      let userCol = (/** @type {*} */ (mongoose.connection.db)).collection('user');
       userCol.createIndex({
         username: 1
       });
@@ -48,7 +49,7 @@ function setupSql() {
         }
       );
 
-      let projectCol = mongoose.connection.db.collection('project');
+      let projectCol = (/** @type {*} */ (mongoose.connection.db)).collection('project');
       projectCol.createIndex({
         uid: 1
       });
@@ -59,7 +60,7 @@ function setupSql() {
         group_id: 1
       });
 
-      let logCol = mongoose.connection.db.collection('log');
+      let logCol = (/** @type {*} */ (mongoose.connection.db)).collection('log');
       logCol.createIndex({
         uid: 1
       });
@@ -69,7 +70,7 @@ function setupSql() {
         type: 1
       });
 
-      let interfaceColCol = mongoose.connection.db.collection('interface_col');
+      let interfaceColCol = (/** @type {*} */ (mongoose.connection.db)).collection('interface_col');
       interfaceColCol.createIndex({
         uid: 1
       });
@@ -81,7 +82,7 @@ function setupSql() {
         index: 1
       });
 
-      let interfaceCatCol = mongoose.connection.db.collection('interface_cat');
+      let interfaceCatCol = (/** @type {*} */ (mongoose.connection.db)).collection('interface_cat');
       interfaceCatCol.createIndex({
         uid: 1
       });
@@ -93,7 +94,7 @@ function setupSql() {
         index: 1
       });
 
-      let interfaceCaseCol = mongoose.connection.db.collection('interface_case');
+      let interfaceCaseCol = (/** @type {*} */ (mongoose.connection.db)).collection('interface_case');
       interfaceCaseCol.createIndex({
         uid: 1
       });
@@ -108,7 +109,7 @@ function setupSql() {
         index: 1
       });
 
-      let interfaceCol = mongoose.connection.db.collection('interface');
+      let interfaceCol = (/** @type {*} */ (mongoose.connection.db)).collection('interface');
       interfaceCol.createIndex({
         uid: 1
       });
@@ -134,7 +135,7 @@ function setupSql() {
         index: 1
       });
 
-      let groupCol = mongoose.connection.db.collection('group');
+      let groupCol = (/** @type {*} */ (mongoose.connection.db)).collection('group');
       groupCol.createIndex({
         uid: 1
       });
@@ -142,17 +143,17 @@ function setupSql() {
         group_name: 1
       });
 
-      let avatarCol = mongoose.connection.db.collection('avatar');
+      let avatarCol = (/** @type {*} */ (mongoose.connection.db)).collection('avatar');
       avatarCol.createIndex({
         uid: 1
       });
 
-      let tokenCol = mongoose.connection.db.collection('token');
+      let tokenCol = (/** @type {*} */ (mongoose.connection.db)).collection('token');
       tokenCol.createIndex({
         project_id: 1
       });
 
-      let followCol = mongoose.connection.db.collection('follow');
+      let followCol = (/** @type {*} */ (mongoose.connection.db)).collection('follow');
       followCol.createIndex({
         uid: 1
       });
@@ -168,12 +169,12 @@ function setupSql() {
           );
           process.exit(0);
         },
-        function(err) {
+        function(/** @type {any} */ err) {
           throw new Error(`初始化管理员账号 "${yapi.WEBCONFIG.adminAccount}" 失败, ${err.message}`);
         }
       );
     })
-    .catch(function(err) {
+    .catch(function(/** @type {any} */ err) {
       throw new Error(err.message);
     });
 }
