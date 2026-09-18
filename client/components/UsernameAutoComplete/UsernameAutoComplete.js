@@ -1,4 +1,4 @@
-import React, { PureComponent as Component } from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { Select } from 'antd';
 import axios from 'axios';
@@ -36,32 +36,15 @@ const Option = Select.Option;
  * }
  *
  */
-class UsernameAutoComplete extends Component {
-  constructor(props) {
-    super(props);
-    // this.lastFetchId = 0;
-    // this.fetchUser = debounce(this.fetchUser, 800);
-  }
-
-  state = {
-    dataSource: [],
-    fetching: false
-  };
-
-  static propTypes = {
-    callbackState: PropTypes.func
-  };
+export default function UsernameAutoComplete(props) {
+  const [dataSource, setDataSource] = useState([]);
+  const [fetching, setFetching] = useState(false);
 
   // 搜索回调
-  handleSearch = value => {
+  const handleSearch = value => {
     const params = { q: value };
-    // this.lastFetchId += 1;
-    // const fetchId = this.lastFetchId;
-    this.setState({ fetching: true });
+    setFetching(true);
     axios.get('/api/user/search', { params }).then(data => {
-      // if (fetchId !== this.lastFetchId) { // for fetch callback order
-      //   return;
-      // }
       const userList = [];
       data = data.data.data;
 
@@ -73,50 +56,40 @@ class UsernameAutoComplete extends Component {
           })
         );
         // 取回搜索值后，设置 dataSource
-        this.setState({
-          dataSource: userList
-        });
+        setDataSource(userList);
       }
     });
   };
 
   // 选中候选词时
-  handleChange = value => {
-    this.setState({
-      dataSource: [],
-      // value,
-      fetching: false
-    });
-    this.props.callbackState(value);
+  const handleChange = value => {
+    setDataSource([]);
+    setFetching(false);
+    props.callbackState(value);
   };
 
-  render() {
-    let { dataSource, fetching } = this.state;
+  const children = dataSource.map((item, index) => (
+    <Option key={index} value={'' + item.id}>
+      {item.username}
+    </Option>
+  ));
 
-    const children = dataSource.map((item, index) => (
-      <Option key={index} value={'' + item.id}>
-        {item.username}
-      </Option>
-    ));
-
-    // if (!children.length) {
-    //   fetching = false;
-    // }
-    return (
-      <Select
-        mode="multiple"
-        style={{ width: '100%' }}
-        placeholder="请输入用户名"
-        filterOption={false}
-        optionLabelProp="children"
-        notFoundContent={fetching ? <span style={{ color: 'red' }}> 当前用户不存在</span> : null}
-        onSearch={this.handleSearch}
-        onChange={this.handleChange}
-      >
-        {children}
-      </Select>
-    );
-  }
+  return (
+    <Select
+      mode="multiple"
+      style={{ width: '100%' }}
+      placeholder="请输入用户名"
+      filterOption={false}
+      optionLabelProp="children"
+      notFoundContent={fetching ? <span style={{ color: 'red' }}> 当前用户不存在</span> : null}
+      onSearch={handleSearch}
+      onChange={handleChange}
+    >
+      {children}
+    </Select>
+  );
 }
 
-export default UsernameAutoComplete;
+UsernameAutoComplete.propTypes = {
+  callbackState: PropTypes.func
+};
