@@ -66,7 +66,7 @@
 | 项 | 旧 | 新 | 说明 |
 | --- | --- | --- | --- |
 | 非 major 依赖安全批（commit 84cc30a5） | audit 45 项 = 9 critical / 26 high / 8 moderate / 2 low（npmmirror 未实现 audit 接口，此前无可见性） | audit **35 项 = 3 critical / 24 high / 8 moderate / 0 low**；5 个包升级 + audit 脚本入口 + 1 个回归测试 | `swagger-client` 3.5.1→3.38.2（消除其引入的 deep-extend、cross-fetch/node-fetch、cookie、form-data、fast-json-patch、qs@6.5.1 传递链）、`qs` 6.7.0→6.16.0、`sha.js` 2.4.9→2.4.12、`underscore` 1.8.3→1.13.8、`@babel/core` 7.28.4→7.29.7；新增 `scripts.audit`（固定官方 registry）；新增 `test/common/postman-utils-underscore.test.js`（沙箱公开 API `utils._` 回归保护，9 例）。业务代码与 `static/prd` 零改动；`run.js` 契约（`swagger({spec})→res.spec`）实测兼容故未改。门禁：lint 0 error / typecheck 0 错 / **npm test 555** 全绿 / build-client 0 error。三阶段独立评审结论 PASS |
-| 最小 CI 四步门禁 + audit 基线差分（commit ff37aebe） | 仓库无任何 CI（`.github/` 仅 ISSUE_TEMPLATE.md），lint/typecheck/test/build 只靠本地 pre-commit；audit 因存量 35 项无法直接做门禁 | 新增 `.github/workflows/ci.yml`（push/PR、单 job、mongo:7 service、四步门禁）、`scripts/audit-check.js`（零依赖基线差分，退出码 0/1/2/3）、`scripts/audit-baseline.json`（3/24/8/0/35）、`test/scripts/audit-check.test.js`（7 例） | CI 步骤：checkout → setup-node(.nvmrc, cache npm) → npm ci → 写 CI 版 config.json（yapi_test、127.0.0.1:27017、mail 关闭）→ lint → typecheck → test → build-client → audit:ci；audit 仅对**新增**漏洞失败（容忍 npm audit 退出码 1）。验证：lint 0 / typecheck 0 / **npm test 562** 全绿（含 mongo:7@27019 的 CI 等价实跑）/ audit:ci 实测 delta 全 0；门禁脚本四条退出码分支均有离线回归测试；独立评审 PASS |
+| 最小 CI 四步门禁 + audit 基线差分（commit ff37aebe） | 仓库无任何 CI（`.github/` 仅 ISSUE_TEMPLATE.md），lint/typecheck/test/build 只靠本地 pre-commit；audit 因存量 35 项无法直接做门禁 | 新增 `.github/workflows/ci.yml`（push/PR、单 job、mongo:7 service、四步门禁）、`scripts/audit-check.js`（零依赖基线差分，退出码 0/1/2/3）、`scripts/audit-baseline.json`（3/24/8/0/35）、`test/scripts/audit-check.test.js`（7 例） | CI 步骤：checkout → setup-node(.nvmrc, cache npm) → npm ci → 写 CI 版 config.json（yapi_test、127.0.0.1:27017、mail 关闭）→ lint → typecheck → test → build-client → audit:ci；audit 仅对**新增**漏洞失败（容忍 npm audit 退出码 1）。验证：lint 0 / typecheck 0 / **npm test 562** 全绿（含 mongo:7@27019 的 CI 等价实跑）/ audit:ci 实测 delta 全 0；门禁脚本四条退出码分支均有离线回归测试；独立评审 PASS。**首次真跑（GitHub Actions run 35341995159，3m44s，2026-09-18）全绿**：npm ci（npmmirror 在 runner 可达）、lint、typecheck、test（**567 passed**，mongo:7 service）、build-client（35 warnings / 0 error）、audit:ci（35/35 delta 全 0）全部通过 |
 | teardown flake 根治：就绪语义覆盖全部启动期 DB 工作（commit 0d3944c1） | `npm test` 在**冷库**（CI 每次运行的形态）下 exit 1、29 个 unhandled（`MongoClientClosedError`）：`connect()` 只等 `mongoose.connect`，核心索引 / 插件索引 / 计数器索引都在就绪之后 fire-and-forget，测试 close 时打断在途操作 | `yapi.registerStartupTask(fn)` 注册表；`connect()` 就绪链 = connect → `ensureQueryIndexes()` → 全部注册任务（串行）；`IdentityCounter` 关 autoIndex，唯一索引与计数器初始化纳入启动任务；3 个插件 10 处 fire-and-forget createIndex 改为注册任务（索引键逐字未变）；helper 移除 200ms 兜底 | 验证（**冷库**，每轮 drop `yapi_test`）：4 文件合跑 ×3、完整套件 ×3（**567 passed**）、探针 delay=0 全 0 unhandled、就绪契约零 sleep 12/12、4 进程并发写 user 验证计数器唯一；独立评审在冷库复现前次 FAIL 场景并确认已解决。**顺带修复存量缺陷**：冷库多 worker 会在唯一索引建立前并发插入重复计数器文档（E11000）致唯一索引永久建不起来 |
 | CI config 形态修复（commit 253d29ab） | CI 写入的 config 只有 `mail:{enable:false}`，tsc 据此推断出 `{enable:boolean}`，`server/yapi.js:19` 的 `nodemailer.createTransport(WEBCONFIG.mail)` 因 TS weak type 检测报 TS2769 → **CI 首跑 Typecheck 必红** | 补全为符合 TransportConfig 的占位形态（`enable:false` + host/port/from/auth），mail 关闭语义不变 | 验证：用 workflow heredoc 的**完全相同内容**写入 config.json 后 `npm run typecheck` exit 0、0 错误；YAML 解析正常；config.json 已还原（sha256 与原始一致） |
 
@@ -149,12 +149,13 @@
 - **后续跟踪项（非阻塞，来自评审）**：
   1. ~~server 测试 teardown flake 会让 CI 的 Test 步骤偶发变红~~ → **已根治（commit 0d3944c1）**，残余观察项见「三、遗留观察项」；
   2. ~~CI config 的 `mail:{enable:false}` 形态导致 Typecheck 必红~~ → **已修（commit 253d29ab）**；
-  3. `npm run build-client` 的 CI 首次真跑未验证（本批无构建相关改动，上一批同依赖状态已验证 0 error）；
-  4. CI 拉包走 npmmirror（lockfile resolved 全部指向镜像）：若 runner 侧不稳，可改 `npm ci --registry=https://registry.npmjs.org --replace-registry-host=always`；
+  3. ~~`npm run build-client` 的 CI 首次真跑未验证~~ → **已验证**：run 35341995159 的 Build client 步骤通过（35 warnings / 0 error）；
+  4. ~~CI 拉包走 npmmirror 的 runner 侧可达性未验证~~ → **已验证**：run 35341995159 的 `npm ci` 通过（npmmirror 在 GitHub runner 可达）；如后续出现不稳定再改 `npm ci --registry=https://registry.npmjs.org --replace-registry-host=always`；
   5. `scripts/` 未纳入 `npm run lint` 范围（新脚本目前只被手工 lint）；
   6. `audit-check.js:135` 在 `metadata.total` 为 null 时按 0 处理（severity 仍各自比对，不漏报新增）；
   7. 官方 action 目前用主版本 tag（`@v4`），如需供应链加固可改 SHA 固定；
-  8. 真实 CI runner（GitHub Actions + service 容器）尚未实跑过，冷库行为由本机 `docker mongo:7` 等价复现（17 次启动零复现）。
+  8. ~~真实 CI runner 尚未实跑~~ → **已实跑且全绿（run 35341995159）**；
+  9. **CI 平台告警（新增，来自首次真跑 annotations）**：① `actions/checkout@v4` / `actions/setup-node@v4` 面向 Node 20 已被 GitHub 弃用（runner 强制用 Node 24 运行），后续可升到新版本 action；② `ubuntu-latest` 将于 2026-10-19 迁移到 Ubuntu 26，届时需复核构建与 mongo service 行为。
 
 ### 3. 结构债（god files）
 
@@ -193,7 +194,7 @@
 
 - Node：`.nvmrc` 24.21.0（engines `>=18 <25`）。
 - 门禁：`npm run lint`（覆盖全仓含 test/，0 error 0 warning，pre-commit 卡点）、`npm test`（**567**）、`npm run typecheck`（0 错）、`npm run build-client`（0 error）、`npm run audit`（官方 registry 安全扫描，当前 35 项）、`npm run audit:ci`（基线差分门禁，仅对新增漏洞失败）。
-- CI：`.github/workflows/ci.yml`（push/PR 触发；mongo:7 service + 上述门禁全跑）。本地等价验证方式：`docker run -d --rm -p <空闲端口>:27017 mongo:7` + 按 workflow heredoc 写 config.json（改端口）+ `npm test`。
+- CI：`.github/workflows/ci.yml`（push/PR 触发；mongo:7 service + 上述门禁全跑）。**首次真跑全绿：run 35341995159（3m44s）**，可用 `gh run list --repo steedjson/yapi` 查看（注意本仓库有两个 remote，`gh` 需显式 `--repo steedjson/yapi`，否则会解析到 upstream）。本地等价验证方式：`docker run -d --rm -p <空闲端口>:27017 mongo:7` + 按 workflow heredoc 写 config.json（改端口）+ `npm test`。
 - **测试验证必须用冷库**（每轮前 drop `yapi_test`）：温库会掩盖启动期 DB 工作的时序问题（冷库 teardown flake 曾在温库下"通过"、在冷库必现）。
 - **临时替换 config.json 的纪律**：先 `cp config.json /tmp/<name>.bak` 并记录 sha256（原始值 `6dc9b4c27137702233d03a4d1cdb619a622dd4180ab4044b16316114ed4864a9`），结束前恢复并校验；用户容器 27017（mongo:4.4）/27018（mongo:8.0）禁止触碰。
 - 浏览器冒烟（本轮）：注册/登录（scrypt + legacy 自动升级）、接口编辑页编辑器、用例表格拖拽持久化、Markdown 双写、Wiki 编辑器、面包屑、路由分包按需加载，全部通过。
