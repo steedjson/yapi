@@ -263,9 +263,15 @@ declare module 'markdown-it' {
   export = markdownIt;
 }
 
-declare module 'jsondiffpatch/dist/jsondiffpatch.umd.js' {
+// jsondiffpatch 0.7 起主入口为 ESM(create/diff/patch 等), formatters 为子路径导出;
+// 客户端经 webpack 打包主入口, 服务端经 Node require(esm) 加载, 统一按 any 存根
+declare module 'jsondiffpatch' {
   const jsondiffpatch: any;
   export = jsondiffpatch;
+}
+declare module 'jsondiffpatch/formatters/html' {
+  const formattersHtml: any;
+  export = formattersHtml;
 }
 
 // webpack 别名 common -> 仓库根 common/ 已通过 tsconfig paths 映射到真实文件，

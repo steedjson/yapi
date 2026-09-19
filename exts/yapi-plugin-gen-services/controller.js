@@ -12,6 +12,9 @@ const defaultTheme = require('./defaultTheme.js');
 const md = require('../../common/markdown');
 // 与 server/utils/escapeHtml.js 共享同一实现(经相对路径引用, 与 ../../common/* 同一解析环境)
 const escapeHtml = require('../../server/utils/escapeHtml.js');
+// anchor v10 默认 slugify(encodeURIComponent) 产生的 %XX 序列会被本文件末端 unescape() 复活成
+// 引号/尖括号, 造成 <hN id> 与 TOC <a href> 属性位逃逸注入; 统一改用白名单安全 slug(共享实现)
+const anchorSlugify = require('../../server/utils/anchorSlugify.js');
 
 // const htmlToPdf = require("html-pdf");
 class exportController extends baseController {
@@ -166,7 +169,8 @@ class exportController extends baseController {
     async function createHtml(list) {
       let md = await createMarkdown.bind(this)(list, true);
       let markdown = markdownIt({ html: true, breaks: true });
-      markdown.use(markdownItAnchor); // Optional, but makes sense as you really want to link to something
+      // tabIndex:false 保持与升级前导出产物一致(anchor v10 起默认为标题注入 tabindex="-1")
+      markdown.use(markdownItAnchor, { slugify: anchorSlugify, tabIndex: false }); // Optional, but makes sense as you really want to link to something
       markdown.use(markdownItTableOfContents, {
         markerPattern: /^\[toc\]/im
       });

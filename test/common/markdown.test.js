@@ -7,9 +7,11 @@ const md = require('../../common/markdown.js');
 /**
  * common/markdown.js 注入面修复回归测试
  *
- * golden 夹具(golden_inter_*.md)与修复前基线(commit a8715839)逐字节一致,
- * 唯一计划内差异为锚点 id 属性值加引号(无引号属性位加固, 属结构性变更):
- *   <a id=查询接口5f1a...>  →  <a id="查询接口5f1a...">
+ * golden 夹具(golden_inter_*.md)在 commit a8715839 修复基线之上有两处计划内差异:
+ *   1. 锚点 id 属性值加引号(无引号属性位加固, 属结构性变更):
+ *      <a id=查询接口5f1a...>  →  <a id="查询接口5f1a...">
+ *   2. 「路径参数」「Query」「Body」标签行前补空行(markdown-it 8→15 适配:
+ *      v15 起表格后无空行的段落行会被吸附为上一张表格的行, v8 渲染为独立段落)。
  * 转义函数仅中和含 & < > " ' 的数据, 良性数据输出不变。
  */
 
@@ -64,12 +66,12 @@ const benignCategory = {
 
 const benignProject = { name: '演示项目', basepath: '/v1', desc: '项目描述' };
 
-test('createInterMarkdown 良性数据输出与修复前基线逐字节一致(仅 id 属性按计划加引号)', t => {
+test('createInterMarkdown 良性数据输出与计划基线逐字节一致(id 加引号+标签行前空行)', t => {
   t.is(md.createInterMarkdown('/v1', benignInter, false), readGolden('golden_inter_plain.md'));
   t.is(md.createInterMarkdown('/v1', benignInter, true), readGolden('golden_inter_toc.md'));
 });
 
-test('createClassMarkdown 良性数据输出与修复前基线逐字节一致(仅 id 属性按计划加引号)', t => {
+test('createClassMarkdown 良性数据输出与计划基线逐字节一致(id 加引号+标签行前空行)', t => {
   const goldenPlain = readGolden('golden_inter_plain.md');
   const goldenToc = readGolden('golden_inter_toc.md');
   t.is(

@@ -34,7 +34,11 @@ jsf.extend('mock', function () {
 
 const defaultOptions = {
   failOnInvalidTypes: false,
-  failOnInvalidFormat: false
+  failOnInvalidFormat: false,
+  // json-schema-faker 0.5.0-rc16 → 0.5.9 行为对齐:rc16 默认仅生成 required 属性
+  // (无 required 的对象输出 {});0.5.9 起默认生成 optional 并附加随机命名属性,
+  // requiredOnly 显式固定 rc16 语义,实测各 schema 形态输出结构逐一一致
+  requiredOnly: true
 };
 
 // formats.forEach(item => {

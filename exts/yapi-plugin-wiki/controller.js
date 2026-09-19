@@ -4,7 +4,8 @@ const wikiModel = require('./wikiModel.js');
 const projectModel = require('models/project.js');
 const userModel = require('models/user.js');
 const jsondiffpatch = require('jsondiffpatch');
-const formattersHtml = jsondiffpatch.formatters.html;
+// jsondiffpatch 0.7 起 formatters 从主入口移除, 改为子路径导出 jsondiffpatch/formatters/html
+const formattersHtml = require('jsondiffpatch/formatters/html');
 const yapi = require('yapi.js');
 // const util = require('./util.js');
 const fs = require('fs-extra');

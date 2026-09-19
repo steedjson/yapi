@@ -1,9 +1,9 @@
 import test from 'ava';
 
 const jsondiffpatch = require('jsondiffpatch');
-// jsondiffpatch 0.3.11 发布包不含 src/ 目录, HTML formatter 由主入口 formatters 导出,
-// 与 server/controllers/interface.js、exts/yapi-plugin-wiki/controller.js 的取法一致
-const formattersHtml = jsondiffpatch.formatters.html;
+// jsondiffpatch 0.7 起 formatters 从主入口移除, 改为子路径导出 jsondiffpatch/formatters/html,
+// 与 server/controllers/interface/upMethods.js、exts/yapi-plugin-wiki/controller.js 的取法一致
+const formattersHtml = require('jsondiffpatch/formatters/html');
 // common/diff-view.js 只暴露一个工厂入口: (jsondiffpatch, formattersHtml, curDiffData)
 // 返回 [{ title, content }] 数组, diffText/diffJson/diffArray/valueMaps 均为内部闭包,
 // 与生产调用方式一致地通过 curDiffData 间接触达

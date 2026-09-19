@@ -12,7 +12,8 @@
 const requireAny = name => require(name);
 
 const jsondiffpatch = requireAny('jsondiffpatch');
-const formattersHtml = jsondiffpatch.formatters && jsondiffpatch.formatters.html;
+// jsondiffpatch 0.7 起 formatters 从主入口移除, 改为子路径导出 jsondiffpatch/formatters/html
+const formattersHtml = requireAny('jsondiffpatch/formatters/html');
 const showDiffMsg = requireAny('../../../common/diff-view.js');
 const fs = requireAny('fs-extra');
 const path = requireAny('path');
@@ -207,12 +208,16 @@ let diffCssCache = null;
           annotatedCss: fs.readFileSync(
             path.resolve(
               yapi.WEBROOT,
-              'node_modules/jsondiffpatch/dist/formatters-styles/annotated.css'
+              // jsondiffpatch 0.7 起包内样式目录由 dist/formatters-styles 迁移到 lib/formatters/styles
+              'node_modules/jsondiffpatch/lib/formatters/styles/annotated.css'
             ),
             'utf8'
           ),
           htmlCss: fs.readFileSync(
-            path.resolve(yapi.WEBROOT, 'node_modules/jsondiffpatch/dist/formatters-styles/html.css'),
+            path.resolve(
+              yapi.WEBROOT,
+              'node_modules/jsondiffpatch/lib/formatters/styles/html.css'
+            ),
             'utf8'
           )
         };

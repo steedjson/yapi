@@ -1,5 +1,10 @@
 import test from 'ava';
 
+// jsondiffpatch 0.7 起为 ESM-only 包:须先经 Node require(esm) 原生加载进 Module._cache,
+// 再 rewire 控制器;否则 @babel/register(pirates) 的 .js 钩子在 rewire 重载链路上
+// 丢失 ESM format 信息,把 lib/index.js 当 CJS 编译导致 SyntaxError(仅测试环境)。
+require('jsondiffpatch');
+require('jsondiffpatch/formatters/html');
 const controller = require('rewire')('../../server/controllers/interface');
 const InterfaceController = controller.__get__('interfaceController');
 const handleHeaders = controller.__get__('handleHeaders');

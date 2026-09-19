@@ -158,7 +158,8 @@ function createReqHeaders(req_headers) {
  */
 function createPathParams(req_params) {
   if (req_params && req_params.length) {
-    let paramsTable = `**路径参数**\n\n`;
+    // 标签行前补空行: markdown-it 15 起表格后无空行的段落行会被吸附为上一张表格的行(v8 时代渲染为独立段落)
+    let paramsTable = `\n**路径参数**\n\n`;
     paramsTable += `| 参数名称 | 示例  | 备注  |\n| ------------ | ------------ | ------------ |\n`;
     for (let j = 0; j < req_params.length; j++) {
       // name/example 为用户可控纯文本位, 转义防注入; desc 为 Markdown 创作面字段, 按设计保留原样
@@ -178,7 +179,8 @@ function createPathParams(req_params) {
  */
 function createReqQuery(req_query) {
   if (req_query && req_query.length) {
-    let headersTable = `**Query**\n\n`;
+    // 标签行前补空行: markdown-it 15 起表格后无空行的段落行会被吸附为上一张表格的行(v8 时代渲染为独立段落)
+    let headersTable = `\n**Query**\n\n`;
     headersTable += `| 参数名称  |  是否必须 | 示例  | 备注  |\n| ------------ | ------------ | ------------ | ------------ |\n`;
     for (let j = 0; j < req_query.length; j++) {
       // name/example 为用户可控纯文本位, 转义防注入; desc 为 Markdown 创作面字段, 按设计保留原样
@@ -203,7 +205,8 @@ function createReqQuery(req_query) {
  */
 function createReqBody(req_body_type, req_body_form, req_body_other, req_body_is_json_schema) {
   if (req_body_type === 'form' && req_body_form.length) {
-    let bodyTable = `**Body**\n\n`;
+    // 标签行前补空行: markdown-it 15 起表格后无空行的段落行会被吸附为上一张表格的行(v8 时代渲染为独立段落)
+    let bodyTable = `\n**Body**\n\n`;
     bodyTable += `| 参数名称  | 参数类型  |  是否必须 | 示例  | 备注  |\n| ------------ | ------------ | ------------ | ------------ | ------------ |\n`;
     let req_body = req_body_form;
     for (let j = 0; j < req_body.length; j++) {
@@ -217,10 +220,11 @@ function createReqBody(req_body_type, req_body_form, req_body_other, req_body_is
   } else if (req_body_other) {
     if (req_body_is_json_schema) {
       let reqBody = createSchemaTable(req_body_other);
-      return `**Body**\n\n` + reqBody;
+      // 同上: 标签行前补空行, 防 markdown-it 15 将其吸附进上一张表格
+      return `\n**Body**\n\n` + reqBody;
     } else {
       //other
-      return `**Body**\n\n` + '```javascript' + `\n${req_body_other || ''}` + '\n```';
+      return `\n**Body**\n\n` + '```javascript' + `\n${req_body_other || ''}` + '\n```';
     }
   }
   return '';
