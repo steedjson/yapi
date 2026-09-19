@@ -207,11 +207,14 @@ declare module 'antd' {
   export const Breadcrumb: any;
   export const Collapse: any;
   export const ConfigProvider: any;
+  export const Divider: any;
   export const Dropdown: any;
   export const Layout: any;
   export const Menu: any;
+  export const Popconfirm: any;
   export const Popover: any;
   export const Result: any;
+  export const Space: any;
   export const Tag: any;
   export const Timeline: any;
 }
@@ -336,6 +339,12 @@ declare module 'koa-static' {
 declare module 'extend' {
   function extend(...args: any[]): any;
   export = extend;
+}
+
+// core-decorators 0.17 未内置类型且无对应 @types 包，
+// 按运行时实际导出形态声明使用到的最小子集（Group/ProjectList.js 的 @autobind 使用）。
+declare module 'core-decorators' {
+  export const autobind: any;
 }
 
 declare module 'ldapjs' {

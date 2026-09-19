@@ -1,3 +1,4 @@
+// @ts-check
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
@@ -34,9 +35,12 @@ const formItemLayout = {
   className: 'form-item'
 };
 
+/**
+ * @param {any} props
+ */
 function ProjectList(props) {
   const [form] = Form.useForm();
-  const [groupList, setGroupList] = useState([]);
+  const [groupList, setGroupList] = useState(/** @type {any[]} */ ([]));
   const [currGroupId, setCurrGroupId] = useState(null);
 
   useEffect(() => {
@@ -64,6 +68,9 @@ function ProjectList(props) {
     }
   }, [currGroupId]);
 
+  /**
+   * @param {any} e
+   */
   const handlePath = e => {
     let val = e.target.value;
     form.setFieldsValue({
@@ -72,13 +79,16 @@ function ProjectList(props) {
   };
 
   // 确认添加项目
+  /**
+   * @param {any} e
+   */
   const handleOk = e => {
     e.preventDefault();
-    form.validateFields().then(values => {
+    form.validateFields().then((/** @type {any} */ values) => {
       values.group_id = values.group;
       values.icon = constants.PROJECT_ICON[0];
       values.color = pickRandomProperty(constants.PROJECT_COLOR);
-      props.addProject(values).then(res => {
+      props.addProject(values).then((/** @type {any} */ res) => {
         if (res.payload.data.errcode == 0) {
           form.resetFields();
           message.success('创建成功! ');
@@ -207,7 +217,7 @@ ProjectList.propTypes = {
 };
 
 export default connect(
-  state => {
+  (/** @type {any} */ state) => {
     return {
       groupList: state.group.groupList,
       currGroup: state.group.currGroup

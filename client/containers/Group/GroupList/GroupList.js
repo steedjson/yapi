@@ -1,3 +1,4 @@
+// @ts-check
 import React, { useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import { useDispatch, useSelector } from 'react-redux';
@@ -63,9 +64,9 @@ const GroupList = () => {
   // 保留裸 useState 调用与旧实现的 state 形态一致
   useState('');
   useState('');
-  const [owner_uids, setOwnerUids] = useState([]);
+  const [owner_uids, setOwnerUids] = useState(/** @type {any[]} */ ([]));
   // 本地展示列表（搜索过滤 / 初始化与 redux 列表刷新时同步），对应旧 this.state.groupList
-  const [localGroupList, setLocalGroupList] = useState([]);
+  const [localGroupList, setLocalGroupList] = useState(/** @type {any[]} */ ([]));
 
   // 镜像最新 redux 值 / 路由参数：异步动作恢复后的读取等价于旧类组件的实时 this.props
   const groupListRef = useRef(groupList);
@@ -79,6 +80,10 @@ const GroupList = () => {
    * 按路由参数同步选中分组：命中则保持 URL 不动；
    * 无参数/参数非法/指向不存在的分组时回退首个分组并 replace 归一化 URL；
    * 列表为空时仅展示加载态，不产生 /group/undefined 这类无效 URL。
+   */
+  /**
+   * @param {any} nextGroupList
+   * @param {any} nextParams
    */
   function syncGroupSelection(nextGroupList, nextParams) {
     const list = Array.isArray(nextGroupList) ? nextGroupList : [];
@@ -149,20 +154,29 @@ const GroupList = () => {
       await dispatch(fetchGroupList());
       setLocalGroupList(groupListRef.current);
       dispatch(fetchGroupMsg(currGroupRef.current._id));
-      dispatch(fetchNewsData(currGroupRef.current._id, 'group', 1, 10));
+      dispatch((/** @type {any} */ (fetchNewsData))(currGroupRef.current._id, 'group', 1, 10));
     } else {
       message.error(res.data.errmsg);
     }
   };
   // 注：旧类组件的 editGroup 方法在本组件渲染树中从未被引用（编辑功能由 GroupSetting 承担），
   // 属不可达死代码，随迁移移除；其依赖的遗留 state 以上方裸 useState 保留。
+  /**
+   * @param {any} e
+   */
   const inputNewGroupName = e => {
     setNewGroupName(e.target.value);
   };
+  /**
+   * @param {any} e
+   */
   const inputNewGroupDesc = e => {
     setNewGroupDesc(e.target.value);
   };
 
+  /**
+   * @param {any} e
+   */
   const selectGroup = e => {
     const groupId = e.key;
     const nextGroup = findGroupById(groupListRef.current, groupId);
@@ -180,10 +194,17 @@ const GroupList = () => {
     navigate(buildGroupPath(nextGroup._id));
   };
 
+  /**
+   * @param {any} uids
+   */
   const onUserSelect = uids => {
     setOwnerUids(uids);
   };
 
+  /**
+   * @param {any} e
+   * @param {any} value
+   */
   const searchGroup = (e, value) => {
     const v = value !== undefined ? value : e.target.value;
     setLocalGroupList(filterGroups(groupListRef.current, v));
@@ -211,7 +232,7 @@ const GroupList = () => {
             <Search
               placeholder="搜索分类"
               onChange={searchGroup}
-              onSearch={v => searchGroup(null, v)}
+              onSearch={(/** @type {any} */ v) => searchGroup(null, v)}
             />
           </div>
         </div>

@@ -1,3 +1,4 @@
+// @ts-check
 import './News.scss';
 import React, { useState } from 'react';
 import NewsTimeline from './NewsTimeline/NewsTimeline';

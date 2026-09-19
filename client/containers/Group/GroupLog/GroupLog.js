@@ -1,3 +1,4 @@
+// @ts-check
 import React from 'react';
 import TimeTree from '../../../components/TimeLine/TimeLine';
 import { useSelector } from 'react-redux';

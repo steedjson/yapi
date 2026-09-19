@@ -6,12 +6,7 @@ import MemberList from './MemberList/MemberList.js';
 import GroupLog from './GroupLog/GroupLog.js';
 import GroupSetting from './GroupSetting/GroupSetting.js';
 import PropTypes from 'prop-types';
-// TS 7.0.2 对 react-redux 8 类型链解析不完整（connect 可解析、useSelector 报 TS2305），
-// 与上方 antd 同样以 @ts-ignore 处理，运行时导出真实存在
-// @ts-ignore
 import { useSelector } from 'react-redux';
-// common/types/global.d.ts 的 antd 声明未包含 Layout/Spin，且 common/ 不在本次可修改范围内
-// @ts-ignore
 import { Tabs, Layout, Spin } from 'antd';
 import ErrMsg from '../../components/ErrMsg/ErrMsg.js';
 const { Content, Sider } = Layout;

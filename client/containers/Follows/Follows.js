@@ -1,3 +1,4 @@
+// @ts-check
 import React, { useEffect, useRef, useState } from 'react';
 import './Follows.scss';
 import PropTypes from 'prop-types';
@@ -11,14 +12,14 @@ import ErrMsg from '../../components/ErrMsg/ErrMsg.js';
 const Follows = () => {
   const dispatch = useDispatch();
   const uid = useSelector(state => state.user.uid);
-  const [data, setData] = useState([]);
+  const [data, setData] = useState(/** @type {any[]} */ ([]));
 
   // 用 ref 始终指向最新值，异步回调读取语义与旧类组件 this.props 一致
   const latestRef = useRef({});
   latestRef.current = { uid };
 
   function fetchList() {
-    return dispatch(getFollowList(latestRef.current.uid)).then(res => {
+    return dispatch(getFollowList(latestRef.current.uid)).then((/** @type {any} */ res) => {
       if (res.payload.data.errcode === 0) {
         setData(res.payload.data.data.list);
       }

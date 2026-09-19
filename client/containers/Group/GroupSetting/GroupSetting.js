@@ -1,3 +1,4 @@
+// @ts-check
 import React, { useEffect, useRef, useState } from 'react';
 import { SaveOutlined } from '@ant-design/icons';
 import { useDispatch, useSelector } from 'react-redux';
@@ -63,15 +64,24 @@ const GroupSetting = () => {
   });
 
   // 修改分组名称
+  /**
+   * @param {any} e
+   */
   const changeName = e => {
     setCurrGroupName(e.target.value);
   };
   // 修改分组描述
+  /**
+   * @param {any} e
+   */
   const changeDesc = e => {
     setCurrGroupDesc(e.target.value);
   };
 
   // 修改自定义字段名称
+  /**
+   * @param {any} e
+   */
   const changeCustomName = e => {
     const custom_field1_rule_next = custom_field1_enable ? !e.target.value : false;
     setCustomFieldName(e.target.value);
@@ -79,6 +89,9 @@ const GroupSetting = () => {
   };
 
   // 修改开启状态
+  /**
+   * @param {any} e
+   */
   const changeCustomEnable = e => {
     const custom_field1_rule_next = e ? !custom_field1_name : false;
     setCustomFieldEnable(e);
@@ -113,12 +126,12 @@ const GroupSetting = () => {
       // 旧实现向 fetchGroupList 传入 this.props.groupList，action creator 从未消费该参数，随迁移移除
       await dispatch(fetchGroupList());
       dispatch(updateGroupList(groupListRef.current));
-      const nextGroup = groupListRef.current.find(group => {
+      const nextGroup = groupListRef.current.find((/** @type {any} */ group) => {
         return +group._id === +id;
       });
       dispatch(setCurrGroup(nextGroup));
       dispatch(fetchGroupMsg(currGroupRef.current._id));
-      dispatch(fetchNewsData(currGroupRef.current._id, 'group', 1, 10));
+      dispatch((/** @type {any} */ (fetchNewsData))(currGroupRef.current._id, 'group', 1, 10));
     }
   };
 
@@ -153,7 +166,7 @@ const GroupSetting = () => {
         </div>
       ),
       onOk() {
-        const groupName = trim(document.getElementById('group_name').value);
+        const groupName = trim((/** @type {any} */ (document.getElementById('group_name'))).value);
         if (currGroupRef.current.group_name !== groupName) {
           message.error('分组名称有误');
           return new Promise((resolve, reject) => {

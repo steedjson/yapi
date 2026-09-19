@@ -2,8 +2,6 @@
 import React, { PureComponent as Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-// common/types/global.d.ts 的 antd 声明未包含 Tooltip，且 common/ 不在本次可修改范围内
-// @ts-ignore
 import { Row, Col, Button, Tooltip } from 'antd';
 import { Link } from 'react-router-dom';
 import {
@@ -13,8 +11,7 @@ import {
 } from '../../../reducer/modules/project';
 import ProjectCard from '../../../components/ProjectCard/ProjectCard.js';
 import ErrMsg from '../../../components/ErrMsg/ErrMsg.js';
-// core-decorators 无类型声明，按 any 处理
-// @ts-ignore
+// core-decorators 类型见 common/types/global.d.ts（按运行时导出形态声明的最小子集）
 import { autobind } from 'core-decorators';
 import { setBreadcrumb } from '../../../reducer/modules/user';
 

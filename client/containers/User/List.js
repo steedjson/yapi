@@ -1,3 +1,4 @@
+// @ts-check
 import React, { useEffect, useState } from 'react';
 import { formatTime } from '../../common.js';
 import { Link } from 'react-router-dom';
@@ -16,7 +17,7 @@ const List = () => {
   const dispatch = useDispatch();
   const curUserRole = useSelector(state => state.user.role);
   const curUid = useSelector(state => state.user.uid);
-  const [data, setData] = useState([]);
+  const [data, setData] = useState(/** @type {any[]} */ ([]));
   const [total, setTotal] = useState(null);
   const [current, setCurrent] = useState(1);
   const [keyword, setKeyword] = useState('');
@@ -40,6 +41,10 @@ const List = () => {
   const [roleUid, setRoleUid] = useState(null);
   const [roleValue, setRoleValue] = useState('member');
 
+  /**
+   * @param {number} nextCurrent
+   * @param {string} nextKeyword
+   */
   function fetchUserList(nextCurrent, nextKeyword) {
     axios
       .get('/api/user/list', {
@@ -50,12 +55,12 @@ const List = () => {
         }
       })
       .then(
-        res => {
+        (/** @type {any} */ res) => {
           let result = res.data;
           if (result.errcode === 0) {
             let list = result.data.list || [];
             let totalCount = result.data.count;
-            list.map((item, index) => {
+            list.map((/** @type {any} */ item, /** @type {any} */ index) => {
               item.key = index;
               item.up_time = formatTime(item.up_time);
             });
@@ -65,7 +70,7 @@ const List = () => {
             message.error(result.errmsg);
           }
         },
-        err => {
+        (/** @type {any} */ err) => {
           message.error(err.message);
         }
       );
@@ -77,6 +82,9 @@ const List = () => {
   }
 
   // 对应原 setState({ current }, this.getUserList)：显式携带新值，避免闭包读到旧值
+  /**
+   * @param {number} nextCurrent
+   */
   function changePage(nextCurrent) {
     setCurrent(nextCurrent);
     fetchUserList(nextCurrent, keyword);
@@ -88,13 +96,16 @@ const List = () => {
     getUserList();
   }, []);
 
+  /**
+   * @param {any} uid
+   */
   function confirm(uid) {
     axios
       .post('/api/user/del', {
         id: uid
       })
       .then(
-        res => {
+        (/** @type {any} */ res) => {
           if (res.data.errcode === 0) {
             message.success('已删除此用户');
             getUserList();
@@ -102,13 +113,16 @@ const List = () => {
             message.error(res.data.errmsg);
           }
         },
-        err => {
+        (/** @type {any} */ err) => {
           message.error(err.message);
         }
       );
   }
 
   // 对应原 setState({ current: 1, keyword: value }, this.getUserList)
+  /**
+   * @param {string} value
+   */
   function handleSearch(value) {
     setCurrent(1);
     setKeyword(value);
@@ -129,6 +143,10 @@ const List = () => {
     setAddModalVisible(false);
   }
 
+  /**
+   * @param {string} key
+   * @param {any} value
+   */
   function setAddForm(key, value) {
     setAddFormState({ ...addForm, [key]: value });
   }
@@ -155,7 +173,7 @@ const List = () => {
         role: role
       })
       .then(
-        res => {
+        (/** @type {any} */ res) => {
           if (res.data.errcode === 0) {
             message.success('用户创建成功');
             setAddModalVisible(false);
@@ -164,12 +182,15 @@ const List = () => {
             message.error(res.data.errmsg);
           }
         },
-        err => {
+        (/** @type {any} */ err) => {
           message.error(err.message);
         }
       );
   }
 
+  /**
+   * @param {any} item
+   */
   function openEditModal(item) {
     setEditModalVisible(true);
     setEditUid(item._id);
@@ -183,6 +204,10 @@ const List = () => {
     setEditModalVisible(false);
   }
 
+  /**
+   * @param {string} key
+   * @param {any} value
+   */
   function setEditForm(key, value) {
     setEditFormState({ ...editForm, [key]: value });
   }
@@ -205,7 +230,7 @@ const List = () => {
         email: email
       })
       .then(
-        res => {
+        (/** @type {any} */ res) => {
           if (res.data.errcode === 0) {
             message.success('用户资料已更新');
             setEditModalVisible(false);
@@ -214,12 +239,15 @@ const List = () => {
             message.error(res.data.errmsg);
           }
         },
-        err => {
+        (/** @type {any} */ err) => {
           message.error(err.message);
         }
       );
   }
 
+  /**
+   * @param {any} item
+   */
   function openResetModal(item) {
     setResetModalVisible(true);
     setResetUid(item._id);
@@ -241,7 +269,7 @@ const List = () => {
         password: password
       })
       .then(
-        res => {
+        (/** @type {any} */ res) => {
           if (res.data.errcode === 0) {
             message.success('密码重置成功');
             setResetModalVisible(false);
@@ -250,12 +278,15 @@ const List = () => {
             message.error(res.data.errmsg);
           }
         },
-        err => {
+        (/** @type {any} */ err) => {
           message.error(err.message);
         }
       );
   }
 
+  /**
+   * @param {any} item
+   */
   function openRoleModal(item) {
     setRoleModalVisible(true);
     setRoleUid(item._id);
@@ -273,7 +304,7 @@ const List = () => {
         role: roleValue
       })
       .then(
-        res => {
+        (/** @type {any} */ res) => {
           if (res.data.errcode === 0) {
             message.success('角色已更新');
             setRoleModalVisible(false);
@@ -282,12 +313,15 @@ const List = () => {
             message.error(res.data.errmsg);
           }
         },
-        err => {
+        (/** @type {any} */ err) => {
           message.error(err.message);
         }
       );
   }
 
+  /**
+   * @param {any} item
+   */
   function handleChangeStatus(item) {
     axios
       .post('/api/user/change_status', {
@@ -295,7 +329,7 @@ const List = () => {
         disabled: !item.disabled
       })
       .then(
-        res => {
+        (/** @type {any} */ res) => {
           if (res.data.errcode === 0) {
             message.success(item.disabled ? '已启用该用户' : '已禁用该用户');
             getUserList();
@@ -303,17 +337,21 @@ const List = () => {
             message.error(res.data.errmsg);
           }
         },
-        err => {
+        (/** @type {any} */ err) => {
           message.error(err.message);
         }
       );
   }
 
+  /**
+   * @param {any} item
+   */
   function isSelf(item) {
     return curUid != null && String(item._id) === String(curUid);
   }
 
   const role = curUserRole;
+  /** @type {any[]} */
   let tableData = [];
   if (role === 'admin') {
     tableData = data;
@@ -324,7 +362,7 @@ const List = () => {
       dataIndex: 'username',
       key: 'username',
       width: 180,
-      render: (username, item) => {
+      render: (/** @type {any} */ username, /** @type {any} */ item) => {
         return <Link to={'/user/profile/' + item._id}>{item.username}</Link>;
       }
     },
@@ -338,7 +376,7 @@ const List = () => {
       dataIndex: 'role',
       key: 'role',
       width: 100,
-      render: role => {
+      render: (/** @type {any} */ role) => {
         return role === 'admin' ? <Tag color='geekblue'>管理员</Tag> : <Tag>成员</Tag>;
       }
     },
@@ -347,7 +385,7 @@ const List = () => {
       dataIndex: 'disabled',
       key: 'disabled',
       width: 90,
-      render: disabled => {
+      render: (/** @type {any} */ disabled) => {
         return disabled ? <Tag color='red'>已禁用</Tag> : <Tag color='green'>启用</Tag>;
       }
     },
@@ -361,7 +399,7 @@ const List = () => {
       title: '功能',
       key: 'action',
       width: 300,
-      render: item => {
+      render: (/** @type {any} */ item) => {
         return (
           <Space split={<Divider type="vertical" />} style={{ whiteSpace: 'nowrap' }}>
             <a onClick={() => openEditModal(item)}>编辑</a>
@@ -428,7 +466,7 @@ const List = () => {
       </div>
       <Table
         bordered={true}
-        rowKey={record => record._id}
+        rowKey={(/** @type {any} */ record) => record._id}
         columns={columns}
         pagination={pageConfig}
         dataSource={tableData}
@@ -446,7 +484,7 @@ const List = () => {
           <p style={{ margin: '0 0 4px' }}>用户名</p>
           <Input
             value={addForm.username}
-            onChange={e => setAddForm('username', e.target.value)}
+            onChange={(/** @type {any} */ e) => setAddForm('username', e.target.value)}
             placeholder='请输入用户名'
           />
         </div>
@@ -454,7 +492,7 @@ const List = () => {
           <p style={{ margin: '0 0 4px' }}>Email</p>
           <Input
             value={addForm.email}
-            onChange={e => setAddForm('email', e.target.value)}
+            onChange={(/** @type {any} */ e) => setAddForm('email', e.target.value)}
             placeholder='请输入邮箱'
           />
         </div>
@@ -463,7 +501,7 @@ const List = () => {
           <Input
             type='password'
             value={addForm.password}
-            onChange={e => setAddForm('password', e.target.value)}
+            onChange={(/** @type {any} */ e) => setAddForm('password', e.target.value)}
             placeholder='请输入密码，至少6位'
           />
         </div>
@@ -472,7 +510,7 @@ const List = () => {
           <Select
             style={{ width: 120 }}
             value={addForm.role}
-            onChange={value => setAddForm('role', value)}
+            onChange={(/** @type {any} */ value) => setAddForm('role', value)}
           >
             <Select.Option value='member'>成员</Select.Option>
             <Select.Option value='admin'>管理员</Select.Option>
@@ -492,7 +530,7 @@ const List = () => {
           <p style={{ margin: '0 0 4px' }}>用户名</p>
           <Input
             value={editForm.username}
-            onChange={e => setEditForm('username', e.target.value)}
+            onChange={(/** @type {any} */ e) => setEditForm('username', e.target.value)}
             placeholder='请输入用户名'
           />
         </div>
@@ -500,7 +538,7 @@ const List = () => {
           <p style={{ margin: '0 0 4px' }}>Email</p>
           <Input
             value={editForm.email}
-            onChange={e => setEditForm('email', e.target.value)}
+            onChange={(/** @type {any} */ e) => setEditForm('email', e.target.value)}
             placeholder='请输入邮箱'
           />
         </div>
@@ -518,7 +556,7 @@ const List = () => {
         <Input
           type='password'
           value={resetPassword}
-          onChange={e => setResetPassword(e.target.value)}
+          onChange={(/** @type {any} */ e) => setResetPassword(e.target.value)}
           placeholder='请输入新密码，至少6位'
         />
       </Modal>
@@ -535,7 +573,7 @@ const List = () => {
         <Select
           style={{ width: 120 }}
           value={roleValue}
-          onChange={value => setRoleValue(value)}
+          onChange={(/** @type {any} */ value) => setRoleValue(value)}
         >
           <Select.Option value='member'>成员</Select.Option>
           <Select.Option value='admin'>管理员</Select.Option>

@@ -1,3 +1,4 @@
+// @ts-check
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
@@ -19,6 +20,9 @@ const logList = [
   }
 ];
 
+/**
+ * @param {any} props
+ */
 const NewsList = props => {
   const uid = useSelector(state => state.user.uid + '');
   const dispatch = useDispatch();
@@ -26,11 +30,14 @@ const NewsList = props => {
   // 旧 @connect 映射的 newsData 历史遗留仅声明未消费，保留订阅避免行为差异
   useSelector(state => state.news.newsData);
 
+  /**
+   * @param {any} e
+   */
   function getLogData(e) {
     // page,size,logId
     setSelectedKeys(+e.key);
     props.setLoading(true);
-    dispatch(fetchNewsData(+uid, 0, 5)).then(function() {
+    dispatch((/** @type {any} */ (fetchNewsData))(+uid, 0, 5)).then(function() {
       props.setLoading(false);
     });
   }

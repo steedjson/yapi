@@ -1,3 +1,4 @@
+// @ts-check
 import React, { useEffect, useRef, useState } from 'react';
 import { EditOutlined } from '@ant-design/icons';
 import { Row, Col, Input, Button, Select, message, Upload, Tooltip } from 'antd';
@@ -8,6 +9,9 @@ import { setBreadcrumb, setImageUrl } from '../../reducer/modules/user';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 
+/**
+ * @param {any} props
+ */
 const EditButton = props => {
   const { isAdmin, isOwner, onClick, name, admin } = props;
   if (isOwner) {
@@ -69,10 +73,15 @@ const Profile = () => {
   const [emailEdit, setEmailEdit] = useState(false);
   const [secureEdit, setSecureEdit] = useState(false);
   const [roleEdit, setRoleEdit] = useState(false);
-  const [userinfo, setUserinfo] = useState({});
-  const [_userinfo, set_userinfo] = useState();
+  const [userinfo, setUserinfo] = useState(/** @type {any} */ ({}));
+  const [_userinfo, set_userinfo] = useState(/** @type {any} */ (undefined));
 
+  /**
+   * @param {string} key
+   * @param {any} val
+   */
   const handleEdit = (key, val) => {
+    /** @type {Record<string, any>} */
     const setters = {
       usernameEdit: setUsernameEdit,
       emailEdit: setEmailEdit,
@@ -82,8 +91,11 @@ const Profile = () => {
     setters[key](val);
   };
 
+  /**
+   * @param {any} id
+   */
   const getUserInfo = id => {
-    axios.get('/api/user/find?id=' + id).then(res => {
+    axios.get('/api/user/find?id=' + id).then((/** @type {any} */ res) => {
       setUserinfo(res.data.data);
       set_userinfo(res.data.data);
       if (curUid === +id) {
@@ -111,13 +123,16 @@ const Profile = () => {
     }
   }, [uid]);
 
+  /**
+   * @param {any} name
+   */
   const updateUserinfo = name => {
     let value = _userinfo[name];
-    let params = { uid: userinfo.uid };
+    const params = /** @type {Record<string, any>} */ ({ uid: userinfo.uid });
     params[name] = value;
 
     axios.post('/api/user/update', params).then(
-      res => {
+      (/** @type {any} */ res) => {
         let data = res.data;
         if (data.errcode === 0) {
           // 与旧实现一致：就地修改 userinfo 后同引用 setState，最终由随后的
@@ -131,12 +146,15 @@ const Profile = () => {
           message.error(data.errmsg);
         }
       },
-      err => {
+      (/** @type {any} */ err) => {
         message.error(err.message);
       }
     );
   };
 
+  /**
+   * @param {any} e
+   */
   const changeUserinfo = e => {
     let dom = e.target;
     let name = dom.getAttribute('name');
@@ -148,6 +166,9 @@ const Profile = () => {
     });
   };
 
+  /**
+   * @param {any} val
+   */
   const changeRole = val => {
     userinfo.role = val;
     // 与旧实现一致：将 userinfo 同一引用写入 _userinfo
@@ -156,9 +177,9 @@ const Profile = () => {
   };
 
   const updatePassword = () => {
-    let old_password = document.getElementById('old_password').value;
-    let password = document.getElementById('password').value;
-    let verify_pass = document.getElementById('verify_pass').value;
+    let old_password = (/** @type {any} */ (document.getElementById('old_password'))).value;
+    let password = (/** @type {any} */ (document.getElementById('password'))).value;
+    let verify_pass = (/** @type {any} */ (document.getElementById('verify_pass'))).value;
     if (password != verify_pass) {
       return message.error('两次输入的密码不一样');
     }
@@ -169,7 +190,7 @@ const Profile = () => {
     };
 
     axios.post('/api/user/change_password', params).then(
-      res => {
+      (/** @type {any} */ res) => {
         let data = res.data;
         if (data.errcode === 0) {
           handleEdit('secureEdit', false);
@@ -181,7 +202,7 @@ const Profile = () => {
           message.error(data.errmsg);
         }
       },
-      err => {
+      (/** @type {any} */ err) => {
         message.error(err.message);
       }
     );
@@ -190,7 +211,9 @@ const Profile = () => {
   let ButtonGroup = Button.Group;
   let userNameEditHtml, emailEditHtml, secureEditHtml, roleEditHtml;
   const Option = Select.Option;
+  /** @type {Record<string, string>} */
   let roles = { admin: '管理员', member: '会员' };
+  /** @type {any} */
   let siteLogin = '';
   if (userType === 'third') {
     siteLogin = false;
@@ -317,6 +340,7 @@ const Profile = () => {
   }
 
   if (secureEdit === false) {
+    /** @type {any} */
     let btn = '';
     if (siteLogin) {
       btn = (
@@ -446,26 +470,35 @@ const Profile = () => {
  * - 旧 @connect 的 url 映射改为 useSelector，setImageUrl 改为 useDispatch；
  * - 旧 handleChange 的 this 绑定随函数组件一并移除。
  */
+/**
+ * @param {{ uid: any }} props
+ */
 const AvatarUpload = ({ uid }) => {
   const dispatch = useDispatch();
   const url = useSelector(state => state.user.imageUrl);
   let imageUrl = url ? url : `/api/user/avatar?uid=${uid}`;
 
+  /**
+   * @param {any} basecode
+   */
   const uploadAvatar = basecode => {
     axios
       .post('/api/user/upload_avatar', { basecode: basecode })
       .then(() => {
         dispatch(setImageUrl(basecode));
       })
-      .catch(e => {
+      .catch((/** @type {any} */ e) => {
         console.log(e);
       });
   };
 
+  /**
+   * @param {any} info
+   */
   const handleChange = info => {
     if (info.file.status === 'done') {
       // Get this url from response in real world.
-      getBase64(info.file.originFileObj, basecode => {
+      getBase64(info.file.originFileObj, (/** @type {any} */ basecode) => {
         uploadAvatar(basecode);
       });
     }
@@ -501,6 +534,9 @@ AvatarUpload.propTypes = {
   uid: PropTypes.number
 };
 
+/**
+ * @param {any} file
+ */
 function beforeUpload(file) {
   const isJPG = file.type === 'image/jpeg';
   const isPNG = file.type === 'image/png';
@@ -515,6 +551,10 @@ function beforeUpload(file) {
   return (isPNG || isJPG) && isLt2M;
 }
 
+/**
+ * @param {any} img
+ * @param {any} callback
+ */
 function getBase64(img, callback) {
   const reader = new FileReader();
   reader.addEventListener('load', () => callback(reader.result));

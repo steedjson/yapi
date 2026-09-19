@@ -1,3 +1,4 @@
+// @ts-check
 import React, { useEffect, useRef, useState } from 'react';
 import { Timeline, Spin } from 'antd';
 import PropTypes from 'prop-types';
@@ -20,7 +21,7 @@ const NewsTimeline = () => {
 
   function getMore() {
     setLoading(true);
-    dispatch(fetchNewsData(21, 'project', curpage, 8)).then(function() {
+    dispatch((/** @type {any} */ (fetchNewsData))(21, 'project', curpage, 8)).then(function() {
       setLoading(false);
       const current = latestRef.current;
       if (current.newsData.total + 1 === current.curpage) {
@@ -31,12 +32,12 @@ const NewsTimeline = () => {
 
   useEffect(() => {
     // 对应原 UNSAFE_componentWillMount
-    dispatch(fetchNewsData(21, 'project', curpage, 8));
+    dispatch((/** @type {any} */ (fetchNewsData))(21, 'project', curpage, 8));
   }, []);
 
   let data = newsData ? newsData.list : [];
   if (data && data.length) {
-    data = data.map(function(item, i) {
+    data = data.map(function(/** @type {any} */ item, /** @type {any} */ i) {
       return (
         <Timeline.Item key={i}>
           <span className="logoTimeago">{timeago(item.add_time)}</span>

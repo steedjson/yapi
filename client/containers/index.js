@@ -1,3 +1,4 @@
+// @ts-check
 import Header from '../components/Header/Header.js';
 import Home from './Home/Home.js';
 import Login from './Login/LoginContainer.js';

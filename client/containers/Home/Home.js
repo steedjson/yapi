@@ -1,3 +1,4 @@
+// @ts-check
 import './Home.scss';
 import React, { PureComponent as Component } from 'react';
 import { connect } from 'react-redux';
@@ -325,7 +326,7 @@ HomeGuest.propTypes = {
 };
 
 @connect(
-  state => ({
+  (/** @type {any} */ state) => ({
     login: state.user.isLogin
   }),
   {
@@ -334,7 +335,7 @@ HomeGuest.propTypes = {
 )
 @withRouter
 class Home extends Component {
-  constructor(props) {
+  constructor(/** @type {any} */ props) {
     super(props);
   }
 

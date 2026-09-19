@@ -1,3 +1,4 @@
+// @ts-check
 // GroupList 分组路由参数解析与选中逻辑的纯函数集合。
 // 单独成文件以便 test/client 直接导入做纯逻辑测试（GroupList.js 引入 SCSS，无法被 Node 端测试加载）。
 
@@ -43,7 +44,7 @@ export function parseRouteGroupId(params) {
  * 在分组列表中按 id 严格匹配（数值相等，兼容 string/number 形态的 _id 与路由 key）。
  * @param {Array<{_id: any}>|undefined} groupList
  * @param {any} groupId
- * @returns {object|null} 未命中返回 null
+ * @returns {{_id: any}|null} 未命中返回 null
  */
 export function findGroupById(groupList, groupId) {
   if (!Array.isArray(groupList)) {
@@ -61,7 +62,7 @@ export function findGroupById(groupList, groupId) {
  * 列表为空返回 null（调用方据此跳过导航，避免生成 /group/undefined）。
  * @param {Array<{_id: any}>|undefined} groupList
  * @param {number} routeId
- * @returns {object|null}
+ * @returns {{_id: any}|null}
  */
 export function resolveTargetGroup(groupList, routeId) {
   if (!Array.isArray(groupList) || groupList.length === 0) {
@@ -82,7 +83,7 @@ export function buildGroupPath(groupId) {
  * 按分组名称过滤列表，使用普通字符串匹配避免正则特殊字符抛错。
  * @param {Array<{group_name?: any}>|undefined} groupList
  * @param {any} value
- * @returns {Array}
+ * @returns {Array<any>}
  */
 export function filterGroups(groupList, value) {
   if (!Array.isArray(groupList)) {
