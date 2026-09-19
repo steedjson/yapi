@@ -196,7 +196,7 @@ class exportController extends baseController {
       let html = `<!DOCTYPE html>
       <html>
       <head>
-      <title>${curProject.name}</title>
+      <title>${escapeHtml(curProject.name)}</title>
       <meta charset="utf-8" />
       ${defaultTheme}
       </head>

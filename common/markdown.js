@@ -3,6 +3,36 @@
 const schema = require('./schema-transformTo-table.js');
 
 /**
+ * HTML 文本位转义, 规则与 server/utils/escapeHtml.js 对齐(转义 & < >)。
+ * common/ 不允许反向依赖 server/utils, 故在此局部实现, 两处规则如需调整必须同步修改。
+ * 仅用于表格单元格等纯文本插值位; desc 等 Markdown 创作面字段(设计上允许 HTML)禁止使用本函数。
+ * @param {any} value - 用户可控纯文本数据
+ * @returns {string} 转义后的字符串
+ */
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+/**
+ * HTML 属性位转义, 在 escapeHtml 基础上额外转义 " 与 ',
+ * 用于引号包裹的属性插值位(如接口锚点 id), 阻断属性边界逃逸注入事件处理器。
+ * 调用点必须配合引号包裹的属性值(id="${escapeHtmlAttr(...)}")使用。
+ * @param {any} value - 用户可控属性位数据
+ * @returns {string} 转义后的字符串
+ */
+function escapeHtmlAttr(value) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+/**
  * 解析 JSON 字符串，失败时返回空对象
  * @param {string} json - JSON 字符串
  * @returns {any} 解析结果
@@ -109,10 +139,12 @@ function createReqHeaders(req_headers) {
     let headersTable = `**Headers**\n\n`;
     headersTable += `| 参数名称  | 参数值  |  是否必须 | 示例  | 备注  |\n| ------------ | ------------ | ------------ | ------------ | ------------ |\n`;
     for (let j = 0; j < req_headers.length; j++) {
-      headersTable += `| ${req_headers[j].name || ''}  |  ${req_headers[j].value || ''} | ${
-        req_headers[j].required == 1 ? '是' : '否'
-      }  |  ${handleWrap(req_headers[j].example) || ''} |  ${handleWrap(req_headers[j].desc) ||
-        ''} |\n`;
+      // name/value/example 为用户可控纯文本位, 转义防注入; desc 为 Markdown 创作面字段, 按设计保留原样
+      headersTable += `| ${escapeHtml(req_headers[j].name || '')}  |  ${escapeHtml(
+        req_headers[j].value || ''
+      )} | ${req_headers[j].required == 1 ? '是' : '否'}  |  ${handleWrap(
+        escapeHtml(req_headers[j].example || '')
+      ) || ''} |  ${handleWrap(req_headers[j].desc) || ''} |\n`;
     }
     return headersTable;
   }
@@ -129,8 +161,10 @@ function createPathParams(req_params) {
     let paramsTable = `**路径参数**\n\n`;
     paramsTable += `| 参数名称 | 示例  | 备注  |\n| ------------ | ------------ | ------------ |\n`;
     for (let j = 0; j < req_params.length; j++) {
-      paramsTable += `| ${req_params[j].name || ''} |  ${handleWrap(req_params[j].example) ||
-        ''} |  ${handleWrap(req_params[j].desc) || ''} |\n`;
+      // name/example 为用户可控纯文本位, 转义防注入; desc 为 Markdown 创作面字段, 按设计保留原样
+      paramsTable += `| ${escapeHtml(req_params[j].name || '')} |  ${handleWrap(
+        escapeHtml(req_params[j].example || '')
+      ) || ''} |  ${handleWrap(req_params[j].desc) || ''} |\n`;
     }
     return paramsTable;
   }
@@ -147,10 +181,12 @@ function createReqQuery(req_query) {
     let headersTable = `**Query**\n\n`;
     headersTable += `| 参数名称  |  是否必须 | 示例  | 备注  |\n| ------------ | ------------ | ------------ | ------------ |\n`;
     for (let j = 0; j < req_query.length; j++) {
-      headersTable += `| ${req_query[j].name || ''} | ${
+      // name/example 为用户可控纯文本位, 转义防注入; desc 为 Markdown 创作面字段, 按设计保留原样
+      headersTable += `| ${escapeHtml(req_query[j].name || '')} | ${
         req_query[j].required == 1 ? '是' : '否'
-      }  |  ${handleWrap(req_query[j].example) || ''} |  ${handleWrap(req_query[j].desc) ||
-        ''} |\n`;
+      }  |  ${handleWrap(escapeHtml(req_query[j].example || '')) || ''} |  ${handleWrap(
+        req_query[j].desc
+      ) || ''} |\n`;
     }
     return headersTable;
   }
@@ -171,9 +207,11 @@ function createReqBody(req_body_type, req_body_form, req_body_other, req_body_is
     bodyTable += `| 参数名称  | 参数类型  |  是否必须 | 示例  | 备注  |\n| ------------ | ------------ | ------------ | ------------ | ------------ |\n`;
     let req_body = req_body_form;
     for (let j = 0; j < req_body.length; j++) {
-      bodyTable += `| ${req_body[j].name || ''} | ${req_body[j].type || ''}  |  ${
+      // name/example 为用户可控纯文本位, 转义防注入; desc 为 Markdown 创作面字段, 按设计保留原样;
+      // type 为内部枚举(text/file), 非用户自由文本, 不转义
+      bodyTable += `| ${escapeHtml(req_body[j].name || '')} | ${req_body[j].type || ''}  |  ${
         req_body[j].required == 1 ? '是' : '否'
-      } |  ${req_body[j].example || ''}  |  ${req_body[j].desc || ''} |\n`;
+      } |  ${escapeHtml(req_body[j].example || '')}  |  ${req_body[j].desc || ''} |\n`;
     }
     return `${bodyTable}\n\n`;
   } else if (req_body_other) {
@@ -214,10 +252,11 @@ function handleObject(text) {
   let tpl = ``;
   Object.keys(text || {}).map((item, index) => {
     let name = messageMap[item];
-    let value = text[item];
+    // 其他信息子项(默认值/枚举/枚举备注/mock 等)均为用户可控纯文本位, 转义防注入
+    let value = escapeHtml(text[item]);
     tpl += text[item] === undefined
       ? ''
-      : `<p key=${index}><span style="font-weight: '700'">${name}: </span><span>${value.toString()}</span></p>`;
+      : `<p key=${index}><span style="font-weight: '700'">${name}: </span><span>${value}</span></p>`;
   });
 
   return tpl;
@@ -243,26 +282,30 @@ function tableCol(col, columns, level) {
         text = handleObject(value);
         break;
       case 'type':
+        // type/itemType 源自用户编写的 schema JSON, 属用户可控纯文本位, 转义防注入
         text =
           value === 'array'
-            ? `<span>${col.sub ? col.sub.itemType || '' : 'array'} []</span>`
-            : `<span>${value}</span>`;
+            ? `<span>${escapeHtml(col.sub ? col.sub.itemType || '' : 'array')} []</span>`
+            : `<span>${escapeHtml(value)}</span>`;
         break;
       case 'required':
         text = value ? '必须' : '非必须';
         break;
       case 'desc':
+        // desc 为 Markdown 创作面字段(设计上允许 HTML), 按设计保留原样
         text = col.childrenDesc === undefined
           ? `<span style="white-space: pre-wrap">${value}</span>`
           : `<span style="white-space: pre-wrap">${col.childrenDesc}</span>`;
         break;
       case 'name':
+        // schema 属性名为用户可控纯文本位, 转义防注入
         text = `<span style="padding-left: ${20 * level}px"><span style="color: #8c8a8a">${
           level > 0 ? '├─' : ''
-        }</span> ${value}</span>`;
+        }</span> ${escapeHtml(value)}</span>`;
         break;
       default:
-        text = value;
+        // 仅 default 列落入默认分支, 为用户可控纯文本位, 转义防注入
+        text = escapeHtml(value);
     }
     tpl += `<td key=${index}>${text}</td>`;
   });
@@ -348,7 +391,12 @@ function createInterMarkdown(basepath, listItem, isToc) {
   let mdTemplate = ``;
   const toc = `[TOC]\n\n`;
   // 接口名称
-  mdTemplate += `\n## ${escapeStr(`${listItem.title}\n<a id=${listItem.title + listItem.catid}> </a>`, isToc)}\n`;
+  // 锚点 id 属性位: title/catid 用户可控, 属性值加引号并转义 " ' 等字符,
+  // 阻断无引号属性位逃逸注入事件处理器; 标题文本位的 title 由插件层 escapeHtml 覆盖 & < >, 此处不复转义
+  mdTemplate += `\n## ${escapeStr(
+    `${listItem.title}\n<a id="${escapeHtmlAttr(`${listItem.title}${listItem.catid}`)}"> </a>`,
+    isToc
+  )}\n`;
   isToc && (mdTemplate += toc);
   // 基本信息
   mdTemplate += createBaseMessage(basepath, listItem);
