@@ -1,5 +1,6 @@
 // @ts-check
 const defaultTheme = require('./defaultTheme.js');
+const escapeHtml = require('../escapeHtml.js');
 
 /**
  * @typedef {Object} ReportItem
@@ -37,19 +38,6 @@ function json_format(json) {
     return JSON.stringify(json, null, '   ');
   }
   return json;
-}
-
-/**
- * HTML 文本转义, 阻断测试报告中用户可控数据(接口名/路径/请求响应等)的存储型 XSS。
- * 上述数据均插入元素文本位置, 转义 & < > 即可; 属性位插值仅使用内部数字索引, 无需引号转义。
- * @param {any} value 任意用户可控数据
- * @returns {string}
- */
-function escapeHtml(value) {
-  return String(value)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
 }
 
 /**

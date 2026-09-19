@@ -30,7 +30,15 @@ function initPlugins(root) {
     if (plugin.client && plugin.enable) scripts.push(createScript(plugin, 'exts'));
   });
 
-  fs.writeFileSync(path.join(root, 'client/plugin-module.js'), 'module.exports = {' + scripts.join(',') + '}');
+  // 生成物首两行为类型检查声明与生成说明, 由本生成器统一产出;
+  // 调整文案须同步回归 client/plugin-module.js 的 @ts-check 头不丢失。
+  const generatedHeader =
+    '// @ts-check\n// 注意:本文件由 build/clientPluginModule.js 的 initPlugins() 生成,重新构建会覆盖手工改动。\n';
+
+  fs.writeFileSync(
+    path.join(root, 'client/plugin-module.js'),
+    generatedHeader + 'module.exports = {' + scripts.join(',') + '}'
+  );
 }
 
 module.exports = { initPlugins };

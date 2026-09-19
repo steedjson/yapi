@@ -10,6 +10,8 @@ const yapi = require('yapi.js');
 const fs = require('fs-extra');
 const path = require('path');
 const showDiffMsg = require('../../common/diff-view.js');
+// 与 server/utils/escapeHtml.js 共享同一实现(经相对路径引用, 与 ../../common/* 同一解析环境)
+const escapeHtml = require('../../server/utils/escapeHtml.js');
 class wikiController extends baseController {
   /**
    * @param {any} ctx Koa 请求上下文
@@ -122,6 +124,10 @@ class wikiController extends baseController {
         );
         let project = await this.projectModel.getBaseInfo(params.project_id);
 
+        // 邮件 HTML 正文中的用户可控字段(用户名/项目名)统一转义, 阻断存储型 HTML 注入;
+        // title 为纯文本邮件主题, 不转义; wikiUrl 由 origin 与内部 id 拼接, 无需转义。
+        const safeUsername = escapeHtml(username);
+
         yapi.commons.sendNotice(params.project_id, {
           title: `${username} 更新了wiki说明`,
           content: `<html>
@@ -133,9 +139,9 @@ class wikiController extends baseController {
           </style>
           </head>
           <body>
-          <div><h3>${username}更新了wiki说明</h3>
-          <p>修改用户: ${username}</p>
-          <p>修改项目: <a href="${wikiUrl}">${project.name}</a></p>
+          <div><h3>${safeUsername}更新了wiki说明</h3>
+          <p>修改用户: ${safeUsername}</p>
+          <p>修改项目: <a href="${wikiUrl}">${escapeHtml(project.name)}</a></p>
           <p>详细改动日志: ${this.diffHTML(diffView)}</p></div>
           </body>
           </html>`

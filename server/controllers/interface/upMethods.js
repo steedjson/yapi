@@ -20,6 +20,7 @@ const url = requireAny('url');
 const yapi = requireAny('../../yapi.js');
 const handleHeaders = require('../../utils/interfaceNormalizer.js');
 const clearProjectCategoryCache = require('./cacheHelper.js');
+const escapeHtml = require('../../utils/escapeHtml.js');
 
 // diff 通知邮件所需的两个 CSS 内容固定不变，进程内缓存避免每次保存接口都同步读盘。
 /** @type {{ annotatedCss: string, htmlCss: string } | null} */
@@ -224,6 +225,13 @@ let diffCssCache = null;
         interfaceData.project_id
       }/interface/api/${id}`;
 
+      // 邮件 HTML 正文中的用户可控字段(用户名/接口名/路径/方法)统一转义, 阻断存储型 HTML 注入;
+      // title 为纯文本邮件主题, 不转义; interfaceUrl 由 origin 与内部数字 id 拼接, 无需转义。
+      const safeUsername = escapeHtml(username);
+      const safeTitle = escapeHtml(data.title);
+      const safeMethod = escapeHtml(data.method);
+      const safePath = escapeHtml(data.path);
+
       yapi.commons.sendNotice(interfaceData.project_id, {
         title: `${username} 更新了接口`,
         content: `<html>
@@ -234,11 +242,11 @@ let diffCssCache = null;
         </style>
         </head>
         <body>
-        <div><h3>${username}更新了接口(${data.title})</h3>
-        <p>项目名：${project.name} </p>
-        <p>修改用户: ${username}</p>
-        <p>接口名: <a href="${interfaceUrl}">${data.title}</a></p>
-        <p>接口路径: [${data.method}]${data.path}</p>
+        <div><h3>${safeUsername}更新了接口(${safeTitle})</h3>
+        <p>项目名：${escapeHtml(project.name)} </p>
+        <p>修改用户: ${safeUsername}</p>
+        <p>接口名: <a href="${interfaceUrl}">${safeTitle}</a></p>
+        <p>接口路径: [${safeMethod}]${safePath}</p>
         <p>详细改动日志: ${this.diffHTML(diffView)}</p></div>
         </body>
         </html>`

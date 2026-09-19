@@ -22,6 +22,7 @@ const {
 } = requireAny('../../common/postmanLib');
 const { handleParamsValue, ArrayToObject } = requireAny('../../common/utils.js');
 const renderToHtml = require('../utils/reportHtml');
+const escapeHtml = require('../utils/escapeHtml.js');
 const HanldeImportData = requireAny('../../common/HandleImportData');
 const createContex = require('../../common/createContext')
 
@@ -313,6 +314,8 @@ class openController extends baseController {
       let autoTestUrl = `${
         ctx.request.origin
       }/api/open/run_auto_test?id=${id}&token=${token}&mode=${ctx.params.mode}`;
+      // autoTestUrl 回显了请求查询参数(token/mode), 邮件 HTML 正文中统一转义阻断注入;
+      // message.msg 由内部计数拼接, 不含用户可控数据。
       yapi.commons.sendNotice(projectId, {
         title: `YApi自动化测试报告`,
         content: `
@@ -325,7 +328,7 @@ class openController extends baseController {
         <h3>测试结果：</h3>
         <p>${reportsResult.message.msg}</p>
         <h3>测试结果详情如下：</h3>
-        <p>${autoTestUrl}</p>
+        <p>${escapeHtml(autoTestUrl)}</p>
         </div>
         </body>
         </html>`

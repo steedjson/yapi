@@ -19,6 +19,7 @@ const userModel = requireAny('../../models/user.js');
 const groupModel = requireAny('../../models/group.js');
 const ldap = requireAny('../../utils/ldap.js');
 const jwt = require('jsonwebtoken');
+const escapeHtml = require('../../utils/escapeHtml.js');
 
   /**
    * 用户登录接口
@@ -219,9 +220,12 @@ const jwt = require('jsonwebtoken');
         };
         user = await userInst.save(data);
         await this.handlePrivateGroup(user._id);
+        // email 来自第三方登录方回传数据, 邮件 HTML 正文中转义阻断注入
         yapi.commons.sendMail({
           to: email,
-          contents: `<h3>亲爱的用户：</h3><p>您好，感谢使用YApi平台，你的邮箱账号是：${email}</p>`
+          contents: `<h3>亲爱的用户：</h3><p>您好，感谢使用YApi平台，你的邮箱账号是：${escapeHtml(
+            email
+          )}</p>`
         });
       }
 
@@ -352,8 +356,9 @@ const jwt = require('jsonwebtoken');
       });
       yapi.commons.sendMail({
         to: user.email,
+        // email 为用户注册输入, 邮件 HTML 正文中转义阻断注入
         contents: `<h3>亲爱的用户：</h3><p>您好，感谢使用YApi可视化接口平台,您的账号 ${
-          params.email
+          escapeHtml(params.email)
         } 已经注册成功</p>`
       });
     } catch (/** @type {any} */ e) {

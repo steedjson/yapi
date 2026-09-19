@@ -111,10 +111,6 @@ class interfaceColController extends baseController {
         size += chunk.length;
       });
 
-      req.on('finish', function() {
-        console.log(34343);
-      });
-
       // 原实现把回调误传给 writeFileSync 的第 3 参（实为 options，被静默忽略），
       // 「写入失败返回 402」从未生效。改为 fs.promises.writeFile 异步写入并真实接收错误：
       // 失败返回 402（原为抛异常导致 500），成功在写入完成后响应（由同步变为事件循环延迟）。

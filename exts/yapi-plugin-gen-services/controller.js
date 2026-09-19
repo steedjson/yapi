@@ -10,6 +10,8 @@ const markdownItAnchor = require('markdown-it-anchor');
 const markdownItTableOfContents = require('markdown-it-table-of-contents');
 const defaultTheme = require('./defaultTheme.js');
 const md = require('../../common/markdown');
+// 与 server/utils/escapeHtml.js 共享同一实现(经相对路径引用, 与 ../../common/* 同一解析环境)
+const escapeHtml = require('../../server/utils/escapeHtml.js');
 
 // const htmlToPdf = require("html-pdf");
 class exportController extends baseController {
@@ -222,6 +224,41 @@ class exportController extends baseController {
     }
 
     /**
+     * mongoose 文档转普通对象(普通对象原样返回), 便于对导出数据做非变异克隆
+     * @param {any} value
+     * @returns {any}
+     */
+    function toPlain(value) {
+      return value && typeof value.toObject === 'function' ? value.toObject() : value;
+    }
+
+    /**
+     * 接口名/分类名/路径/方法等纯文本字段统一转义后再进入 Markdown 源,
+     * 防止形如 script 标签的内容经 markdown-it(html: true) 原样进入 api.html 下载件;
+     * desc 类字段为 Markdown 创作面(与站内渲染行为一致), 按设计保留原样。
+     * 克隆产生新对象, 不改动原始 list/接口数据(同请求的其他导出分支仍使用原值)。
+     * @param {any} cate 分类(含接口列表)
+     * @returns {any}
+     */
+    function escapeListPlainFields(cate) {
+      return Object.assign({}, toPlain(cate), {
+        name: escapeHtml(cate.name),
+        list: (cate.list || []).map(
+          /**
+           * @param {any} api
+           * @returns {any}
+           */
+          api =>
+            Object.assign({}, toPlain(api), {
+              title: escapeHtml(api.title),
+              path: escapeHtml(api.path),
+              method: escapeHtml(api.method)
+            })
+        )
+      });
+    }
+
+    /**
      * @param {any} list
      * @param {any} isToc
      * @returns {any} markdown 文本（异常时为 undefined，与既有运行时行为一致）
@@ -231,10 +268,14 @@ class exportController extends baseController {
       //模板
       let mdTemplate = ``;
       try {
+        const safeProject = Object.assign({}, toPlain(curProject), {
+          name: escapeHtml(curProject.name),
+          basepath: escapeHtml(curProject.basepath)
+        });
         // 项目名称信息
-        mdTemplate += md.createProjectMarkdown(curProject, wikiData);
+        mdTemplate += md.createProjectMarkdown(safeProject, wikiData);
         // 分类信息
-        mdTemplate += md.createClassMarkdown(curProject, list, isToc);
+        mdTemplate += md.createClassMarkdown(safeProject, list.map(escapeListPlainFields), isToc);
         return mdTemplate;
       } catch (e) {
         yapi.commons.log(e, 'error');

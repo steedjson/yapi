@@ -367,3 +367,176 @@ test.serial('Postman ref.state 暴露保存用例所需的实时请求参数', a
 
   utils.unmount();
 });
+
+// ---------- cWRP 等价 effect（props.data 变化触发 initState/initEnvState）回归 ----------
+// 对应 Postman.js「对应旧 UNSAFE_componentWillReceiveProps」useEffect 的四条路径：
+// ① 同 _id 仅 env 变化（else-if 分支）；② 换 _id 且换 env、type=inter（重初始化，env 重算
+// 仅由 initState 内部按新 case_env 执行一次）；③ type=case 换 _id 且换 env（env 分支以
+// 「接收时刻的旧 case_env + 新 env」最后应用——钉死最终应用顺序等价）；④ 同 ① 的 type=case。
+// 各用例不发送请求，经 rerender 驱动 props.data 变化，断言 ref.state 实时镜像。
+
+const CONTENT_TYPE_HEADER = [{ name: 'Content-Type', value: 'application/json', required: '1' }];
+
+/**
+ * 挂载 Postman 并返回句柄与测试工具（refCallback 须在 rerender 时原样透传,
+ * 否则 React 会先以 null 反调旧 ref 导致句柄丢失）
+ * @param {any} data
+ * @param {string} type
+ */
+async function renderPostman(data, type) {
+  let postmanHandle = null;
+  const refCallback = r => {
+    postmanHandle = r;
+  };
+  const utils = render(
+    React.createElement(Postman, Object.assign({}, BASE_PROPS, {
+      data,
+      type,
+      ref: refCallback
+    }))
+  );
+  await act(async () => {});
+  return { utils, handle: () => postmanHandle, refCallback };
+}
+
+/**
+ * 以新 data 重渲染并等待 effect 落定
+ * @param {any} utils
+ * @param {any} data
+ * @param {string} type
+ * @param {any} refCallback
+ */
+async function rerenderPostman(utils, data, type, refCallback) {
+  await act(async () => {
+    utils.rerender(
+      React.createElement(Postman, Object.assign({}, BASE_PROPS, { data, type, ref: refCallback }))
+    );
+  });
+}
+
+// 6) type=inter，同 _id 仅 env 变化：只按当前 case_env 重算请求头，不重跑 initState
+test.serial('cWRP 等价: type=inter 同 _id 仅 env 变化时只重算请求头, 不重跑 initState', async t => {
+  const ENV_V2 = [
+    { name: 'local', domain: 'http://localhost:3000', header: [{ name: 'X-Env-V2', value: 'local-v2' }] },
+    { name: 'prod', domain: 'https://prod.example.com', header: [] }
+  ];
+  const { utils, handle, refCallback } = await renderPostman(INTER_DATA, 'inter');
+  t.is(handle().state.case_env, 'local', '挂载后 case_env 应来自数据');
+
+  // data2 去掉 title 作「未重初始化」标记：initState 若重跑，applyState({...data2}) 会把 title 抹掉
+  const data2 = Object.assign({}, INTER_DATA, { env: ENV_V2 });
+  delete data2.title;
+  await rerenderPostman(utils, data2, 'inter', refCallback);
+
+  t.is(handle().state.env, ENV_V2, 'env 应更新为新引用');
+  t.is(handle().state.case_env, 'local', '新 env 仍含 local, case_env 应保持');
+  t.is(handle().state.title, '接口一', '仅 env 变化不应重跑 initState（title 标记字段保留）');
+  const names = handle().state.req_headers.map(h => h.name);
+  t.true(names.indexOf('X-Env-V2') !== -1, '应按当前 case_env(local) 合并新 env 的 header');
+  const xEnvV2 = handle().state.req_headers.find(h => h.name === 'X-Env-V2');
+  t.true(xEnvV2.abled === true, 'env 注入的 header 应标记 abled: true');
+
+  utils.unmount();
+});
+
+// 7) type=inter，换 _id 且换 env：重初始化整体重建，env 重算仅由 initState 内部按新 case_env 执行
+test.serial('cWRP 等价: type=inter 换 _id 且换 env 时重初始化并仅按新 case_env 重算请求头', async t => {
+  const ENV_V2 = [
+    { name: 'local', domain: 'http://localhost:3000', header: [{ name: 'X-Only-Local-V2', value: '1' }] },
+    { name: 'prod', domain: 'https://prod.example.com', header: [{ name: 'X-Only-Prod-V2', value: '1' }] }
+  ];
+  const { utils, handle, refCallback } = await renderPostman(INTER_DATA, 'inter');
+
+  const data2 = Object.assign({}, INTER_DATA, {
+    _id: 101,
+    case_env: 'prod',
+    env: ENV_V2,
+    req_headers: CONTENT_TYPE_HEADER
+  });
+  await rerenderPostman(utils, data2, 'inter', refCallback);
+
+  t.is(handle().state._id, 101, '应完成重初始化');
+  t.is(handle().state.case_env, 'prod', 'case_env 应来自新数据');
+  t.is(handle().state.env, ENV_V2, 'env 应来自新数据');
+  const names = handle().state.req_headers.map(h => h.name);
+  t.true(names.indexOf('X-Only-Prod-V2') !== -1, '应按新 case_env(prod) 与新 env 计算请求头');
+  t.false(names.indexOf('X-Only-Local-V2') !== -1, '不应再按 local 环境补算（旧 cWRP 顺序等价：不额外补跑 initEnvState）');
+  t.false(names.indexOf('X-Env') !== -1, '旧 env 合并产物不应残留（重初始化整体重建请求头）');
+  const xProd = handle().state.req_headers.find(h => h.name === 'X-Only-Prod-V2');
+  t.true(xProd.abled === true, 'env 注入的 header 应标记 abled: true');
+
+  utils.unmount();
+});
+
+// 8) type=case，换 _id 且换 env：env 分支以「接收时刻的旧 case_env + 新 env」最后应用（bug-for-bug）
+test.serial('cWRP 等价: type=case 换 _id 且换 env 时以旧 case_env 加新 env 最后重算请求头', async t => {
+  const ENV_V1 = [
+    { name: 'local', domain: 'http://localhost:3000', header: [{ name: 'X-From-Local-V1', value: '1' }] },
+    { name: 'prod', domain: 'https://prod.example.com', header: [{ name: 'X-From-Prod-V1', value: '1' }] }
+  ];
+  const ENV_V2 = [
+    { name: 'local', domain: 'http://localhost:3000', header: [{ name: 'X-From-Local-V2', value: '1' }] },
+    { name: 'prod', domain: 'https://prod.example.com', header: [{ name: 'X-From-Prod-V2', value: '1' }] }
+  ];
+  const data1 = Object.assign({}, INTER_DATA, {
+    _id: 900,
+    casename: '用例一',
+    case_env: 'prod',
+    env: ENV_V1
+  });
+  const { utils, handle, refCallback } = await renderPostman(data1, 'case');
+  t.is(handle().state.case_env, 'prod', '挂载后 case_env 应来自数据');
+
+  const data2 = Object.assign({}, INTER_DATA, {
+    _id: 901,
+    casename: '用例一',
+    case_env: 'local',
+    env: ENV_V2,
+    req_headers: CONTENT_TYPE_HEADER
+  });
+  await rerenderPostman(utils, data2, 'case', refCallback);
+
+  t.is(handle().state.case_env, 'local', 'case_env 应被 initState 按新数据更新');
+  const names = handle().state.req_headers.map(h => h.name);
+  t.true(
+    names.indexOf('X-From-Prod-V2') !== -1,
+    '请求头应基于接收时刻的旧 case_env(prod) 与新 env(V2) 计算——旧 cWRP 的最后应用顺序'
+  );
+  t.false(
+    names.indexOf('X-From-Local-V2') !== -1,
+    '不应按新 case_env(local) 计算请求头（钉死最终应用顺序等价，该既有语义的修复需另行立项）'
+  );
+  const xProdV2 = handle().state.req_headers.find(h => h.name === 'X-From-Prod-V2');
+  t.true(xProdV2.abled === true, 'env 注入的 header 应标记 abled: true');
+
+  utils.unmount();
+});
+
+// 9) type=case，同 _id 仅 env 变化：按当前 case_env 重算请求头，case_env 与未重初始化标记保留
+test.serial('cWRP 等价: type=case 同 _id 仅 env 变化时按当前 case_env 重算请求头', async t => {
+  const ENV_V2 = [
+    { name: 'local', domain: 'http://localhost:3000', header: [] },
+    { name: 'prod', domain: 'https://prod.example.com', header: [{ name: 'X-Case-Env-Only', value: '1' }] }
+  ];
+  const data1 = Object.assign({}, INTER_DATA, {
+    _id: 900,
+    casename: '用例一',
+    case_env: 'prod'
+  });
+  const { utils, handle, refCallback } = await renderPostman(data1, 'case');
+
+  // data2 去掉 casename 作「未重初始化」标记; _id/interface_up_time 均保持不变
+  const data2 = Object.assign({}, INTER_DATA, { _id: 900, env: ENV_V2 });
+  delete data2.casename;
+  await rerenderPostman(utils, data2, 'case', refCallback);
+
+  t.is(handle().state.case_env, 'prod', '新 env 仍含 prod, case_env 应保持');
+  t.is(handle().state.casename, '用例一', '仅 env 变化不应重跑 initState（casename 标记字段保留）');
+  t.is(handle().state.env, ENV_V2, 'env 应更新为新引用');
+  const names = handle().state.req_headers.map(h => h.name);
+  t.true(names.indexOf('X-Case-Env-Only') !== -1, '应按当前 case_env(prod) 合并新 env 的 header');
+  const xOnly = handle().state.req_headers.find(h => h.name === 'X-Case-Env-Only');
+  t.true(xOnly.abled === true, 'env 注入的 header 应标记 abled: true');
+
+  utils.unmount();
+});
