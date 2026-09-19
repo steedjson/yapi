@@ -40,6 +40,19 @@ function json_format(json) {
 }
 
 /**
+ * HTML 文本转义, 阻断测试报告中用户可控数据(接口名/路径/请求响应等)的存储型 XSS。
+ * 上述数据均插入元素文本位置, 转义 & < > 即可; 属性位插值仅使用内部数字索引, 无需引号转义。
+ * @param {any} value 任意用户可控数据
+ * @returns {string}
+ */
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+/**
  * 将测试报告数据渲染为 HTML5 文档字符串
  * @param {ReportData} reports
  * @returns {string}
@@ -136,13 +149,13 @@ function requestHtml(url, headers, params) {
     <h3>Request</h3>
     <div class="row case-report">
      <div class="col-3 case-report-title">Url</div>
-     <div class="col-21">${url}</div>
+     <div class="col-21">${escapeHtml(url)}</div>
     </div>`;
   html += headers
     ? `<div class="row case-report">
     <div class="col-3 case-report-title">Headers</div>
     <div class="col-21">
-     <pre>${headers}</pre>
+     <pre>${escapeHtml(headers)}</pre>
     </div>
    </div>`
     : ``;
@@ -151,7 +164,7 @@ function requestHtml(url, headers, params) {
     ? ` <div class="row case-report">
    <div class="col-3 case-report-title">Body</div>
    <div class="col-21">
-    <pre>${params}</pre>
+    <pre>${escapeHtml(params)}</pre>
    </div>
    </div>`
     : ``;
@@ -176,7 +189,7 @@ function reponseHtml(res_header, res_body) {
   <div class="row case-report">
    <div class="col-3 case-report-title">Headers</div>
    <div class="col-21">
-    <pre>${res_header}</pre>
+    <pre>${escapeHtml(res_header)}</pre>
    </div>
   </div>`
     : ``;
@@ -185,7 +198,7 @@ function reponseHtml(res_header, res_body) {
     ? ` <div class="row case-report">
   <div class="col-3 case-report-title">Body</div>
   <div class="col-21">
-   <pre>${res_body}</pre>
+   <pre>${escapeHtml(res_body)}</pre>
   </div>
  </div>`
     : ``;
@@ -200,21 +213,24 @@ function reponseHtml(res_header, res_body) {
  * @returns {string}
  */
 function validHtml(validRes) {
-  if (validRes && Array.isArray(validRes)) {
-    validRes = validRes.map((item, index) => {
-      return `<div key=${index}>${item.message}</div>`;
-    });
-  }
+  // 数组分支逐条转义后拼接, 非数组分支整体转义, 均阻断 message 中的标签注入
+  let content = validRes && Array.isArray(validRes)
+    ? validRes
+        .map((item, index) => {
+          return `<div key=${index}>${escapeHtml(item.message)}</div>`;
+        })
+        .join('')
+    : escapeHtml(validRes);
   let html = `
   <div>
     <div class="row case-report">
      <div class="col-3 case-report-title">验证结果</div>
      <div class="col-21">
-      ${validRes}
+      ${content}
      </div>
     </div>
   </div>
-  
+
   `;
 
   return html;
@@ -230,15 +246,15 @@ function validHtml(validRes) {
 function baseHtml(index, name, path, status) {
   let html = `
   <div>
-    <h2 id=${index}>${name}</h2>
+    <h2 id=${index}>${escapeHtml(name)}</h2>
     <h3>基本信息</h3>
     <div class="row case-report">
     <div class="col-3 case-report-title">Path</div>
-    <div class="col-21">${path}</div>
+    <div class="col-21">${escapeHtml(path)}</div>
    </div>
    <div class="row case-report">
     <div class="col-3 case-report-title">Status</div>
-    <div class="col-21">${status}</div>
+    <div class="col-21">${escapeHtml(status)}</div>
    </div>
   </div>
   `;
@@ -255,7 +271,7 @@ function baseHtml(index, name, path, status) {
 function leftHtml(index, name, code) {
   let html = `
   <div class="list-content">
-    <a class="list" href="#${index}">${name}</a>
+    <a class="list" href="#${index}">${escapeHtml(name)}</a>
     ${codeHtml(code)}
   </div>
   `;

@@ -274,3 +274,61 @@ test('list 含多条用例时按索引生成目录锚点链接', t => {
   t.true(html.includes('icon-check-circle'));
   t.true(html.includes('icon-close-circle'));
 });
+
+// ---------- XSS 转义 ----------
+
+test('用户可控字段中的 HTML 标签全部被转义, 报告中不出现可执行标签', t => {
+  const html = renderToHtml({
+    list: [
+      {
+        name: '<script>alert(1)</script>',
+        path: '/api/<b>evil</b>',
+        status: '<img src=x onerror=alert(1)>',
+        code: 0,
+        validRes: [{ message: '</div><script>alert(2)</script>' }],
+        url: 'http://example.com/<a>',
+        headers: { 'x-evil': '<script>h()</script>' },
+        data: '<svg onload=alert(3)>',
+        res_header: { server: '<script>s()</script>' },
+        res_body: '</pre><script>alert(4)</script>'
+      }
+    ],
+    message: { failedNum: 1, successNum: 0, len: 1 }
+  });
+
+  // 注入的任何标签都不得以原始形态出现在输出中
+  t.false(html.includes('<script>'));
+  t.false(html.includes('<img src=x'));
+  t.false(html.includes('<svg onload'));
+  t.false(html.includes('</pre><script>'));
+
+  // 各字段均按实体转义输出
+  t.true(html.includes('<h2 id=0>&lt;script&gt;alert(1)&lt;/script&gt;</h2>'));
+  t.true(html.includes('<div class="col-21">/api/&lt;b&gt;evil&lt;/b&gt;</div>'));
+  t.true(html.includes('&lt;img src=x onerror=alert(1)&gt;'));
+  t.true(html.includes('<a class="list" href="#0">&lt;script&gt;alert(1)&lt;/script&gt;</a>'));
+  t.true(html.includes('&lt;/div&gt;&lt;script&gt;alert(2)&lt;/script&gt;'));
+  t.true(html.includes('&lt;script&gt;h()&lt;/script&gt;'));
+  t.true(html.includes('&lt;svg onload=alert(3)&gt;'));
+  t.true(html.includes('&lt;/pre&gt;&lt;script&gt;alert(4)&lt;/script&gt;'));
+});
+
+test('& 字符转义为 &amp; 且不会被二次转义', t => {
+  const html = renderToHtml({
+    list: [{ name: 'a&b', path: '/x?k=1&k=2', code: 0 }],
+    message: { failedNum: 0, successNum: 1 }
+  });
+
+  t.true(html.includes('<h2 id=0>a&amp;b</h2>'));
+  t.true(html.includes('<div class="col-21">/x?k=1&amp;k=2</div>'));
+  t.false(html.includes('&amp;amp;'));
+});
+
+test('res_body 为含标签的字符串时在 pre 中被转义而非截断结构', t => {
+  const html = renderToHtml({
+    list: [{ name: '字符串响应用例', res_body: '<b>bold</b> & <i>italic</i>' }],
+    message: { failedNum: 0, successNum: 1 }
+  });
+
+  t.true(html.includes('<pre>&lt;b&gt;bold&lt;/b&gt; &amp; &lt;i&gt;italic&lt;/i&gt;</pre>'));
+});

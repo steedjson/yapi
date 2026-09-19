@@ -1133,6 +1133,8 @@ const Run = forwardRef((props, ref) => {
                       state.autoPreviewHTML && testResponseBodyIsHTML()
                         ? <iframe
                             className="pretty-editor-body"
+                            // 响应体来自被测服务, 属不可信内容: 全量 sandbox 禁止脚本执行, 仅做静态 HTML 预览
+                            sandbox=""
                             srcDoc={state.test_res_body}
                           />
                         : <AceEditor

@@ -29,6 +29,11 @@ const handleHeaders = require('../utils/interfaceNormalizer.js');
 /** @type {{ annotatedCss: string, htmlCss: string } | null} */
 let diffCssCache = null;
 
+// cross-request.zip 为随版本发布的静态附件，内容固定不变，
+// 进程内缓存避免每个下载请求都同步读盘（参照 user.js 的 defaultAvatarBuffer 模式）。
+/** @type {Buffer | null} */
+let crossRequestZipBuffer = null;
+
 /**
  * 仅清理当前项目的分类缓存，避免写操作导致其他项目缓存无效。
  * @param {any} [projectId]
@@ -581,12 +586,14 @@ class interfaceController extends baseController {
    */
   async downloadCrx(ctx) {
     let filename = 'crossRequest.zip';
-    let dataBuffer = yapi.fs.readFileSync(
-      yapi.path.join(yapi.WEBROOT, 'static/attachment/cross-request.zip')
-    );
+    if (!crossRequestZipBuffer) {
+      crossRequestZipBuffer = yapi.fs.readFileSync(
+        yapi.path.join(yapi.WEBROOT, 'static/attachment/cross-request.zip')
+      );
+    }
     ctx.set('Content-disposition', 'attachment; filename=' + filename);
     ctx.set('Content-Type', 'application/zip');
-    ctx.body = dataBuffer;
+    ctx.body = crossRequestZipBuffer;
   }
 
   /**

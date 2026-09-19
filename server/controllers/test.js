@@ -115,22 +115,32 @@ class interfaceColController extends baseController {
         console.log(34343);
       });
 
-      req.on('end', function() {
-        let data = Buffer.alloc(size);
-        for (let i = 0, pos = 0, l = chunks.length; i < l; i++) {
-          let chunk = chunks[i];
-          chunk.copy(data, pos);
-          pos += chunk.length;
+      // 原实现把回调误传给 writeFileSync 的第 3 参（实为 options，被静默忽略），
+      // 「写入失败返回 402」从未生效。改为 fs.promises.writeFile 异步写入并真实接收错误：
+      // 失败返回 402（原为抛异常导致 500），成功在写入完成后响应（由同步变为事件循环延迟）。
+      // koa-body 已消费请求体（multipart/json 等场景）时 end 不会再触发，直接按已收集数据落盘。
+      await new Promise((/** @type {(v?: void) => void} */ resolve) => {
+        if (req.readableEnded) {
+          resolve();
+          return;
         }
-        fs.writeFileSync(
-          path.join(yapi.WEBROOT_RUNTIME, 'test.text'),
-          data,
-          function() {
-            return (ctx.body = yapi.commons.resReturn(null, 402, '写入失败'));
-          }
-        );
+        req.on('end', resolve);
+        req.on('error', resolve);
       });
 
+      let data = Buffer.alloc(size);
+      for (let i = 0, pos = 0, l = chunks.length; i < l; i++) {
+        let chunk = chunks[i];
+        chunk.copy(data, pos);
+        pos += chunk.length;
+      }
+
+      try {
+        await fs.promises.writeFile(path.join(yapi.WEBROOT_RUNTIME, 'test.text'), data);
+      } catch (/** @type {any} */ e) {
+        ctx.body = yapi.commons.resReturn(null, 402, '写入失败');
+        return;
+      }
       ctx.body = yapi.commons.resReturn({ res: '上传成功' });
     } catch (/** @type {any} */ e) {
       ctx.body = yapi.commons.resReturn(null, 402, e.message);
