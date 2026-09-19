@@ -180,6 +180,22 @@
     "server/app.js",
     "server/router.js",
     "server/websocket.js",
-    "server/plugin.js"
+    "server/plugin.js",
+    "exts/yapi-plugin-import-postman/client.js",
+    "exts/yapi-plugin-import-swagger/run.js",
+    "exts/yapi-plugin-import-swagger/server.js",
+    "exts/yapi-plugin-import-swagger/client.js",
+    "exts/yapi-plugin-import-har/client.js",
+    "exts/yapi-plugin-import-yapi-json/client.js",
+    "exts/yapi-plugin-export-data/controller.js",
+    "exts/yapi-plugin-export-data/server.js",
+    "exts/yapi-plugin-export-data/client.js",
+    "exts/yapi-plugin-export-swagger2-data/controller.js",
+    "exts/yapi-plugin-export-swagger2-data/server.js",
+    "exts/yapi-plugin-export-swagger2-data/client.js",
+    "exts/yapi-plugin-gen-services/controller.js",
+    "exts/yapi-plugin-gen-services/server.js",
+    "exts/yapi-plugin-gen-services/client.js",
+    "exts/yapi-plugin-gen-services/Services/Services.js"
   ]
 }

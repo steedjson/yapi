@@ -1,7 +1,12 @@
+// @ts-check
 const swagger = require('swagger-client');
 const compareVersions = require('compare-versions');
 
+  /** @type {any} */
   var SwaggerData, isOAS3;
+  /**
+   * @param {string} path
+   */
   function handlePath(path) {
     if (path === '/') return path;
     if (path.charAt(0) != '/') {
@@ -14,6 +19,9 @@ const compareVersions = require('compare-versions');
   }
 
   // OpenAPI 3.x 的响应和请求体都放在 content 中，优先选择 JSON 或兼容的 +json 媒体类型。
+  /**
+   * @param {any} content
+   */
   function getJsonContent(content) {
     if (!content || typeof content !== 'object') return null;
     const keys = Object.keys(content);
@@ -21,6 +29,9 @@ const compareVersions = require('compare-versions');
     return key ? content[key] : null;
   }
 
+  /**
+   * @param {any} data
+   */
   function getServerBasePath(data) {
     if (data.basePath || !data.servers || !data.servers[0] || !data.servers[0].url) {
       return data.basePath || '';
@@ -38,6 +49,9 @@ const compareVersions = require('compare-versions');
     return match && match[1] && match[1] !== '/' ? match[1].replace(/\/$/, '') : '';
   }
 
+  /**
+   * @param {any} data
+   */
   function openapi2swagger(data) {
     data.swagger = '2.0';
     // 缺失 paths 的畸形文档按空导入处理（原 underscore _.each 对 undefined 为 no-op）
@@ -52,6 +66,7 @@ const compareVersions = require('compare-versions');
         });
         if (api.requestBody) {
           if (!api.parameters) api.parameters = [];
+          /** @type {Record<string, any>} */
           let body = {
             type: 'object',
             name: 'body',
@@ -72,6 +87,9 @@ const compareVersions = require('compare-versions');
     return data;
   }
 
+  /**
+   * @param {any} res
+   */
   async function handleSwaggerData(res) {
 
     return await new Promise(resolve => {
@@ -79,18 +97,22 @@ const compareVersions = require('compare-versions');
         spec: res
       });
 
-      data.then(res => {
+      data.then((/** @type {any} */ res) => {
         resolve(res.spec);
       });
     });
   }
 
+  /**
+   * @param {any} res
+   */
   async function run(res) {
+      /** @type {Record<string, any>} */
       let interfaceData = { apis: [], cats: [] };
       if(typeof res === 'string' && res){
         try{
           res = JSON.parse(res);
-        } catch (e) {
+        } catch (/** @type {any} */ e) {
           console.error('json 解析出错',e.message)
         }
       }
@@ -109,7 +131,7 @@ const compareVersions = require('compare-versions');
       interfaceData.basePath = res.basePath || '';
 
       if (res.tags && Array.isArray(res.tags)) {
-        res.tags.forEach(tag => {
+        res.tags.forEach((/** @type {any} */ tag) => {
           interfaceData.cats.push({
             name: tag.name,
             desc: tag.description
@@ -126,11 +148,12 @@ const compareVersions = require('compare-versions');
         Object.entries(apis).forEach(([method, api]) => {
           api.path = path;
           api.method = method;
+          /** @type {any} */
           let data = null;
           try {
             data = handleSwagger(api, res.tags);
             if (data.catname) {
-              if (!interfaceData.cats.find(item => item.name === data.catname)) {
+              if (!interfaceData.cats.find((/** @type {any} */ item) => item.name === data.catname)) {
                 if(res.tags.length === 0){
                   interfaceData.cats.push({
                     name: data.catname,
@@ -148,8 +171,9 @@ const compareVersions = require('compare-versions');
         });
       });
 
+      /** @type {Record<string, any>} */
       const categoryMap = {};
-      interfaceData.cats.forEach(cat => {
+      interfaceData.cats.forEach((/** @type {any} */ cat) => {
         const parts = String(cat.name).split('/').map(item => item.trim()).filter(Boolean);
         let fullPath = '';
         let parentPath = '';
@@ -167,8 +191,8 @@ const compareVersions = require('compare-versions');
         });
       });
       interfaceData.cats = Object.keys(categoryMap).map(key => categoryMap[key]);
-      interfaceData.cats = interfaceData.cats.filter(catData=>{
-        return interfaceData.apis.find(apiData=>{
+      interfaceData.cats = interfaceData.cats.filter((/** @type {any} */ catData)=>{
+        return interfaceData.apis.find((/** @type {any} */ apiData)=>{
           return apiData.catname === catData.path ||
             (apiData.catname && apiData.catname.indexOf(catData.path + '/') === 0);
         });
@@ -177,8 +201,13 @@ const compareVersions = require('compare-versions');
       return interfaceData;
   }
 
+  /**
+   * @param {any} data
+   * @param {any[]} [originTags]
+   */
   function handleSwagger(data, originTags= []) {
 
+    /** @type {Record<string, any>} */
     let api = {};
     //处理基本信息
     api.method = data.method.toUpperCase();
@@ -244,6 +273,10 @@ const compareVersions = require('compare-versions');
       api.res_body_type = 'raw';
     }
     //处理参数
+    /**
+     * @param {string} key
+     * @param {any} json
+     */
     function simpleJsonPathParse(key, json) {
       if (!key || typeof key !== 'string' || key.indexOf('#/') !== 0 || key.length <= 2) {
         return null;
@@ -264,10 +297,11 @@ const compareVersions = require('compare-versions');
     }
 
     if (data.parameters && Array.isArray(data.parameters)) {
-      data.parameters.forEach(param => {
+      data.parameters.forEach((/** @type {any} */ param) => {
         if (param && typeof param === 'object' && param.$ref) {
           param = simpleJsonPathParse(param.$ref, { parameters: SwaggerData.parameters });
         }
+        /** @type {Record<string, any>} */
         let defaultParam = {
           name: param.name,
           desc: param.description,
@@ -305,6 +339,9 @@ const compareVersions = require('compare-versions');
     return api;
   }
 
+  /**
+   * @param {string} json
+   */
   function isJson(json) {
     try {
       return JSON.parse(json);
@@ -313,6 +350,10 @@ const compareVersions = require('compare-versions');
     }
   }
 
+  /**
+   * @param {any} data
+   * @param {any} api
+   */
   function handleBodyPamras(data, api) {
     api.req_body_other = JSON.stringify(data, null, 2);
     if (isJson(api.req_body_other)) {
@@ -321,6 +362,9 @@ const compareVersions = require('compare-versions');
     }
   }
 
+  /**
+   * @param {any} api
+   */
   function handleResponse(api) {
     let res_body = '';
     if (!api || typeof api !== 'object') {

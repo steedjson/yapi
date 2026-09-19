@@ -1,16 +1,31 @@
+// @ts-check
 import { message } from 'antd';
 import URL from 'url';
 const GenerateSchema = require('generate-schema/src/schemas/json.js');
 import { json_parse } from '../../common/utils.js';
 
+/**
+ * Postman 数据导入插件（import_data 钩子实现）。
+ * 由插件运行时以实例对象调用（this 为插件运行时，可 bindHook）。
+ * @this {any}
+ * @param {any} importDataModule
+ */
 function postman(importDataModule) {
+  /** @type {any[]} */
   var folders = [];
 
+  /**
+   * @param {string} url
+   */
   function parseUrl(url) {
     return URL.parse(url);
   }
 
+  /**
+   * @param {any} interData
+   */
   function checkInterRepeat(interData) {
+    /** @type {Record<string, boolean>} */
     let obj = {};
     let arr = [];
     for (let item in interData) {
@@ -25,6 +40,9 @@ function postman(importDataModule) {
     return arr;
   }
 
+  /**
+   * @param {any} query
+   */
   function handleReq_query(query) {
     let res = [];
     if (query && query.length) {
@@ -40,6 +58,9 @@ function postman(importDataModule) {
     }
     return res;
   }
+  /**
+   * @param {any} headers
+   */
   function handleReq_headers(headers) {
     let res = [];
     if (headers && headers.length) {
@@ -55,6 +76,9 @@ function postman(importDataModule) {
     return res;
   }
 
+  /**
+   * @param {any} body_form
+   */
   function handleReq_body_form(body_form) {
     let res = [];
     if (body_form && body_form.length) {
@@ -72,6 +96,9 @@ function postman(importDataModule) {
     return res;
   }
 
+  /**
+   * @param {string} path
+   */
   function handlePath(path) {
     path = parseUrl(path).pathname;
     path = decodeURIComponent(path);
@@ -85,15 +112,20 @@ function postman(importDataModule) {
     return path;
   }
 
+  /**
+   * @this {any}
+   * @param {any} res
+   */
   function run(res) {
     try {
       res = JSON.parse(res);
       let interData = res.requests;
+      /** @type {Record<string, any>} */
       let interfaceData = { apis: [], cats: [] };
       interData = checkInterRepeat.bind(this)(interData);
 
       if (res.folders && Array.isArray(res.folders)) {
-        res.folders.forEach(tag => {
+        res.folders.forEach((/** @type {any} */ tag) => {
           interfaceData.cats.push({
             name: tag.name,
             desc: tag.description
@@ -101,7 +133,7 @@ function postman(importDataModule) {
         });
       }
 
-      if (Array.isArray(res.folders) && res.folders.find(item => item.collectionId === res.id)) {
+      if (Array.isArray(res.folders) && res.folders.find((/** @type {any} */ item) => item.collectionId === res.id)) {
         folders = res.folders;
       }
 
@@ -118,7 +150,13 @@ function postman(importDataModule) {
     }
   }
 
+  /**
+   * @this {any}
+   * @param {any} data
+   * @param {any} [key]
+   */
   function importPostman(data, key) {
+    /** @type {Record<string, any>} */
     let reflect = {
       //数据字段映射关系
       title: 'name',
@@ -148,6 +186,7 @@ function postman(importDataModule) {
       'res'
     ];
     key = key || allKey;
+    /** @type {Record<string, any>} */
     let res = {};
     try {
       for (let item in key) {
@@ -214,16 +253,20 @@ function postman(importDataModule) {
           res[item] = data[reflect[item]];
         }
       }
-    } catch (err) {
+    } catch (/** @type {any} */ err) {
       console.log(err.message);
       message.error(`${err.message}, 导入的postman格式有误`);
     }
     return res;
   }
 
+  /**
+   * @param {any} data
+   */
   const handleResponses = data => {
     if (data && data.length) {
       let res = data[0];
+      /** @type {Record<string, any>} */
       let response = {};
       response['res_body_type'] = res.language === 'json' ? 'json' : 'raw';
       // response['res_body'] = res.language === 'json' ? transformJsonToSchema(res.text): res.text;
@@ -239,6 +282,9 @@ function postman(importDataModule) {
     return null;
   };
 
+  /**
+   * @param {any} json
+   */
   const transformJsonToSchema = json => {
     json = json || {};
     let jsonData = json_parse(json);
@@ -261,6 +307,10 @@ function postman(importDataModule) {
   };
 }
 
+/**
+ * 插件注册入口：由插件运行时以实例对象调用（this.bindHook）。
+ * @this {any}
+ */
 module.exports = function() {
   this.bindHook('import_data', postman);
 };

@@ -1,3 +1,4 @@
+// @ts-check
 import React, { PureComponent as Component } from 'react'
 import PropTypes from 'prop-types'
 import { connect } from 'react-redux';
@@ -7,7 +8,7 @@ import { getToken } from '../../../client/reducer/modules/project.js'
 import './Services.scss';
 
 @connect(
-  state => {
+  (/** @type {any} */ state) => {
     return {
       token: state.project.token
     }

@@ -1,8 +1,12 @@
+// @ts-check
 import { message } from 'antd';
 import URL from 'url';
 const GenerateSchema = require('generate-schema/src/schemas/json.js');
 import { json_parse, unbase64 } from '../../common/utils.js';
 
+/**
+ * @param {any} json
+ */
 const transformJsonToSchema = json => {
   json = json || {};
   let jsonData = json_parse(json);
@@ -14,12 +18,25 @@ const transformJsonToSchema = json => {
   return schemaData;
 };
 
+/**
+ * HAR 数据导入插件（import_data 钩子实现）。
+ * 由插件运行时以实例对象调用（this 为插件运行时，可 bindHook）。
+ * @this {any}
+ * @param {any} importDataModule
+ */
 function postman(importDataModule) {
+  /**
+   * @param {string} url
+   */
   function parseUrl(url) {
     return URL.parse(url);
   }
 
+  /**
+   * @param {any} interData
+   */
   function checkInterRepeat(interData) {
+    /** @type {Record<string, boolean>} */
     let obj = {};
     let arr = [];
     for (let item in interData) {
@@ -33,6 +50,9 @@ function postman(importDataModule) {
     return arr;
   }
 
+  /**
+   * @param {any} query
+   */
   function handleReq_query(query) {
     let res = [];
     if (query && query.length) {
@@ -60,6 +80,9 @@ function postman(importDataModule) {
   //   return res;
   // }
 
+  /**
+   * @param {any} body_form
+   */
   function handleReq_body_form(body_form) {
     let res = [];
     if (body_form && typeof body_form === 'object') {
@@ -74,6 +97,9 @@ function postman(importDataModule) {
     return res;
   }
 
+  /**
+   * @param {string} path
+   */
   function handlePath(path) {
     path = parseUrl(path).pathname;
     path = decodeURIComponent(path);
@@ -87,16 +113,21 @@ function postman(importDataModule) {
     return path;
   }
 
+  /**
+   * @this {any}
+   * @param {any} res
+   */
   function run(res) {
     try {
       res = JSON.parse(res);
       res = res.log.entries;
 
-      res = res.filter(item => {
+      res = res.filter((/** @type {any} */ item) => {
         if (!item) return false;
         return item.response.content.mimeType.indexOf('application/json') === 0;
       });
 
+      /** @type {Record<string, any>} */
       let interfaceData = { apis: [] };
       res = checkInterRepeat.bind(this)(res);
       if (res && res.length) {
@@ -113,7 +144,13 @@ function postman(importDataModule) {
     }
   }
 
+  /**
+   * @this {any}
+   * @param {any} data
+   * @param {any} [key]
+   */
   function importHar(data, key) {
+    /** @type {Record<string, any>} */
     let reflect = {
       //数据字段映射关系
       title: 'url',
@@ -137,11 +174,12 @@ function postman(importDataModule) {
       'req_headers'
     ];
     key = key || allKey;
+    /** @type {Record<string, any>} */
     let res = {};
 
     let reqType = 'json',
       header;
-    data.request.headers.forEach(item => {
+    data.request.headers.forEach((/** @type {any} */ item) => {
       if (!item || !item.name || !item.value) return null;
       if (/content-type/i.test(item.name) && item.value.indexOf('application/json') === 0) {
         reqType = 'json';
@@ -224,6 +262,10 @@ function postman(importDataModule) {
   };
 }
 
+/**
+ * 插件注册入口：由插件运行时以实例对象调用（this.bindHook）。
+ * @this {any}
+ */
 module.exports = function() {
   this.bindHook('import_data', postman);
 };

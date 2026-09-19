@@ -245,12 +245,20 @@ declare module 'rc-queue-anim' {
   export default QueueAnim;
 }
 
+// markdown-it 无内置类型且无 @types 包；插件（P8a export-data / gen-services）以
+// CJS require 形态调用主函数并 .use/.render，故按「可调用 + 静态成员」的 export = 声明。
 declare module 'markdown-it' {
   class MarkdownIt {
     constructor(options?: any);
     render(src: string): string;
+    use(plugin: any, ...args: any[]): MarkdownIt;
   }
-  export default MarkdownIt;
+  interface MarkdownItStatic {
+    new (options?: any): MarkdownIt;
+    (options?: any): MarkdownIt;
+  }
+  const markdownIt: MarkdownItStatic;
+  export = markdownIt;
 }
 
 declare module 'jsondiffpatch/dist/jsondiffpatch.umd.js' {
@@ -423,4 +431,48 @@ interface Window {
 declare module 'exts/*' {
   const pluginClient: any;
   export = pluginClient;
+}
+
+// 以下声明供 exts 数据类插件（P8a）服务端代码使用：插件 controller 经 yapi 插件机制
+// 加载时按裸模块名 require('controllers/base.js') / require('models/*.js') /
+// require('yapi.js')（运行时由 server/yapi.js 注入的 module alias 解析到 server/ 内
+// 真实文件）。目标文件均为运行时真实存在，此处按 any 放宽，仅覆盖裸模块名形态；
+// 相对路径引用仍解析到真实文件。
+declare module 'yapi.js' {
+  const yapi: any;
+  export = yapi;
+}
+
+declare module 'controllers/*' {
+  const controller: any;
+  export = controller;
+}
+
+declare module 'models/*' {
+  const model: any;
+  export = model;
+}
+
+// 以下依赖为 exts 数据类插件（P8a）使用，未内置类型且无对应 @types 包，
+// 按运行时实际导出形态声明最小子集，新增用法时需同步补充声明。
+// generate-schema 的 JSON schema 生成入口（deep export，包根无该文件）。
+declare module 'generate-schema/src/schemas/json.js' {
+  function generateJsonSchema(data: any): any;
+  export = generateJsonSchema;
+}
+
+declare module 'swagger-client' {
+  // swagger-client@3 主入口为工厂函数 swagger({ spec })，返回解析后的 { spec } Promise
+  const swagger: (...args: any[]) => any;
+  export = swagger;
+}
+
+declare module 'markdown-it-anchor' {
+  const anchor: any;
+  export = anchor;
+}
+
+declare module 'markdown-it-table-of-contents' {
+  const tableOfContents: any;
+  export = tableOfContents;
 }

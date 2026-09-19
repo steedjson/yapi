@@ -1,3 +1,4 @@
+// @ts-check
 const baseController = require('controllers/base.js');
 const interfaceModel = require('models/interface.js');
 const projectModel = require('models/project.js');
@@ -6,6 +7,9 @@ const yapi = require('yapi.js');
 
 
 class exportSwaggerController extends baseController {
+    /**
+     * @param {any} ctx Koa 请求上下文
+     */
     constructor(ctx) {
         super(ctx);
         this.catModel = yapi.getInst(interfaceCatModel);
@@ -18,13 +22,17 @@ class exportSwaggerController extends baseController {
        No DRY,but i have no idea to optimize it.
     */
 
+    /**
+     * @param {any} pid
+     * @param {any} status
+     */
     async handleListClass(pid, status) {
         let result = await this.catModel.list(pid),
             newResult = [];
         for (let i = 0, item, list; i < result.length; i++) {
             item = result[i].toObject();
             list = await this.interModel.listByInterStatus(item._id, status);
-            list = list.sort((a, b) => {
+            list = list.sort((/** @type {any} */ a, /** @type {any} */ b) => {
                 return a.index - b.index;
             });
             if (list.length > 0) {
@@ -36,7 +44,14 @@ class exportSwaggerController extends baseController {
         return newResult;
     }
 
+    /**
+     * @param {any} data
+     */
     handleExistId(data) {
+        /**
+         * @param {any} arr
+         * @param {(item: any) => void} [fn]
+         */
         function delArrId(arr, fn) {
             if (!Array.isArray(arr)) return;
             arr.forEach(item => {
@@ -66,6 +81,9 @@ class exportSwaggerController extends baseController {
         return data;
     }
 
+    /**
+     * @param {any} ctx Koa 请求上下文
+     */
     async exportData(ctx) {
         let pid = ctx.request.query.pid;
         let type = ctx.request.query.type;
@@ -74,6 +92,7 @@ class exportSwaggerController extends baseController {
         if (!pid) {
             ctx.body = yapi.commons.resReturn(null, 200, 'pid 不为空');
         }
+        /** @type {any} */
         let curProject;
         let tp = '';
         try {
@@ -101,6 +120,9 @@ class exportSwaggerController extends baseController {
         }
 
         //Convert to SwaggerV2.0 (OpenAPI 2.0)
+        /**
+         * @param {any} list
+         */
         async function convertToSwaggerV2Model(list) {
             const swaggerObj = {
                 swagger: '2.0',
@@ -112,8 +134,9 @@ class exportSwaggerController extends baseController {
                 //host: "",             // No find any info of host in this point :-)
                 basePath: curProject.basepath ? curProject.basepath : '/', //default base path is '/'(root)
                 tags: (() => {
+                    /** @type {any[]} */
                     let tagArray = [];
-                    list.forEach(t => {
+                    list.forEach((/** @type {any} */ t) => {
                         tagArray.push({
                             name: t.name,
                             description: t.desc
@@ -129,6 +152,7 @@ class exportSwaggerController extends baseController {
                     "http" //Only http
                 ],
                 paths: (() => {
+                    /** @type {Record<string, any>} */
                     let apisObj = {};
                     for (let aptTag of list) { //list of category
                         for (let api of aptTag.list) //list of api

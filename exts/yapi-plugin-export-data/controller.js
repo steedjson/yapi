@@ -1,3 +1,4 @@
+// @ts-check
 const baseController = require('controllers/base.js');
 const interfaceModel = require('models/interface.js');
 const projectModel = require('models/project.js');
@@ -12,6 +13,9 @@ const md = require('../../common/markdown');
 
 // const htmlToPdf = require("html-pdf");
 class exportController extends baseController {
+  /**
+   * @param {any} ctx Koa 请求上下文
+   */
   constructor(ctx) {
     super(ctx);
     this.catModel = yapi.getInst(interfaceCatModel);
@@ -20,13 +24,17 @@ class exportController extends baseController {
     
   }
 
+  /**
+   * @param {any} pid
+   * @param {any} status
+   */
   async handleListClass(pid, status) {
     let result = await this.catModel.list(pid),
       newResult = [];
     for (let i = 0, item, list; i < result.length; i++) {
       item = result[i].toObject();
       list = await this.interModel.listByInterStatus(item._id, status);
-      list = list.sort((a, b) => {
+      list = list.sort((/** @type {any} */ a, /** @type {any} */ b) => {
         return a.index - b.index;
       });
       if (list.length > 0) {
@@ -38,16 +46,26 @@ class exportController extends baseController {
     return newResult;
   }
 
+  /**
+   * @param {any} data
+   */
   handleExistId(data) {
     const list = Array.isArray(data) ? data : [];
 
     // json 导出需保留多级分类：先基于 _id 计算每个分类的完整 path 与 parent_path，
     // 供导入端按路径精准复原层级；parent_id 本身不清除，随分类一并导出。
+    /** @type {Record<string, any>} */
     const catById = {};
     list.forEach(item => {
       if (item && item._id !== undefined) catById[item._id] = item;
     });
+    /**
+     * @param {any} item
+     */
     const catName = item => (item && item.name) || '';
+    /**
+     * @param {any} item
+     */
     const catPath = item => {
       const parts = [catName(item)];
       const visited = new Set([item._id]);
@@ -72,6 +90,7 @@ class exportController extends baseController {
     const emitted = new Set();
     let pending = list.slice();
     while (pending.length) {
+      /** @type {any[]} */
       const rest = [];
       pending.forEach(item => {
         const parentInData = item && item.parent_id !== undefined && catById[item.parent_id];
@@ -90,6 +109,10 @@ class exportController extends baseController {
       }
     }
 
+    /**
+     * @param {any} arr
+     * @param {(item: any) => void} [fn]
+     */
     function delArrId(arr, fn) {
       if (!Array.isArray(arr)) return;
       arr.forEach(item => {
@@ -120,6 +143,9 @@ class exportController extends baseController {
     return ordered;
   }
 
+  /**
+   * @param {any} ctx Koa 请求上下文
+   */
   async exportData(ctx) {
     let pid = ctx.request.query.pid;
     let type = ctx.request.query.type;
@@ -129,7 +155,10 @@ class exportController extends baseController {
     if (!pid) {
       ctx.body = yapi.commons.resReturn(null, 200, 'pid 不为空');
     }
-    let curProject, wikiData;
+    /** @type {any} */
+    let curProject;
+    /** @type {any} */
+    let wikiData;
     let tp = '';
     try {
       curProject = await this.projectModel.get(pid);
@@ -164,6 +193,10 @@ class exportController extends baseController {
       ctx.body = yapi.commons.resReturn(null, 502, '下载出错');
     }
 
+    /**
+     * @this {any}
+     * @param {any} list
+     */
     async function createHtml(list) {
       let md = await createMarkdown.bind(this)(list, true);
       let markdown = markdownIt({ html: true, breaks: true });
@@ -188,6 +221,10 @@ class exportController extends baseController {
       return createHtml5(left || '', content);
     }
 
+    /**
+     * @param {string} left
+     * @param {string} tp
+     */
     function createHtml5(left, tp) {
       //html5模板
       let html = `<!DOCTYPE html>
@@ -220,6 +257,11 @@ class exportController extends baseController {
       return html;
     }
 
+    /**
+     * @param {any} list
+     * @param {any} isToc
+     * @returns {any} markdown 文本（异常时为 undefined，与既有运行时行为一致）
+     */
     function createMarkdown(list, isToc) {
       //拼接markdown
       //模板
