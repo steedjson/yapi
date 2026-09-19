@@ -89,15 +89,10 @@
 
 ## 二、评估后暂缓（含推进路径）
 
-### 1. 构建工具 Webpack5 → Vite/Rsbuild（暂缓，工作量数天级）
+### 1. 构建工具 Webpack5 → Rsbuild（已立项，见 docs/rsbuild-migration-plan.md）
 
-- 现状风险：`build/webpack.standalone.config.js` 手工维护 lib/lib2/lib3 dependOn 链 + `static/index.html` 用 `document.write` 注入 5 段 script（阻断预解析）；dev 走 webpack-dev-middleware 挂在 Koa 内。
-- 推进路径（建议独立分支分四步）：
-  1. 引 Rsbuild 替代生产构建，产物文件名/`assets.js` 清单格式对齐，`static/index.html` 改模板注入（同时消除 document.write）；
-  2. dev 链路替换 webpack-dev-middleware/HMR；
-  3. 分包策略交给工具（删手工 dependOn 链），验证 `assets.js` 消费方（`server/app.js` 的 gzip 逻辑）；
-  4. 观察期后删除 webpack 相关依赖与 build/ 旧脚本。
-- 暂缓理由：构建迁移无法靠测试套件充分验证（需全功能回归），本会话以浏览器冒烟覆盖不到该风险面。
+- 立项计划已产出（2026-09-20，基于构建链事实核查）：分四阶段可执行计划，含产物契约（window.WEBPACK_ASSETS 形状/服务端 .gz 预压缩链）、验证矩阵与回滚预案，见 [docs/rsbuild-migration-plan.md](docs/rsbuild-migration-plan.md)。
+- 关键事实（已核查）：`assets.js` 清单**仅浏览器端消费**（static/index.html document.write 注入，server/app.js 只做静态与预压缩 .gz 服务），迁移面为「构建器替换 + 模板注入改造」，无服务端代码契约。
 
 ### 2. 剩余 Class 组件 → Hooks（持续进行；containers 已开工）
 
