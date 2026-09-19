@@ -184,6 +184,41 @@ test('请求头/路径/Query/Form 表格单元格注入被中和', t => {
   t.false(/<(img|i|b|script)\s[^>]*onerror[^>]*>/i.test(html));
 });
 
+test('Form 表 type 列注入被中和(客户端虽限枚举, 服务端 API 可写任意值)', t => {
+  const src = md.createInterMarkdown(
+    '/b',
+    {
+      title: 'T',
+      catid: 'c',
+      path: '/p',
+      method: 'GET',
+      req_body_type: 'form',
+      req_body_form: [
+        {
+          name: 'f1',
+          type: 'text"><img src=x onerror=alert(20)>',
+          required: 1,
+          example: 'e',
+          desc: 'd'
+        }
+      ]
+    },
+    false
+  );
+  // type 纯文本位已实体化(表格单元格为文本位, 引号按 escapeHtml 规则保留原样, 无害)
+  t.true(src.includes('text"&gt;&lt;img src=x onerror=alert(20)&gt;'));
+  const html = renderLikePlugin(src);
+  // 管线末端 unescape 会把实体还原一层, onerror 以惰性文本存在; 断言不得活成标签
+  t.false(/<(img|script)\s[^>]*onerror[^>]*>/i.test(html));
+  // 枚举值显示零影响
+  const benignSrc = md.createInterMarkdown(
+    '/b',
+    Object.assign({}, benignInter),
+    false
+  );
+  t.true(benignSrc.includes('| text  |'));
+});
+
 test('schema 表格单元格(name/type/default/枚举/mock)注入被中和', t => {
   const src = md.createInterMarkdown(
     '/b',

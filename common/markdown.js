@@ -207,9 +207,9 @@ function createReqBody(req_body_type, req_body_form, req_body_other, req_body_is
     bodyTable += `| 参数名称  | 参数类型  |  是否必须 | 示例  | 备注  |\n| ------------ | ------------ | ------------ | ------------ | ------------ |\n`;
     let req_body = req_body_form;
     for (let j = 0; j < req_body.length; j++) {
-      // name/example 为用户可控纯文本位, 转义防注入; desc 为 Markdown 创作面字段, 按设计保留原样;
-      // type 为内部枚举(text/file), 非用户自由文本, 不转义
-      bodyTable += `| ${escapeHtml(req_body[j].name || '')} | ${req_body[j].type || ''}  |  ${
+      // name/example/type 为用户可控纯文本位, 转义防注入(type 客户端虽限枚举, 服务端 API 可写任意值, 纵深防御且对枚举值显示零影响);
+      // desc 为 Markdown 创作面字段, 按设计保留原样
+      bodyTable += `| ${escapeHtml(req_body[j].name || '')} | ${escapeHtml(req_body[j].type || '')}  |  ${
         req_body[j].required == 1 ? '是' : '否'
       } |  ${escapeHtml(req_body[j].example || '')}  |  ${req_body[j].desc || ''} |\n`;
     }
