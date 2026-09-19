@@ -1,7 +1,6 @@
 // @ts-check
-import React, { PureComponent as Component } from 'react';
-import { connect } from 'react-redux';
-import PropTypes from 'prop-types';
+import React, { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 // v6：unstable_HistoryRouter 接管自定义 history 实例（供 BlockPrompt 拦截导航用）
 import { Route, Routes, unstable_HistoryRouter as HistoryRouter } from 'react-router-dom';
 import Home from './containers/Home/Home.js';
@@ -140,75 +139,61 @@ const AppHeader = withRouter((/** @type {any} */ props) => {
   return props.loginState !== 1 ? <Header /> : null;
 });
 
-@connect(
-  (/** @type {any} */ state) => {
-    return {
-      loginState: state.user.loginState,
-      curUserRole: state.user.role
-    };
-  },
-  {
-    checkLoginState
-  }
-)
-export default class App extends Component {
-  constructor(/** @type {any} */ props) {
-    super(props);
-    this.state = {
-      login: LOADING_STATUS
-    };
-  }
+/**
+ * 应用外壳。原类组件经 Hooks 现代化迁移，渲染结构与行为保持一致：
+ * - 旧 @connect 改为 useSelector/useDispatch；
+ * - 旧 componentDidMount 的 checkLoginState 改为挂载期 useEffect；
+ * - 旧 constructor 中从未被读取的 state.login 随迁移移除；
+ * - withRouter 兼容层（AppHeader / authed 包装 AuthenticatedComponent 等子组件）、
+ *   HistoryRouter 与 React.lazy 分包结构保持不变。
+ */
+const App = () => {
+  const dispatch = useDispatch();
+  const loginState = useSelector((/** @type {any} */ state) => state.user.loginState);
+  const curUserRole = useSelector((/** @type {any} */ state) => state.user.role);
 
-  static propTypes = {
-    checkLoginState: PropTypes.func,
-    loginState: PropTypes.number,
-    curUserRole: PropTypes.string
-  };
-
-  componentDidMount() {
-    this.props.checkLoginState();
-  }
+  // 对应旧 componentDidMount
+  useEffect(() => {
+    dispatch(checkLoginState());
+  }, []);
 
   /**
    * 按登录态渲染应用骨架
    * @param {number} status 登录状态(0 加载中/1 已登录)
    */
-  route = status => {
-    let r;
+  const route = status => {
     if (status === LOADING_STATUS) {
       return <Loading visible />;
-    } else {
-      r = (
-        <HistoryRouter history={/** @type {any} */ (history)}>
-          <div className="g-main">
-            <div className="router-main">
-              {this.props.curUserRole === 'admin' && <Notify />}
-              {alertContent()}
-              <AppHeader loginState={this.props.loginState} />
-              <div className="router-container">
-                {/* v6：Route 必须是 Routes 直接子元素，v5 时代顶层裸 Route 独立匹配语义由
-                    Routes 的最佳匹配承担（各路径前缀互不重叠，行为等价） */}
-                <Routes>
-                  {Object.keys(AppRoute).map(key => {
-                    let item = AppRoute[key];
-                    if (key === 'login' || key === 'home') {
-                      return <RouteAny key={key} path={item.path} element={<item.component />} />;
-                    }
-                    const Authed = authed(item.component);
-                    return <RouteAny key={key} path={item.path} element={<Authed />} />;
-                  })}
-                </Routes>
-              </div>
-            </div>
-            <Footer />
-          </div>
-        </HistoryRouter>
-      );
     }
-    return r;
+    return (
+      <HistoryRouter history={/** @type {any} */ (history)}>
+        <div className="g-main">
+          <div className="router-main">
+            {curUserRole === 'admin' && <Notify />}
+            {alertContent()}
+            <AppHeader loginState={loginState} />
+            <div className="router-container">
+              {/* v6：Route 必须是 Routes 直接子元素，v5 时代顶层裸 Route 独立匹配语义由
+                  Routes 的最佳匹配承担（各路径前缀互不重叠，行为等价） */}
+              <Routes>
+                {Object.keys(AppRoute).map(key => {
+                  let item = AppRoute[key];
+                  if (key === 'login' || key === 'home') {
+                    return <RouteAny key={key} path={item.path} element={<item.component />} />;
+                  }
+                  const Authed = authed(item.component);
+                  return <RouteAny key={key} path={item.path} element={<Authed />} />;
+                })}
+              </Routes>
+            </div>
+          </div>
+          <Footer />
+        </div>
+      </HistoryRouter>
+    );
   };
 
-  render() {
-    return this.route(this.props.loginState);
-  }
-}
+  return route(loginState);
+};
+
+export default App;

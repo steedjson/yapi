@@ -1,14 +1,12 @@
 // @ts-check
 import './Home.scss';
-import React, { PureComponent as Component } from 'react';
-import { connect } from 'react-redux';
+import React from 'react';
+import { useSelector } from 'react-redux';
 import { Link, Navigate } from 'react-router-dom';
 import { Row, Col, Button, Card } from 'antd';
 import { AppstoreOutlined, ApiOutlined, DatabaseOutlined, TeamOutlined } from '@ant-design/icons';
 import PropTypes from 'prop-types';
-import withRouter from '../../withRouter';
 import LogoSVG from '../../components/LogoSVG/index.js';
-import { changeMenuItem } from '../../reducer/modules/menu';
 const plugin = require('client/plugin.js');
 
 const ThirdLogin = plugin.emitHook('third_login');
@@ -325,85 +323,46 @@ HomeGuest.propTypes = {
   introList: PropTypes.array
 };
 
-@connect(
-  (/** @type {any} */ state) => ({
-    login: state.user.isLogin
-  }),
-  {
-    changeMenuItem
+/**
+ * 游客落地页。原类组件经 Hooks 现代化迁移，渲染结构与行为保持一致：
+ * - 旧 @connect 改为 useSelector；
+ * - 旧 @withRouter 注入的 match/location/history 未被组件消费，注入层随迁移移除；
+ * - 旧 toStart 方法（changeMenuItem('/group')）无任何 UI 触发点，随迁移移除；
+ * - 落地页其余 JSX（HomeGuest 等）为纯展示结构，保持原样不变。
+ */
+const Home = () => {
+  const login = useSelector((/** @type {any} */ state) => state.user.isLogin);
+  // 登录态由 /api/user/status 异步获取，到达后也应立即离开游客落地页
+  if (login) {
+    return <Navigate to="/group" replace />;
   }
-)
-@withRouter
-class Home extends Component {
-  constructor(/** @type {any} */ props) {
-    super(props);
-  }
-
-  componentDidMount() {}
-  static propTypes = {
-    introList: PropTypes.array,
-    login: PropTypes.bool,
-    history: PropTypes.object,
-    changeMenuItem: PropTypes.func
-  };
-  toStart = () => {
-    this.props.changeMenuItem('/group');
-  };
-  render() {
-    // 登录态由 /api/user/status 异步获取，到达后也应立即离开游客落地页
-    if (this.props.login) {
-      return <Navigate to="/group" replace />;
-    }
-    return (
-      <div className="home-main">
-        <HomeGuest introList={this.props.introList} />
-        <div className="row-tip">
-          <div className="container">
-            <div className="tip-title">
-              <h3 className="title">准备好使用了吗？</h3>
-              <p className="desc">注册账号尽请使用吧，查看使用文档了解更多信息</p>
-            </div>
-            <div className="tip-btns">
-              <div className="btn-group">
-                <Link to="/login">
-                  <Button type="primary" className="btn-home btn-login">
-                    登录 / 注册
-                  </Button>
-                </Link>
-                <Button className="btn-home btn-home-normal">
-                  <a target="_blank" rel="noopener noreferrer" href="https://hellosean1025.github.io/yapi">
-                    使用文档
-                  </a>
+  return (
+    <div className="home-main">
+      <HomeGuest />
+      <div className="row-tip">
+        <div className="container">
+          <div className="tip-title">
+            <h3 className="title">准备好使用了吗？</h3>
+            <p className="desc">注册账号尽请使用吧，查看使用文档了解更多信息</p>
+          </div>
+          <div className="tip-btns">
+            <div className="btn-group">
+              <Link to="/login">
+                <Button type="primary" className="btn-home btn-login">
+                  登录 / 注册
                 </Button>
-              </div>
+              </Link>
+              <Button className="btn-home btn-home-normal">
+                <a target="_blank" rel="noopener noreferrer" href="https://hellosean1025.github.io/yapi">
+                  使用文档
+                </a>
+              </Button>
             </div>
           </div>
         </div>
       </div>
-    );
-  }
-}
-
-// Home.defaultProps={
-//   introList:[{
-//     title:"接口管理",
-//     des:"满足你的所有接口管理需求。不再需要为每个项目搭建独立的接口管理平台和编写离线的接口文档，其权限管理和项目日志让协作开发不再痛苦。",
-//     detail:[
-//       {title:"团队协作",des:"多成员协作，掌握项目进度",iconType:"team"},
-//       {title:"权限管理",des:"设置每个成员的操作权限",iconType:"usergroup-add"},
-//       {title:"项目日志",des:"推送项目情况，掌握更新动态",iconType:"schedule"}
-//     ],
-//     img:"./image/demo-img.jpg"
-//   },{
-//     title:"接口测试",
-//     des:"一键即可得到返回结果。根据用户的输入接口信息如协议、URL、接口名、请求头、请求参数、mock规则生成Mock接口，这些接口会自动生成模拟数据。",
-//     detail:[
-//       {title:"编辑接口",des:"团队开发时任何人都可以在权限许可下创建、修改接口",iconType:"tags-o"},
-//       {title:"mock请求",des:"创建者可以自由构造需要的数据，支持复杂的生成逻辑",iconType:"fork"}
-//     ],
-//     img:"./image/demo-img.jpg"
-//   }
-//   ]
-// };
+    </div>
+  );
+};
 
 export default Home;

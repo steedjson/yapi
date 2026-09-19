@@ -222,3 +222,5 @@
 - **测试验证必须用冷库**（每轮前 drop `yapi_test`）：温库会掩盖启动期 DB 工作的时序问题（冷库 teardown flake 曾在温库下"通过"、在冷库必现）。
 - **临时替换 config.json 的纪律**：先 `cp config.json /tmp/<name>.bak` 并记录 sha256（原始值 `6dc9b4c27137702233d03a4d1cdb619a622dd4180ab4044b16316114ed4864a9`），结束前恢复并校验；用户容器 27017（mongo:4.4）/27018（mongo:8.0）禁止触碰。
 - 浏览器冒烟（本轮）：注册/登录（scrypt + legacy 自动升级）、接口编辑页编辑器、用例表格拖拽持久化、Markdown 双写、Wiki 编辑器、面包屑、路由分包按需加载，全部通过。
+
+| 类组件 Hooks 化收官（commit 本次） | client/ 最后 5 个类组件：Home 409、ProjectList 233（全仓最后 1 处 @autobind）、Project 197、LoginWrap 52、Application 214（全仓最后 1 处 @connect） | 5 个全部迁移为函数组件 + Hooks（新增 4 测试文件 12 用例）；**client/ 全仓类组件清零**（仅 ErrorBoundary 按 React 18 规范保留），@connect/@autobind/UNSAFE_ 装饰器与废弃生命周期全仓归零 | 独立验证 13/13 场景渲染逐字节等价（Application 全外壳含真实 lazy chunk 3 场景）；checkLoginState cDM→useEffect 时序逐帧推演成立（首帧全 LOADING、route(0) 提前 return 无旧值消费者）；ProjectList 页码怪癖实证保留；5 处死代码 HEAD 零调用点核实。**主 Agent 浏览器 UI 验证（UI_VERIFIED，dev:4000 真实环境）**：游客/登录态首页、分组页（585 接口真实项目）、项目子导航、接口列表分页、接口详情 View、退出→登录→注册→自动登录→重登全链路正常。已知时序面：隔离挂载下 cWM→useEffect 请求顺序可观察差异（最终渲染等价、无数据竞争，声明内语义）。测试缺口备忘：Project id 变化重拉与 ProjectList 切组重拉两个分支待补路由内导航用例。门禁（三方独立复跑 + UI 实测）：lint 0/0、typecheck 0 错、**npm test 689** 全绿冷库 |
