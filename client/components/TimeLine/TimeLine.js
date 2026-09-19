@@ -1,3 +1,4 @@
+// @ts-check
 import React, { useEffect, useRef, useState } from 'react';
 import { Timeline, Spin, Row, Col, Tag, Avatar, Button, Modal, AutoComplete } from 'antd';
 import PropTypes from 'prop-types';
@@ -20,6 +21,9 @@ import { timeago } from '../../../common/utils.js';
 // const Option = AutoComplete.Option;
 const { Option, OptGroup } = AutoComplete;
 
+/**
+ * @param {any} props
+ */
 const AddDiffView = props => {
   const { title, content, className } = props;
 
@@ -43,6 +47,9 @@ AddDiffView.propTypes = {
 
 // timeago(new Date().getTime() - 40);
 
+/**
+ * @param {any} props
+ */
 export default function TimeTree(props) {
   const dispatch = useDispatch();
   const newsData = useSelector(state => state.news.newsData);
@@ -53,8 +60,8 @@ export default function TimeTree(props) {
   // 旧版 state.bidden 仅被写入从未被读取(死状态),迁移时一并移除
   const [loading, setLoading] = useState(false);
   const [visible, setVisible] = useState(false);
-  const [curDiffData, setCurDiffData] = useState({});
-  const [apiList, setApiList] = useState([]);
+  const [curDiffData, setCurDiffData] = useState(/** @type {any} */ ({}));
+  const [apiList, setApiList] = useState(/** @type {any[]} */ ([]));
   // 非响应式的实例字段,改用 ref 承载
   const curSelectValueRef = useRef('');
 
@@ -66,7 +73,10 @@ export default function TimeTree(props) {
     // 对应原 UNSAFE_componentWillMount + UNSAFE_componentWillReceiveProps:
     // 首次挂载与 typeid 变化时都重新拉取动态数据
     const current = latestRef.current;
-    current.dispatch(fetchNewsData(current.typeid, current.type, 1, 10));
+    // news.js 中 selectValue 形参未标可选，此处历史调用只传 4 个实参，类型上按 any 调用放行
+    current.dispatch(
+      (/** @type {any} */ (fetchNewsData))(current.typeid, current.type, 1, 10)
+    );
     if (current.type === 'project') {
       getApiList();
     }
@@ -91,6 +101,9 @@ export default function TimeTree(props) {
     setVisible(false);
   }
 
+  /**
+   * @param {any} data
+   */
   function openDiff(data) {
     setCurDiffData(data);
     setVisible(true);
@@ -106,6 +119,9 @@ export default function TimeTree(props) {
     setApiList(result.payload.data.data.list);
   }
 
+  /**
+   * @param {string} selectValue
+   */
   function handleSelectApi(selectValue) {
     curSelectValueRef.current = selectValue;
     latestRef.current.dispatch(fetchNewsData(props.typeid, props.type, 1, 10, selectValue));
@@ -113,6 +129,7 @@ export default function TimeTree(props) {
 
   let data = newsData ? newsData.list : [];
 
+  /** @type {Record<string, string>} */
   let logType = {
     project: '项目',
     group: '分组',
@@ -122,8 +139,10 @@ export default function TimeTree(props) {
     other: '其他'
   };
 
-  const children = apiList.map(item => {
-    let methodColor = variable.METHOD_COLOR[item.method ? item.method.toLowerCase() : 'get'];
+  const children = apiList.map((/** @type {any} */ item) => {
+    let methodColor = (/** @type {Record<string, any>} */ (variable.METHOD_COLOR))[
+      item.method ? item.method.toLowerCase() : 'get'
+    ];
     return (
       <Option title={item.title} value={item._id + ''} path={item.path} key={item._id}>
         {item.title}{' '}
@@ -144,7 +163,7 @@ export default function TimeTree(props) {
 
   let timelineItems = [];
   if (data && data.length) {
-    timelineItems = data.map((item, i) => {
+    timelineItems = data.map((/** @type {any} */ item, /** @type {number} */ i) => {
       let interfaceDiff = false;
       if (item.data && typeof item.data === 'object') {
         interfaceDiff = true;
@@ -199,7 +218,7 @@ export default function TimeTree(props) {
       >
         <i>注： 绿色代表新增内容，红色代表删除内容</i>
         <div className="project-interface-change-content">
-          {diffView.map((item, index) => {
+          {diffView.map((/** @type {any} */ item, /** @type {number} */ index) => {
             return (
               <AddDiffView
                 className="item-content"
@@ -221,7 +240,7 @@ export default function TimeTree(props) {
               style={{ width: '100%' }}
               placeholder="Select Api"
               optionLabelProp="title"
-              filterOption={(inputValue, options) => {
+              filterOption={(/** @type {any} */ inputValue, /** @type {any} */ options) => {
                 if (options.props.value == '') return true;
                 if (
                   options.props.path.indexOf(inputValue) !== -1 ||

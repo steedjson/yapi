@@ -1,3 +1,4 @@
+// @ts-check
 import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import {
@@ -69,6 +70,9 @@ export const InsertCodeMap = [
   }
 ];
 
+/**
+ * @param {any} props
+ */
 const ParamsNameComponent = props => {
   const { example, desc, name } = props;
   const isNull = !example && !desc;
@@ -107,6 +111,9 @@ ParamsNameComponent.propTypes = {
   name: PropTypes.string
 };
 
+/**
+ * @param {any} data
+ */
 function checkInterfaceData(data) {
   if (!data || typeof data !== 'object' || !data._id) {
     return false;
@@ -156,6 +163,9 @@ const Run = forwardRef((props, ref) => {
   latestRef.current = props;
 
   // 浅合并更新并同步镜像：等价旧 this.setState(对象)（对象键覆盖合并）
+  /**
+   * @param {any} patch
+   */
   const applyState = patch => {
     const next = { ...stateRef.current, ...patch };
     stateRef.current = next;
@@ -177,15 +187,21 @@ const Run = forwardRef((props, ref) => {
   );
 
   // 整合header信息
+  /**
+   * @param {string} value
+   * @param {any} env
+   */
   const handleReqHeader = (value, env) => {
     let index = value
-      ? env.findIndex(item => {
+      ? env.findIndex((/** @type {any} */ item) => {
           return item.name === value;
         })
       : 0;
     index = index === -1 ? 0 : index;
 
+    /** @type {any[]} */
     let req_header = [].concat(latestRef.current.data.req_headers || []);
+    /** @type {any[]} */
     let header = [].concat(env[index].header || []);
     header.forEach(item => {
       if (!checkNameIsExistInArray(item.name, req_header)) {
@@ -202,6 +218,9 @@ const Run = forwardRef((props, ref) => {
     return req_header;
   };
 
+  /**
+   * @param {string} value
+   */
   const selectDomain = value => {
     let headers = handleReqHeader(value, stateRef.current.env);
     applyState({
@@ -210,6 +229,9 @@ const Run = forwardRef((props, ref) => {
     });
   };
 
+  /**
+   * @param {any} data
+   */
   const initState = async data => {
     if (!checkInterfaceData(data)) {
       return null;
@@ -242,7 +264,7 @@ const Run = forwardRef((props, ref) => {
     if (latestRef.current.type === 'inter') {
       example = ['req_headers', 'req_query', 'req_body_form'].reduce(
         (res, key) => {
-          res[key] = (data[key] || []).map(item => {
+          res[key] = (data[key] || []).map((/** @type {any} */ item) => {
             if (
               item.type !== 'file' // 不是文件类型
                 && (item.value == null || item.value === '') // 初始值为空
@@ -254,7 +276,7 @@ const Run = forwardRef((props, ref) => {
           })
           return res;
         },
-        {}
+        /** @type {any} */ ({})
       )
     }
 
@@ -275,6 +297,10 @@ const Run = forwardRef((props, ref) => {
     }
   };
 
+  /**
+   * @param {string} case_env
+   * @param {any} env
+   */
   const initEnvState = (case_env, env) => {
     let headers = handleReqHeader(case_env, env);
 
@@ -283,7 +309,7 @@ const Run = forwardRef((props, ref) => {
       env: env
     });
     // 对应旧 initEnvState 的 setState 回调（此时新 env 已合并进 state）
-    let s = !env.find(item => item.name === stateRef.current.case_env);
+    let s = !env.find((/** @type {any} */ item) => item.name === stateRef.current.case_env);
     if (!stateRef.current.case_env || s) {
       applyState({
         case_env: stateRef.current.env[0].name
@@ -293,7 +319,7 @@ const Run = forwardRef((props, ref) => {
 
   // 对应旧 UNSAFE_componentWillMount + componentWillUnmount
   useEffect(() => {
-    crossRequestIntervalRef.current = initCrossRequest(hasPlugin => {
+    crossRequestIntervalRef.current = initCrossRequest((/** @type {any} */ hasPlugin) => {
       applyState({
         hasPlugin: hasPlugin
       });
@@ -333,6 +359,10 @@ const Run = forwardRef((props, ref) => {
     }
   }, [props.data]);
 
+  /**
+   * @param {any} val
+   * @param {any} global
+   */
   const handleValue = (val, global) => {
     let globalValue = ArrayToObject(global);
     return handleParamsValue(val, {
@@ -340,16 +370,25 @@ const Run = forwardRef((props, ref) => {
     });
   };
 
+  /**
+   * @param {any} d
+   */
   const onOpenTest = d => {
     applyState({
       test_script: d.text
     });
   };
 
+  /**
+   * @param {string} code
+   */
   const handleInsertCode = code => {
     aceEditorRef.current.editor.insertCode(code);
   };
 
+  /**
+   * @param {any} d
+   */
   const handleRequestBody = d => {
     applyState({
       req_body_other: d.text
@@ -367,7 +406,8 @@ const Run = forwardRef((props, ref) => {
       loading: true
     });
 
-    let options = handleParams(stateRef.current, handleValue),
+    // postmanLib 的 handleParams 声明了第 3 个形参，历史调用只传 2 个实参，类型上按 any 调用放行
+    let options = (/** @type {any} */ (handleParams))(stateRef.current, handleValue),
       result;
 
 
@@ -401,7 +441,7 @@ const Run = forwardRef((props, ref) => {
         runTime: result.runTime
       };
 
-    } catch (data) {
+    } catch (/** @type {any} */ data) {
       result = {
         header: data.header,
         body: data.body,
@@ -446,8 +486,13 @@ const Run = forwardRef((props, ref) => {
   };
 
   // 返回数据与定义数据的比较判断
+  /**
+   * @param {any} interfaceData
+   * @param {any} test_res_body
+   */
   const resBodyValidator = (interfaceData, test_res_body) => {
     const { res_body_type, res_body_is_json_schema, res_body } = interfaceData;
+    /** @type {any} */
     let validResult = { valid: true };
 
     if (res_body_type === 'json' && res_body_is_json_schema) {
@@ -459,6 +504,12 @@ const Run = forwardRef((props, ref) => {
     return validResult;
   };
 
+  /**
+   * @param {string} name
+   * @param {any} v
+   * @param {number} index
+   * @param {any} [key]
+   */
   const changeParam = (name, v, index, key) => {
 
     key = key || 'value';
@@ -473,6 +524,11 @@ const Run = forwardRef((props, ref) => {
     });
   };
 
+  /**
+   * @param {any} v
+   * @param {number} index
+   * @param {any} [key]
+   */
   const changeBody = (v, index, key) => {
     const bodyForm = deepCopyJson(stateRef.current.req_body_form);
     key = key || 'value';
@@ -490,6 +546,11 @@ const Run = forwardRef((props, ref) => {
   };
 
   // 模态框的相关操作
+  /**
+   * @param {any} val
+   * @param {number} index
+   * @param {string} type
+   */
   const showModal = (val, index, type) => {
     let inputValue = '';
     let cursurPosition;
@@ -501,7 +562,7 @@ const Run = forwardRef((props, ref) => {
       inputValue = getInstallValue(val || '', cursurPosition).val;
     } else {
       // 其他input 输入
-      let oTxt1 = document.getElementById(`${type}_${index}`);
+      let oTxt1 = /** @type {any} */ (document.getElementById(`${type}_${index}`));
       cursurPosition = oTxt1.selectionStart;
       inputValue = getInstallValue(val || '', cursurPosition).val;
       // cursurPosition = {row: 1, column: position}
@@ -517,6 +578,9 @@ const Run = forwardRef((props, ref) => {
   };
 
   // 点击插入
+  /**
+   * @param {string} val
+   */
   const handleModalOk = val => {
     const { inputIndex, modalType } = stateRef.current;
     if (modalType === 'req_body_other') {
@@ -529,6 +593,10 @@ const Run = forwardRef((props, ref) => {
   };
 
   // 根据鼠标位置往req_body中动态插入数据
+  /**
+   * @param {string} type
+   * @param {string} value
+   */
   const changeInstallBody = (type, value) => {
     const pathParam = deepCopyJson(stateRef.current[type]);
     let oldValue = pathParam || '';
@@ -541,6 +609,10 @@ const Run = forwardRef((props, ref) => {
   };
 
   // 获取截取的字符串
+  /**
+   * @param {string} oldValue
+   * @param {number} cursurPosition
+   */
   const getInstallValue = (oldValue, cursurPosition) => {
     let left = oldValue.substr(0, cursurPosition);
     let right = oldValue.substr(cursurPosition);
@@ -563,6 +635,12 @@ const Run = forwardRef((props, ref) => {
   };
 
   // 根据鼠标位置动态插入数据
+  /**
+   * @param {string} name
+   * @param {string} v
+   * @param {number} index
+   * @param {any} [key]
+   */
   const changeInstallParam = (name, v, index, key) => {
     key = key || 'value';
     const pathParam = deepCopyJson(stateRef.current[name]);
@@ -588,6 +666,10 @@ const Run = forwardRef((props, ref) => {
     });
   };
 
+  /**
+   * @param {any} newEnv
+   * @param {number} index
+   */
   const handleEnvOk = (newEnv, index) => {
     applyState({
       envModalVisible: false,
@@ -666,7 +748,7 @@ const Run = forwardRef((props, ref) => {
             style={{ flexBasis: 180, flexGrow: 1 }}
             onSelect={selectDomain}
           >
-            {env.map((item, index) => (
+            {env.map((/** @type {any} */ item, /** @type {number} */ index) => (
               <Option value={item.name} key={index}>
                 {item.name + '：' + item.domain}
               </Option>
@@ -729,7 +811,7 @@ const Run = forwardRef((props, ref) => {
             label: 'PATH PARAMETERS',
             children: (
               <>
-            {req_params.map((item, index) => {
+            {req_params.map((/** @type {any} */ item, /** @type {number} */ index) => {
               return (
                 <div key={index} className="key-value-wrap">
                   {/* <Tooltip
@@ -743,7 +825,9 @@ const Run = forwardRef((props, ref) => {
                   <Input
                     value={item.value}
                     className="value"
-                    onChange={e => changeParam('req_params', e.target.value, index)}
+                    onChange={(/** @type {any} */ e) =>
+                      changeParam('req_params', e.target.value, index)
+                    }
                     placeholder="参数值"
                     id={`req_params_${index}`}
                     addonAfter={
@@ -771,7 +855,7 @@ const Run = forwardRef((props, ref) => {
             label: 'QUERY PARAMETERS',
             children: (
               <>
-            {req_query.map((item, index) => {
+            {req_query.map((/** @type {any} */ item, /** @type {number} */ index) => {
               return (
                 <div key={index} className="key-value-wrap">
                   {/* <Tooltip
@@ -788,7 +872,7 @@ const Run = forwardRef((props, ref) => {
                     <Checkbox
                       className="params-enable"
                       checked={item.enable}
-                      onChange={e =>
+                      onChange={(/** @type {any} */ e) =>
                         changeParam('req_query', e.target.checked, index, 'enable')
                       }
                     />
@@ -797,7 +881,7 @@ const Run = forwardRef((props, ref) => {
                   <Input
                     value={item.value}
                     className="value"
-                    onChange={e => changeParam('req_query', e.target.value, index)}
+                    onChange={(/** @type {any} */ e) => changeParam('req_query', e.target.value, index)}
                     placeholder="参数值"
                     id={`req_query_${index}`}
                     addonAfter={
@@ -821,7 +905,7 @@ const Run = forwardRef((props, ref) => {
             label: 'HEADERS',
             children: (
               <>
-            {req_headers.map((item, index) => {
+            {req_headers.map((/** @type {any} */ item, /** @type {number} */ index) => {
               return (
                 <div key={index} className="key-value-wrap">
                   {/* <Tooltip
@@ -836,7 +920,9 @@ const Run = forwardRef((props, ref) => {
                     value={item.value}
                     disabled={!!item.abled}
                     className="value"
-                    onChange={e => changeParam('req_headers', e.target.value, index)}
+                    onChange={(/** @type {any} */ e) =>
+                      changeParam('req_headers', e.target.value, index)
+                    }
                     placeholder="参数值"
                     id={`req_headers_${index}`}
                     addonAfter={
@@ -859,7 +945,7 @@ const Run = forwardRef((props, ref) => {
           {
             key: '3',
             className:
-              HTTP_METHOD[method].request_body &&
+              (/** @type {Record<string, any>} */ (HTTP_METHOD))[method].request_body &&
               ((req_body_type === 'form' && req_body_form.length > 0) || req_body_type !== 'form')
                 ? 'POST'
                 : 'hidden',
@@ -889,7 +975,7 @@ const Run = forwardRef((props, ref) => {
 
               <AceEditor
                 className="pretty-editor"
-                ref={editor => (aceEditorRef.current = editor)}
+                ref={(/** @type {any} */ editor) => (aceEditorRef.current = editor)}
                 data={state.req_body_other}
                 mode={req_body_type === 'json' ? null : 'text'}
                 onChange={handleRequestBody}
@@ -897,10 +983,10 @@ const Run = forwardRef((props, ref) => {
               />
             </div>
 
-            {HTTP_METHOD[method].request_body &&
+            {(/** @type {Record<string, any>} */ (HTTP_METHOD))[method].request_body &&
               req_body_type === 'form' && (
                 <div>
-                  {req_body_form.map((item, index) => {
+                  {req_body_form.map((/** @type {any} */ item, /** @type {number} */ index) => {
                     return (
                       <div key={index} className="key-value-wrap">
                         {/* <Tooltip
@@ -921,7 +1007,7 @@ const Run = forwardRef((props, ref) => {
                           <Checkbox
                             className="params-enable"
                             checked={item.enable}
-                            onChange={e => changeBody(e.target.checked, index, 'enable')}
+                            onChange={(/** @type {any} */ e) => changeBody(e.target.checked, index, 'enable')}
                           />
                         )}
                         <span className="eq-symbol">=</span>
@@ -938,7 +1024,7 @@ const Run = forwardRef((props, ref) => {
                           <Input
                             value={item.value}
                             className="value"
-                            onChange={e => changeBody(e.target.value, index)}
+                            onChange={(/** @type {any} */ e) => changeBody(e.target.value, index)}
                             placeholder="参数值"
                             id={`req_body_form_${index}`}
                             addonAfter={
@@ -960,7 +1046,7 @@ const Run = forwardRef((props, ref) => {
                   </Button>
                 </div>
               )}
-            {HTTP_METHOD[method].request_body &&
+            {(/** @type {Record<string, any>} */ (HTTP_METHOD))[method].request_body &&
               req_body_type === 'file' && (
                 <div>
                   <Input type="file" id="single-file" />
@@ -1020,7 +1106,7 @@ const Run = forwardRef((props, ref) => {
                       <h4>Headers</h4>
                     </div>
                     <AceEditor
-                      callback={editor => {
+                      callback={(/** @type {any} */ editor) => {
                         editor.renderer.setShowGutter(false);
                       }}
                       readOnly={true}
@@ -1039,7 +1125,7 @@ const Run = forwardRef((props, ref) => {
                       <h4>Body</h4>
                       <Checkbox
                         checked={state.autoPreviewHTML}
-                        onChange={e => applyState({ autoPreviewHTML: e.target.checked })}>
+                        onChange={(/** @type {any} */ e) => applyState({ autoPreviewHTML: e.target.checked })}>
                         <span>自动预览HTML</span>
                       </Checkbox>
                     </div>
@@ -1075,7 +1161,7 @@ const Run = forwardRef((props, ref) => {
                         &nbsp;是否开启:&nbsp;
                         <Switch
                           checked={state.enable_script}
-                          onChange={e => applyState({ enable_script: e })}
+                          onChange={(/** @type {any} */ e) => applyState({ enable_script: e })}
                         />
                       </h3>
                       <p style={{ margin: '10px' }}>注：Test 脚本只有做自动化测试才执行</p>
@@ -1085,7 +1171,7 @@ const Run = forwardRef((props, ref) => {
                             onChange={onOpenTest}
                             className="case-script"
                             data={state.test_script}
-                            ref={editor => {
+                            ref={(/** @type {any} */ editor) => {
                               aceEditorRef.current = editor;
                             }}
                           />

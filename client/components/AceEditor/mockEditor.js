@@ -1,3 +1,4 @@
+// @ts-check
 const { EditorState, Compartment } = require('@codemirror/state');
 const { EditorView, keymap, lineNumbers, drawSelection } = require('@codemirror/view');
 const { defaultKeymap, history, historyKeymap } = require('@codemirror/commands');
@@ -78,6 +79,9 @@ const gutterConf = new Compartment();
 // 只读态通过 Compartment 切换（EditorState.readOnly 是 facet，动态切换须经 Compartment）。
 const readOnlyConf = new Compartment();
 
+/**
+ * @param {string} mode
+ */
 function normalizeMode(mode) {
   if (!mode) {
     return 'javascript';
@@ -85,6 +89,9 @@ function normalizeMode(mode) {
   return String(mode).replace(/^ace\/mode\//, '');
 }
 
+/**
+ * @param {string} mode
+ */
 function getLanguageExt(mode) {
   switch (normalizeMode(mode)) {
     case 'json':
@@ -111,6 +118,9 @@ const xcodeTheme = EditorView.theme({
 });
 
 // 输入 @ 触发的 mock 字段补全，等价原 ace rhymeCompleter(identifierRegexps: [/@/])。
+/**
+ * @param {any} context
+ */
 function mockCompletionSource(context) {
   const word = context.matchBefore(/@[\w-]*/);
   if (!word || (word.from === word.to && !context.explicit)) {
@@ -125,8 +135,15 @@ function mockCompletionSource(context) {
   };
 }
 
+/**
+ * @param {any} options
+ */
 function run(options) {
+  /** @type {any} */
   var mockEditor;
+  /**
+   * @param {any} json
+   */
   function handleJson(json) {
     var curData = mockEditor.curData;
     try {
@@ -136,7 +153,7 @@ function run(options) {
       curData.jsonData = obj;
       curData.mockData = () => Mock.mock(MockExtra(obj, {})); //为防止时时 mock 导致页面卡死的问题，改成函数式需要用到再计算
     } catch (e) {
-      curData.format = e.message;
+      curData.format = /** @type {any} */ (e).message;
     }
   }
   options = options || {};
@@ -160,7 +177,7 @@ function run(options) {
   // F9 全屏：仅在创建时声明 fullScreen 的编辑器上生效（等价原 editor._fullscreen_yapi 门控）。
   const fullscreenKey = {
     key: 'F9',
-    run: view => {
+    run: (/** @type {any} */ view) => {
       const fullScreen = document.body.classList.toggle('fullScreen');
       mountNode.classList.toggle('fullScreen', fullScreen);
       view.requestMeasure();
@@ -168,6 +185,7 @@ function run(options) {
     }
   };
 
+  /** @type {any} */
   let view;
   const updateListener = EditorView.updateListener.of(update => {
     if (update.docChanged) {
@@ -214,10 +232,10 @@ function run(options) {
   const editorAdapter = {
     view: view,
     getValue: () => view.state.doc.toString(),
-    setMode: mode => {
+    setMode: (/** @type {string} */ mode) => {
       view.dispatch({ effects: languageConf.reconfigure(getLanguageExt(mode)) });
     },
-    setReadOnly: readOnly => {
+    setReadOnly: (/** @type {boolean} */ readOnly) => {
       view.dispatch({
         effects: readOnlyConf.reconfigure([
           EditorState.readOnly.of(readOnly === true),
@@ -234,7 +252,7 @@ function run(options) {
     // 等价原 editor.session.doc.positionToIndex(editor.selection.getCursor())
     getCursorIndex: () => view.state.selection.main.head,
     renderer: {
-      setShowGutter: show => {
+      setShowGutter: (/** @type {boolean} */ show) => {
         view.dispatch({ effects: gutterConf.reconfigure(show ? lineNumbers() : []) });
       }
     }
@@ -243,19 +261,22 @@ function run(options) {
   mockEditor = {
     curData: {},
     getValue: () => mockEditor.curData.text,
-    setValue: function(data) {
+    setValue: function(/** @type {any} */ data) {
       view.dispatch({
         changes: { from: 0, to: view.state.doc.length, insert: handleData(data) }
       });
     },
     editor: editorAdapter,
     options: options,
-    insertCode: code => {
+    insertCode: (/** @type {string} */ code) => {
       const pos = view.state.selection.main.head;
       view.dispatch({ changes: { from: pos, insert: code }, selection: { anchor: pos } });
     }
   };
 
+  /**
+   * @param {string} json
+   */
   function formatJson(json) {
     try {
       return JSON.stringify(JSON.parse(json), null, 2);
@@ -264,6 +285,9 @@ function run(options) {
     }
   }
 
+  /**
+   * @param {any} data
+   */
   function handleData(data) {
     data = data || '';
     if (typeof data === 'string') {

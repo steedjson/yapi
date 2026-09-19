@@ -1,3 +1,4 @@
+// @ts-check
 import './Header.scss';
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
@@ -25,6 +26,9 @@ import Breadcrumb from '../Breadcrumb/Breadcrumb.js';
 import GuideBtns from '../GuideBtns/GuideBtns.js';
 const plugin = require('client/plugin.js');
 
+/**
+ * @type {Record<string, { path: string, name: string, icon: string, adminFlag: boolean }>}
+ */
 let HeaderMenu = {
   user: {
     path: '/user/profile',
@@ -44,8 +48,12 @@ plugin.emitHook('header_menu', HeaderMenu);
 
 // antd5 的 Dropdown overlay 已移除,改用 menu(items 配置);theme="dark" 沿用原深色菜单,
 // className="user-menu" 经 MenuProps 透传保持原 hook 挂载点。
+/**
+ * @param {any} props
+ */
 const buildUserMenuItems = props => {
   const isAdmin = props.role === 'admin';
+  /** @type {any[]} */
   const items = Object.keys(HeaderMenu)
     .filter(key => !HeaderMenu[key].adminFlag || isAdmin)
     .map(key => {
@@ -113,6 +121,9 @@ const tipDoc = (
   </div>
 );
 
+/**
+ * @param {any} props
+ */
 const ToolUser = props => {
   let imageUrl = props.imageUrl ? props.imageUrl : `/api/user/avatar?uid=${props.uid}`;
   return (
@@ -223,6 +234,9 @@ export default function HeaderCom() {
   const imageUrl = useSelector(state => state.user.imageUrl);
   const [skin, setSkinState] = useState(getSkin());
 
+  /**
+   * @param {string} name
+   */
   function selectSkin(name) {
     if (setSkin(name)) {
       setSkinState(getSkin());
@@ -233,10 +247,13 @@ export default function HeaderCom() {
     dispatch(changeMenuItem(''));
   }
 
+  /**
+   * @param {any} e
+   */
   function logout(e) {
     e.preventDefault();
     dispatch(logoutActions())
-      .then(res => {
+      .then((/** @type {any} */ res) => {
         if (res.payload.data.errcode == 0) {
           navigate('/');
           dispatch(changeMenuItem('/'));
@@ -245,7 +262,7 @@ export default function HeaderCom() {
           message.error(res.payload.data.errmsg);
         }
       })
-      .catch(err => {
+      .catch((/** @type {any} */ err) => {
         message.error(err);
       });
   }

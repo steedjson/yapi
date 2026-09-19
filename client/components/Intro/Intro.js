@@ -1,3 +1,4 @@
+// @ts-check
 import React from 'react';
 import PropTypes from 'prop-types';
 import { getV4Icon } from '../../constants/v4IconMap';
@@ -6,6 +7,9 @@ import { OverPack } from 'rc-scroll-anim';
 import TweenOne from 'rc-tween-one';
 import QueueAnim from 'rc-queue-anim';
 
+/**
+ * @param {any} props
+ */
 const IntroPart = props => (
   <li className="switch-content">
     <div className="icon-switch">
@@ -42,6 +46,9 @@ const propTypes = {
 };
 
 // 纯展示组件：与旧类组件渲染结果保持一致（className 未传时输出不变）
+/**
+ * @param {{ intro?: any, className?: string }} props
+ */
 export default function Intro({ intro, className }) {
   const id = 'motion';
   const animType = {
@@ -76,11 +83,13 @@ export default function Intro({ intro, className }) {
             <div className="des-detail">{intro.des}</div>
           </div>
           <ul className="des-switch" key={`${id}-des-switch`}>
-            {intro.detail.map((item, i) => {
-              return (
-                <IntroPart key={i} title={item.title} des={item.des} iconType={item.iconType} />
-              );
-            })}
+            {intro.detail.map(
+              (/** @type {any} */ item, /** @type {number} */ i) => {
+                return (
+                  <IntroPart key={i} title={item.title} des={item.des} iconType={item.iconType} />
+                );
+              }
+            )}
           </ul>
         </QueueAnim>
       </OverPack>

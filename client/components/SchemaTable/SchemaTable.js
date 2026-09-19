@@ -1,3 +1,4 @@
+// @ts-check
 import React from 'react';
 import { Table } from 'antd';
 import json5 from 'json5';
@@ -5,6 +6,7 @@ import PropTypes from 'prop-types';
 import { schemaTransformToTable } from '../../../common/schema-transformTo-table.js';
 import './index.scss';
 
+/** @type {Record<string, string>} */
 const messageMap = {
   desc: '备注',
   default: '实例',
@@ -35,7 +37,7 @@ const columns = [
     dataIndex: 'type',
     key: 'type',
     width: 100,
-    render: (text, item) => {
+    render: (/** @type {any} */ text, /** @type {any} */ item) => {
       // console.log('text',item.sub);
       return text === 'array' ? (
         <span>{item.sub ? item.sub.itemType || '' : 'array'} []</span>
@@ -49,7 +51,7 @@ const columns = [
     dataIndex: 'required',
     key: 'required',
     width: 80,
-    render: text => {
+    render: (/** @type {any} */ text) => {
       return <div>{text ? '必须' : '非必须'}</div>;
     }
   },
@@ -58,7 +60,7 @@ const columns = [
     dataIndex: 'default',
     key: 'default',
     width: 80,
-    render: text => {
+    render: (/** @type {any} */ text) => {
       return <div>{typeof text === 'boolean' ? text + '' : text}</div>;
     }
   },
@@ -66,7 +68,7 @@ const columns = [
     title: '备注',
     dataIndex: 'desc',
     key: 'desc',
-    render: (text, item) => {
+    render: (/** @type {any} */ text, /** @type {any} */ item) => {
       return item.childrenDesc === undefined ? (
         <span className="table-desc">{text}</span>
       ) : (
@@ -79,10 +81,10 @@ const columns = [
     dataIndex: 'sub',
     key: 'sub',
     width: 180,
-    render: (text, record) => {
+    render: (/** @type {any} */ text, /** @type {any} */ record) => {
       let result = text || record;
 
-      return Object.keys(result).map((item, index) => {
+      return Object.keys(result).map((/** @type {string} */ item, /** @type {number} */ index) => {
         let name = messageMap[item];
         let value = result[item];
         let isShow = result[item] !== undefined && name !== undefined;
@@ -102,6 +104,9 @@ const columns = [
 
 // 旧类组件（仅有空 constructor + render，无 state / 生命周期）直接改为函数组件，
 // 渲染逻辑逐行保持一致：dataSource 解析失败或为空时渲染 null。
+/**
+ * @param {any} props
+ */
 const SchemaTable = props => {
   let product;
   try {

@@ -1,3 +1,4 @@
+// @ts-check
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { Row, Input, Select, Tooltip } from 'antd';
@@ -5,6 +6,9 @@ import { DownOutlined } from '@ant-design/icons';
 const Option = Select.Option;
 
 // 深拷贝
+/**
+ * @param {any} state
+ */
 function deepEqual(state) {
   return JSON.parse(JSON.stringify(state));
 }
@@ -23,6 +27,9 @@ const METHODS_LIST = [
   { name: 'number', type: false, desc: '字符串转换为数字类型' }
 ];
 
+/**
+ * @param {any} props
+ */
 export default function MethodsList(props) {
   const { click, clickValue, clickIndex, params, paramsInput } = props;
   const [list, setList] = useState(METHODS_LIST);
@@ -37,6 +44,9 @@ export default function MethodsList(props) {
     setMoreFlag(false);
   };
 
+  /**
+   * @param {any} query
+   */
   const inputComponent = query => {
     const { params: inputParams } = query;
     return (
@@ -44,11 +54,16 @@ export default function MethodsList(props) {
         size="small"
         placeholder="请输入参数"
         value={inputParams[0]}
-        onChange={e => handleParamsChange(e.target.value, query.clickIndex, query.paramsIndex, 0)}
+        onChange={(/** @type {any} */ e) =>
+          handleParamsChange(e.target.value, query.clickIndex, query.paramsIndex, 0)
+        }
       />
     );
   };
 
+  /**
+   * @param {any} query
+   */
   const doubleInputComponent = query => {
     const { params: inputParams } = query;
     return (
@@ -57,18 +72,25 @@ export default function MethodsList(props) {
           size="small"
           placeholder="start"
           value={inputParams[0]}
-          onChange={e => handleParamsChange(e.target.value, query.clickIndex, query.paramsIndex, 0)}
+          onChange={(/** @type {any} */ e) =>
+            handleParamsChange(e.target.value, query.clickIndex, query.paramsIndex, 0)
+          }
         />
         <Input
           size="small"
           placeholder="length"
           value={inputParams[1]}
-          onChange={e => handleParamsChange(e.target.value, query.clickIndex, query.paramsIndex, 1)}
+          onChange={(/** @type {any} */ e) =>
+            handleParamsChange(e.target.value, query.clickIndex, query.paramsIndex, 1)
+          }
         />
       </div>
     );
   };
 
+  /**
+   * @param {any} query
+   */
   const selectComponent = query => {
     const subname = ['sha1', 'sha224', 'sha256', 'sha384', 'sha512'];
     const { params: selectParams } = query;
@@ -78,7 +100,7 @@ export default function MethodsList(props) {
         placeholder="请选择"
         style={{ width: 150 }}
         size="small"
-        onChange={e => handleParamsChange(e, query.clickIndex, query.paramsIndex, 0)}
+        onChange={(/** @type {any} */ e) => handleParamsChange(e, query.clickIndex, query.paramsIndex, 0)}
       >
         {subname.map((item, index) => {
           return (
@@ -92,6 +114,12 @@ export default function MethodsList(props) {
   };
 
   // 处理参数输入
+  /**
+   * @param {any} value
+   * @param {any} changeClickIndex
+   * @param {number} paramsIndex
+   * @param {number} index
+   */
   function handleParamsChange(value, changeClickIndex, paramsIndex, index) {
     const newList = deepEqual(list);
     newList[paramsIndex].params[index] = value;
@@ -100,6 +128,12 @@ export default function MethodsList(props) {
   }
 
   // 组件选择
+  /**
+   * @param {any} item
+   * @param {any} componentClickIndex
+   * @param {number} index
+   * @param {any} componentParams
+   */
   function handleComponent(item, componentClickIndex, index, componentParams) {
     const query = {
       clickIndex: componentClickIndex,

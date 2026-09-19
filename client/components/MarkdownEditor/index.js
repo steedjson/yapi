@@ -1,3 +1,4 @@
+// @ts-check
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import MDEditor from '@uiw/react-md-editor';
@@ -43,6 +44,9 @@ const MarkdownEditor = forwardRef((props, ref) => {
     getHtml: () => mdParser.render(valueRef.current || '')
   }));
 
+  /**
+   * @param {string} val
+   */
   const handleChange = val => {
     valueRef.current = val || '';
     setValue(val || '');

@@ -1,3 +1,4 @@
+// @ts-check
 // 测试集合中的环境切换
 
 import React from 'react';
@@ -8,9 +9,15 @@ const Option = Select.Option;
 import './index.scss';
 
 // 纯受控展示组件
+/**
+ * @param {any} props
+ */
 export default function CaseEnv(props) {
   const { envList, currProjectEnvChange, changeClose, collapseKey, envValue } = props;
 
+  /**
+   * @param {any} key
+   */
   const callback = key => {
     changeClose && changeClose(key);
   };
@@ -40,7 +47,7 @@ export default function CaseEnv(props) {
             <div className="case-env">
               {envList.length > 0 && (
                 <div>
-                  {envList.map(item => {
+                  {envList.map((/** @type {any} */ item) => {
                     return (
                       <Row
                         key={item._id}
@@ -61,13 +68,13 @@ export default function CaseEnv(props) {
                             }}
                             value={envValue[item._id] || ''}
                             defaultValue=""
-                            onChange={val => currProjectEnvChange(val, item._id)}
+                            onChange={(/** @type {any} */ val) => currProjectEnvChange(val, item._id)}
                           >
                             <Option key="default" value="">
                               默认环境
                             </Option>
 
-                            {item.env.map(key => {
+                            {item.env.map((/** @type {any} */ key) => {
                               return (
                                 <Option value={key.name} key={key._id}>
                                   {key.name + ': ' + key.domain}

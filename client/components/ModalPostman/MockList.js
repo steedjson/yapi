@@ -1,3 +1,4 @@
+// @ts-check
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { Row, Input } from 'antd';
@@ -5,11 +6,17 @@ import constants from '../../constants/variable.js';
 
 const Search = Input.Search;
 
+/**
+ * @param {any} props
+ */
 export default function MockList(props) {
   const { click, clickValue } = props;
   const [filter, setFilter] = useState('');
   const [list, setList] = useState(constants.MOCK_SOURCE);
 
+  /**
+   * @param {any} e
+   */
   const onFilter = e => {
     const value = e.target.value;
     const filteredList = constants.MOCK_SOURCE.filter(item => {

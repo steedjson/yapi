@@ -1,9 +1,13 @@
+// @ts-check
 import React, { useEffect, useState } from 'react';
 import { Input, Tooltip } from 'antd';
 import { EditOutlined, CheckOutlined, CloseOutlined } from '@ant-design/icons';
 import PropTypes from 'prop-types';
 import './Label.scss';
 
+/**
+ * @param {any} props
+ */
 export default function Label(props) {
   const [inputShow, setInputShow] = useState(false);
   const [inputValue, setInputValue] = useState('');
@@ -16,6 +20,9 @@ export default function Label(props) {
     setInputShow(!inputShow);
   }
 
+  /**
+   * @param {any} event
+   */
   function handleChange(event) {
     setInputValue(event.target.value);
   }

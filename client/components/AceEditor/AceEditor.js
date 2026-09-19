@@ -1,9 +1,11 @@
+// @ts-check
 import React, { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 import mockEditor from './mockEditor';
 import PropTypes from 'prop-types';
 import './AceEditor.scss';
 
 // mode 直接以字符串传给 CodeMirror 6 引擎（javascript/json/text/xml/html）
+/** @type {Record<string, string>} */
 const ModeMap = {
   javascript: 'javascript',
   json: 'json',
@@ -14,6 +16,9 @@ const ModeMap = {
 
 const defaultStyle = { width: '100%', height: '200px' };
 
+/**
+ * @param {string} mode
+ */
 function getMode(mode) {
   return ModeMap[mode] || ModeMap.text;
 }

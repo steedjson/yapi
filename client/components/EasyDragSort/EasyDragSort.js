@@ -1,3 +1,4 @@
+// @ts-check
 import React from 'react';
 
 import PropTypes from 'prop-types';
@@ -9,8 +10,12 @@ import PropTypes from 'prop-types';
  * {list}
  * </EasyDragSot>
  */
+/** @type {number | null} */
 let curDragIndex = null;
 
+/**
+ * @param {any} obj
+ */
 function isDom(obj) {
   return (
     obj &&
@@ -21,9 +26,16 @@ function isDom(obj) {
   );
 }
 
+/**
+ * @param {any} props
+ */
 export default function EasyDragSort(props) {
   const { onlyChild } = props;
   const container = props.children;
+  /**
+   * @param {any} from
+   * @param {any} to
+   */
   const onChange = (from, to) => {
     if (from === to) {
       return;
@@ -39,7 +51,7 @@ export default function EasyDragSort(props) {
   };
   return (
     <div>
-      {container.map((item, index) => {
+      {container.map((/** @type {any} */ item, /** @type {number} */ index) => {
         if (React.isValidElement(item)) {
           return React.cloneElement(item, {
             draggable: onlyChild ? false : true,
@@ -101,6 +113,11 @@ EasyDragSort.propTypes = {
   onlyChild: PropTypes.string
 };
 
+/**
+ * @param {any} arr
+ * @param {number} fromIndex
+ * @param {number} toIndex
+ */
 function arrMove(arr, fromIndex, toIndex) {
   arr = [].concat(arr);
   let item = arr.splice(fromIndex, 1)[0];

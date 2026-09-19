@@ -1,3 +1,4 @@
+// @ts-check
 import React from 'react';
 import PropTypes from 'prop-types';
 import { Button } from 'antd';
@@ -5,6 +6,10 @@ import { useDispatch } from 'react-redux';
 import { changeStudyTip, finishStudy } from '../../reducer/modules/user.js';
 
 // 点击下一步
+/**
+ * @param {any} dispatch
+ * @param {boolean} isLast
+ */
 function nextStep(dispatch, isLast) {
   dispatch(changeStudyTip());
   if (isLast) {
@@ -13,10 +18,16 @@ function nextStep(dispatch, isLast) {
 }
 
 // 点击退出指引
+/**
+ * @param {any} dispatch
+ */
 function exitGuide(dispatch) {
   dispatch(finishStudy());
 }
 
+/**
+ * @param {any} props
+ */
 function GuideBtns(props) {
   const dispatch = useDispatch();
   const { isLast } = props;

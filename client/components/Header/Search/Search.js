@@ -1,3 +1,4 @@
+// @ts-check
 import React, { useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Input, AutoComplete } from 'antd';
@@ -15,10 +16,14 @@ export default function Srch() {
   const navigate = useNavigate();
   useSelector(state => state.group.groupList);
   useSelector(state => state.project.projectList);
-  const [dataSource, setDataSource] = useState([]);
+  const [dataSource, setDataSource] = useState(/** @type {any[]} */ ([]));
   // 选项附带的自定义数据索引(见 handleSearch),非响应式,用 ref 承载
   const searchIndexRef = useRef({});
 
+  /**
+   * @param {any} value
+   * @param {any} option
+   */
   async function onSelect(value, option) {
     // 选项附带的自定义数据存放在 searchIndex 中（见 handleSearch），
     // 不能作为 props 挂在 Option 上，否则会透传到 DOM 触发 React 警告
@@ -36,17 +41,22 @@ export default function Srch() {
     }
   }
 
+  /**
+   * @param {string} value
+   */
   function handleSearch(value) {
     axios
       .get('/api/project/search?q=' + value)
-      .then(res => {
+      .then((/** @type {any} */ res) => {
         if (res.data && res.data.errcode === 0) {
           // antd5 的 AutoComplete 移除 dataSource,改用 options 配置
           // ({ key, value, label });key 仅作为 onSelect 的索引,不透传 DOM
+          /** @type {any[]} */
           const options = [];
+          /** @type {Record<string, any>} */
           const searchIndex = {};
           for (let title in res.data.data) {
-            res.data.data[title].map(item => {
+            res.data.data[title].map((/** @type {any} */ item) => {
               switch (title) {
                 case 'group': {
                   const key = `分组${item._id}`;
@@ -81,7 +91,7 @@ export default function Srch() {
           console.log('查询项目或分组失败');
         }
       })
-      .catch(err => {
+      .catch((/** @type {any} */ err) => {
         console.log(err);
       });
   }

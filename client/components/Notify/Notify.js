@@ -1,3 +1,4 @@
+// @ts-check
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Alert } from 'antd';
@@ -13,7 +14,7 @@ export default function Notify() {
     // 外网 mock 已失效，失败时静默忽略，避免 axios 1.x 未捕获 Network Error 打断页面。
     axios
       .get(versions, { timeout: 3000 })
-      .then(req => {
+      .then((/** @type {any} */ req) => {
         if (active && req.status === 200 && req.data && req.data.data && req.data.data[0]) {
           setNewVersion(req.data.data[0]);
         }

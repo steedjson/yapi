@@ -28,15 +28,26 @@ export default class ErrorBoundary extends React.Component {
     fallback: PropTypes.element
   };
 
+  /**
+   * @param {any} props
+   */
   constructor(props) {
     super(props);
+    /** @type {{ error: any }} */
     this.state = { error: null };
   }
 
+  /**
+   * @param {any} error
+   */
   static getDerivedStateFromError(error) {
     return { error };
   }
 
+  /**
+   * @param {any} error
+   * @param {any} info
+   */
   componentDidCatch(error, info) {
     // 保留控制台输出便于线上排查；异常本身已被边界消化，不再向上传播
     console.error('ErrorBoundary caught an error:', error, info && info.componentStack);

@@ -1,3 +1,4 @@
+// @ts-check
 import './Footer.scss';
 import React from 'react';
 import PropTypes from 'prop-types';
@@ -56,6 +57,9 @@ const defaultFootList = [
   }
 ];
 
+/**
+ * @param {any} props
+ */
 function FootItem(props) {
   return (
     <Col span={6}>
@@ -63,7 +67,10 @@ function FootItem(props) {
         {props.iconType ? React.createElement(getV4Icon(props.iconType), { className: 'icon' }) : ''}
         {props.title}
       </h4>
-      {props.linkList.map(function(item, i) {
+      {props.linkList.map(function(
+        /** @type {any} */ item,
+        /** @type {number} */ i
+      ) {
         return (
           <p key={i}>
             <a href={item.itemLink} className="link">
@@ -82,12 +89,18 @@ FootItem.propTypes = {
   iconType: PropTypes.string
 };
 
+/**
+ * @param {any} props
+ */
 function Footer(props) {
   const footList = props.footList || defaultFootList;
   return (
     <div className="footer-wrapper">
       <Row className="footer-container">
-        {footList.map(function(item, i) {
+        {footList.map(function(
+          /** @type {any} */ item,
+          /** @type {number} */ i
+        ) {
           return (
             <FootItem
               key={i}

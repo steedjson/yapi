@@ -1,3 +1,4 @@
+// @ts-check
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import './index.scss';
@@ -11,11 +12,21 @@ import { trim } from '../../common.js';
 const { handleParamsValue } = require('common/utils.js');
 
 // 深拷贝
+/**
+ * @param {any} state
+ */
 function deepEqual(state) {
   return JSON.parse(JSON.stringify(state));
 }
 
+/**
+ * @param {any} arr
+ * @param {number} index
+ * @param {any} name
+ * @param {any} params
+ */
 function closeRightTabsAndAddNewTab(arr, index, name, params) {
+  /** @type {any[]} */
   let newParamsList = [].concat(arr);
   newParamsList.splice(index + 1, newParamsList.length - index);
   newParamsList.push({
@@ -33,6 +44,9 @@ function closeRightTabsAndAddNewTab(arr, index, name, params) {
   return newParamsList;
 }
 
+/**
+ * @param {any} props
+ */
 export default function ModalPostman(props) {
   const { visible, envType, id, inputValue } = props;
   const [methodsParamsList, setMethodsParamsList] = useState([
@@ -45,11 +59,18 @@ export default function ModalPostman(props) {
   const [constantInput, setConstantInput] = useState('');
   const [activeKey, setActiveKey] = useState('1');
 
+  /**
+   * @param {number} index
+   * @returns {(curname?: any, params?: any) => void}
+   */
   const mockClick = index => (curname, params) => {
     setMethodsParamsList(list => closeRightTabsAndAddNewTab(list, index, curname, params));
   };
 
   // 初始化列表:解析 {{ ... }} 表达式为方法参数列表
+  /**
+   * @param {string} val
+   */
   const handleInitList = val => {
     val = val.replace(/^\{\{(.+)\}\}$/g, '$1');
     let valArr = val.split('|');
@@ -60,6 +81,7 @@ export default function ModalPostman(props) {
       setActiveKey('3');
     }
 
+    /** @type {any[]} */
     let paramsList = [
       {
         name: trim(valArr[0]),
@@ -74,7 +96,7 @@ export default function ModalPostman(props) {
       let paramArr = nameArr[1] && nameArr[1].split(',');
       paramArr =
         paramArr &&
-        paramArr.map(item => {
+        paramArr.map((/** @type {any} */ item) => {
           return trim(item);
         });
       let item = {
@@ -95,12 +117,20 @@ export default function ModalPostman(props) {
   }, [inputValue]);
 
   //  处理常量输入
+  /**
+   * @param {string} val
+   */
   const handleConstantsInput = val => {
     val = val.replace(/^\{\{(.+)\}\}$/g, '$1');
     setConstantInput(val);
     mockClick(0)(val);
   };
 
+  /**
+   * @param {any} e
+   * @param {number} clickIndex
+   * @param {number} paramsIndex
+   */
   const handleParamsInput = (e, clickIndex, paramsIndex) => {
     setMethodsParamsList(list => {
       let newParamsList = deepEqual(list);
@@ -137,11 +167,17 @@ export default function ModalPostman(props) {
   };
 
   // 处理插入
+  /**
+   * @param {any} installValue
+   */
   const handleOk = installValue => {
     props.handleOk(installValue);
     setInit();
   };
   // 处理面板切换
+  /**
+   * @param {any} key
+   */
   const handleCollapse = key => {
     setActiveKey(key);
   };
@@ -163,6 +199,9 @@ export default function ModalPostman(props) {
   };
 
   //  处理表达式
+  /**
+   * @param {string} val
+   */
   const handleValue = val => {
     return handleParamsValue(val, {});
   };
@@ -200,7 +239,9 @@ export default function ModalPostman(props) {
                       <Input
                         placeholder="基础参数值"
                         value={constantInput}
-                        onChange={e => handleConstantsInput(e.target.value, index)}
+                        onChange={(/** @type {any} */ e) =>
+                          (/** @type {any} */ (handleConstantsInput))(e.target.value, index)
+                        }
                       />
                     )
                   },

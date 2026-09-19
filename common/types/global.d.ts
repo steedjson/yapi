@@ -141,8 +141,19 @@ declare module 'react' {
   ): [S, (state: S | ((prevState: S) => S)) => void];
   export function useEffect(effect: () => void | (() => void), deps?: any[]): void;
   export function useRef(initialValue?: any): { current: any };
+  // client/components Hooks 现代化组件使用（P7a）：forwardRef + useImperativeHandle
+  // 保留旧类组件实例 API；useMemo/useCallback 为 ProjectCard / VariablesSelect 使用。
+  export function forwardRef(render: (props: any, ref: any) => any): any;
+  export function useImperativeHandle(ref: any, init: () => any, deps?: any[]): void;
+  export function useMemo<T = any>(factory: () => T, deps?: any[]): T;
+  export function useCallback<T = any>(fn: T, deps?: any[]): T;
   const React: any;
   export default React;
+}
+
+declare module 'react-dom/client' {
+  // React 18 createRoot API（BlockPrompt 挂载使用）
+  export function createRoot(container: any): { render(node: any): void; unmount(): void };
 }
 
 declare module 'prop-types' {
@@ -189,6 +200,47 @@ declare module 'antd' {
   export const Upload: any;
   export const Spin: any;
   export const Checkbox: any;
+  // client/components 使用（P7a）：Header/Layout 系列、TimeLine、Breadcrumb、
+  // Postman/ModalPostman、ErrorBoundary、ProjectCard、Subnav 等文件引用。
+  export const Alert: any;
+  export const Avatar: any;
+  export const Breadcrumb: any;
+  export const Collapse: any;
+  export const ConfigProvider: any;
+  export const Dropdown: any;
+  export const Layout: any;
+  export const Menu: any;
+  export const Popover: any;
+  export const Result: any;
+  export const Tag: any;
+  export const Timeline: any;
+}
+
+declare module 'rc-scroll-anim' {
+  export const OverPack: any;
+}
+
+declare module 'rc-tween-one' {
+  const TweenOne: any;
+  export default TweenOne;
+}
+
+declare module 'rc-queue-anim' {
+  const QueueAnim: any;
+  export default QueueAnim;
+}
+
+declare module 'markdown-it' {
+  class MarkdownIt {
+    constructor(options?: any);
+    render(src: string): string;
+  }
+  export default MarkdownIt;
+}
+
+declare module 'jsondiffpatch/dist/jsondiffpatch.umd.js' {
+  const jsondiffpatch: any;
+  export = jsondiffpatch;
 }
 
 // webpack 别名 common -> 仓库根 common/ 已通过 tsconfig paths 映射到真实文件，
@@ -289,4 +341,10 @@ declare module 'extend' {
 declare module 'ldapjs' {
   const ldap: any;
   export = ldap;
+}
+
+// crossRequest 由 YApi「测试增强」浏览器插件在页面加载时注入
+// （client/components/Postman/CheckCrossInstall.js 轮询探测），非页面自身代码创建。
+interface Window {
+  crossRequest?: any;
 }

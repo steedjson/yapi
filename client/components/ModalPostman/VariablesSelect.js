@@ -1,3 +1,4 @@
+// @ts-check
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import { Tree } from 'antd';
@@ -6,6 +7,9 @@ import { fetchVariableParamsList } from '../../reducer/modules/interfaceCol.js';
 
 const CanSelectPathPrefix = 'CanSelectPath-';
 
+/**
+ * @param {string} str
+ */
 function deleteLastObject(str) {
   return str
     .split('.')
@@ -13,22 +17,28 @@ function deleteLastObject(str) {
     .join('.');
 }
 
+/**
+ * @param {string} str
+ */
 function deleteLastArr(str) {
   return str.replace(/\[.*?\]/g, '');
 }
 
+/**
+ * @param {any} props
+ */
 export default function VariablesSelect(props) {
   const { click, clickValue, id } = props;
-  const currColId = useSelector(state => state.interfaceCol.currColId);
+  const currColId = useSelector((/** @type {any} */ state) => state.interfaceCol.currColId);
   const dispatch = useDispatch();
-  const [records, setRecords] = useState([]);
-  const [expandedKeys, setExpandedKeys] = useState([]);
-  const [selectedKeys, setSelectedKeys] = useState([]);
+  const [records, setRecords] = useState(/** @type {any[]} */ ([]));
+  const [expandedKeys, setExpandedKeys] = useState(/** @type {any[]} */ ([]));
+  const [selectedKeys, setSelectedKeys] = useState(/** @type {any[]} */ ([]));
   // 全量用例记录与已切换到的用例 id,对应原实例属性 this.records / this.id
   const allRecordsRef = useRef([]);
   const currentIdRef = useRef(null);
 
-  const handleRecordsData = useCallback(targetId => {
+  const handleRecordsData = useCallback((/** @type {any} */ targetId) => {
     currentIdRef.current = targetId;
     const allRecords = allRecordsRef.current;
     const newRecords = [];
@@ -50,7 +60,7 @@ export default function VariablesSelect(props) {
         return;
       }
       const fetchedRecords = result.payload.data.data;
-      allRecordsRef.current = fetchedRecords.sort((a, b) => {
+      allRecordsRef.current = fetchedRecords.sort((/** @type {any} */ a, /** @type {any} */ b) => {
         return a.index - b.index;
       });
       handleRecordsData(id);
@@ -75,6 +85,9 @@ export default function VariablesSelect(props) {
     }
   }, [id, records, handleRecordsData]);
 
+  /**
+   * @param {string} key
+   */
   const handleSelect = key => {
     setSelectedKeys([key]);
     if (key && key.indexOf(CanSelectPathPrefix) === 0) {
@@ -85,11 +98,20 @@ export default function VariablesSelect(props) {
     }
   };
 
+  /**
+   * @param {any} keys
+   */
   const onExpand = keys => {
     setExpandedKeys(keys);
   };
 
   // antd5 Tree 移除 TreeNode JSX,改用 treeData 配置({ key, title, disabled, children })
+  /**
+   * @param {any} data
+   * @param {string} [elementKeyPrefix]
+   * @param {number} [deepLevel]
+   * @returns {any}
+   */
   const pathSelctByTree = (data, elementKeyPrefix = '$', deepLevel = 0) => {
     const keys = Object.keys(data);
     const treeNodes = keys.map((key, index) => {
@@ -134,7 +156,7 @@ export default function VariablesSelect(props) {
       <Tree
         expandedKeys={expandedKeys}
         selectedKeys={selectedKeys}
-        onSelect={([key]) => handleSelect(key)}
+        onSelect={(/** @type {any} */ [key]) => handleSelect(key)}
         onExpand={onExpand}
         treeData={pathSelctByTree(records)}
       />

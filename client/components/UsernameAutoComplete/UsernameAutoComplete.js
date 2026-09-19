@@ -1,3 +1,4 @@
+// @ts-check
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { Select } from 'antd';
@@ -36,20 +37,28 @@ const Option = Select.Option;
  * }
  *
  */
+
+/**
+ * @param {any} props
+ */
 export default function UsernameAutoComplete(props) {
-  const [dataSource, setDataSource] = useState([]);
+  const [dataSource, setDataSource] = useState(/** @type {any[]} */ ([]));
   const [fetching, setFetching] = useState(false);
 
   // 搜索回调
+  /**
+   * @param {string} value
+   */
   const handleSearch = value => {
     const params = { q: value };
     setFetching(true);
-    axios.get('/api/user/search', { params }).then(data => {
+    axios.get('/api/user/search', { params }).then((/** @type {any} */ data) => {
+      /** @type {any[]} */
       const userList = [];
       data = data.data.data;
 
       if (data) {
-        data.forEach(v =>
+        data.forEach((/** @type {any} */ v) =>
           userList.push({
             username: v.username,
             id: v.uid
@@ -62,6 +71,9 @@ export default function UsernameAutoComplete(props) {
   };
 
   // 选中候选词时
+  /**
+   * @param {any} value
+   */
   const handleChange = value => {
     setDataSource([]);
     setFetching(false);

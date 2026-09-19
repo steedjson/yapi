@@ -1,3 +1,4 @@
+// @ts-check
 import './ProjectCard.scss';
 import React, { useMemo, useRef } from 'react';
 import { Card, Tooltip, Modal, Alert, Input, message } from 'antd';
@@ -14,6 +15,9 @@ import { getProject, checkProjectName, copyProjectMsg } from '../../reducer/modu
 import { trim } from '../../common.js';
 const confirm = Modal.confirm;
 
+/**
+ * @param {any} props
+ */
 export default function ProjectCard(props) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -27,6 +31,9 @@ export default function ProjectCard(props) {
   latestRef.current = { projectData, uid, callbackResult, dispatch };
 
   // 复制项目
+  /**
+   * @param {string} projectName
+   */
   async function copy(projectName) {
     const id = latestRef.current.projectData._id;
 
@@ -63,7 +70,9 @@ export default function ProjectCard(props) {
         </div>
       ),
       async onOk() {
-        const projectName = trim(document.getElementById('project_name').value);
+        const projectName = trim(
+          (/** @type {any} */ (document.getElementById('project_name'))).value
+        );
 
         // 查询项目名称是否重复
         const group_id = projectData.group_id;
@@ -80,7 +89,7 @@ export default function ProjectCard(props) {
       debounce(() => {
         const { projectData: data, dispatch: d, callbackResult: cb } = latestRef.current;
         const id = data.projectid || data._id;
-        d(delFollow(id)).then(res => {
+        d(delFollow(id)).then((/** @type {any} */ res) => {
           if (res.payload.data.errcode === 0) {
             cb();
             // message.success('已取消关注！');  // 星号已做出反馈 无需重复提醒用户
@@ -102,7 +111,7 @@ export default function ProjectCard(props) {
           icon: data.icon || constants.PROJECT_ICON[0],
           color: data.color || constants.PROJECT_COLOR.blue
         };
-        d(addFollow(param)).then(res => {
+        d(addFollow(param)).then((/** @type {any} */ res) => {
           if (res.payload.data.errcode === 0) {
             cb();
             // message.success('已添加关注！');  // 星号已做出反馈 无需重复提醒用户
@@ -124,7 +133,10 @@ export default function ProjectCard(props) {
           <div
             className="ui-logo"
             style={{
-              backgroundColor: constants.PROJECT_COLOR[projectData.color] || constants.PROJECT_COLOR.blue
+              backgroundColor:
+                (/** @type {Record<string, string>} */ (constants.PROJECT_COLOR))[
+                  projectData.color
+                ] || constants.PROJECT_COLOR.blue
             }}
           >
             {React.createElement(getV4Icon(projectData.icon || 'star-o'))}

@@ -1,3 +1,4 @@
+// @ts-check
 // react-router v6 的非数据路由（HistoryRouter）不支持 <Prompt>/getUserConfirmation，
 // 这里基于 history.block 自实现等价的「路由离开确认」：
 // when 为真时拦截一切导航（含浏览器前进/后退），弹出与原 getUserConfirmation
@@ -8,6 +9,9 @@ import PropTypes from 'prop-types';
 import MyPopConfirm from '../MyPopConfirm/MyPopConfirm';
 import history from '../../history';
 
+/**
+ * @param {{ when?: any, message?: any }} props
+ */
 export default function BlockPrompt({ when, message }) {
   const whenRef = useRef(when);
   whenRef.current = when;
@@ -24,6 +28,7 @@ export default function BlockPrompt({ when, message }) {
 
   useEffect(() => {
     if (!when) return undefined;
+    /** @type {any} */
     let unblock = null;
 
     // 确认放行后：先解除拦截再重放导航；导航完成后若组件仍挂载且仍处于编辑态，
@@ -41,7 +46,7 @@ export default function BlockPrompt({ when, message }) {
         root.render(
           <MyPopConfirm
             msg={msg}
-            callback={result => {
+            callback={(/** @type {boolean} */ result) => {
               root.unmount();
               container.remove();
               if (result) {

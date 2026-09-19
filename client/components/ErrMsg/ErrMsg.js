@@ -1,3 +1,4 @@
+// @ts-check
 import React from 'react';
 import PropTypes from 'prop-types';
 import { useNavigate } from 'react-router-dom';
@@ -23,6 +24,10 @@ import './ErrMsg.scss';
  * @type string
  * @description 一般用于描述错误信息名称
  * @returns {object}
+ */
+
+/**
+ * @param {any} props
  */
 function ErrMsg(props) {
   const navigate = useNavigate();

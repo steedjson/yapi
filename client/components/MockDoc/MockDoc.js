@@ -1,3 +1,4 @@
+// @ts-check
 import './MockDoc.scss';
 import React from 'react';
 import PropTypes from 'prop-types';
@@ -45,7 +46,7 @@ function MockDoc({ mock = defaultMock, doc = defaultDoc }) {
   htmlData = arrToHtml(htmlData, doc);
   return (
     <div className="MockDoc">
-      {htmlData.map(function(item, i) {
+      {htmlData.map(function(/** @type {any} */ item, /** @type {number} */ i) {
         {
           /*//类型：Object  必有字段  备注：qwqwqw*/
         }
@@ -92,6 +93,9 @@ MockDoc.propTypes = {
   doc: PropTypes.array
 };
 
+/**
+ * @param {number} count
+ */
 function produceSpace(count) {
   var space = [];
   for (var i = 0; i < count; i++) {
@@ -100,9 +104,16 @@ function produceSpace(count) {
   return space;
 }
 
+/**
+ * @param {any} str
+ */
 function setStrToHtml(str) {
   return <span dangerouslySetInnerHTML={{ __html: sanitizeHtml(`${str}`) }} />;
 }
+/**
+ * @param {any} mockArr
+ * @param {any} mock
+ */
 function arrToHtml(mockArr, mock) {
   for (var i in mockArr) {
     for (var item in mock) {
@@ -114,6 +125,12 @@ function arrToHtml(mockArr, mock) {
   return mockArr;
 }
 
+/**
+ * @param {any} mock
+ * @param {any} [html]
+ * @param {any} [space]
+ * @param {any} [key]
+ */
 function mockToArr(mock, html, space, key) {
   html = html || [];
   space = space || 0;
@@ -185,7 +202,8 @@ function mockToArr(mock, html, space, key) {
       if (mock.constructor === Array) {
         html.push({
           space: space,
-          str: `<span class = "valueLight">${mock[i]}</span>` + ','
+          // mock.constructor === Array 会把 mock 收窄成数组类型，此处用 any 中转恢复字符串索引
+          str: `<span class = "valueLight">${(/** @type {any} */ (mock))[i]}</span>` + ','
         });
       } else {
         if (mock.constructor != Array) {
@@ -205,7 +223,8 @@ function mockToArr(mock, html, space, key) {
         } else {
           html.push({
             space: space,
-            str: index + ' : ' + `<span class = "valueLight">${mock[i]}</span>` + ',',
+            // 同上：constructor === Array 收窄后以 any 中转恢复字符串索引
+            str: index + ' : ' + `<span class = "valueLight">${(/** @type {any} */ (mock))[i]}</span>` + ',',
             key: key.join('')
           });
         }
