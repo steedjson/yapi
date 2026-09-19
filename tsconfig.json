@@ -116,6 +116,8 @@
     "client/containers/Project/Interface/InterfaceList/InterfaceContent.js",
     "client/containers/Project/Interface/InterfaceList/Edit.js",
     "client/containers/Project/Interface/InterfaceList/InterfaceEditForm.js",
+    "client/containers/Project/Interface/InterfaceList/interfaceEditFormUtils/formDefaults.js",
+    "client/containers/Project/Interface/InterfaceList/interfaceEditFormUtils/paramTemplates.js",
     "client/containers/Project/Interface/InterfaceList/View.js",
     "client/containers/Project/Interface/InterfaceList/AddInterfaceForm.js",
     "client/containers/Project/Interface/InterfaceList/AddInterfaceCatForm.js",
