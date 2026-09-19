@@ -1,3 +1,4 @@
+// @ts-check
 const baseController = require('controllers/base.js');
 const yapi = require('yapi.js');
 const syncModel = require('../syncModel.js');
@@ -5,6 +6,9 @@ const projectModel = require('models/project.js');
 const interfaceSyncUtils = require('../interfaceSyncUtils.js')
 
 class syncController extends baseController {
+  /**
+   * @param {any} ctx Koa 请求上下文
+   */
   constructor(ctx) {
     super(ctx);
     this.syncModel = yapi.getInst(syncModel);

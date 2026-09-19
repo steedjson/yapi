@@ -1,3 +1,4 @@
+// @ts-check
 import React from 'react';
 import { EditOutlined } from '@ant-design/icons';
 import PropTypes from 'prop-types';
@@ -6,6 +7,10 @@ import { Link } from 'react-router-dom';
 import sanitizeHtml from 'client/utils/sanitize.js';
 import 'client/components/MarkdownEditor/contents.scss';
 
+/**
+ * Wiki 只读视图组件。
+ * @param {any} props
+ */
 const WikiView = props => {
   const { editorEable, onEditor, uid, username, editorTime, desc } = props;
   return (

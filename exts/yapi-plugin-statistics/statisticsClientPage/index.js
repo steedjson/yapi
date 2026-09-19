@@ -1,6 +1,7 @@
 /**
  * Created by gxl.gao on 2017/10/25.
  */
+// @ts-check
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import axios from 'axios';
@@ -13,6 +14,10 @@ import { setBreadcrumb } from 'client/reducer/modules/user';
 import StatisChart from './StatisChart';
 import StatisTable from './StatisTable';
 
+/**
+ * 数据统计概览行组件。
+ * @param {any} props
+ */
 const CountOverview = props => (
   <Row type="flex" justify="space-start" className="m-row">
     <Col className="gutter-row" span={6}>
@@ -60,6 +65,10 @@ CountOverview.propTypes = {
   date: PropTypes.object
 };
 
+/**
+ * 系统状况概览行组件。
+ * @param {any} props
+ */
 const StatusOverview = props => (
   <Row type="flex" justify="space-start" className="m-row">
     <Col className="gutter-row" span={6}>
@@ -121,6 +130,9 @@ class statisticsPage extends Component {
     setBreadcrumb: PropTypes.func
   };
 
+  /**
+   * @param {any} props
+   */
   constructor(props) {
     super(props);
     this.state = {
@@ -177,7 +189,7 @@ class statisticsPage extends Component {
     let result = await axios.get('/api/plugin/statismock/group_data_statis');
     if (result.data.errcode === 0) {
       let statusData = result.data.data;
-      statusData.map(item => {
+      statusData.map((/** @type {any} */ item) => {
         return (item['key'] = item.name);
       });
       this.setState({

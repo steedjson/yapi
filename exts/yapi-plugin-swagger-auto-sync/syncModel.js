@@ -1,3 +1,4 @@
+// @ts-check
 const yapi = require('yapi.js');
 const baseModel = require('models/base.js');
 
@@ -27,12 +28,18 @@ class syncModel extends baseModel {
     };
   }
 
+  /**
+   * @param {any} id
+   */
   getByProjectId(id) {
     return this.model.findOne({
       project_id: id
-    }) 
+    })
   }
 
+  /**
+   * @param {any} project_id
+   */
   delByProjectId(project_id){
     // mongoose 7 起移除 Model.remove，等价替换为 deleteMany。
     return this.model.deleteMany({
@@ -40,6 +47,9 @@ class syncModel extends baseModel {
     })
   }
 
+  /**
+   * @param {any} data
+   */
   save(data) {
     data.up_time = yapi.commons.time();
     let m = new this.model(data);
@@ -56,6 +66,9 @@ class syncModel extends baseModel {
       .exec();
   }
 
+  /**
+   * @param {any} data
+   */
   up(data) {
     let id = data.id;
     delete data.id;
@@ -65,6 +78,10 @@ class syncModel extends baseModel {
     }, data)
   }
 
+  /**
+   * @param {any} id
+   * @param {any} data
+   */
   upById(id, data) {
     delete data.id;
     data.up_time = yapi.commons.time();
@@ -73,6 +90,9 @@ class syncModel extends baseModel {
     }, data)
   }
 
+  /**
+   * @param {any} id
+   */
   del(id){
     return this.model.deleteMany({
       _id: id

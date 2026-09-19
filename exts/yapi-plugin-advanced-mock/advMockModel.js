@@ -1,3 +1,4 @@
+// @ts-check
 const yapi = require('yapi.js');
 const baseModel = require('models/base.js');
 
@@ -17,6 +18,9 @@ class advMockModel extends baseModel {
     };
   }
 
+  /**
+   * @param {any} interface_id
+   */
   get(interface_id) {
 
     return this.model.findOne({
@@ -24,6 +28,9 @@ class advMockModel extends baseModel {
     });
   }
 
+  /**
+   * @param {any} interface_id
+   */
   delByInterfaceId(interface_id) {
     // mongoose 7 起移除 Model.remove，等价替换为 deleteMany。
     return this.model.deleteMany({
@@ -31,18 +38,27 @@ class advMockModel extends baseModel {
     });
   }
 
+  /**
+   * @param {any} project_id
+   */
   delByProjectId(project_id){
     return this.model.deleteMany({
       project_id: project_id
     })
   }
 
+  /**
+   * @param {any} data
+   */
   save(data) {
     data.up_time = yapi.commons.time();
     let m = new this.model(data);
     return m.save();
   }
 
+  /**
+   * @param {any} data
+   */
   up(data) {
     data.up_time = yapi.commons.time();
     // mongoose 7 起移除 Model.update，接口维度单条配置，等价替换为 updateOne（保留 upsert）。

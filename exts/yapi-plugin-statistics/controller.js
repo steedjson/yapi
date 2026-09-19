@@ -1,6 +1,7 @@
 /**
  * Created by gxl.gao on 2017/10/24.
  */
+// @ts-check
 const baseController = require('controllers/base.js');
 const statisMockModel = require('./statisMockModel.js');
 const groupModel = require('models/group.js');
@@ -14,6 +15,9 @@ const os = require('os');
 let cpu = require('cpu-load');
 
 class statisMockController extends baseController {
+  /**
+   * @param {any} ctx Koa 请求上下文
+   */
   constructor(ctx) {
     super(ctx);
     this.Model = yapi.getInst(statisMockModel);
@@ -29,7 +33,8 @@ class statisMockController extends baseController {
    * @method get
    * @category statistics
    * @foldnumber 10
-   * @returns {Object}
+   * @returns {Promise<any>}
+   * @param {any} ctx Koa 请求上下文
    */
   async getStatisCount(ctx) {
     try {
@@ -44,7 +49,7 @@ class statisMockController extends baseController {
         interfaceCount,
         interfaceCaseCount
       }));
-    } catch (err) {
+    } catch (/** @type {any} */ err) {
       ctx.body = yapi.commons.resReturn(null, 400, err.message);
     }
   }
@@ -55,21 +60,22 @@ class statisMockController extends baseController {
    * @method get
    * @category statistics
    * @foldnumber 10
-   * @returns {Object}
+   * @returns {Promise<any>}
+   * @param {any} ctx Koa 请求上下文
    */
   async getMockDateList(ctx) {
     try {
       let mockCount = await this.Model.getTotalCount();
       let mockDateList = [];
 
-      if (!this.getRole() === 'admin') {
+      if ((/** @type {any} */ (!this.getRole())) === 'admin') {
         return (ctx.body = yapi.commons.resReturn(null, 405, '没有权限'));
       }
       //  默认时间是30 天为一周期
       let dateInterval = commons.getDateRange();
       mockDateList = await this.Model.getDayCount(dateInterval);
       return (ctx.body = yapi.commons.resReturn({ mockCount, mockDateList }));
-    } catch (err) {
+    } catch (/** @type {any} */ err) {
       ctx.body = yapi.commons.resReturn(null, 400, err.message);
     }
   }
@@ -80,7 +86,8 @@ class statisMockController extends baseController {
    * @method get
    * @category statistics
    * @foldnumber 10
-   * @returns {Object}
+   * @returns {Promise<any>}
+   * @param {any} ctx Koa 请求上下文
    */
   async getSystemStatus(ctx) {
     try {
@@ -108,7 +115,7 @@ class statisMockController extends baseController {
         load: load.toFixed(2)
       };
       return (ctx.body = yapi.commons.resReturn(data));
-    } catch (err) {
+    } catch (/** @type {any} */ err) {
       ctx.body = yapi.commons.resReturn(null, 400, err.message);
     }
   }
@@ -116,7 +123,7 @@ class statisMockController extends baseController {
   checkEmail() {
     return new Promise(resolve => {
       let result = {};
-      yapi.mail.verify(error => {
+      yapi.mail.verify((/** @type {any} */ error) => {
         if (error) {
           result = '不可用';
           resolve(result);
@@ -128,6 +135,9 @@ class statisMockController extends baseController {
     });
   }
 
+  /**
+   * @param {any} ctx Koa 请求上下文
+   */
   async groupDataStatis(ctx) {
     try {
       let groupData = await this.groupModel.list();
@@ -158,14 +168,14 @@ class statisMockController extends baseController {
         data.mock = mockCount;
       }
       return (ctx.body = yapi.commons.resReturn(result));
-    } catch (err) {
+    } catch (/** @type {any} */ err) {
       ctx.body = yapi.commons.resReturn(null, 400, err.message);
     }
   }
 
   cupLoad() {
     return new Promise(resolve => {
-      cpu(1000, function(load) {
+      cpu(1000, function(/** @type {any} */ load) {
         resolve(load);
       });
     });

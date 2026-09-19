@@ -1,3 +1,4 @@
+// @ts-check
 const baseController = require('controllers/base.js');
 const advModel = require('./advMockModel.js');
 const yapi = require('yapi.js');
@@ -6,6 +7,9 @@ const userModel = require('models/user.js');
 const config = require('./index.js');
 
 class advMockController extends baseController {
+  /**
+   * @param {any} ctx Koa 请求上下文
+   */
   constructor(ctx) {
     super(ctx);
     this.Model = yapi.getInst(advModel);
@@ -13,6 +17,9 @@ class advMockController extends baseController {
     this.userModel = yapi.getInst(userModel);
   }
 
+  /**
+   * @param {any} ctx Koa 请求上下文
+   */
   async getMock(ctx) {
     let id = ctx.query.interface_id;
     let mockData = await this.Model.get(id);
@@ -22,6 +29,9 @@ class advMockController extends baseController {
     return (ctx.body = yapi.commons.resReturn(mockData));
   }
 
+  /**
+   * @param {any} ctx Koa 请求上下文
+   */
   async upMock(ctx) {
     let params = ctx.request.body;
     try {
@@ -53,11 +63,14 @@ class advMockController extends baseController {
         result = await this.Model.save(data);
       }
       return (ctx.body = yapi.commons.resReturn(result));
-    } catch (e) {
+    } catch (/** @type {any} */ e) {
       return (ctx.body = yapi.commons.resReturn(null, 400, e.message));
     }
   }
 
+  /**
+   * @param {any} ctx Koa 请求上下文
+   */
   async list(ctx) {
     try {
       let id = ctx.query.interface_id;
@@ -74,11 +87,14 @@ class advMockController extends baseController {
       }
 
       ctx.body = yapi.commons.resReturn(result);
-    } catch (err) {
+    } catch (/** @type {any} */ err) {
       ctx.body = yapi.commons.resReturn(null, 400, err.message);
     }
   }
 
+  /**
+   * @param {any} ctx Koa 请求上下文
+   */
   async getCase(ctx) {
     let id = ctx.query.id;
     if (!id) {
@@ -91,6 +107,9 @@ class advMockController extends baseController {
     ctx.body = yapi.commons.resReturn(result);
   }
 
+  /**
+   * @param {any} ctx Koa 请求上下文
+   */
   async saveCase(ctx) {
     let params = ctx.request.body;
 
@@ -105,6 +124,7 @@ class advMockController extends baseController {
       return (ctx.body = yapi.commons.resReturn(null, 408, '请输入 Response Body'));
     }
 
+    /** @type {any} */
     let data = {
       interface_id: params.interface_id,
       project_id: params.project_id,
@@ -126,7 +146,9 @@ class advMockController extends baseController {
       return (ctx.body = yapi.commons.resReturn(null, 408, '非法的 httpCode'));
     }
 
-    let findRepeat, findRepeatParams;
+    let findRepeat;
+    /** @type {Record<string, any>} */
+    let findRepeatParams;
     findRepeatParams = {
       project_id: data.project_id,
       interface_id: data.interface_id,
@@ -159,6 +181,9 @@ class advMockController extends baseController {
     return (ctx.body = yapi.commons.resReturn(result));
   }
 
+  /**
+   * @param {any} ctx Koa 请求上下文
+   */
   async delCase(ctx) {
     let id = ctx.request.body.id;
     if (!id) {
@@ -168,6 +193,9 @@ class advMockController extends baseController {
     return (ctx.body = yapi.commons.resReturn(result));
   }
 
+  /**
+   * @param {any} ctx Koa 请求上下文
+   */
   async hideCase(ctx) {
     let id = ctx.request.body.id;
     let enable = ctx.request.body.enable;

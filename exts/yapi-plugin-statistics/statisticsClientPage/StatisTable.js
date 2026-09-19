@@ -1,3 +1,4 @@
+// @ts-check
 import React from 'react';
 import { Table } from 'antd';
 import PropTypes from 'prop-types';
@@ -25,6 +26,10 @@ const columns = [
   }
 ];
 
+/**
+ * 分组数据详情表格组件。
+ * @param {any} props
+ */
 const StatisTable = props => {
   const { dataSource } = props;
   return (

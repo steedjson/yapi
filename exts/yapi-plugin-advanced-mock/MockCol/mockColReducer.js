@@ -1,3 +1,4 @@
+// @ts-check
 import axios from 'axios'
 
 import {  message } from 'antd'
@@ -10,6 +11,10 @@ const initialState = {
   list: []
 }
 
+/**
+ * @param {any} state
+ * @param {any} action
+ */
 export default (state = initialState, action) => {
   switch (action.type) {
     case FETCH_MOCK_COL:
@@ -23,6 +28,9 @@ export default (state = initialState, action) => {
 }
 
 // Action Creators
+/**
+ * @param {any} interfaceId
+ */
 export async function fetchMockCol(interfaceId) {
   let result = await axios.get('/api/plugin/advmock/case/list?interface_id=' + interfaceId);
   if(result.errcode !==0 ){

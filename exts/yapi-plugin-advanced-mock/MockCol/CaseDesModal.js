@@ -1,3 +1,4 @@
+// @ts-check
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import {
@@ -33,6 +34,9 @@ const formItemLayoutWithOutLabel = {
 };
 
 // 初始化输入数据
+/**
+ * @param {any} caseData
+ */
 function preProcess(caseData) {
   try {
     caseData = JSON.parse(JSON.stringify(caseData));
@@ -55,10 +59,10 @@ function preProcess(caseData) {
   caseData.params = caseData.params || {};
   const paramsArr = Object.keys(caseData.params).length
     ? Object.keys(caseData.params)
-        .map(key => {
+        .map((/** @type {any} */ key) => {
           return { name: key, value: caseData.params[key] };
         })
-        .filter(item => {
+        .filter((/** @type {any} */ item) => {
           if (typeof item.value === 'object') {
             caseData.paramsForm = 'json';
           }
@@ -75,6 +79,10 @@ function preProcess(caseData) {
   return caseData;
 }
 
+/**
+ * 期望编辑表单（antd4 Form 重构后保留原有字段与校验行为）。
+ * @param {any} props
+ */
 function CaseDesForm(props) {
   const [form] = Form.useForm();
   const [state, setState] = useState(preProcess(props.caseData));
@@ -83,28 +91,28 @@ function CaseDesForm(props) {
   const ipEnable = Form.useWatch('ip_enable', form) ?? state.ip_enable;
 
   // 处理request_body编译器
-  const handleRequestBody = d => {
-    setState(prev => ({ ...prev, res_body: d.text }));
+  const handleRequestBody = (/** @type {any} */ d) => {
+    setState((/** @type {any} */ prev) => ({ ...prev, res_body: d.text }));
   };
 
   // 处理参数编译器
-  const handleParams = d => {
-    setState(prev => ({ ...prev, params: d.text }));
+  const handleParams = (/** @type {any} */ d) => {
+    setState((/** @type {any} */ prev) => ({ ...prev, params: d.text }));
   };
 
   // 增加参数信息
-  const addValues = key => {
+  const addValues = (/** @type {any} */ key) => {
     let values = form.getFieldValue(key);
     values = values.concat({ name: '', value: '' });
-    setState(prev => ({ ...prev, [key]: values }));
+    setState((/** @type {any} */ prev) => ({ ...prev, [key]: values }));
   };
 
   // 删除参数信息
-  const removeValues = (key, index) => {
+  const removeValues = (/** @type {any} */ key, /** @type {any} */ index) => {
     let values = form.getFieldValue(key);
-    values = values.filter((val, index2) => index !== index2);
+    values = values.filter((/** @type {any} */ val, /** @type {any} */ index2) => index !== index2);
     form.setFieldsValue({ [key]: values });
-    setState(prev => ({ ...prev, [key]: values }));
+    setState((/** @type {any} */ prev) => ({ ...prev, [key]: values }));
   };
 
   // 处理参数
@@ -118,22 +126,23 @@ function CaseDesForm(props) {
       req_body_is_json_schema,
       req_params
     } = props.currInterface;
+    /** @type {any[]} */
     let keys = [];
     req_query &&
       Array.isArray(req_query) &&
-      req_query.forEach(item => {
+      req_query.forEach((/** @type {any} */ item) => {
         keys.push(item.name);
       });
     req_params &&
       Array.isArray(req_params) &&
-      req_params.forEach(item => {
+      req_params.forEach((/** @type {any} */ item) => {
         keys.push(item.name);
       });
 
     if (constants.HTTP_METHOD[method.toUpperCase()].request_body && req_body_type === 'form') {
       req_body_form &&
         Array.isArray(req_body_form) &&
-        req_body_form.forEach(item => {
+        req_body_form.forEach((/** @type {any} */ item) => {
           keys.push(item.name);
         });
     } else if (
@@ -158,13 +167,18 @@ function CaseDesForm(props) {
     return keys;
   };
 
+  /**
+   * @param {any} caseData
+   */
   const endProcess = caseData => {
+    /** @type {any[]} */
     const headers = [];
+    /** @type {Record<string, any>} */
     const params = {};
     const { paramsForm } = state;
     caseData.headers &&
       Array.isArray(caseData.headers) &&
-      caseData.headers.forEach(item => {
+      caseData.headers.forEach((/** @type {any} */ item) => {
         if (item.name) {
           headers.push({
             name: item.name,
@@ -174,7 +188,7 @@ function CaseDesForm(props) {
       });
     caseData.paramsArr &&
       Array.isArray(caseData.paramsArr) &&
-      caseData.paramsArr.forEach(item => {
+      caseData.paramsArr.forEach((/** @type {any} */ item) => {
         if (item.name) {
           params[item.name] = item.value;
         }
@@ -196,6 +210,9 @@ function CaseDesForm(props) {
     return caseData;
   };
 
+  /**
+   * @param {any} values
+   */
   const handleOk = values => {
     values.res_body = state.res_body;
     values.params = state.params;
@@ -216,10 +233,14 @@ function CaseDesForm(props) {
     delay
   } = state;
 
+  /**
+   * @param {any[]} values
+   * @param {any} title
+   */
   const valuesTpl = (values, title) => {
     const dataSource = getParamsKey();
     const display = paramsForm === 'json' ? 'none' : '';
-    return values.map((item, index) => (
+    return values.map((/** @type {any} */ item, /** @type {any} */ index) => (
       <div key={index} className="paramsArr" style={{ display }}>
         <FormItem
           {...(index === 0 ? formItemLayout : formItemLayoutWithOutLabel)}
@@ -230,9 +251,9 @@ function CaseDesForm(props) {
             <Col span={10}>
               <FormItem name={['paramsArr', index, 'name']} initialValue={item.name}>
                 <AutoComplete
-                  options={dataSource.map(item => ({ value: item, label: item }))}
+                  options={dataSource.map((/** @type {any} */ item) => ({ value: item, label: item }))}
                   placeholder="参数名称"
-                  filterOption={(inputValue, option) =>
+                  filterOption={(/** @type {any} */ inputValue, /** @type {any} */ option) =>
                     option.value.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
                   }
                 />
@@ -256,9 +277,13 @@ function CaseDesForm(props) {
       </div>
     ));
   };
+  /**
+   * @param {any[]} values
+   * @param {any} title
+   */
   const headersTpl = (values, title) => {
     const dataSource = constants.HTTP_REQUEST_HEADER;
-    return values.map((item, index) => (
+    return values.map((/** @type {any} */ item, /** @type {any} */ index) => (
       <div key={index} className="headers">
         <FormItem
           {...(index === 0 ? formItemLayout : formItemLayoutWithOutLabel)}
@@ -269,9 +294,9 @@ function CaseDesForm(props) {
             <Col span={10}>
               <FormItem name={['headers', index, 'name']} initialValue={item.name}>
                 <AutoComplete
-                  options={dataSource.map(item => ({ value: item, label: item }))}
+                  options={dataSource.map((/** @type {any} */ item) => ({ value: item, label: item }))}
                   placeholder="参数名称"
-                  filterOption={(inputValue, option) =>
+                  filterOption={(/** @type {any} */ inputValue, /** @type {any} */ option) =>
                     option.value.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
                   }
                 />
@@ -303,14 +328,15 @@ function CaseDesForm(props) {
       onOk={() => form.submit()}
       width={780}
       onCancel={() => onCancel()}
-      afterClose={() => setState(prev => ({ ...prev, paramsForm: 'form' }))}
+      afterClose={() => setState((/** @type {any} */ prev) => ({ ...prev, paramsForm: 'form' }))}
       className="case-des-modal"
     >
       <Form
         form={form}
         onFinish={handleOk}
-        onFinishFailed={({ errorFields }) => {
+        onFinishFailed={(/** @type {any} */ errorInfo) => {
           // 对齐原 validateFieldsAndScroll:校验失败滚动到首个出错字段
+          const { errorFields } = errorInfo;
           if (errorFields && errorFields.length) {
             form.scrollToField(errorFields[0].name);
           }
@@ -369,8 +395,8 @@ function CaseDesForm(props) {
               checkedChildren="JSON"
               unCheckedChildren="JSON"
               checked={paramsForm === 'json'}
-              onChange={bool => {
-                setState(prev => ({ ...prev, paramsForm: bool ? 'json' : 'form' }));
+              onChange={(/** @type {any} */ bool) => {
+                setState((/** @type {any} */ prev) => ({ ...prev, paramsForm: bool ? 'json' : 'form' }));
               }}
             />
           </Col>
@@ -469,7 +495,7 @@ CaseDesForm.propTypes = {
   visible: PropTypes.bool
 };
 
-const CaseDesModal = connect(state => {
+const CaseDesModal = connect((/** @type {any} */ state) => {
   return {
     currInterface: state.inter.curdata
   };

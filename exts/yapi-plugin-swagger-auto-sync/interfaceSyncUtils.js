@@ -1,3 +1,4 @@
+// @ts-check
 const schedule = require('node-schedule');
 const openController = require('controllers/open.js');
 const projectModel = require('models/project.js');
@@ -9,16 +10,25 @@ const { getToken } = require('utils/token');
 const jobMap = new Map();
 
 // 输出与原 md5 / sha.js 库保持一致的 hex 摘要
+/**
+ * @param {any} str
+ */
 function md5Hex(str) {
   return crypto.createHash('md5').update(String(str)).digest('hex');
 }
 
+/**
+ * @param {any} str
+ */
 function sha1Hex(str) {
   return crypto.createHash('sha1').update(String(str)).digest('hex');
 }
 
 class syncUtils {
 
+    /**
+     * @param {any} ctx Koa 请求上下文
+     */
     constructor(ctx) {
         yapi.commons.log("-------------------------------------swaggerSyncUtils constructor-----------------------------------------------");
         this.ctx = ctx;
@@ -66,6 +76,13 @@ class syncUtils {
     }
 
     //同步接口
+    /**
+     * @param {any} projectId 项目id
+     * @param {any} swaggerUrl 获取swagger的地址
+     * @param {any} syncMode 同步模式
+     * @param {any} uid 用户id
+     * @param {any} projectToken 项目token
+     */
     async syncInterface(projectId, swaggerUrl, syncMode, uid, projectToken) {
         yapi.commons.log('定时器触发, syncJsonUrl:' + swaggerUrl + ",合并模式:" + syncMode);
         let oldPorjectData;
@@ -94,7 +111,7 @@ class syncUtils {
                 this.saveSyncLog(0, syncMode, "数据格式出错，请检查", uid, projectId);
             }
             newSwaggerJsonData = JSON.stringify(newSwaggerJsonData)
-        } catch (e) {
+        } catch (/** @type {any} */ e) {
             this.saveSyncLog(0, syncMode, "获取数据失败，请检查", uid, projectId);
             yapi.commons.log('获取数据失败' + e.message)
         }
@@ -117,6 +134,7 @@ class syncUtils {
             merge: syncMode,
             token: projectToken
         }
+        /** @type {any} */
         let requestObj = {
             params: _params
         };
@@ -133,10 +151,16 @@ class syncUtils {
         this.saveSyncLog(requestObj.body.errcode, syncMode, requestObj.body.errmsg, uid, projectId);
     }
 
+    /**
+     * @param {any} projectId 项目id
+     */
     getSyncJob(projectId) {
         return jobMap.get(projectId);
     }
 
+    /**
+     * @param {any} projectId 项目id
+     */
     deleteSyncJob(projectId) {
         let jobItem = jobMap.get(projectId);
         if (jobItem) {
@@ -188,6 +212,9 @@ class syncUtils {
         }
     }
 
+    /**
+     * @param {any} uid 用户id
+     */
     getUid(uid) {
         return parseInt(uid, 10);
     }
@@ -207,15 +234,19 @@ class syncUtils {
         return '';
     }
 
+    /**
+     * 拉取远端 swagger json 内容
+     * @param {any} swaggerUrl 获取swagger的地址
+     */
     async getSwaggerContent(swaggerUrl) {
-        const axios = require('axios')
+        const axios = /** @type {any} */ (require('axios'))
         try {
             let response = await axios.get(swaggerUrl);
             if (response.status > 400) {
                 throw new Error(`http status "${response.status}"` + '获取数据失败，请确认 swaggerUrl 是否正确')
             }
             return response.data;
-        } catch (e) {
+        } catch (/** @type {any} */ e) {
             let response = e.response || {status: e.message || 'error'};
             throw new Error(`http status "${response.status}"` + '获取数据失败，请确认 swaggerUrl 是否正确')
         }

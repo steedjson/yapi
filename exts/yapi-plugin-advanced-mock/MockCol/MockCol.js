@@ -1,3 +1,4 @@
+// @ts-check
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import axios from 'axios';
@@ -12,7 +13,7 @@ import CaseDesModal from './CaseDesModal';
 import { json5_parse } from '../../../client/common';
 
 @connect(
-  state => {
+  (/** @type {any} */ state) => {
     return {
       list: state.mockCol.list,
       currInterface: state.inter.curdata,
@@ -33,12 +34,16 @@ export default class MockCol extends Component {
     currProject: PropTypes.object
   };
 
+  /** @type {any} */
   state = {
     caseData: {},
     caseDesModalVisible: false,
     isAdd: false
   };
 
+  /**
+   * @param {any} props
+   */
   constructor(props) {
     super(props);
   }
@@ -48,6 +53,10 @@ export default class MockCol extends Component {
     this.props.fetchMockCol(interfaceId);
   }
 
+  /**
+   * @param {any} record
+   * @param {any} [isAdd]
+   */
   openModal = (record, isAdd) => {
     return async () => {
       if (this.props.currInterface.res_body_is_json_schema && isAdd) {
@@ -74,7 +83,7 @@ export default class MockCol extends Component {
     };
   };
 
-  handleOk = async caseData => {
+  handleOk = async (/** @type {any} */ caseData) => {
     if (!caseData) {
       return null;
     }
@@ -89,7 +98,7 @@ export default class MockCol extends Component {
     if (!this.state.isAdd) {
       caseData.id = currcase._id;
     }
-    await axios.post('/api/plugin/advmock/case/save', caseData).then(async res => {
+    await axios.post('/api/plugin/advmock/case/save', caseData).then(async (/** @type {any} */ res) => {
       if (res.data.errcode === 0) {
         message.success(this.state.isAdd ? '添加成功' : '保存成功');
         await this.props.fetchMockCol(interface_id);
@@ -100,9 +109,9 @@ export default class MockCol extends Component {
     });
   };
 
-  deleteCase = async id => {
+  deleteCase = async (/** @type {any} */ id) => {
     const interface_id = this.props.match.params.actionId;
-    await axios.post('/api/plugin/advmock/case/del', { id }).then(async res => {
+    await axios.post('/api/plugin/advmock/case/del', { id }).then(async (/** @type {any} */ res) => {
       if (res.data.errcode === 0) {
         message.success('删除成功');
         await this.props.fetchMockCol(interface_id);
@@ -113,13 +122,13 @@ export default class MockCol extends Component {
   };
 
   // mock case 可以设置开启的关闭
-  openMockCase = async (id , enable=true)=> {
+  openMockCase = async (/** @type {any} */ id, /** @type {boolean} */ enable = true) => {
     const interface_id = this.props.match.params.actionId;
 
     await axios.post('/api/plugin/advmock/case/hide', {
       id,
       enable: !enable
-    }).then(async res => {
+    }).then(async (/** @type {any} */ res) => {
       if (res.data.errcode === 0) {
         message.success('修改成功');
         await this.props.fetchMockCol(interface_id);
@@ -147,11 +156,13 @@ export default class MockCol extends Component {
     };
 
     let ipFilters = [];
+    /** @type {Record<string, string>} */
     let ipObj = {};
     let userFilters = [];
+    /** @type {Record<string, string>} */
     let userObj = {};
     Array.isArray(data) &&
-      data.forEach(item => {
+      data.forEach(/** @param {any} item */ item => {
         ipObj[item.ip_enable ? item.ip : ''] = '';
         userObj[item.username] = '';
       });
@@ -174,13 +185,13 @@ export default class MockCol extends Component {
         title: 'ip',
         dataIndex: 'ip',
         key: 'ip',
-        render: (text, recode) => {
+        render: (/** @type {any} */ text, /** @type {any} */ recode) => {
           if (!recode.ip_enable) {
             text = '';
           }
           return text;
         },
-        onFilter: (value, record) =>
+        onFilter: (/** @type {any} */ value, /** @type {any} */ record) =>
           (record.ip === value && record.ip_enable) || (value === '无过滤' && !record.ip_enable),
         filters: ipFilters
       },
@@ -188,20 +199,20 @@ export default class MockCol extends Component {
         title: '创建人',
         dataIndex: 'username',
         key: 'username',
-        onFilter: (value, record) => record.username === value,
+        onFilter: (/** @type {any} */ value, /** @type {any} */ record) => record.username === value,
         filters: userFilters
       },
       {
         title: '编辑时间',
         dataIndex: 'up_time',
         key: 'up_time',
-        render: text => formatTime(text)
+        render: (/** @type {any} */ text) => formatTime(text)
       },
       {
         title: '操作',
         dataIndex: '_id',
         key: '_id',
-        render: (_id, recode) => {
+        render: (/** @type {any} */ _id, /** @type {any} */ recode) => {
           // console.log(recode)
           return (
             !isGuest && (
@@ -260,7 +271,7 @@ export default class MockCol extends Component {
             caseData={caseData}
             onOk={this.handleOk}
             onCancel={() => this.setState({ caseDesModalVisible: false })}
-            ref={this.saveFormRef}
+            ref={(/** @type {any} */ (this)).saveFormRef}
           />
         )}
       </div>

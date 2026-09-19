@@ -1,3 +1,4 @@
+// @ts-check
 const baseModel = require('models/base.js');
 
 class statisMockModel extends baseModel {
@@ -18,11 +19,17 @@ class statisMockModel extends baseModel {
     };
   }
 
+  /**
+   * @param {any} data
+   */
   save(data) {
     let m = new this.model(data);
     return m.save();
   }
 
+  /**
+   * @param {any} project_id
+   */
   get(project_id) {
     return this.model
       .findOne({
@@ -31,6 +38,10 @@ class statisMockModel extends baseModel {
       .exec();
   }
 
+  /**
+   * @param {any} id
+   * @param {any} data
+   */
   up(id, data) {
     // mongoose 7 起移除 Model.update，按 _id 单条更新等价替换为 updateOne。
     return this.model.updateOne(
@@ -42,6 +53,10 @@ class statisMockModel extends baseModel {
     );
   }
 
+  /**
+   * @param {any} id
+   * @param {any} uid
+   */
   upEditUid(id, uid) {
     return this.model.updateOne(
       {

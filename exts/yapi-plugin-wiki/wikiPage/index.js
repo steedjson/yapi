@@ -1,3 +1,4 @@
+// @ts-check
 import React, { Component } from 'react';
 import { message } from 'antd';
 import { connect } from 'react-redux';
@@ -10,7 +11,7 @@ import WikiView from './View.js';
 import WikiEditor from './Editor.js';
 
 @connect(
-  state => {
+  (/** @type {any} */ state) => {
     return {
       projectMsg: state.project.currProject
     };
@@ -18,8 +19,12 @@ import WikiEditor from './Editor.js';
   {}
 )
 class WikiPage extends Component {
+  /**
+   * @param {any} props
+   */
   constructor(props) {
     super(props);
+    /** @type {any} */
     this.state = {
       isEditor: false,
       isUpload: true,
@@ -48,8 +53,8 @@ class WikiPage extends Component {
     // willUnmount
     try {
       if (this.state.status === 'CLOSE') {
-        this.WebSocket.send('end');
-        this.WebSocket.close();
+        (/** @type {any} */ (this.WebSocket)).send('end');
+        (/** @type {any} */ (this.WebSocket)).close();
       }
     } catch (e) {
       return null;
@@ -60,7 +65,7 @@ class WikiPage extends Component {
     try {
       if (this.state.status === 'CLOSE') {
         const sendEnd = () => {
-          this.WebSocket.send('end');
+          (/** @type {any} */ (this.WebSocket)).send('end');
         };
         this.handleWebsocketAccidentClose(sendEnd);
       }
@@ -127,9 +132,9 @@ class WikiPage extends Component {
   onEditor = () => {
     // this.WebSocket.send('editor');
     const sendEditor = () => {
-      this.WebSocket.send('editor');
+      (/** @type {any} */ (this.WebSocket)).send('editor');
     };
-    this.handleWebsocketAccidentClose(sendEditor, status => {
+    this.handleWebsocketAccidentClose(sendEditor, (/** @type {any} */ status) => {
       // 如果websocket 启动不成功用户依旧可以对wiki 进行编辑
       if (!status) {
         this.setState({
@@ -140,6 +145,10 @@ class WikiPage extends Component {
   };
 
   // 处理websocket  意外断开问题
+  /**
+   * @param {any} fn
+   * @param {any} [callback] 旧调用存在不传 callback 的路径（endWebSocket），此时静默失败
+   */
   handleWebsocketAccidentClose = (fn, callback) => {
     // websocket 是否启动
     if (this.WebSocket) {
@@ -149,13 +158,16 @@ class WikiPage extends Component {
       } else {
         fn();
       }
-      callback(true);
+      (/** @type {any} */ (callback))(true);
     } else {
-      callback(false);
+      (/** @type {any} */ (callback))(false);
     }
   };
 
   //  获取数据
+  /**
+   * @param {any} params
+   */
   handleData = async params => {
     let result = await axios.get('/api/plugin/wiki_desc/get', { params });
     if (result.data.errcode === 0) {
@@ -175,6 +187,10 @@ class WikiPage extends Component {
   };
 
   // 数据上传
+  /**
+   * @param {any} desc
+   * @param {any} markdown
+   */
   onUpload = async (desc, markdown) => {
     const currProjectId = this.props.match.params.id;
     let option = {
@@ -200,7 +216,7 @@ class WikiPage extends Component {
   };
 
   // 邮件通知
-  onEmailNotice = e => {
+  onEmailNotice = (/** @type {any} */ e) => {
     this.setState({
       notice: e.target.checked
     });

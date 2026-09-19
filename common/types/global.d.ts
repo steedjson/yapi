@@ -227,6 +227,8 @@ declare module 'antd' {
   export const Timeline: any;
   // containers/Project 使用（P7c）：ProjectMember.js 引用 Badge。
   export const Badge: any;
+  // exts/yapi-plugin-advanced-mock（P8b）CaseDesModal.js 引用 InputNumber。
+  export const InputNumber: any;
   // client/theme.js 使用（P7d）：antd5 的 theme.darkAlgorithm（暗色皮肤算法）。
   export const theme: any;
 }
@@ -338,6 +340,12 @@ declare module 'client/components/CaseEnv' {
   export default CaseEnv;
 }
 
+// exts/yapi-plugin-wiki（P8b）Editor.js 引用 MarkdownEditor 编辑器组件。
+declare module 'client/components/MarkdownEditor' {
+  const MarkdownEditor: any;
+  export default MarkdownEditor;
+}
+
 declare module 'client/utils/sanitize.js' {
   function sanitizeHtml(dirty: any): any;
   export default sanitizeHtml;
@@ -346,6 +354,47 @@ declare module 'client/utils/sanitize.js' {
 declare module 'client/constants/variable.js' {
   const constants: any;
   export default constants;
+}
+
+// 以下 3 个声明供 exts 插件客户端组件（P8b advanced-mock）以 webpack 别名 client/...
+// 绝对路径引用的模块使用；目标文件均为运行时真实存在的 client 内文件，此处仅按
+// 使用到的导出形态声明最小子集，新增用法时需同步补充。
+declare module 'client/withRouter' {
+  /** react-router v6 兼容 HOC（client/withRouter.jsx），注入 match/params 等路由属性 */
+  function withRouter(Component: any): any;
+  export default withRouter;
+}
+
+declare module 'client/common.js' {
+  export function safeAssign(target: any, nextObj: any): any;
+  export function formatTime(timestamp: any): any;
+  export function json5_parse(json: any): any;
+}
+
+declare module 'client/reducer/modules/mockCol' {
+  export function fetchMockCol(interfaceId: any): any;
+}
+
+declare module 'client/reducer/modules/user' {
+  export function setBreadcrumb(data: any): any;
+}
+
+declare module 'client/reducer/modules/project' {
+  export function handleSwaggerUrlData(url: any): any;
+}
+
+// node-schedule 未内置类型且无对应 @types 包；swagger-auto-sync 插件（P8b）以
+// scheduleJob(cron, fn) / Job.cancel() 形态使用。
+declare module 'node-schedule' {
+  const schedule: any;
+  export = schedule;
+}
+
+// cpu-load 未内置类型且无对应 @types 包；statistics 插件以 cpu(1024, cb) 形态
+// 采样 CPU 负载（P8b）。
+declare module 'cpu-load' {
+  function cpuLoad(interval: number, callback: (load: any) => void): void;
+  export = cpuLoad;
 }
 
 declare module 'json-schema-editor-visual' {
@@ -424,14 +473,11 @@ interface Window {
   chrome?: any;
 }
 
-// webpack 别名 exts -> 仓库根 exts/（build/webpack.standalone.config.js alias），
-// tsconfig 未配置该映射；client/plugin-module.js（构建脚本 build/clientPluginModule.js
-// 生成）以 require('exts/yapi-plugin-*/client.js') 引入各内置插件的客户端入口，
-// 此处按 any 放宽，避免把 exts/ 插件源码拖入 client 类型化范围。
-declare module 'exts/*' {
-  const pluginClient: any;
-  export = pluginClient;
-}
+// webpack 别名 exts -> 仓库根 exts/（build/webpack.standalone.config.js alias）。
+// P8b 收官：全部 exts 插件文件已加 @ts-check 并登记 tsconfig include，
+// tsconfig paths 已配置 "exts/*" -> "./exts/*"，client/plugin-module.js 的
+// require('exts/...') 直接解析到真实受检文件，故删除原 'exts/*' 通配 any 存根
+// （P7d 评审遗留义务）。
 
 // 以下声明供 exts 数据类插件（P8a）服务端代码使用：插件 controller 经 yapi 插件机制
 // 加载时按裸模块名 require('controllers/base.js') / require('models/*.js') /
@@ -451,6 +497,12 @@ declare module 'controllers/*' {
 declare module 'models/*' {
   const model: any;
   export = model;
+}
+
+declare module 'utils/*' {
+  // swagger-auto-sync 插件（P8b）以 const { getToken } = require('utils/token') 解构使用，
+  // 故按命名导出声明；新增其他 utils 裸模块用法时需同步补充。
+  export function getToken(token: any, uid: any): any;
 }
 
 // 以下依赖为 exts 数据类插件（P8a）使用，未内置类型且无对应 @types 包，

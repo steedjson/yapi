@@ -1,3 +1,4 @@
+// @ts-check
 const yapi = require('../../server/yapi.js');
 const commons = require('../../server/utils/commons');
 const dbModule = require('../../server/utils/db.js');
@@ -6,7 +7,11 @@ const mongoose = require('mongoose');
 yapi.commons = commons;
 yapi.connect = dbModule.connect();
 
-const convert2Decimal = num => (num > 9 ? num : `0${num}`);
+const convert2Decimal = (/** @type {any} */ num) => (num > 9 ? num : `0${num}`);
+/**
+ * @param {any} val
+ * @param {string} [joinStr]
+ */
 const formatYMD = (val, joinStr = '-') => {
   let date = val;
   if (typeof val !== 'object') {
@@ -36,17 +41,18 @@ function run() {
 
   yapi.connect
     .then(function() {
-      let logCol = mongoose.connection.db.collection('statis_mock');
+      let logCol = /** @type {any} */ ((/** @type {*} */ (mongoose.connection.db)).collection('statis_mock'));
+      /** @type {any[]} */
       let arr = [];
       for (let i = 0; i < 11; i++) {
         if (arr.length >= 5) {
           logCol.insert(arr);
           arr = [];
         }
-        arr.push(data(i));
+        arr.push((/** @type {any} */ (data))(i));
       }
     })
-    .catch(function(err) {
+    .catch(function(/** @type {any} */ err) {
       throw new Error(err.message);
     });
 }

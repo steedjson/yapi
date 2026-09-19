@@ -1,3 +1,4 @@
+// @ts-check
 import React, { Component } from 'react';
 import { UploadOutlined } from '@ant-design/icons';
 import PropTypes from 'prop-types';
@@ -29,7 +30,11 @@ class WikiEditor extends Component {
           className="wiki-editor"
           style={{ display: !isConflict ? 'block' : 'none' }}
         >
-          <MarkdownEditor ref={el => (this.editor = el)} value={desc} height={500} />
+          <MarkdownEditor
+            ref={(/** @type {any} */ el) => (this.editor = el)}
+            value={desc}
+            height={500}
+          />
         </div>
         <div className="wiki-title wiki-up">
           <Button

@@ -1,3 +1,4 @@
+// @ts-check
 import React, { Component } from 'react';
 // import { connect } from 'react-redux'
 import axios from 'axios';
@@ -15,6 +16,9 @@ class AdvMock extends Component {
     match: PropTypes.object
   };
 
+  /**
+   * @param {any} props
+   */
   constructor(props) {
     super(props);
     this.state = {
@@ -33,7 +37,7 @@ class AdvMock extends Component {
       mock_script: this.state.mock_script,
       enable: this.state.enable
     };
-    axios.post('/api/plugin/advmock/save', params).then(res => {
+    axios.post('/api/plugin/advmock/save', params).then((/** @type {any} */ res) => {
       if (res.data.errcode === 0) {
         message.success('保存成功');
       } else {
@@ -61,7 +65,7 @@ class AdvMock extends Component {
     mockEditor({
       container: 'mock-script',
       data: that.state.mock_script,
-      onChange: function(d) {
+      onChange: function(/** @type {any} */ d) {
         that.setState({
           mock_script: d.text
         });
@@ -69,13 +73,13 @@ class AdvMock extends Component {
     });
   }
 
-  onChange = v => {
+  onChange = (/** @type {any} */ v) => {
     this.setState({
       enable: v
     });
   };
 
-  handleTapChange = e => {
+  handleTapChange = (/** @type {any} */ e) => {
     this.setState({
       tab: e.target.value
     });

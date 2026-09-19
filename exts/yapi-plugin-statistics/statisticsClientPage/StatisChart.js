@@ -1,6 +1,7 @@
 /**
  * Created by gxl.gao on 2017/10/25.
  */
+// @ts-check
 import React, { Component } from 'react';
 // import PropTypes from 'prop-types'
 import axios from 'axios';
@@ -9,6 +10,9 @@ import { Spin } from 'antd';
 class StatisChart extends Component {
   static propTypes = {};
 
+  /**
+   * @param {any} props
+   */
   constructor(props) {
     super(props);
     this.state = {

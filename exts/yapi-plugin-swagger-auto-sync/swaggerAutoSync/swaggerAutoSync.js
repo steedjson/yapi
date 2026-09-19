@@ -1,3 +1,4 @@
+// @ts-check
 import React, { useState, useEffect } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
@@ -32,9 +33,13 @@ const tailFormItemLayout = {
   }
 };
 
+/**
+ * Swagger 自动同步设置表单。
+ * @param {any} props
+ */
 function ProjectInterfaceSync(props) {
   const [form] = Form.useForm();
-  const [sync_data, setSyncData] = useState({ is_sync_open: false });
+  const [sync_data, setSyncData] = useState(/** @type {any} */ ({ is_sync_open: false }));
   //默认每份钟同步一次,取一个随机数
   const [random_corn] = useState('*/2 * * * *');
 
@@ -61,6 +66,7 @@ function ProjectInterfaceSync(props) {
   }
 
   const handleSubmit = async () => {
+    /** @type {any} */
     let params = {
       project_id: props.projectId,
       is_sync_open: sync_data.is_sync_open,
@@ -69,9 +75,9 @@ function ProjectInterfaceSync(props) {
     if (sync_data._id) {
       params.id = sync_data._id;
     }
-    form.validateFields().then(values => {
+    form.validateFields().then((/** @type {any} */ values) => {
       let assignValue = Object.assign(params, values);
-      axios.post('/api/plugin/autoSync/save', assignValue).then(res => {
+      axios.post('/api/plugin/autoSync/save', assignValue).then((/** @type {any} */ res) => {
         if (res.data.errcode === 0) {
           message.success('保存成功');
         } else {
@@ -81,6 +87,11 @@ function ProjectInterfaceSync(props) {
     });
   };
 
+  /**
+   * @param {any} rule
+   * @param {any} value
+   * @param {any} callback
+   */
   const validSwaggerUrl = async (rule, value, callback) => {
     if (!value) return;
     try {
@@ -92,13 +103,18 @@ function ProjectInterfaceSync(props) {
   };
 
   // 是否开启
-  const onChange = v => {
-    setSyncData(prev => ({
+  const onChange = (/** @type {any} */ v) => {
+    setSyncData((/** @type {any} */ prev) => ({
       ...prev,
       is_sync_open: v
     }));
   };
 
+  /**
+   * @param {any} rule
+   * @param {any} value
+   * @param {any} callback
+   */
   const sync_cronCheck = (rule, value, callback) => {
     if (!value) return;
     value = value.trim();
@@ -230,7 +246,7 @@ ProjectInterfaceSync.propTypes = {
 };
 
 export default connect(
-  state => {
+  (/** @type {any} */ state) => {
     return {
       projectMsg: state.project.currProject
     };

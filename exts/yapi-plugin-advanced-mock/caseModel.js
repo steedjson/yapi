@@ -1,3 +1,4 @@
+// @ts-check
 const yapi = require('yapi.js');
 const baseModel = require('models/base.js');
 const  mongoose = require('mongoose');
@@ -28,16 +29,25 @@ class caseModel extends baseModel {
     };
   }
 
+  /**
+   * @param {any} data
+   */
   get(data) {
     return this.model.findOne(data);
   }
 
+  /**
+   * @param {any} id
+   */
   list(id){
     return this.model.find({
       interface_id: id
     })
   }
 
+  /**
+   * @param {any} interface_id
+   */
   delByInterfaceId(interface_id) {
     // mongoose 7 起移除 Model.remove，等价替换为 deleteMany。
     return this.model.deleteMany({
@@ -45,18 +55,27 @@ class caseModel extends baseModel {
     });
   }
 
+  /**
+   * @param {any} project_id
+   */
   delByProjectId(project_id){
     return this.model.deleteMany({
       project_id: project_id
     })
   }
 
+  /**
+   * @param {any} data
+   */
   save(data) {
     data.up_time = yapi.commons.time();
     let m = new this.model(data);
     return m.save();
   }
 
+  /**
+   * @param {any} data
+   */
   up(data) {
     let id = data.id;
     delete data.id;
@@ -66,6 +85,9 @@ class caseModel extends baseModel {
     }, data)
   }
 
+  /**
+   * @param {any} id
+   */
   del(id){
     return this.model.deleteMany({
       _id: id

@@ -1,3 +1,4 @@
+// @ts-check
 const baseController = require('controllers/base.js');
 const wikiModel = require('./wikiModel.js');
 const projectModel = require('models/project.js');
@@ -10,6 +11,9 @@ const fs = require('fs-extra');
 const path = require('path');
 const showDiffMsg = require('../../common/diff-view.js');
 class wikiController extends baseController {
+  /**
+   * @param {any} ctx Koa 请求上下文
+   */
   constructor(ctx) {
     super(ctx);
     this.Model = yapi.getInst(wikiModel);
@@ -22,7 +26,8 @@ class wikiController extends baseController {
    * @method get
    * @category statistics
    * @foldnumber 10
-   * @returns {Object}
+   * @returns {Promise<any>}
+   * @param {any} ctx Koa 请求上下文
    */
   async getWikiDesc(ctx) {
     try {
@@ -32,7 +37,7 @@ class wikiController extends baseController {
       }
       let result = await this.Model.get(project_id);
       return (ctx.body = yapi.commons.resReturn(result));
-    } catch (err) {
+    } catch (/** @type {any} */ err) {
       ctx.body = yapi.commons.resReturn(null, 400, err.message);
     }
   }
@@ -43,7 +48,8 @@ class wikiController extends baseController {
    * @method get
    * @category statistics
    * @foldnumber 10
-   * @returns {Object}
+   * @returns {Promise<any>}
+   * @param {any} ctx Koa 请求上下文
    */
 
   async uplodaWikiDesc(ctx) {
@@ -146,16 +152,19 @@ class wikiController extends baseController {
         data: logData
       });
       return 1;
-    } catch (err) {
+    } catch (/** @type {any} */ err) {
       ctx.body = yapi.commons.resReturn(null, 400, err.message);
     }
   }
+  /**
+   * @param {any} html
+   */
   diffHTML(html) {
     if (html.length === 0) {
       return `<span style="color: #555">没有改动，该操作未改动wiki数据</span>`;
     }
 
-    return html.map(item => {
+    return html.map((/** @type {any} */ item) => {
       return `<div>
       <h4 class="title">${item.title}</h4>
       <div>${item.content}</div>
@@ -164,10 +173,13 @@ class wikiController extends baseController {
   }
 
   // 处理编辑冲突
+  /**
+   * @param {any} ctx Koa 请求上下文
+   */
   async wikiConflict(ctx) {
     try {
       let result;
-      ctx.websocket.on('message', async message => {
+      ctx.websocket.on('message', async (/** @type {any} */ message) => {
         let id = parseInt(ctx.query.id, 10);
         if (!id) {
           return ctx.websocket.send('id 参数有误');
@@ -179,12 +191,17 @@ class wikiController extends baseController {
         }
       });
       ctx.websocket.on('close', async () => {});
-    } catch (err) {
+    } catch (/** @type {any} */ err) {
       yapi.commons.log(err, 'error');
     }
   }
 
+  /**
+   * @param {any} msg
+   * @param {any} result
+   */
   websocketMsgMap(msg, result) {
+    /** @type {any} */
     const map = {
       start: this.startFunc.bind(this),
       end: this.endFunc.bind(this),
@@ -195,6 +212,9 @@ class wikiController extends baseController {
   }
 
   // socket 开始链接
+  /**
+   * @param {any} result
+   */
   async startFunc(result) {
     if (result && result.edit_uid === this.getUid()) {
       await this.Model.upEditUid(result._id, 0);
@@ -202,6 +222,9 @@ class wikiController extends baseController {
   }
 
   // socket 结束链接
+  /**
+   * @param {any} result
+   */
   async endFunc(result) {
     if (result) {
       await this.Model.upEditUid(result._id, 0);
@@ -209,6 +232,9 @@ class wikiController extends baseController {
   }
 
   // 正在编辑
+  /**
+   * @param {any} result
+   */
   async editorFunc(result) {
     let userInst, userinfo, data;
     if (result && result.edit_uid !== 0 && result.edit_uid !== this.getUid()) {

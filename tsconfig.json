@@ -10,7 +10,11 @@
     "noEmit": true,
     // webpack 别名 common -> 仓库根 common/；TS 7.0.2 在无 baseUrl 时 paths 值须以 ./ 开头
     "paths": {
-      "common/*": ["./common/*"]
+      "common/*": ["./common/*"],
+      // webpack 别名 exts -> 仓库根 exts/；P8b 后 exts 全量插件文件已受检，
+      // client/plugin-module.js 的 require('exts/...') 直接解析到真实受检文件，
+      // 不再依赖 global.d.ts 的 'exts/*' 通配存根。
+      "exts/*": ["./exts/*"]
     },
     // 实测（TypeScript 7.0.2）：缺省 types 不会自动枚举 node_modules/@types，
     // 移除该字段后 server/utils/sandbox_child.js 立即出现 TS2591
@@ -196,6 +200,39 @@
     "exts/yapi-plugin-gen-services/controller.js",
     "exts/yapi-plugin-gen-services/server.js",
     "exts/yapi-plugin-gen-services/client.js",
-    "exts/yapi-plugin-gen-services/Services/Services.js"
+    "exts/yapi-plugin-gen-services/Services/Services.js",
+    "exts/yapi-plugin-advanced-mock/client.js",
+    "exts/yapi-plugin-advanced-mock/AdvMock.js",
+    "exts/yapi-plugin-advanced-mock/MockCol/MockCol.js",
+    "exts/yapi-plugin-advanced-mock/MockCol/CaseDesModal.js",
+    "exts/yapi-plugin-advanced-mock/MockCol/mockColReducer.js",
+    "exts/yapi-plugin-advanced-mock/server.js",
+    "exts/yapi-plugin-advanced-mock/controller.js",
+    "exts/yapi-plugin-advanced-mock/advMockModel.js",
+    "exts/yapi-plugin-advanced-mock/caseModel.js",
+    "exts/yapi-plugin-statistics/client.js",
+    "exts/yapi-plugin-statistics/statisticsClientPage/index.js",
+    "exts/yapi-plugin-statistics/statisticsClientPage/StatisChart.js",
+    "exts/yapi-plugin-statistics/statisticsClientPage/StatisTable.js",
+    "exts/yapi-plugin-statistics/server.js",
+    "exts/yapi-plugin-statistics/controller.js",
+    "exts/yapi-plugin-statistics/statisMockModel.js",
+    "exts/yapi-plugin-statistics/test.js",
+    "exts/yapi-plugin-statistics/util.js",
+    "exts/yapi-plugin-swagger-auto-sync/client.js",
+    "exts/yapi-plugin-swagger-auto-sync/server.js",
+    "exts/yapi-plugin-swagger-auto-sync/interfaceSyncUtils.js",
+    "exts/yapi-plugin-swagger-auto-sync/syncModel.js",
+    "exts/yapi-plugin-swagger-auto-sync/controller/syncController.js",
+    "exts/yapi-plugin-swagger-auto-sync/swaggerAutoSync/swaggerAutoSync.js",
+    "exts/yapi-plugin-wiki/client.js",
+    "exts/yapi-plugin-wiki/server.js",
+    "exts/yapi-plugin-wiki/controller.js",
+    "exts/yapi-plugin-wiki/wikiModel.js",
+    "exts/yapi-plugin-wiki/util.js",
+    "exts/yapi-plugin-wiki/wikiPage/index.js",
+    "exts/yapi-plugin-wiki/wikiPage/Editor.js",
+    "exts/yapi-plugin-wiki/wikiPage/View.js",
+    "exts/yapi-plugin-test/client.js"
   ]
 }

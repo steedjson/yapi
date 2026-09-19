@@ -1,10 +1,11 @@
+// @ts-check
 // 时间
-const convert2Decimal = num => (num > 9 ? num : `0${num}`);
+const convert2Decimal = (/** @type {any} */ num) => (num > 9 ? num : `0${num}`);
 
 /**
  * 格式化 年、月、日、时、分、秒
- * @param val {Object or String or Number} 日期对象 或是可new Date的对象或时间戳
- * @return {String} 2017-01-20 20:00:00
+ * @param {any} val 日期对象 或是可new Date的对象或时间戳
+ * @return {string} 2017-01-20 20:00:00
  */
 exports.formatDate = val => {
   let date = val;

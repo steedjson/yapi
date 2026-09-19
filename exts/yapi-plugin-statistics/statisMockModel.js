@@ -1,6 +1,7 @@
 /**
  * Created by gxl.gao on 2017/10/24.
  */
+// @ts-check
 const yapi = require('yapi.js');
 const baseModel = require('models/base.js');
 
@@ -20,12 +21,18 @@ class statisMockModel extends baseModel {
         };
     }
 
+    /**
+     * @param {any} id
+     */
     countByGroupId(id){
         return this.model.countDocuments({
             group_id: id
         })
     }
 
+    /**
+     * @param {any} data
+     */
     save(data) {
         let m = new this.model(data);
         return m.save();
@@ -35,9 +42,13 @@ class statisMockModel extends baseModel {
         return this.model.countDocuments({});
     }
 
+    /**
+     * @param {any[]} timeInterval
+     */
     async getDayCount(timeInterval) {
         let end = timeInterval[1];
         let start = timeInterval[0];
+        /** @type {any[]} */
         let data = [];
         const cursor = this.model.aggregate([
             {
@@ -55,7 +66,7 @@ class statisMockModel extends baseModel {
                 $sort: { _id: 1 }
             }
         ]).cursor({}).exec();
-		await cursor.eachAsync(doc => data.push(doc));
+		await cursor.eachAsync((/** @type {any} */ doc) => data.push(doc));
 		return data;
 
 	}
@@ -64,6 +75,10 @@ class statisMockModel extends baseModel {
         return this.model.find({}).select('date').exec();
     }
 
+    /**
+     * @param {any} id
+     * @param {any} data
+     */
     up(id, data) {
         data.up_time = yapi.commons.time();
         return this.model.updateOne({
