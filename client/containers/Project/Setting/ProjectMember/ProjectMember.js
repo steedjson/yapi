@@ -1,3 +1,4 @@
+// @ts-check
 import React, { useEffect, useRef, useState } from 'react';
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import {
@@ -32,8 +33,11 @@ import '../Setting.scss';
 
 const Option = Select.Option;
 
+/**
+ * @param {any} arr
+ */
 const arrayAddKey = arr => {
-  return arr.map((item, index) => {
+  return arr.map((/** @type {any} */ item, /** @type {number} */ index) => {
     return {
       ...item,
       key: index
@@ -53,7 +57,7 @@ const arrayAddKey = arr => {
  */
 const ProjectMember = () => {
   const dispatch = useDispatch();
-  const { id } = useParams();
+  const { id } = /** @type {any} */ (useParams());
   const projectMsg = useSelector(state => state.project.currProject);
   const uid = useSelector(state => state.user.uid);
   const projectList = useSelector(state => state.project.projectList);
@@ -62,7 +66,7 @@ const ProjectMember = () => {
   const projectMsgRef = useRef(projectMsg);
   projectMsgRef.current = projectMsg;
 
-  const [state, setState] = useState({
+  const [state, setState] = useState(/** @type {any} */ ({
     groupMemberList: [],
     projectMemberList: [],
     groupName: '',
@@ -72,12 +76,12 @@ const ProjectMember = () => {
     inputRole: 'dev',
     modalVisible: false,
     selectProjectId: 0
-  });
+  }));
 
   // 重新获取列表
   const reFetchList = () => {
-    dispatch(getProjectMemberList(id)).then(res => {
-      setState(prevState => ({
+    dispatch(getProjectMemberList(id)).then((/** @type {any} */ res) => {
+      setState((/** @type {any} */ prevState) => ({
         ...prevState,
         projectMemberList: arrayAddKey(res.payload.data.data),
         visible: false,
@@ -92,7 +96,7 @@ const ProjectMember = () => {
       const groupMemberList = await dispatch(fetchGroupMemberList(projectMsg.group_id));
       const groupMsg = await dispatch(fetchGroupMsg(projectMsg.group_id));
       const projectMemberList = await dispatch(getProjectMemberList(id));
-      setState(prevState => ({
+      setState((/** @type {any} */ prevState) => ({
         ...prevState,
         groupMemberList: groupMemberList.payload.data.data,
         groupName: groupMsg.payload.data.data.group_name,
@@ -103,15 +107,15 @@ const ProjectMember = () => {
   }, []);
 
   const showAddMemberModal = () => {
-    setState(prevState => ({
+    setState((/** @type {any} */ prevState) => ({
       ...prevState,
       visible: true
     }));
   };
 
   const showImportMemberModal = async () => {
-    await dispatch(fetchProjectList(projectMsgRef.current.group_id));
-    setState(prevState => ({
+    await dispatch((/** @type {any} */ (fetchProjectList))(projectMsgRef.current.group_id));
+    setState((/** @type {any} */ prevState) => ({
       ...prevState,
       modalVisible: true
     }));
@@ -122,6 +126,9 @@ const ProjectMember = () => {
   };
 
   // 增 - 添加成员
+  /**
+   * @param {any} memberUids
+   */
   const addMembers = memberUids => {
     dispatch(
       addMember({
@@ -129,12 +136,12 @@ const ProjectMember = () => {
         member_uids: memberUids,
         role: state.inputRole
       })
-    ).then(res => {
+    ).then((/** @type {any} */ res) => {
       if (!res.payload.data.errcode) {
         const { add_members, exist_members } = res.payload.data.data;
         const addLength = add_members.length;
         const existLength = exist_members.length;
-        setState(prevState => ({
+        setState((/** @type {any} */ prevState) => ({
           ...prevState,
           inputRole: 'dev',
           inputUids: []
@@ -145,17 +152,23 @@ const ProjectMember = () => {
     });
   };
   // 添加成员时 选择新增成员权限
+  /**
+   * @param {any} value
+   */
   const changeNewMemberRole = value => {
-    setState(prevState => ({
+    setState((/** @type {any} */ prevState) => ({
       ...prevState,
       inputRole: value
     }));
   };
 
   // 删 - 删除分组成员
+  /**
+   * @param {any} member_uid
+   */
   const deleteConfirm = member_uid => {
     return () => {
-      dispatch(delMember({ id, member_uid })).then(res => {
+      dispatch(delMember({ id, member_uid })).then((/** @type {any} */ res) => {
         if (!res.payload.data.errcode) {
           message.success(res.payload.data.errmsg);
           reFetchList(); // 添加成功后重新获取分组成员列表
@@ -165,10 +178,13 @@ const ProjectMember = () => {
   };
 
   // 改 - 修改成员权限
+  /**
+   * @param {any} e
+   */
   const changeUserRole = e => {
     const role = e.split('-')[0];
     const member_uid = e.split('-')[1];
-    dispatch(changeMemberRole({ id, member_uid, role })).then(res => {
+    dispatch(changeMemberRole({ id, member_uid, role })).then((/** @type {any} */ res) => {
       if (!res.payload.data.errcode) {
         message.success(res.payload.data.errmsg);
         reFetchList(); // 添加成功后重新获取分组成员列表
@@ -177,6 +193,10 @@ const ProjectMember = () => {
   };
 
   // 修改用户是否接收消息通知
+  /**
+   * @param {any} notice
+   * @param {any} member_uid
+   */
   const changeEmailNotice = async (notice, member_uid) => {
     await dispatch(changeMemberEmailNotice({ id, member_uid, notice }));
     reFetchList(); // 添加成功后重新获取项目成员列表
@@ -184,22 +204,25 @@ const ProjectMember = () => {
 
   // 关闭模态框
   const handleCancel = () => {
-    setState(prevState => ({
+    setState((/** @type {any} */ prevState) => ({
       ...prevState,
       visible: false
     }));
   };
   // 关闭批量导入模态框
   const handleModalCancel = () => {
-    setState(prevState => ({
+    setState((/** @type {any} */ prevState) => ({
       ...prevState,
       modalVisible: false
     }));
   };
 
   // 处理选择项目
+  /**
+   * @param {any} key
+   */
   const handleChange = key => {
-    setState(prevState => ({
+    setState((/** @type {any} */ prevState) => ({
       ...prevState,
       selectProjectId: key
     }));
@@ -209,26 +232,30 @@ const ProjectMember = () => {
   const handleModalOk = async () => {
     // 获取项目中的成员列表
     const menberList = await dispatch(getProjectMemberList(state.selectProjectId));
-    const memberUidList = menberList.payload.data.data.map(item => {
+    const memberUidList = menberList.payload.data.data.map((/** @type {any} */ item) => {
       return item.uid;
     });
     addMembers(memberUidList);
   };
 
+  /**
+   * @param {any} uids
+   */
   const onUserSelect = uids => {
-    setState(prevState => ({
+    setState((/** @type {any} */ prevState) => ({
       ...prevState,
       inputUids: uids
     }));
   };
 
   const isEmailChangeEable = state.role === 'owner' || state.role === 'admin';
+  /** @type {any[]} */
   const columns = [
     {
       title: projectMsg.name + ' 项目成员 (' + state.projectMemberList.length + ') 人',
       dataIndex: 'username',
       key: 'username',
-      render: (text, record) => {
+      render: (/** @type {any} */ text, /** @type {any} */ record) => {
         return (
           <div className="m-user">
             <img src={'/api/user/avatar?uid=' + record.uid} className="m-user-img" />
@@ -241,7 +268,7 @@ const ProjectMember = () => {
                   unCheckedChildren="关"
                   checked={record.email_notice}
                   disabled={!(isEmailChangeEable || record.uid === uid)}
-                  onChange={e => changeEmailNotice(e, record.uid)}
+                  onChange={(/** @type {any} */ e) => changeEmailNotice(e, record.uid)}
                 />
               </span>
             </Tooltip>
@@ -265,7 +292,7 @@ const ProjectMember = () => {
         ),
       key: 'action',
       className: 'member-opration',
-      render: (text, record) => {
+      render: (/** @type {any} */ text, /** @type {any} */ record) => {
         if (state.role === 'owner' || state.role === 'admin') {
           return (
             <div>
@@ -305,7 +332,7 @@ const ProjectMember = () => {
     }
   ];
   // 获取当前分组下的所有项目名称
-  const children = projectList.map((item, index) => (
+  const children = projectList.map((/** @type {any} */ item, /** @type {number} */ index) => (
     <Option key={index} value={'' + item._id}>
       {item.name}
     </Option>
@@ -385,7 +412,7 @@ const ProjectMember = () => {
           className="setting-group"
         >
           {state.groupMemberList.length ? (
-            state.groupMemberList.map((item, index) => {
+            state.groupMemberList.map((/** @type {any} */ item, /** @type {number} */ index) => {
               return (
                 <div key={index} className="card-item">
                   <img

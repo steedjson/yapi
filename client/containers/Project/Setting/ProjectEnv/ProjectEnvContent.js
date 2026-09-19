@@ -1,3 +1,4 @@
+// @ts-check
 import React, { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import './index.scss';
@@ -29,6 +30,9 @@ const initMap = {
   ]
 };
 
+/**
+ * @param {any} curdata
+ */
 function initState(curdata) {
   let header = [
     {
@@ -54,11 +58,11 @@ function initState(curdata) {
   const curGlobal = curdata.global;
 
   if (curheader && curheader.length !== 0) {
-    curheader.forEach(item => {
+    curheader.forEach((/** @type {any} */ item) => {
       if (item.name === 'Cookie') {
         let cookieStr = item.value;
         if (cookieStr) {
-          cookieStr = cookieStr.split(';').forEach(c => {
+          cookieStr = cookieStr.split(';').forEach((/** @type {any} */ c) => {
             if (c) {
               c = c.split('=');
               cookie.unshift({
@@ -75,16 +79,19 @@ function initState(curdata) {
   }
 
   if (curGlobal && curGlobal.length !== 0) {
-    curGlobal.forEach(item => {
+    curGlobal.forEach((/** @type {any} */ item) => {
       global.unshift(item);
     });
   }
   return { header, cookie, global };
 }
 
+/**
+ * @param {any} props
+ */
 function ProjectEnvContent(props) {
   const [form] = Form.useForm();
-  const [rows, setRows] = useState(initMap);
+  const [rows, setRows] = useState(/** @type {any} */ (initMap));
   // antd3 时代 protocol 是 addonBefore 内经表单装饰器绑定的字段;
   // antd4 下嵌套 Form.Item 会组合 name 路径,故改用本地 state,提交时并入 payload
   const [protocol, setProtocol] = useState(
@@ -101,26 +108,38 @@ function ProjectEnvContent(props) {
     }
   }, [props.projectMsg.name]);
 
+  /**
+   * @param {any} value
+   * @param {any} index
+   * @param {any} name
+   */
   const addHeader = (value, index, name) => {
-    setRows(prev => {
+    setRows((/** @type {any} */ prev) => {
       const nextHeader = prev[name][index + 1];
       if (nextHeader && typeof nextHeader === 'object') {
         return prev;
       }
       const data = { name: '', value: '' };
-      return { ...prev, [name]: [].concat(prev[name], data) };
+      return { ...prev, [name]: (/** @type {any[]} */ ([])).concat(prev[name], data) };
     });
   };
 
+  /**
+   * @param {any} key
+   * @param {any} name
+   */
   const delHeader = (key, name) => {
     let curValue = form.getFieldValue(name);
-    let newValue = curValue.filter((val, index) => {
+    let newValue = curValue.filter((/** @type {any} */ val, /** @type {number} */ index) => {
       return index !== key;
     });
     form.setFieldsValue({ [name]: newValue });
-    setRows(prev => ({ ...prev, [name]: newValue }));
+    setRows((/** @type {any} */ prev) => ({ ...prev, [name]: newValue }));
   };
 
+  /**
+   * @param {any} data
+   */
   function handleInit(data) {
     form.resetFields();
     let newValue = initState(data);
@@ -138,25 +157,28 @@ function ProjectEnvContent(props) {
     setProtocol(data.domain ? data.domain.split('//')[0] + '//' : 'http://');
   }
 
+  /**
+   * @param {any} e
+   */
   const handleOk = e => {
     e.preventDefault();
-    form.validateFields().then(values => {
-      let header = values.header.filter(val => {
+    form.validateFields().then((/** @type {any} */ values) => {
+      let header = values.header.filter((/** @type {any} */ val) => {
         return val.name !== '';
       });
-      let cookie = values.cookie.filter(val => {
+      let cookie = values.cookie.filter((/** @type {any} */ val) => {
         return val.name !== '';
       });
-      let global = values.global.filter(val => {
+      let global = values.global.filter((/** @type {any} */ val) => {
         return val.name !== '';
       });
       if (cookie.length > 0) {
         header.push({
           name: 'Cookie',
-          value: cookie.map(item => item.name + '=' + item.value).join(';')
+          value: cookie.map((/** @type {any} */ item) => item.name + '=' + item.value).join(';')
         });
       }
-      let assignValue = {};
+      let assignValue = /** @type {any} */ ({});
       assignValue.env = Object.assign(
         { _id: props.projectMsg._id },
         {
@@ -170,6 +192,10 @@ function ProjectEnvContent(props) {
     });
   };
 
+  /**
+   * @param {any} item
+   * @param {any} index
+   */
   const headerTpl = (item, index) => {
     const headerLength = rows.header.length - 1;
     return (
@@ -184,10 +210,12 @@ function ProjectEnvContent(props) {
             <AutoComplete
               style={{ width: '100%' }}
               allowClear={true}
-              options={constants.HTTP_REQUEST_HEADER.map(item => ({ value: item, label: item }))}
+              options={(/** @type {any} */ (constants.HTTP_REQUEST_HEADER)).map(
+                (/** @type {any} */ item) => ({ value: item, label: item })
+              )}
               placeholder="请输入header名称"
               onChange={() => addHeader(item, index, 'header')}
-              filterOption={(inputValue, option) =>
+              filterOption={(/** @type {any} */ inputValue, /** @type {any} */ option) =>
                 option.value.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
               }
             />
@@ -207,7 +235,7 @@ function ProjectEnvContent(props) {
           {/* 新增的项中，只有最后一项没有有删除按钮 */}
           <DeleteOutlined
             className="dynamic-delete-button delete"
-            onClick={e => {
+            onClick={(/** @type {any} */ e) => {
               e.stopPropagation();
               delHeader(index, 'header');
             }}
@@ -217,6 +245,11 @@ function ProjectEnvContent(props) {
     );
   };
 
+  /**
+   * @param {any} item
+   * @param {any} index
+   * @param {any} name
+   */
   const commonTpl = (item, index, name) => {
     const length = rows[name].length - 1;
     return (
@@ -249,7 +282,7 @@ function ProjectEnvContent(props) {
           {/* 新增的项中，只有最后一项没有有删除按钮 */}
           <DeleteOutlined
             className="dynamic-delete-button delete"
-            onClick={e => {
+            onClick={(/** @type {any} */ e) => {
               e.stopPropagation();
               delHeader(index, name);
             }}
@@ -274,7 +307,7 @@ function ProjectEnvContent(props) {
                 {
                   required: false,
                   whitespace: true,
-                  validator(rule, value, callback) {
+                  validator(/** @type {any} */ rule, /** @type {any} */ value, /** @type {any} */ callback) {
                     if (value) {
                       if (value.length === 0) {
                         callback('请输入环境名称');
@@ -291,7 +324,7 @@ function ProjectEnvContent(props) {
               ]}
             >
               <Input
-                onChange={e => props.handleEnvInput(e.target.value)}
+                onChange={(/** @type {any} */ e) => props.handleEnvInput(e.target.value)}
                 placeholder="请输入环境名称"
                 style={{ width: '100%' }}
               />
@@ -312,7 +345,7 @@ function ProjectEnvContent(props) {
                 {
                   required: false,
                   whitespace: true,
-                  validator(rule, value, callback) {
+                  validator(/** @type {any} */ rule, /** @type {any} */ value, /** @type {any} */ callback) {
                     if (value) {
                       if (value.length === 0) {
                         callback('请输入环境域名!');
@@ -332,7 +365,7 @@ function ProjectEnvContent(props) {
                 placeholder="请输入环境域名"
                 style={{ width: '100%' }}
                 addonBefore={
-                  <Select value={protocol} onChange={v => setProtocol(v)}>
+                  <Select value={protocol} onChange={(/** @type {any} */ v) => setProtocol(v)}>
                     <Option value="http://">{'http://'}</Option>
                     <Option value="https://">{'https://'}</Option>
                   </Select>
@@ -342,12 +375,12 @@ function ProjectEnvContent(props) {
           </Col>
         </Row>
         <h3 className="env-label">Header</h3>
-        {rows.header.map((item, index) => {
+        {rows.header.map((/** @type {any} */ item, /** @type {number} */ index) => {
           return headerTpl(item, index);
         })}
 
         <h3 className="env-label">Cookie</h3>
-        {rows.cookie.map((item, index) => {
+        {rows.cookie.map((/** @type {any} */ item, /** @type {number} */ index) => {
           return commonTpl(item, index, 'cookie');
         })}
 
@@ -364,7 +397,7 @@ function ProjectEnvContent(props) {
             </Tooltip>
           </a>
         </h3>
-        {rows.global.map((item, index) => {
+        {rows.global.map((/** @type {any} */ item, /** @type {number} */ index) => {
           return commonTpl(item, index, 'global');
         })}
       </Form>

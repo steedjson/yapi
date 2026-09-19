@@ -1,3 +1,4 @@
+// @ts-check
 import React, { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -41,7 +42,7 @@ const InterfaceList = () => {
   const catTableList = useSelector(state => state.inter.catTableList);
   const totalCount = useSelector(state => state.inter.totalCount);
   const count = useSelector(state => state.inter.count);
-  const { id, actionId } = useParams();
+  const { id, actionId } = /** @type {any} */ (useParams());
   const navigate = useNavigate();
 
   const [state, setState] = useState({
@@ -52,13 +53,19 @@ const InterfaceList = () => {
     total: null,
     current: 1
   });
-  const patchState = patch => setState(prevState => ({ ...prevState, ...patch }));
+  /**
+   * @param {any} patch
+   */
+  const patchState = patch => setState((/** @type {any} */ prevState) => ({ ...prevState, ...patch }));
 
   // 镜像最新 redux 值、路由参数与本地 state：异步回调中的读取
   // 等价于旧类组件的实时 this.props / this.state
   const latestRef = useRef({});
   latestRef.current = { id, actionId, curProject, state };
 
+  /**
+   * @param {any} [stateOverride]
+   */
   const handleRequest = async stateOverride => {
     // stateOverride：调用方显式传入更新后的 { current, filteredInfo } 快照；
     // 缺省时读取镜像（等价旧实现回调时机下的 this.state）
@@ -92,6 +99,10 @@ const InterfaceList = () => {
   };
 
   // 更新分类简介
+  /**
+   * @param {any} desc
+   * @param {any} name
+   */
   const handleChangeInterfaceCat = async (desc, name) => {
     const params = {
       catid: state.catid,
@@ -107,11 +118,16 @@ const InterfaceList = () => {
       const projectId = latestRef.current.id;
       await Promise.all([dispatch(getProject(projectId)), dispatch(fetchInterfaceListMenu(projectId))]);
       message.success('接口集合简介更新成功');
-    } catch (err) {
+    } catch (/** @type {any} */ err) {
       message.error('接口集合简介更新失败：' + err.message);
     }
   };
 
+  /**
+   * @param {any} pagination
+   * @param {any} filters
+   * @param {any} sorter
+   */
   const handleChange = (pagination, filters, sorter) => {
     const nextState = {
       ...state,
@@ -141,6 +157,9 @@ const InterfaceList = () => {
     handleRequest({ current: 1, filteredInfo: latestRef.current.state.filteredInfo });
   }, [actionId]);
 
+  /**
+   * @param {any} data
+   */
   const handleAddInterface = async data => {
     data.project_id = curProject._id;
     try {
@@ -152,11 +171,15 @@ const InterfaceList = () => {
       const interfaceId = res.data.data._id;
       navigate('/project/' + data.project_id + '/interface/api/' + interfaceId);
       await dispatch(fetchInterfaceListMenu(data.project_id));
-    } catch (err) {
+    } catch (/** @type {any} */ err) {
       message.error('接口添加失败：' + err.message);
     }
   };
 
+  /**
+   * @param {any} interfaceId
+   * @param {any} catid
+   */
   const changeInterfaceCat = async (interfaceId, catid) => {
     const params = {
       id: interfaceId,
@@ -169,11 +192,14 @@ const InterfaceList = () => {
       }
       message.success('修改成功');
       await Promise.all([handleRequest(), dispatch(fetchInterfaceListMenu(curProject._id))]);
-    } catch (err) {
+    } catch (/** @type {any} */ err) {
       message.error('修改分类失败：' + err.message);
     }
   };
 
+  /**
+   * @param {any} value
+   */
   const changeInterfaceStatus = async value => {
     const params = {
       id: value.split('-')[0],
@@ -186,7 +212,7 @@ const InterfaceList = () => {
       }
       message.success('修改成功');
       await handleRequest();
-    } catch (err) {
+    } catch (/** @type {any} */ err) {
       message.error('修改状态失败：' + err.message);
     }
   };
@@ -204,17 +230,18 @@ const InterfaceList = () => {
   // };
 
   const tag = curProject.tag;
-  const tagFilter = tag.map(item => {
+  const tagFilter = tag.map((/** @type {any} */ item) => {
     return { text: item.name, value: item.name };
   });
 
+  /** @type {any[]} */
   const columns = [
     {
       title: '接口名称',
       dataIndex: 'title',
       key: 'title',
       width: 30,
-      render: (text, item) => {
+      render: (/** @type {any} */ text, /** @type {any} */ item) => {
         return (
           <Link to={'/project/' + item.project_id + '/interface/api/' + item._id}>
             <span className="path">{text}</span>
@@ -227,11 +254,12 @@ const InterfaceList = () => {
       dataIndex: 'path',
       key: 'path',
       width: 50,
-      render: (item, record) => {
+      render: (/** @type {any} */ item, /** @type {any} */ record) => {
         const path = curProject.basepath + item;
         const methodColor =
-          variable.METHOD_COLOR[record.method ? record.method.toLowerCase() : 'get'] ||
-          variable.METHOD_COLOR['get'];
+          (/** @type {Record<string, any>} */ (variable.METHOD_COLOR))[
+            record.method ? record.method.toLowerCase() : 'get'
+          ] || (/** @type {Record<string, any>} */ (variable.METHOD_COLOR))['get'];
         return (
           <div>
             <span
@@ -255,7 +283,7 @@ const InterfaceList = () => {
       dataIndex: 'catid',
       key: 'catid',
       width: 28,
-      render: (item, record) => {
+      render: (/** @type {any} */ item, /** @type {any} */ record) => {
         return (
           <TreeSelect
             className="select path"
@@ -263,7 +291,7 @@ const InterfaceList = () => {
             value={item + ''}
             dropdownStyle={{ maxHeight: 400, overflow: 'auto', minWidth: 200 }}
             treeDefaultExpandAll={true}
-            onChange={catid => changeInterfaceCat(record._id, catid)}
+            onChange={(/** @type {any} */ catid) => changeInterfaceCat(record._id, catid)}
           />
         );
       }
@@ -273,7 +301,7 @@ const InterfaceList = () => {
       dataIndex: 'status',
       key: 'status',
       width: 24,
-      render: (text, record) => {
+      render: (/** @type {any} */ text, /** @type {any} */ record) => {
         const key = record.key;
         return (
           <Select value={key + '-' + text} className="select" onChange={changeInterfaceStatus}>
@@ -296,14 +324,15 @@ const InterfaceList = () => {
           value: 'undone'
         }
       ],
-      onFilter: (value, record) => record.status.indexOf(value) === 0
+      onFilter: (/** @type {any} */ value, /** @type {any} */ record) =>
+        record.status.indexOf(value) === 0
     },
     {
       title: 'tag',
       dataIndex: 'tag',
       key: 'tag',
       width: 14,
-      render: text => {
+      render: (/** @type {any} */ text) => {
         const textMsg = Array.isArray(text) && text.length > 0 ? text.join(' , ') : '未设置';
         return (
           <Tooltip title={textMsg}>
@@ -312,7 +341,7 @@ const InterfaceList = () => {
         );
       },
       filters: tagFilter,
-      onFilter: (value, record) => {
+      onFilter: (/** @type {any} */ value, /** @type {any} */ record) => {
         return record.tag.indexOf(value) >= 0;
       }
     }
@@ -344,7 +373,7 @@ const InterfaceList = () => {
     total = count;
   }
 
-  data = data.map(item => {
+  data = data.map((/** @type {any} */ item) => {
     item.key = item._id;
     return item;
   });
@@ -375,7 +404,10 @@ const InterfaceList = () => {
         添加接口
       </Button>
       <div style={{ marginTop: '10px' }}>
-        <Label onChange={value => handleChangeInterfaceCat(value, intername)} desc={desc} />
+        <Label
+          onChange={(/** @type {any} */ value) => handleChangeInterfaceCat(value, intername)}
+          desc={desc}
+        />
       </div>
       <Table
         className="table-interfacelist"

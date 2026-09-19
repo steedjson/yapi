@@ -1,3 +1,4 @@
+// @ts-check
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -27,14 +28,26 @@ const headHeight = 240; // menu顶部到网页顶部部分的高度
 import './InterfaceColMenu.scss';
 
 // 极简防抖：延迟 wait 毫秒执行最后一次调用，透传参数（替代 underscore 的 debounce）
+/**
+ * @param {any} fn
+ * @param {any} wait
+ */
 function debounce(fn, wait) {
+  /** @type {any} */
   let timer = null;
+  /**
+   * @this {any}
+   * @param {...any} args
+   */
   return function(...args) {
     clearTimeout(timer);
     timer = setTimeout(() => fn.apply(this, args), wait);
   };
 }
 
+/**
+ * @param {any} props
+ */
 const ColModalForm = props => {
   const { visible, onCancel, onCreate, title, saveFormRef } = props;
   const [form] = Form.useForm();
@@ -72,6 +85,9 @@ const ColModalForm = props => {
  *   经 useMemo 保持实例唯一，防抖触发时经 latestRef 镜像读取最新路由参数，
  *   等价旧类组件的实时 this.props。
  */
+/**
+ * @param {any} props
+ */
 export default function InterfaceColMenu(props) {
   const { router } = props;
   const dispatch = useDispatch();
@@ -98,7 +114,10 @@ export default function InterfaceColMenu(props) {
     delIcon: null,
     selectedProject: null
   });
-  const patchState = patch => setState(prevState => ({ ...prevState, ...patch }));
+  /**
+   * @param {any} patch
+   */
+  const patchState = patch => setState((/** @type {any} */ prevState) => ({ ...prevState, ...patch }));
 
   const formRef = useRef(null);
   const copyInterfaceSignRef = useRef(false);
@@ -120,7 +139,7 @@ export default function InterfaceColMenu(props) {
     const { colName: name, colDesc: desc } = formRef.current.getFieldsValue();
     const { colModalType, editColId: col_id } = state;
     const project_id = id;
-    let res = {};
+    let res = /** @type {any} */ ({});
     if (colModalType === 'add') {
       res = await axios.post('/api/col/add_col', { name, desc, project_id });
     } else if (colModalType === 'edit') {
@@ -138,6 +157,9 @@ export default function InterfaceColMenu(props) {
     }
   };
 
+  /**
+   * @param {any} keys
+   */
   const onExpand = keys => {
     patchState({ expands: keys });
   };
@@ -146,7 +168,7 @@ export default function InterfaceColMenu(props) {
   // 这里经 useMemo 保持同一防抖实例；防抖 500ms 后触发，读取最新路由参数
   const onSelect = useMemo(
     () =>
-      debounce(keys => {
+      debounce((/** @type {any} */ keys) => {
         if (keys.length) {
           const type = keys[0].split('_')[0];
           const nodeId = keys[0].split('_')[1];
@@ -183,6 +205,9 @@ export default function InterfaceColMenu(props) {
     patchState({ list: interfaceColList });
   }, [interfaceColList]);
 
+  /**
+   * @param {any} colId
+   */
   const showDelColConfirm = colId => {
     const paramsId = id;
     confirm({
@@ -206,6 +231,9 @@ export default function InterfaceColMenu(props) {
   };
 
   // 复制测试集合
+  /**
+   * @param {any} item
+   */
   const copyInterface = async item => {
     if (copyInterfaceSignRef.current === true) {
       return;
@@ -245,6 +273,9 @@ export default function InterfaceColMenu(props) {
     message.success('克隆测试集成功');
   };
 
+  /**
+   * @param {any} caseId
+   */
   const caseCopy = async caseId => {
     const caseData = await dispatch(fetchCaseData(caseId));
     let data = caseData.payload.data.data;
@@ -266,6 +297,9 @@ export default function InterfaceColMenu(props) {
     }
   };
 
+  /**
+   * @param {any} caseId
+   */
   const showDelCaseConfirm = caseId => {
     const paramsId = id;
     confirm({
@@ -292,6 +326,10 @@ export default function InterfaceColMenu(props) {
     });
   };
 
+  /**
+   * @param {any} type
+   * @param {any} [col]
+   */
   const showColModal = (type, col) => {
     const editCol =
       type === 'edit' ? { colName: col.name, colDesc: col.desc } : { colName: '', colDesc: '' };
@@ -303,19 +341,26 @@ export default function InterfaceColMenu(props) {
     formRef.current.setFieldsValue(editCol);
   };
 
-  const saveFormRef = useCallback(form => {
+  const saveFormRef = useCallback((/** @type {any} */ form) => {
     formRef.current = form;
   }, []);
 
+  /**
+   * @param {any} importInterIds
+   * @param {any} selectedProject
+   */
   const selectInterface = (importInterIds, selectedProject) => {
     patchState({ importInterIds, selectedProject });
   };
 
+  /**
+   * @param {any} colId
+   */
   const showImportInterfaceModal = async colId => {
     // const projectId = this.props.match.params.id;
     // console.log('project', this.props.curProject)
     const groupId = curProject.group_id;
-    await dispatch(fetchProjectList(groupId));
+    await dispatch((/** @type {any} */ (fetchProjectList))(groupId));
     // await dispatch(fetchInterfaceListMenu(projectId))
     patchState({ importInterVisible: true, importColId: colId });
   };
@@ -344,6 +389,9 @@ export default function InterfaceColMenu(props) {
     patchState({ importInterVisible: false });
   };
 
+  /**
+   * @param {any} e
+   */
   const filterCol = e => {
     const value = e.target.value;
     // console.log('list', interfaceColList);
@@ -356,6 +404,9 @@ export default function InterfaceColMenu(props) {
     });
   };
 
+  /**
+   * @param {any} e
+   */
   const onDrop = async e => {
     // const projectId = this.props.match.params.id;
     const dropColIndex = e.node.props.pos.split('-')[1];
@@ -387,6 +438,9 @@ export default function InterfaceColMenu(props) {
     }
   };
 
+  /**
+   * @param {any} nodeId
+   */
   const enterItem = nodeId => {
     patchState({ delIcon: nodeId });
   };
@@ -446,6 +500,9 @@ export default function InterfaceColMenu(props) {
   };
 
   // antd5 Tree 移除 TreeNode JSX,改用 treeData 配置({ key, title, children })
+  /**
+   * @param {any} interfaceCase
+   */
   const itemInterfaceColCreate = interfaceCase => {
     return {
       key: 'case_' + interfaceCase._id,
@@ -462,7 +519,7 @@ export default function InterfaceColMenu(props) {
             <Tooltip title="删除用例">
               <DeleteOutlined
                 className="interface-delete-icon"
-                onClick={e => {
+                onClick={(/** @type {any} */ e) => {
                   e.stopPropagation();
                   showDelCaseConfirm(interfaceCase._id);
                 }}
@@ -472,7 +529,7 @@ export default function InterfaceColMenu(props) {
             <Tooltip title="克隆用例">
               <CopyOutlined
                 className="interface-delete-icon"
-                onClick={e => {
+                onClick={(/** @type {any} */ e) => {
                   e.stopPropagation();
                   caseCopy(interfaceCase._id);
                 }}
@@ -488,13 +545,15 @@ export default function InterfaceColMenu(props) {
   let currentKes = defaultExpandedKeys();
   // console.log('currentKey', currentKes)
 
+  /** @type {any} */
   let list = state.list;
 
   if (state.filterValue) {
+    /** @type {any[]} */
     const arr = [];
-    list = list.filter(item => {
+    list = list.filter((/** @type {any} */ item) => {
 
-      item.caseList = item.caseList.filter(inter => {
+      item.caseList = item.caseList.filter((/** @type {any} */ inter) => {
         if (
           inter.casename.indexOf(state.filterValue) === -1 &&
           inter.path.indexOf(state.filterValue) === -1
@@ -531,7 +590,7 @@ export default function InterfaceColMenu(props) {
           </Button>
         </Tooltip>
       </div>
-      <div className="tree-wrapper" style={{ maxHeight: parseInt(document.body.clientHeight) - headHeight + 'px'}}>
+      <div className="tree-wrapper" style={{ maxHeight: parseInt((/** @type {any} */ (document.body.clientHeight))) - headHeight + 'px'}}>
         <Tree
           className="col-list-tree"
           defaultExpandedKeys={currentKes.expands}
@@ -543,7 +602,7 @@ export default function InterfaceColMenu(props) {
           draggable={{ icon: false }}
           onExpand={onExpand}
           onDrop={onDrop}
-          treeData={list.map(col => ({
+          treeData={list.map((/** @type {any} */ col) => ({
             key: 'col_' + col._id,
             title: (
               <div className="menu-title">
@@ -564,7 +623,7 @@ export default function InterfaceColMenu(props) {
                   <Tooltip title="编辑集合">
                     <EditOutlined
                       className="interface-delete-icon"
-                      onClick={e => {
+                      onClick={(/** @type {any} */ e) => {
                         e.stopPropagation();
                         showColModal('edit', col);
                       }}
@@ -573,7 +632,7 @@ export default function InterfaceColMenu(props) {
                   <Tooltip title="导入接口">
                     <PlusOutlined
                       className="interface-delete-icon"
-                      onClick={e => {
+                      onClick={(/** @type {any} */ e) => {
                         e.stopPropagation();
                         showImportInterfaceModal(col._id);
                       }}
@@ -582,7 +641,7 @@ export default function InterfaceColMenu(props) {
                   <Tooltip title="克隆集合">
                     <CopyOutlined
                       className="interface-delete-icon"
-                      onClick={e => {
+                      onClick={(/** @type {any} */ e) => {
                         e.stopPropagation();
                         copyInterface(col);
                       }}

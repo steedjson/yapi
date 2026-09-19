@@ -1,3 +1,4 @@
+// @ts-check
 import React, { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useParams } from 'react-router-dom';
@@ -14,10 +15,14 @@ import { Postman } from '../../../../components';
 import './InterfaceCaseContent.scss';
 
 /** 按用例 id 反查所属集合 id */
+/**
+ * @param {any} colList
+ * @param {any} currCaseId
+ */
 function getColId(colList, currCaseId) {
   let currColId = 0;
-  colList.forEach(col => {
-    col.caseList.forEach(caseItem => {
+  colList.forEach((/** @type {any} */ col) => {
+    col.caseList.forEach((/** @type {any} */ caseItem) => {
       if (+caseItem._id === +currCaseId) {
         currColId = col._id;
       }
@@ -49,13 +54,16 @@ const InterfaceCaseContent = () => {
   const currProject = useSelector(state => state.project.currProject);
   const projectEnv = useSelector(state => state.project.projectEnv);
   const curUid = useSelector(state => state.user.uid);
-  const { id, actionId } = useParams();
+  const { id, actionId } = /** @type {any} */ (useParams());
 
   const [state, setState] = useState({
     isEditingCasename: true,
     editCasename: ''
   });
-  const patchState = patch => setState(prevState => ({ ...prevState, ...patch }));
+  /**
+   * @param {any} patch
+   */
+  const patchState = patch => setState((/** @type {any} */ prevState) => ({ ...prevState, ...patch }));
 
   const postmanRef = useRef(null);
 
@@ -173,7 +181,7 @@ const InterfaceCaseContent = () => {
           <div className="edit-case-name">
             <Input
               value={editCasename}
-              onChange={e => patchState({ editCasename: e.target.value })}
+              onChange={(/** @type {any} */ e) => patchState({ editCasename: e.target.value })}
               style={{ fontSize: 18 }}
             />
           </div>

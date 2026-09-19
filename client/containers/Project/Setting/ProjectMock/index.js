@@ -1,3 +1,4 @@
+// @ts-check
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
@@ -32,6 +33,9 @@ const tailFormItemLayout = {
  *   改为 useState 惰性初始化，首帧渲染输出一致；旧实现不响应 projectMsg 后续
  *   变化，惰性初始化仅取一次，行为保持一致。
  */
+/**
+ * @param {any} props
+ */
 const ProjectMock = props => {
   const { projectId } = props;
   const dispatch = useDispatch();
@@ -58,10 +62,16 @@ const ProjectMock = props => {
   };
 
   // 是否开启
+  /**
+   * @param {any} v
+   */
   const onChange = v => {
     setIsMockOpen(v);
   };
 
+  /**
+   * @param {any} e
+   */
   const handleMockJsInput = e => {
     setProjectMockScript(e.text);
   };

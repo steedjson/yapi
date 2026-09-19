@@ -1,3 +1,4 @@
+// @ts-check
 import React, { useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import './index.scss';
@@ -20,18 +21,21 @@ import EasyDragSort from '../../../../components/EasyDragSort/EasyDragSort.js';
  * - 旧 _isMounted 标记（componentWillUnmount 置否，onSave 恢复后守卫 setState）
  *   改为 isMountedRef + useEffect cleanup 等价实现。
  */
+/**
+ * @param {any} props
+ */
 const ProjectEnv = props => {
   const { projectId, onOk } = props;
   const dispatch = useDispatch();
   const projectMsg = useSelector(state => state.project.currProject);
 
-  const [state, setState] = useState({
+  const [state, setState] = useState(/** @type {any} */ ({
     env: [],
     _id: null,
     currentEnvMsg: {},
     delIcon: null,
     currentKey: -2
-  });
+  }));
 
   // 镜像最新 redux 值：挂载期 await getProject 恢复后的读取等价于旧 this.props.projectMsg
   const projectMsgRef = useRef(projectMsg);
@@ -46,8 +50,12 @@ const ProjectEnv = props => {
     };
   }, []);
 
+  /**
+   * @param {any} key
+   * @param {any} data
+   */
   const handleClick = (key, data) => {
-    setState(prevState => ({
+    setState((/** @type {any} */ prevState) => ({
       ...prevState,
       currentEnvMsg: data,
       currentKey: key
@@ -55,29 +63,40 @@ const ProjectEnv = props => {
   };
 
   // 增加环境变量项
+  /**
+   * @param {any} name
+   */
   const addParams = name => {
     let data = { name: '新环境', domain: '', header: [] };
-    setState(prevState => ({
+    setState((/** @type {any} */ prevState) => ({
       ...prevState,
-      [name]: [].concat(data, prevState[name])
+      [name]: (/** @type {any[]} */ ([])).concat(data, prevState[name])
     }));
     handleClick(0, data);
   };
 
   // 删除提示信息
+  /**
+   * @param {any} key
+   * @param {any} name
+   */
   const showConfirm = (key, name) => {
     let assignValue = delParams(key, name);
     onSave(assignValue);
   };
 
   // 删除环境变量项
+  /**
+   * @param {any} key
+   * @param {any} name
+   */
   const delParams = (key, name) => {
     let curValue = state.env;
-    let newValue = {};
-    newValue[name] = curValue.filter((val, index) => {
+    let newValue = /** @type {any} */ ({});
+    newValue[name] = curValue.filter((/** @type {any} */ val, /** @type {number} */ index) => {
       return index !== key;
     });
-    setState(prevState => ({
+    setState((/** @type {any} */ prevState) => ({
       ...prevState,
       ...newValue
     }));
@@ -86,20 +105,26 @@ const ProjectEnv = props => {
     return newValue;
   };
 
+  /**
+   * @param {any} key
+   */
   const enterItem = key => {
-    setState(prevState => ({ ...prevState, delIcon: key }));
+    setState((/** @type {any} */ prevState) => ({ ...prevState, delIcon: key }));
   };
 
   // 保存设置
+  /**
+   * @param {any} assignValue
+   */
   async function onSave(assignValue) {
     await dispatch(updateEnv(assignValue))
-      .then(res => {
+      .then((/** @type {any} */ res) => {
         if (res.payload.data.errcode == 0) {
           dispatch(getProject(projectId));
           dispatch(getEnv(projectId));
           message.success('修改成功! ');
           if (isMountedRef.current) {
-            setState(prevState => ({ ...prevState, ...assignValue }));
+            setState((/** @type {any} */ prevState) => ({ ...prevState, ...assignValue }));
           }
         }
       })
@@ -109,8 +134,12 @@ const ProjectEnv = props => {
   }
 
   //  提交保存信息
+  /**
+   * @param {any} value
+   * @param {any} index
+   */
   const onSubmit = (value, index) => {
-    let assignValue = {};
+    let assignValue = /** @type {any} */ ({});
     assignValue['env'] = [].concat(state.env);
     assignValue['env'].splice(index, 1, value['env']);
     assignValue['_id'] = state._id;
@@ -119,19 +148,26 @@ const ProjectEnv = props => {
   };
 
   // 动态修改环境名称
+  /**
+   * @param {any} value
+   * @param {any} currentKey
+   */
   const handleInputChange = (value, currentKey) => {
-    let newValue = [].concat(state.env);
+    let newValue = (/** @type {any[]} */ ([])).concat(state.env);
     newValue[currentKey].name = value || '新环境';
-    setState(prevState => ({ ...prevState, env: newValue }));
+    setState((/** @type {any} */ prevState) => ({ ...prevState, env: newValue }));
   };
 
   // 侧边栏拖拽
+  /**
+   * @param {any} name
+   */
   const handleDragMove = name => {
-    return (data, from, to) => {
-      let newValue = {
+    return (/** @type {any} */ data, /** @type {any} */ from, /** @type {any} */ to) => {
+      let newValue = /** @type {any} */ ({
         [name]: data
-      };
-      setState(prevState => ({
+      });
+      setState((/** @type {any} */ prevState) => ({
         ...prevState,
         ...newValue
       }));
@@ -146,7 +182,7 @@ const ProjectEnv = props => {
     (async () => {
       await dispatch(getProject(projectId));
       const { env, _id } = projectMsgRef.current;
-      setState(prevState => ({
+      setState((/** @type {any} */ prevState) => ({
         ...prevState,
         env: [].concat(env),
         _id
@@ -157,7 +193,7 @@ const ProjectEnv = props => {
 
   const { env, currentKey } = state;
 
-  const envSettingItems = env.map((item, index) => {
+  const envSettingItems = env.map((/** @type {any} */ item, /** @type {number} */ index) => {
     return (
       <Row
         key={index}
@@ -171,7 +207,7 @@ const ProjectEnv = props => {
           </span>
           <Popconfirm
             title="您确认删除此环境变量?"
-            onConfirm={e => {
+            onConfirm={(/** @type {any} */ e) => {
               e.stopPropagation();
               showConfirm(index, 'env');
             }}
@@ -216,8 +252,8 @@ const ProjectEnv = props => {
           <Content style={{ background: 'var(--sk-bg-component)', padding: 24, margin: 0, minHeight: 280 }}>
             <ProjectEnvContent
               projectMsg={state.currentEnvMsg}
-              onSubmit={e => onSubmit(e, currentKey)}
-              handleEnvInput={e => handleInputChange(e, currentKey)}
+              onSubmit={(/** @type {any} */ e) => onSubmit(e, currentKey)}
+              handleEnvInput={(/** @type {any} */ e) => handleInputChange(e, currentKey)}
             />
           </Content>
         </Layout>

@@ -1,3 +1,4 @@
+// @ts-check
 import React, { useEffect } from 'react';
 import PropTypes from 'prop-types';
 import './ProjectToken.scss';
@@ -14,6 +15,9 @@ const confirm = Modal.confirm;
  * - 旧 componentDidMount 拉取 token 改为挂载期 useEffect；
  * - 旧与 redux action 同名的实例方法 updateToken（刷新确认弹窗）更名为
  *   handleUpdateToken，避免与导入的 action 混淆，行为不变。
+ */
+/**
+ * @param {any} props
  */
 const ProjectToken = props => {
   const { projectId, curProjectRole } = props;

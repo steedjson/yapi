@@ -1,3 +1,4 @@
+// @ts-check
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { useSelector, useDispatch } from 'react-redux';
@@ -14,6 +15,9 @@ import { updateProjectScript, getProject } from '../../../../reducer/modules/pro
  * - 旧 UNSAFE_componentWillMount 首帧前回填（pre_script / after_script）改为
  *   useState 惰性初始化，首帧渲染输出一致；旧实现不响应 projectMsg 后续变化，
  *   惰性初始化仅取一次，行为保持一致。
+ */
+/**
+ * @param {any} props
  */
 const ProjectRequest = props => {
   const { projectId } = props;
@@ -70,7 +74,7 @@ const ProjectRequest = props => {
         <FormItem {...formItemLayout} label="Pre-request Script(请求参数处理脚本)">
           <AceEditor
             data={preScript}
-            onChange={editor => setPreScript(editor.text)}
+            onChange={(/** @type {any} */ editor) => setPreScript(editor.text)}
             fullScreen={true}
             className="request-editor"
           />
@@ -78,7 +82,7 @@ const ProjectRequest = props => {
         <FormItem {...formItemLayout} label="Pre-response Script(响应数据处理脚本)">
           <AceEditor
             data={afterScript}
-            onChange={editor => setAfterScript(editor.text)}
+            onChange={(/** @type {any} */ editor) => setAfterScript(editor.text)}
             fullScreen={true}
             className="request-editor"
           />

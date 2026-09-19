@@ -1,3 +1,4 @@
+// @ts-check
 import React, { useEffect, useRef, useState } from 'react';
 import { Modal, Collapse, Row, Col, Input, message, Button } from 'antd';
 import { FolderOpenOutlined } from '@ant-design/icons';
@@ -22,19 +23,26 @@ const { TextArea } = Input;
  * - 唯一行为偏差：父组件 Run 旧实现传 open={...} 而本组件读 props.visible，prop 名错位
  *   导致弹窗在旧版永远无法打开；Run 侧迁移改为 visible={...} 修复该缺陷。
  */
+/**
+ * @param {any} props
+ */
 const AddColModal = props => {
   const { visible, caseName, onOk, onCancel } = props;
   const interfaceColList = useSelector(state => state.interfaceCol.interfaceColList);
   const dispatch = useDispatch();
-  const { id: projectId } = useParams();
+  const { id: projectId } = /** @type {any} */ (useParams());
 
-  const [state, setState] = useState({
+  const [state, setState] = useState(/** @type {any} */ ({
     addColName: '',
     addColDesc: '',
     id: 0,
     caseName: caseName
-  });
-  const patchState = patch => setState(prevState => ({ ...prevState, ...patch }));
+  }));
+  /**
+   * @param {any} patch
+   */
+  const patchState = patch =>
+    setState((/** @type {any} */ prevState) => ({ ...prevState, ...patch }));
 
   // 对应旧 UNSAFE_componentWillMount：拉取项目集合列表
   useEffect(() => {
@@ -71,6 +79,9 @@ const AddColModal = props => {
     }
   };
 
+  /**
+   * @param {any} colId
+   */
   const select = colId => {
     patchState({ id: colId });
   };
@@ -92,14 +103,14 @@ const AddColModal = props => {
           <Input
             placeholder="请输入接口用例名称"
             value={state.caseName}
-            onChange={e => patchState({ caseName: e.target.value })}
+            onChange={(/** @type {any} */ e) => patchState({ caseName: e.target.value })}
           />
         </Col>
       </Row>
       <p>请选择添加到的集合：</p>
       <ul className="col-list">
         {interfaceColList.length ? (
-          interfaceColList.map(col => (
+          interfaceColList.map((/** @type {any} */ col) => (
             <li
               key={col._id}
               className={`col-item ${col._id === id ? 'selected' : ''}`}
@@ -128,7 +139,7 @@ const AddColModal = props => {
                     <Input
                       placeholder="请输入集合名称"
                       value={state.addColName}
-                      onChange={e => patchState({ addColName: e.target.value })}
+                      onChange={(/** @type {any} */ e) => patchState({ addColName: e.target.value })}
                     />
                   </Col>
                 </Row>
@@ -141,7 +152,7 @@ const AddColModal = props => {
                       rows={3}
                       placeholder="请输入集合描述"
                       value={state.addColDesc}
-                      onChange={e => patchState({ addColDesc: e.target.value })}
+                      onChange={(/** @type {any} */ e) => patchState({ addColDesc: e.target.value })}
                     />
                   </Col>
                 </Row>

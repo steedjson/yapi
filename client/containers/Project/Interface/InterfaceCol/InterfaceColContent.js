@@ -1,3 +1,4 @@
+// @ts-check
 import React, { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useParams } from 'react-router-dom';
@@ -51,6 +52,11 @@ const defaultModalStyle = {
   top: 10
 }
 
+// @dnd-kit/sortable 的 SortableContext 类型要求必填 children 且依赖 @types/react 的
+// JSX children 映射；本项目的最小 JSX 声明未启用该映射，经 any 中转绕开误报。
+/** @type {any} */
+const SortableContextAny = SortableContext;
+
 // 拖拽传感器：5px 激活距离，保证行内链接/按钮的单击不受拖拽影响。
 const dndSensors = [
   {
@@ -60,6 +66,9 @@ const dndSensors = [
 ];
 
 // 可排序行组件：整行拖拽（等价原 dnd.Row 的整行拖拽交互）。
+/**
+ * @param {any} props
+ */
 const SortableRow = props => {
   const { children, ...restProps } = props;
   const rowId = restProps['data-row-key'];
@@ -79,6 +88,9 @@ const SortableRow = props => {
   );
 };
 
+/**
+ * @param {string} json
+ */
 function handleReport(json) {
   try {
     return JSON.parse(json);
@@ -120,9 +132,9 @@ const InterfaceColContent = () => {
   // 历史遗留仅声明未消费，保留订阅避免行为差异
   useSelector(state => state.project.projectEnv);
   const curUid = useSelector(state => state.user.uid);
-  const { id, actionId } = useParams();
+  const { id, actionId } = /** @type {any} */ (useParams());
 
-  const [state, setState] = useState({
+  const [state, setState] = useState(/** @type {any} */ ({
     rows: [],
     reports: {},
     visible: false,
@@ -152,8 +164,11 @@ const InterfaceColContent = () => {
         content: ''
       }
     }
-  });
-  const patchState = patch => setState(prevState => ({ ...prevState, ...patch }));
+  }));
+  /**
+   * @param {any} patch
+   */
+  const patchState = patch => setState((/** @type {any} */ prevState) => ({ ...prevState, ...patch }));
 
   // 旧实例字段：测试报告 / 断言上下文 / 当前集合 id / 插件轮询定时器 / 脚本编辑器
   const reportsRef = useRef({});
@@ -165,6 +180,9 @@ const InterfaceColContent = () => {
   // rows 写入即同步 ref：executeTests 逐行 await 后读取的行数据
   // 恒等旧类组件实时 this.state.rows
   const rowsRef = useRef(state.rows);
+  /**
+   * @param {any[]} nextRows
+   */
   const setRows = nextRows => {
     rowsRef.current = nextRows;
     patchState({ rows: nextRows });
@@ -186,14 +204,19 @@ const InterfaceColContent = () => {
   };
 
   // 整合header信息
+  /**
+   * @param {any} project_id
+   * @param {any} req_header
+   * @param {any} case_env
+   */
   const handleReqHeader = (project_id, req_header, case_env) => {
-    const envItem = latestRef.current.envList.find(item => {
+    const envItem = latestRef.current.envList.find((/** @type {any} */ item) => {
       return item._id === project_id;
     });
 
     const currDomain = handleCurrDomain(envItem && envItem.env, case_env);
     const header = currDomain.header;
-    header.forEach(item => {
+    header.forEach((/** @type {any} */ item) => {
       if (!checkNameIsExistInArray(item.name, req_header)) {
         // item.abled = true;
         item = {
@@ -206,9 +229,13 @@ const InterfaceColContent = () => {
     return req_header;
   };
 
+  /**
+   * @param {any} rows
+   * @param {any} [currColEnvObj]
+   */
   const handleColdata = (rows, currColEnvObj = {}) => {
     const newRows = produce(rows, draftRows => {
-      draftRows.map(item => {
+      draftRows.map((/** @type {any} */ item) => {
         item.id = item._id;
         item._test_status = item.test_status;
         if(currColEnvObj[item.project_id]){
@@ -221,6 +248,9 @@ const InterfaceColContent = () => {
     setRows(newRows);
   };
 
+  /**
+   * @param {any} [key]
+   */
   const changeCollapseClose = key => {
     if (key) {
       patchState({
@@ -234,6 +264,9 @@ const InterfaceColContent = () => {
     }
   };
 
+  /**
+   * @param {any} newColId
+   */
   const handleColIdChange = async newColId => {
     dispatch(setColData({
       currColId: +newColId,
@@ -244,7 +277,7 @@ const InterfaceColContent = () => {
     const result = await dispatch(fetchCaseList(newColId));
     if (result.payload.data.errcode === 0) {
       reportsRef.current = handleReport(result.payload.data.colData.test_report);
-      patchState(prevState => ({
+      patchState((/** @type {any} */ prevState) => ({
         ...prevState,
         commonSetting:{
           ...prevState.commonSetting,
@@ -274,7 +307,7 @@ const InterfaceColContent = () => {
         await handleColIdChange(currColIdRef.current);
       }
 
-      crossRequestIntervalRef.current = initCrossRequest(hasPlugin => {
+      crossRequestIntervalRef.current = initCrossRequest((/** @type {any} */ hasPlugin) => {
         patchState({ hasPlugin: hasPlugin });
       });
     })();
@@ -300,6 +333,10 @@ const InterfaceColContent = () => {
   }, [actionId, isRander]);
 
   // 更新分类简介
+  /**
+   * @param {any} desc
+   * @param {any} name
+   */
   const handleChangeInterfaceCol = (desc, name) => {
     const params = {
       col_id: currColId,
@@ -307,7 +344,7 @@ const InterfaceColContent = () => {
       desc: desc
     };
 
-    axios.post('/api/col/up_col', params).then(async res => {
+    axios.post('/api/col/up_col', params).then(async (/** @type {any} */ res) => {
       if (res.data.errcode) {
         return message.error(res.data.errmsg);
       }
@@ -323,7 +360,7 @@ const InterfaceColContent = () => {
       // 每轮迭代重新读取最新行数据，等价旧实现循环体内的 this.state.rows
       const rows = rowsRef.current;
 
-      const envItem = latestRef.current.envList.find(item => {
+      const envItem = latestRef.current.envList.find((/** @type {any} */ item) => {
         return item._id === rows[i].project_id;
       });
 
@@ -337,6 +374,7 @@ const InterfaceColContent = () => {
         },
         { test_status: 'loading' }
       );
+      /** @type {any[]} */
       let newRows = [].concat([], rows);
       newRows[i] = curitem;
       setRows(newRows);
@@ -352,7 +390,7 @@ const InterfaceColContent = () => {
         } else if (result.code === 1) {
           status = 'invalid';
         }
-      } catch (e) {
+      } catch (/** @type {any} */ e) {
         console.error(e);
         status = 'error';
         result = e;
@@ -377,15 +415,18 @@ const InterfaceColContent = () => {
     });
   };
 
+  /**
+   * @param {any} interfaceData
+   */
   const handleTest = async interfaceData => {
     let requestParams = {};
     const options = handleParams(interfaceData, handleValue, requestParams);
 
-    let result = {
+    let result = /** @type {any} */ ({
       code: 400,
       msg: '数据异常',
       validRes: []
-    };
+    });
 
     await plugin.emitHook('before_col_request', Object.assign({}, options, {
       type: 'col',
@@ -425,7 +466,7 @@ const InterfaceColContent = () => {
         };
       }
 
-      const validRes = [];
+      const validRes = /** @type {any[]} */ ([]);
 
       const responseData = Object.assign(
         {},
@@ -451,7 +492,7 @@ const InterfaceColContent = () => {
         result.code = 1;
         result.validRes = validRes;
       }
-    } catch (data) {
+    } catch (/** @type {any} */ data) {
       result = {
         ...options,
         ...result,
@@ -474,6 +515,12 @@ const InterfaceColContent = () => {
 
   // response, validRes
   // 断言测试
+  /**
+   * @param {any} interfaceData
+   * @param {any} response
+   * @param {any} validRes
+   * @param {any} requestParams
+   */
   const handleScriptTest = async (interfaceData, response, validRes, requestParams) => {
     // 是否启动断言
     try {
@@ -486,17 +533,21 @@ const InterfaceColContent = () => {
         interface_id: interfaceData.interface_id
       });
       if (test.data.errcode !== 0) {
-        test.data.data.logs.forEach(item => {
+        test.data.data.logs.forEach((/** @type {any} */ item) => {
           validRes.push({ message: item });
         });
       }
-    } catch (err) {
+    } catch (/** @type {any} */ err) {
       validRes.push({
         message: 'Error: ' + err.message
       });
     }
   };
 
+  /**
+   * @param {any} val
+   * @param {any} global
+   */
   const handleValue = (val, global) => {
     const globalValue = ArrayToObject(global);
     const context = Object.assign({}, { global: globalValue }, recordsRef.current);
@@ -504,8 +555,9 @@ const InterfaceColContent = () => {
   };
 
   const onDrop = () => {
+    /** @type {any[]} */
     const changes = [];
-    state.rows.forEach((item, index) => {
+    state.rows.forEach((/** @type {any} */ item, /** @type {number} */ index) => {
       changes.push({ id: item._id, index: index });
     });
     axios.post('/api/col/up_case_index', changes).then(() => {
@@ -513,20 +565,26 @@ const InterfaceColContent = () => {
     });
   };
   // 拖拽经过其它行时实时重排（等价原 dnd.Row 的 hover 换位体验）
+  /**
+   * @param {any} event
+   */
   const onDragOver = event => {
     const { active, over } = event;
     if (!over || active.id === over.id) {
       return;
     }
     const rows = state.rows;
-    const oldIndex = rows.findIndex(item => item.id === active.id);
-    const newIndex = rows.findIndex(item => item.id === over.id);
+    const oldIndex = rows.findIndex((/** @type {any} */ item) => item.id === active.id);
+    const newIndex = rows.findIndex((/** @type {any} */ item) => item.id === over.id);
     if (oldIndex === -1 || newIndex === -1) {
       return;
     }
     setRows(arrayMove(rows, oldIndex, newIndex));
   };
   // 拖拽结束持久化新顺序（未发生换位时不发冗余请求）
+  /**
+   * @param {any} event
+   */
   const onDragEnd = event => {
     const { active, over } = event;
     if (over && active.id !== over.id) {
@@ -534,6 +592,9 @@ const InterfaceColContent = () => {
     }
   };
 
+  /**
+   * @param {any} d
+   */
   const onChangeTest = d => {
 
     patchState({
@@ -547,10 +608,16 @@ const InterfaceColContent = () => {
     });
   };
 
+  /**
+   * @param {any} code
+   */
   const handleInsertCode = code => {
     aceEditorRef.current.editor.insertCode(code);
   };
 
+  /**
+   * @param {any} reportId
+   */
   const openReport = reportId => {
     if (!reportsRef.current[reportId]) {
       return message.warning('还没有生成报告');
@@ -558,6 +625,9 @@ const InterfaceColContent = () => {
     patchState({ visible: true, curCaseid: reportId });
   };
 
+  /**
+   * @param {any} d
+   */
   const handleScriptChange = d => {
     patchState({ curScript: d.text });
   };
@@ -592,6 +662,10 @@ const InterfaceColContent = () => {
     patchState({ visible: false });
   };
 
+  /**
+   * @param {any} envName
+   * @param {any} project_id
+   */
   const currProjectEnvChange = (envName, project_id) => {
     const nextCurrColEnvObj = {
       ...state.currColEnvObj,
@@ -617,23 +691,38 @@ const InterfaceColContent = () => {
     });
   };
 
+  /**
+   * @param {any} url
+   */
   const copyUrl = url => {
     copyText(url);
     message.success('已经成功复制到剪切板');
   };
 
+  /**
+   * @param {any} mode
+   */
   const modeChange = mode => {
     patchState({ mode });
   };
 
+  /**
+   * @param {any} email
+   */
   const emailChange = email => {
     patchState({ email });
   };
 
+  /**
+   * @param {any} download
+   */
   const downloadChange = download => {
     patchState({ download });
   };
 
+  /**
+   * @param {any} envObj
+   */
   const handleColEnvObj = envObj => {
     let str = '';
     for (const key in envObj) {
@@ -652,7 +741,7 @@ const InterfaceColContent = () => {
     };
     console.log(params)
 
-    axios.post('/api/col/up_col', params).then(async res => {
+    axios.post('/api/col/up_col', params).then(async (/** @type {any} */ res) => {
       if (res.data.errcode) {
         return message.error(res.data.errmsg);
       }
@@ -676,8 +765,11 @@ const InterfaceColContent = () => {
     })
   }
 
+  /**
+   * @param {any} key
+   */
   const changeCommonFieldSetting = key => {
-    return e => {
+    return (/** @type {any} */ e) => {
       let value = e;
       if(typeof e === 'object' && e){
         value = e.target.value;
@@ -696,12 +788,13 @@ const InterfaceColContent = () => {
   }
 
   const currProjectId = currProject._id;
+  /** @type {any[]} */
   const columns = [
     {
       title: '用例名称',
       dataIndex: 'casename',
       width: 250,
-      render: (text, record) => {
+      render: (/** @type {any} */ text, /** @type {any} */ record) => {
         return (
           <Link to={'/project/' + currProjectId + '/interface/case/' + record._id}>
             {record.casename.length > 23 ? record.casename.substr(0, 20) + '...' : record.casename}
@@ -738,7 +831,7 @@ const InterfaceColContent = () => {
       title: '状态',
       dataIndex: 'test_status',
       width: 100,
-      render: (value, record) => {
+      render: (/** @type {any} */ value, /** @type {any} */ record) => {
         const rowId = record._id;
         const code = reportsRef.current[rowId] ? reportsRef.current[rowId].code : 0;
         if (record.test_status === 'loading') {
@@ -802,7 +895,7 @@ const InterfaceColContent = () => {
     {
       title: '接口路径',
       dataIndex: 'path',
-      render: (text, record) => {
+      render: (/** @type {any} */ text, /** @type {any} */ record) => {
         return (
           <Tooltip title="跳转到对应接口">
             <Link to={`/project/${record.project_id}/interface/api/${record.interface_id}`}>
@@ -816,7 +909,7 @@ const InterfaceColContent = () => {
       title: '测试报告',
       dataIndex: 'id',
       width: 200,
-      render: (text, record) => {
+      render: (/** @type {any} */ text, /** @type {any} */ record) => {
         const reportFun = () => {
           if (!reportsRef.current[record.id]) {
             return null;
@@ -870,7 +963,7 @@ const InterfaceColContent = () => {
               </Tooltip></label>
             </Col>
             <Col className="col-item"  span="18">
-              <Switch onChange={e=>{
+              <Switch onChange={(/** @type {any} */ e)=>{
                 patchState({
                   commonSetting :{
                     ...state.commonSetting,
@@ -905,7 +998,7 @@ const InterfaceColContent = () => {
               </Tooltip></label>
             </Col>
             <Col className="col-item"  span="18">
-              <Switch onChange={e=>{
+              <Switch onChange={(/** @type {any} */ e)=>{
                 patchState({
                   commonSetting :{
                     ...state.commonSetting,
@@ -923,7 +1016,7 @@ const InterfaceColContent = () => {
               </Tooltip></label>
             </Col>
             <Col className="col-item"  span="14">
-              <div><Switch onChange={e=>{
+              <div><Switch onChange={(/** @type {any} */ e)=>{
                 patchState({
                   commonSetting :{
                     ...state.commonSetting,
@@ -938,14 +1031,14 @@ const InterfaceColContent = () => {
                 onChange={onChangeTest}
                 className="case-script"
                 data={state.commonSetting.checkScript.content}
-                ref={aceEditor => {
+                ref={(/** @type {any} */ aceEditor) => {
                   aceEditorRef.current = aceEditor;
                 }}
               />
             </Col>
             <Col span="6">
               <div className="insert-code">
-                {InsertCodeMap.map(item => {
+                {InsertCodeMap.map((/** @type {any} */ item) => {
                   return (
                     <div
                       style={{ cursor: 'pointer' }}
@@ -1041,7 +1134,7 @@ const InterfaceColContent = () => {
       </Row>
 
       <div className="component-label-wrapper">
-        <Label onChange={val => handleChangeInterfaceCol(val, col_name)} desc={col_desc} />
+        <Label onChange={(/** @type {any} */ val) => handleChangeInterfaceCol(val, col_name)} desc={col_desc} />
       </div>
 
       <DndContext
@@ -1049,7 +1142,7 @@ const InterfaceColContent = () => {
         onDragOver={onDragOver}
         onDragEnd={onDragEnd}
       >
-        <SortableContext items={rows.map(item => item.id)} strategy={verticalListSortingStrategy}>
+        <SortableContextAny items={rows.map((/** @type {any} */ item) => item.id)} strategy={verticalListSortingStrategy}>
           <Table
             className="interface-col-table"
             columns={columns}
@@ -1058,7 +1151,7 @@ const InterfaceColContent = () => {
             pagination={false}
             components={{ body: { row: SortableRow } }}
           />
-        </SortableContext>
+        </SortableContextAny>
       </DndContext>
       <Modal
         title="测试报告"
@@ -1088,7 +1181,7 @@ const InterfaceColContent = () => {
           是否开启:&nbsp;
           <Switch
             checked={state.enableScript}
-            onChange={e => patchState({ enableScript: e })}
+            onChange={(/** @type {any} */ e) => patchState({ enableScript: e })}
           />
         </h3>
         <AceEditor

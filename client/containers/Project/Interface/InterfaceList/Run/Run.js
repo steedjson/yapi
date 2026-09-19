@@ -1,3 +1,4 @@
+// @ts-check
 import React, { useRef, useState } from 'react';
 import axios from 'axios';
 import { message } from 'antd';
@@ -24,7 +25,7 @@ const Run = () => {
   const currInterface = useSelector(state => state.inter.curdata);
   const currProject = useSelector(state => state.project.currProject);
   const curUid = useSelector(state => state.user.uid);
-  const { id } = useParams();
+  const { id } = /** @type {any} */ (useParams());
 
   const [saveCaseModalVisible, setSaveCaseModalVisible] = useState(false);
   const postmanRef = useRef(null);
@@ -33,6 +34,10 @@ const Run = () => {
   const latestRef = useRef({});
   latestRef.current = { currInterface, currProject, curUid, paramsId: id };
 
+  /**
+   * @param {any} colId
+   * @param {any} caseName
+   */
   const saveCase = async (colId, caseName) => {
     const { currInterface: interfaceData, paramsId: project_id } = latestRef.current;
     const {
@@ -45,7 +50,7 @@ const Run = () => {
       req_body_other
     } = postmanRef.current.state;
 
-    let params = {
+    let params = /** @type {any} */ ({
       interface_id: interfaceData._id,
       casename: caseName,
       col_id: colId,
@@ -57,7 +62,7 @@ const Run = () => {
       req_body_type,
       req_body_form,
       req_body_other
-    };
+    });
 
     if (params.test_res_body && typeof params.test_res_body === 'object') {
       params.test_res_body = JSON.stringify(params.test_res_body, null, '   ');

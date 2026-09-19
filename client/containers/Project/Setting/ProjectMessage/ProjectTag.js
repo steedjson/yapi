@@ -1,3 +1,4 @@
+// @ts-check
 import React, { useEffect, useImperativeHandle, useState } from 'react';
 import PropTypes from 'prop-types';
 import { Row, Col, Input } from 'antd';
@@ -14,9 +15,9 @@ import './ProjectTag.scss';
  * - handleChange 与旧实现等价：就地修改嵌套元素后浅拷贝出新 state 对象触发重渲染
  *   （旧类 setState 同样总是产生新 state 对象，无同引用 bail-out）；
  */
-const ProjectTag = React.forwardRef((props, ref) => {
+const ProjectTag = React.forwardRef((/** @type {any} */ props, /** @type {any} */ ref) => {
   const { tagMsg } = props;
-  const [state, setState] = useState({ tag: [{ name: '', desc: '' }] });
+  const [state, setState] = useState(/** @type {any} */ ({ tag: [{ name: '', desc: '' }] }));
 
   useEffect(() => {
     // 旧 initState(curdata)：空模板置底，已有 tag 逐条 unshift（结果顺序与旧实现一致）
@@ -27,7 +28,7 @@ const ProjectTag = React.forwardRef((props, ref) => {
       }
     ];
     if (tagMsg && tagMsg.length !== 0) {
-      tagMsg.forEach(item => {
+      tagMsg.forEach((/** @type {any} */ item) => {
         tag.unshift(item);
       });
     }
@@ -37,27 +38,43 @@ const ProjectTag = React.forwardRef((props, ref) => {
   // 等价暴露旧类实例的 state，供父组件提交时读取 tagRef.current.state.tag
   useImperativeHandle(ref, () => ({ state }));
 
+  /**
+   * @param {any} val
+   * @param {any} index
+   * @param {any} name
+   * @param {any} label
+   */
   const addHeader = (val, index, name, label) => {
-    let newValue = {};
+    let newValue = /** @type {any} */ ({});
     newValue[name] = [].concat(state[name]);
     newValue[name][index][label] = val;
     let nextData = state[name][index + 1];
     if (!(nextData && typeof nextData === 'object')) {
       let data = { name: '', desc: '' };
-      newValue[name] = [].concat(state[name], data);
+      newValue[name] = (/** @type {any[]} */ ([])).concat(state[name], data);
     }
     setState(newValue);
   };
 
+  /**
+   * @param {any} key
+   * @param {any} name
+   */
   const delHeader = (key, name) => {
     let curValue = state[name];
-    let newValue = {};
-    newValue[name] = curValue.filter((val, index) => {
+    let newValue = /** @type {any} */ ({});
+    newValue[name] = curValue.filter((/** @type {any} */ val, /** @type {number} */ index) => {
       return index !== key;
     });
     setState(newValue);
   };
 
+  /**
+   * @param {any} val
+   * @param {any} index
+   * @param {any} name
+   * @param {any} label
+   */
   const handleChange = (val, index, name, label) => {
     let newValue = state;
     newValue[name][index][label] = val;
@@ -67,6 +84,11 @@ const ProjectTag = React.forwardRef((props, ref) => {
     setState({ ...state });
   };
 
+  /**
+   * @param {any} item
+   * @param {any} index
+   * @param {any} name
+   */
   const commonTpl = (item, index, name) => {
     const length = state[name].length - 1;
     return (
@@ -76,14 +98,14 @@ const ProjectTag = React.forwardRef((props, ref) => {
             placeholder={`请输入 ${name} 名称`}
             // style={{ width: '200px' }}
             value={item.name || ''}
-            onChange={e => addHeader(e.target.value, index, name, 'name')}
+            onChange={(/** @type {any} */ e) => addHeader(e.target.value, index, name, 'name')}
           />
         </Col>
         <Col span={12}>
           <Input
             placeholder="请输入tag 描述信息"
             style={{ width: '90%', marginRight: 8 }}
-            onChange={e => handleChange(e.target.value, index, name, 'desc')}
+            onChange={(/** @type {any} */ e) => handleChange(e.target.value, index, name, 'desc')}
             value={item.desc || ''}
           />
         </Col>
@@ -91,7 +113,7 @@ const ProjectTag = React.forwardRef((props, ref) => {
           {/* 新增的项中，只有最后一项没有有删除按钮 */}
           <DeleteOutlined
             className="dynamic-delete-button delete"
-            onClick={e => {
+            onClick={(/** @type {any} */ e) => {
               e.stopPropagation();
               delHeader(index, name);
             }}
@@ -103,7 +125,7 @@ const ProjectTag = React.forwardRef((props, ref) => {
 
   return (
     <div className="project-tag">
-      {state.tag.map((item, index) => {
+      {state.tag.map((/** @type {any} */ item, /** @type {number} */ index) => {
         return commonTpl(item, index, 'tag');
       })}
     </div>

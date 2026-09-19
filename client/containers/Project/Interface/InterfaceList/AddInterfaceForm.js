@@ -1,3 +1,4 @@
+// @ts-check
 import React, { useState } from 'react'
 import PropTypes from 'prop-types'
 import { Input, Select, Button, Form, TreeSelect } from 'antd';
@@ -12,6 +13,9 @@ const FormItem = Form.Item;
 const Option = Select.Option;
 
 
+/**
+ * @param {any} props
+ */
 function AddInterfaceForm(props) {
   const [form] = Form.useForm();
   // antd3 时代 method 是 addonBefore 内经表单装饰器绑定的字段;
@@ -19,6 +23,9 @@ function AddInterfaceForm(props) {
   // 字段名与提交 payload 结构保持不变
   const [method, setMethod] = useState('GET');
 
+  /**
+   * @param {any} values
+   */
   const handleSubmit = values => {
     props.onSubmit(
       { ...values, method },
@@ -29,6 +36,9 @@ function AddInterfaceForm(props) {
     );
   }
 
+  /**
+   * @param {any} e
+   */
   const handlePath = e => {
     let val = e.target.value
     form.setFieldsValue({

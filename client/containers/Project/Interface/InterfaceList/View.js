@@ -1,3 +1,4 @@
+// @ts-check
 import './View.scss';
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
@@ -31,7 +32,10 @@ const View = () => {
     init: true,
     enter: false
   });
-  const patchState = patch => setState(prevState => ({ ...prevState, ...patch }));
+  /**
+   * @param {any} patch
+   */
+  const patchState = patch => setState((/** @type {any} */ prevState) => ({ ...prevState, ...patch }));
 
   // 对应旧 componentDidMount：仅挂载期执行一次
   useEffect(() => {
@@ -40,8 +44,13 @@ const View = () => {
     }
   }, []);
 
+  /**
+   * @param {any} req_body_type
+   * @param {any} req_body_form
+   */
   const req_body_form = (req_body_type, req_body_form) => {
     if (req_body_type === 'form') {
+      /** @type {any[]} */
       const columns = [
         {
           title: '参数名称',
@@ -54,7 +63,7 @@ const View = () => {
           dataIndex: 'type',
           key: 'type',
           width: 100,
-          render: text => {
+          render: (/** @type {any} */ text) => {
             text = text || '';
             return text.toLowerCase() === 'text' ? (
               <span>
@@ -78,7 +87,7 @@ const View = () => {
           dataIndex: 'example',
           key: 'example',
           width: 80,
-          render(_, item) {
+          render(/** @type {any} */ _, /** @type {any} */ item) {
             return <p style={{ whiteSpace: 'pre-wrap' }}>{item.example}</p>;
           }
         },
@@ -86,15 +95,16 @@ const View = () => {
           title: '备注',
           dataIndex: 'value',
           key: 'value',
-          render(_, item) {
+          render(/** @type {any} */ _, /** @type {any} */ item) {
             return <p style={{ whiteSpace: 'pre-wrap' }}>{item.value}</p>;
           }
         }
       ];
 
+      /** @type {any[]} */
       const dataSource = [];
       if (req_body_form && req_body_form.length) {
-        req_body_form.map((item, i) => {
+        req_body_form.map((/** @type {any} */ item, /** @type {number} */ i) => {
           dataSource.push({
             key: i,
             name: item.name,
@@ -120,6 +130,11 @@ const View = () => {
     }
   };
 
+  /**
+   * @param {any} res_body_type
+   * @param {any} res_body
+   * @param {any} res_body_is_json_schema
+   */
   const res_body = (res_body_type, res_body, res_body_is_json_schema) => {
     if (res_body_type === 'json') {
       if (res_body_is_json_schema) {
@@ -141,6 +156,11 @@ const View = () => {
     }
   };
 
+  /**
+   * @param {any} req_body_type
+   * @param {any} req_body_other
+   * @param {any} req_body_is_json_schema
+   */
   const req_body = (req_body_type, req_body_other, req_body_is_json_schema) => {
     if (req_body_other) {
       if (req_body_is_json_schema && req_body_type === 'json') {
@@ -160,7 +180,11 @@ const View = () => {
     }
   };
 
+  /**
+   * @param {any} query
+   */
   const req_query = query => {
+    /** @type {any[]} */
     const columns = [
       {
         title: '参数名称',
@@ -179,23 +203,24 @@ const View = () => {
         dataIndex: 'example',
         key: 'example',
         width: 80,
-        render(_, item) {
-          return <p style={{ whiteSpace: 'pre-wrap' }}>{item.example}</p>;
-        }
-      },
-      {
-        title: '备注',
-        dataIndex: 'value',
-        key: 'value',
-        render(_, item) {
-          return <p style={{ whiteSpace: 'pre-wrap' }}>{item.value}</p>;
-        }
+      render(/** @type {any} */ _, /** @type {any} */ item) {
+        return <p style={{ whiteSpace: 'pre-wrap' }}>{item.example}</p>;
       }
-    ];
+    },
+    {
+      title: '备注',
+      dataIndex: 'value',
+      key: 'value',
+      render(/** @type {any} */ _, /** @type {any} */ item) {
+        return <p style={{ whiteSpace: 'pre-wrap' }}>{item.value}</p>;
+      }
+    }
+  ];
 
-    const dataSource = [];
-    if (query && query.length) {
-      query.map((item, i) => {
+  /** @type {any[]} */
+  const dataSource = [];
+  if (query && query.length) {
+    query.map((/** @type {any} */ item, /** @type {number} */ i) => {
         dataSource.push({
           key: i,
           name: item.name,
@@ -223,11 +248,18 @@ const View = () => {
     });
   };
 
+  /**
+   * @param {any} url
+   */
   const copyUrl = url => {
     copyText(url);
     message.success('已经成功复制到剪切板');
   };
 
+  /**
+   * @param {any} mock
+   * @param {any} strice
+   */
   const flagMsg = (mock, strice) => {
     if (mock && strice) {
       return <span>( 全局mock & 严格模式 )</span>;
@@ -240,9 +272,10 @@ const View = () => {
     }
   };
 
+  /** @type {any[]} */
   const dataSource = [];
   if (curData.req_headers && curData.req_headers.length) {
-    curData.req_headers.map((item, i) => {
+    curData.req_headers.map((/** @type {any} */ item, /** @type {number} */ i) => {
       dataSource.push({
         key: i,
         name: item.name,
@@ -254,9 +287,10 @@ const View = () => {
     });
   }
 
+  /** @type {any[]} */
   const req_dataSource = [];
   if (curData.req_params && curData.req_params.length) {
-    curData.req_params.map((item, i) => {
+    curData.req_params.map((/** @type {any} */ item, /** @type {number} */ i) => {
       req_dataSource.push({
         key: i,
         name: item.name,
@@ -265,6 +299,7 @@ const View = () => {
       });
     });
   }
+  /** @type {any[]} */
   const req_params_columns = [
     {
       title: '参数名称',
@@ -277,7 +312,7 @@ const View = () => {
       dataIndex: 'example',
       key: 'example',
       width: 80,
-      render(_, item) {
+      render(/** @type {any} */ _, /** @type {any} */ item) {
         return <p style={{ whiteSpace: 'pre-wrap' }}>{item.example}</p>;
       }
     },
@@ -285,12 +320,13 @@ const View = () => {
       title: '备注',
       dataIndex: 'desc',
       key: 'desc',
-      render(_, item) {
+      render(/** @type {any} */ _, /** @type {any} */ item) {
         return <p style={{ whiteSpace: 'pre-wrap' }}>{item.desc}</p>;
       }
     }
   ];
 
+  /** @type {any[]} */
   const columns = [
     {
       title: '参数名称',
@@ -315,7 +351,7 @@ const View = () => {
       dataIndex: 'example',
       key: 'example',
       width: '80px',
-      render(_, item) {
+      render(/** @type {any} */ _, /** @type {any} */ item) {
         return <p style={{ whiteSpace: 'pre-wrap' }}>{item.example}</p>;
       }
     },
@@ -323,7 +359,7 @@ const View = () => {
       title: '备注',
       dataIndex: 'desc',
       key: 'desc',
-      render(_, item) {
+      render(/** @type {any} */ _, /** @type {any} */ item) {
         return <p style={{ whiteSpace: 'pre-wrap' }}>{item.desc}</p>;
       }
     }
@@ -343,7 +379,9 @@ const View = () => {
     (curData.req_query && curData.req_query.length) ||
     bodyShow;
 
-  let methodColor = variable.METHOD_COLOR[curData.method ? curData.method.toLowerCase() : 'get'];
+  let methodColor = (/** @type {Record<string, any>} */ (variable.METHOD_COLOR))[
+    curData.method ? curData.method.toLowerCase() : 'get'
+  ];
 
   // statusColor = statusColor[curData.status?curData.status.toLowerCase():"undone"];
   // const aceEditor = <div style={{ display: curData.req_body_other && (curData.req_body_type !== "form") ? "block" : "none" }} className="colBody">
@@ -383,7 +421,7 @@ const View = () => {
             状&emsp;&emsp;态：
           </Col>
           <Col span={8} className={'tag-status ' + curData.status}>
-            {status[curData.status]}
+            {(/** @type {Record<string, any>} */ (status))[curData.status]}
           </Col>
           <Col span={4} className="colKey">
             更新时间：
@@ -515,7 +553,11 @@ const View = () => {
       <div
         style={{
           display:
-            curData.method && HTTP_METHOD[curData.method.toUpperCase()].request_body ? '' : 'none'
+            curData.method &&
+            (/** @type {Record<string, any>} */ (HTTP_METHOD))[curData.method.toUpperCase()]
+              .request_body
+              ? ''
+              : 'none'
         }}
       >
         <h3 style={{ display: bodyShow ? '' : 'none' }} className="col-title">

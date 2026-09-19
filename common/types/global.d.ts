@@ -147,6 +147,12 @@ declare module 'react' {
   export function useImperativeHandle(ref: any, init: () => any, deps?: any[]): void;
   export function useMemo<T = any>(factory: () => T, deps?: any[]): T;
   export function useCallback<T = any>(fn: T, deps?: any[]): T;
+  // ReactNode / ReactElement / CSSProperties 供自带类型的第三方库（如
+  // @dnd-kit/sortable 的 SortableContext Props）引用，统一按 any 放宽，
+  // 与「内置元素 any、组件属性不校验」的 JSX 最小声明策略一致。
+  export type ReactNode = any;
+  export type ReactElement = any;
+  export type CSSProperties = any;
   const React: any;
   export default React;
 }
@@ -217,6 +223,8 @@ declare module 'antd' {
   export const Space: any;
   export const Tag: any;
   export const Timeline: any;
+  // containers/Project 使用（P7c）：ProjectMember.js 引用 Badge。
+  export const Badge: any;
 }
 
 declare module 'rc-scroll-anim' {
@@ -274,6 +282,11 @@ declare namespace JSX {
   interface IntrinsicElements {
     [elemName: string]: any;
   }
+  // P7c：不再声明 JSX.ElementChildrenAttribute（children → children prop 映射）。
+  // 实测它会令自带类型的第三方组件把 JSX children 纳入属性校验，导致既有
+  // @ts-check 文件（如 User/Profile.js 的无 children 组件）出现新的 TS2322，
+  // 得不偿失；对 @dnd-kit/sortable SortableContext 必填 children 的误报，
+  // 在 InterfaceColContent.js 中以 any 中转解决。
 }
 
 // react-router 6 起自带类型（flat config 时代遗留的 v5 ambient 声明已删除：
@@ -282,6 +295,32 @@ declare namespace JSX {
 
 declare module 'client/plugin.js' {
   export function emitHook(name: string, ...args: any[]): any;
+}
+
+// 以下 stub 供 containers/Project（P7c）内以 webpack 别名 client/... 绝对路径引用的
+// 模块使用（tsconfig 未配置 client/* 的 paths 映射）；目标文件均为运行时真实存在的
+// client 内文件，此处仅按使用到的导出形态声明最小子集，新增用法时需同步补充。
+declare module 'client/components/Postman/CheckCrossInstall.js' {
+  export function initCrossRequest(fn: (hasPlugin: any) => void): any;
+}
+
+declare module 'client/components/Postman/Postman.js' {
+  export const InsertCodeMap: any;
+}
+
+declare module 'client/components/CaseEnv' {
+  const CaseEnv: any;
+  export default CaseEnv;
+}
+
+declare module 'client/utils/sanitize.js' {
+  function sanitizeHtml(dirty: any): any;
+  export default sanitizeHtml;
+}
+
+declare module 'client/constants/variable.js' {
+  const constants: any;
+  export default constants;
 }
 
 declare module 'json-schema-editor-visual' {

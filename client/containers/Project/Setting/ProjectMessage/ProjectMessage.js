@@ -1,3 +1,4 @@
+// @ts-check
 import React, { useState, useEffect, useRef } from 'react';
 import {
   Input,
@@ -56,6 +57,9 @@ const formItemLayout = {
 
 const Option = Select.Option;
 
+/**
+ * @param {any} props
+ */
 function ProjectMessage(props) {
   const [form] = Form.useForm();
   const tagRef = useRef(null);
@@ -63,24 +67,27 @@ function ProjectMessage(props) {
   const [showDangerOptions, setShowDangerOptions] = useState(false);
 
   // 确认修改
+  /**
+   * @param {any} e
+   */
   const handleOk = e => {
     e.preventDefault();
     const { updateProject, projectMsg, groupList } = props;
-    form.validateFields().then(values => {
+    form.validateFields().then((/** @type {any} */ values) => {
       let { tag } = tagRef.current.state;
-      tag = tag.filter(val => {
+      tag = tag.filter((/** @type {any} */ val) => {
         return val.name !== '';
       });
       let assignValue = Object.assign(projectMsg, values, { tag });
 
       values.protocol = protocol.split(':')[0];
       const group_id = assignValue.group_id;
-      const selectGroup = groupList.find(item => {
+      const selectGroup = groupList.find((/** @type {any} */ item) => {
         return item._id == group_id;
       });
 
       updateProject(assignValue)
-        .then(res => {
+        .then((/** @type {any} */ res) => {
           if (res.payload.data.errcode == 0) {
             props.getProject(props.projectId);
             message.success('修改成功! ');
@@ -105,6 +112,9 @@ function ProjectMessage(props) {
     });
   };
 
+  /**
+   * @param {any} tag
+   */
   const tagSubmit = tag => {
     tagRef.current = tag;
   };
@@ -128,14 +138,14 @@ function ProjectMessage(props) {
         </div>
       ),
       onOk() {
-        let groupName = trim(document.getElementById('project_name').value);
+        let groupName = trim((/** @type {any} */ (document.getElementById('project_name'))).value);
         if (props.projectMsg.name !== groupName) {
           message.error('项目名称有误');
           return new Promise((resolve, reject) => {
             reject('error');
           });
         } else {
-          props.delProject(props.projectId).then(res => {
+          props.delProject(props.projectId).then((/** @type {any} */ res) => {
             if (res.payload.data.errcode == 0) {
               message.success('删除成功!');
               props.history.push('/group/' + props.projectMsg.group_id);
@@ -149,18 +159,28 @@ function ProjectMessage(props) {
   };
 
   // 修改项目头像的背景颜色
+  /**
+   * @param {any} e
+   */
   const changeProjectColor = e => {
     const { _id, color, icon } = props.projectMsg;
-    props.upsetProject({ id: _id, color: e.target.value || color, icon }).then(res => {
+    props
+      .upsetProject({ id: _id, color: e.target.value || color, icon })
+      .then((/** @type {any} */ res) => {
       if (res.payload.data.errcode === 0) {
         props.getProject(props.projectId);
       }
     });
   };
   // 修改项目头像的图标
+  /**
+   * @param {any} e
+   */
   const changeProjectIcon = e => {
     const { _id, color, icon } = props.projectMsg;
-    props.upsetProject({ id: _id, color, icon: e.target.value || icon }).then(res => {
+    props
+      .upsetProject({ id: _id, color, icon: e.target.value || icon })
+      .then((/** @type {any} */ res) => {
       if (res.payload.data.errcode === 0) {
         props.getProject(props.projectId);
       }
@@ -222,10 +242,10 @@ function ProjectMessage(props) {
       strice: initFormValues.strice,
       is_json5: initFormValues.is_json5
     };
-    const backfill = {};
-    Object.keys(candidate).forEach(key => {
+    const backfill = /** @type {any} */ ({});
+    Object.keys(candidate).forEach((/** @type {any} */ key) => {
       if (!form.isFieldTouched(key)) {
-        backfill[key] = candidate[key];
+        backfill[key] = (/** @type {Record<string, any>} */ (candidate))[key];
       }
     });
     form.setFieldsValue(backfill);
@@ -275,7 +295,9 @@ function ProjectMessage(props) {
                 className: 'ui-logo',
                 style: {
                   backgroundColor:
-                    constants.PROJECT_COLOR[projectMsg.color] || constants.PROJECT_COLOR.blue
+                    (/** @type {Record<string, any>} */ (constants.PROJECT_COLOR))[
+                      projectMsg.color
+                    ] || constants.PROJECT_COLOR.blue
                 }
               })}
             </Popover>
@@ -314,7 +336,7 @@ function ProjectMessage(props) {
             ]}
           >
             <Select disabled={!selectDisbaled}>
-              {props.groupList.map((item, index) => (
+              {props.groupList.map((/** @type {any} */ item, /** @type {number} */ index) => (
                 <Option value={item._id.toString()} key={index}>
                   {item.group_name}
                 </Option>
@@ -515,7 +537,7 @@ ProjectMessage.propTypes = {
 };
 
 export default connect(
-  state => {
+  (/** @type {any} */ state) => {
     return {
       projectList: state.project.projectList,
       groupList: state.group.groupList,

@@ -1,3 +1,4 @@
+// @ts-check
 import React, { useEffect } from 'react';
 import { Tabs, Layout } from 'antd';
 import { Routes, Route, matchPath, useLocation, useNavigate, useParams } from 'react-router-dom';
@@ -25,10 +26,10 @@ const contentRouter = {
  * match/history/location 结构予以保留以兼容既有签名。
  */
 const InterfaceRoute = () => {
-  const params = useParams();
+  const params = /** @type {any} */ (useParams());
   const location = useLocation();
   const navigate = useNavigate();
-  let C;
+  let C = /** @type {any} */ (null);
   if (params.action === 'api') {
     if (!params.actionId) {
       C = InterfaceList;
@@ -48,9 +49,9 @@ const InterfaceRoute = () => {
   // 与旧 withRouter 注入的 match/history 结构逐字段一致
   const match = { params, pathname: location.pathname, url: location.pathname };
   const history = {
-    push: (to, state) => navigate(to, { state }),
-    replace: (to, state) => navigate(to, { replace: true, state }),
-    go: n => navigate(n),
+    push: (/** @type {any} */ to, /** @type {any} */ state) => navigate(to, { state }),
+    replace: (/** @type {any} */ to, /** @type {any} */ state) => navigate(to, { replace: true, state }),
+    go: (/** @type {any} */ n) => navigate(n),
     goBack: () => navigate(-1),
     goForward: () => navigate(1),
     location
@@ -78,6 +79,9 @@ const Interface = () => {
     dispatch(setColData({ isShowCol: true }));
   }, []);
 
+  /**
+   * @param {any} action
+   */
   const onChange = action => {
     if (action === 'colOrCase') {
       action = isShowCol ? 'col' : 'case';

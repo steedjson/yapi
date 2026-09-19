@@ -1,3 +1,4 @@
+// @ts-check
 import React, { PureComponent as Component } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
@@ -16,7 +17,7 @@ import ProjectMember from './Setting/ProjectMember/ProjectMember.js';
 import ProjectData from './Setting/ProjectData/ProjectData.js';
 const plugin = require('client/plugin.js');
 @connect(
-  state => {
+  (/** @type {any} */ state) => {
     return {
       curProject: state.project.currProject,
       currGroup: state.group.currGroup
@@ -39,6 +40,9 @@ export default class Project extends Component {
     currGroup: PropTypes.object
   };
 
+  /**
+   * @param {any} props
+   */
   constructor(props) {
     super(props);
     this.state = { loadError: false };
@@ -59,6 +63,9 @@ export default class Project extends Component {
     }
   }
 
+  /**
+   * @param {any} nextProps
+   */
   async UNSAFE_componentWillReceiveProps(nextProps) {
     const currProjectId = this.props.match.params.id;
     const nextProjectId = nextProps.match.params.id;
@@ -82,7 +89,7 @@ export default class Project extends Component {
     const { match, location } = this.props;
     // path: 绝对路径，用于子导航高亮的 matchPath 与 URL 拼接；
     // route: v6 嵌套路由相对路径（相对 /project/:id 前缀），接口页需 /* 消费更深路径
-    let routers = {
+    let routers = /** @type {any} */ ({
       interface: {
         name: '接口',
         path: '/project/:id/interface/:action',
@@ -93,7 +100,7 @@ export default class Project extends Component {
       data: { name: '数据管理', path: '/project/:id/data', route: 'data', component: ProjectData },
       members: { name: '成员管理', path: '/project/:id/members', route: 'members', component: ProjectMember },
       setting: { name: '设置', path: '/project/:id/setting', route: 'setting', component: Setting }
-    };
+    });
 
     plugin.emitHook('sub_nav', routers);
 
@@ -131,8 +138,9 @@ export default class Project extends Component {
     //   path: `/project/${match.params.id}/setting`
     // }];
 
+    /** @type {any[]} */
     let subnavData = [];
-    Object.keys(routers).forEach(key => {
+    Object.keys(routers).forEach((/** @type {any} */ key) => {
       let item = routers[key];
       let value = {};
       if (key === 'interface') {
@@ -150,7 +158,7 @@ export default class Project extends Component {
     });
 
     if (this.props.currGroup && this.props.currGroup.type === 'private') {
-      subnavData = subnavData.filter(item => {
+      subnavData = subnavData.filter((/** @type {any} */ item) => {
         return item.name != '成员管理';
       });
     }
@@ -164,17 +172,17 @@ export default class Project extends Component {
         <Subnav default={defaultName} data={subnavData} />
         <Routes>
           <Route index element={<Navigate to={`/project/${match.params.id}/interface/api`} />} />
-          {Object.keys(routers).map(key => {
+          {Object.keys(routers).map((/** @type {any} */ key) => {
             let item = routers[key];
             // v6 element 不注入路由 props，经兼容 HOC 包装（内部按组件缓存）
             const Wrapped = withRouter(item.component);
 
             return key === 'members' ? (
               this.props.currGroup.type !== 'private' ? (
-                <Route key={key} path={item.route} element={<Wrapped />} />
+                <Route {...{ key: key, path: item.route }} element={<Wrapped />} />
               ) : null
             ) : (
-              <Route key={key} path={item.route} element={<Wrapped />} />
+              <Route {...{ key: key, path: item.route }} element={<Wrapped />} />
             );
           })}
           {/* 兜底：未知子路径明确提示不存在，避免静默空白 */}

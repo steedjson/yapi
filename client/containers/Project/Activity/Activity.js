@@ -1,3 +1,4 @@
+// @ts-check
 import './Activity.scss';
 import React from 'react';
 import TimeTree from '../../../components/TimeLine/TimeLine';
@@ -7,7 +8,7 @@ import PropTypes from 'prop-types';
 import { Button } from 'antd';
 
 const Activity = () => {
-  const params = useParams();
+  const params = /** @type {any} */ (useParams());
   const currProject = useSelector(state => state.project.currProject);
   // 旧 @connect 映射的 uid/curdata 历史遗留仅声明未消费，保留订阅避免行为差异
   useSelector(state => state.user.uid + '');

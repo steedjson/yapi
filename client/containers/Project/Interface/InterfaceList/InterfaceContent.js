@@ -1,3 +1,4 @@
+// @ts-check
 import React, { useEffect, useRef, useState } from 'react';
 import { Tabs, Modal, Button, Spin, message } from 'antd';
 import { useDispatch, useSelector } from 'react-redux';
@@ -28,7 +29,7 @@ const Content = () => {
   // 历史遗留仅声明未消费，保留订阅避免行为差异
   useSelector(state => state.inter.list);
   const editStatus = useSelector(state => state.inter.editStatus);
-  const { actionId } = useParams();
+  const { actionId } = /** @type {any} */ (useParams());
 
   // 镜像旧实例字段 this.actionId：渲染期同步更新，等价旧 cWM/cWRP 中 render 前赋值，
   // 异步恢复回调据此判断响应是否仍对应当前路由接口
@@ -42,8 +43,14 @@ const Content = () => {
     loading: true,
     loadError: ''
   });
+  /**
+   * @param {any} patch
+   */
   const patchState = patch => setState(prevState => ({ ...prevState, ...patch }));
 
+  /**
+   * @param {any} requestActionId
+   */
   const handleRequest = async requestActionId => {
     patchState({
       curtab: 'view',
@@ -59,7 +66,7 @@ const Content = () => {
       if (actionIdRef.current === requestActionId) {
         patchState({ loading: false });
       }
-    } catch (err) {
+    } catch (/** @type {any} */ err) {
       if (actionIdRef.current !== requestActionId) return;
       message.error('接口详情加载失败：' + err.message);
       patchState({ loading: false, loadError: '接口详情加载失败，请稍后重试' });
@@ -91,6 +98,9 @@ const Content = () => {
     });
   };
 
+  /**
+   * @param {any} key
+   */
   const onChange = key => {
     if (state.curtab === 'edit' && editStatus) {
       showModal();
@@ -134,7 +144,7 @@ const Content = () => {
     document.getElementsByTagName('title')[0].innerText = curdata.title + '-' + TITLE;
   }
 
-  let InterfaceTabs = {
+  let InterfaceTabs = /** @type {any} */ ({
     view: {
       component: View,
       name: '预览'
@@ -147,7 +157,7 @@ const Content = () => {
       component: Run,
       name: '运行'
     }
-  };
+  });
 
   plugin.emitHook('interface_tab', InterfaceTabs);
 
@@ -157,7 +167,7 @@ const Content = () => {
       onChange={onChange}
       activeKey={state.curtab}
       defaultActiveKey="view"
-      items={Object.keys(InterfaceTabs).map(key => {
+      items={Object.keys(InterfaceTabs).map((/** @type {any} */ key) => {
         let item = InterfaceTabs[key];
         return { label: item.name, key: key };
       })}

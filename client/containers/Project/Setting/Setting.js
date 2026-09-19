@@ -1,3 +1,4 @@
+// @ts-check
 import React from 'react';
 import { Tabs } from 'antd';
 import { useSelector } from 'react-redux';
@@ -9,7 +10,7 @@ import ProjectToken from './ProjectToken/ProjectToken';
 import ProjectMock from './ProjectMock/index.js';
 const plugin = require('client/plugin.js');
 
-const routers = {}
+const routers = /** @type {any} */ ({});
 
 import './Setting.scss';
 
@@ -22,8 +23,9 @@ import './Setting.scss';
  */
 const Setting = () => {
   const curProjectRole = useSelector(state => state.project.currProject.role);
-  const { id } = useParams();
+  const { id } = /** @type {any} */ (useParams());
   plugin.emitHook('sub_setting_nav', routers);
+  /** @type {any[]} */
   const items = [
     {
       label: '项目配置',
@@ -53,7 +55,7 @@ const Setting = () => {
     key: '5',
     children: <ProjectMock projectId={+id} />
   });
-  Object.keys(routers).forEach(key => {
+  Object.keys(routers).forEach((/** @type {any} */ key) => {
     const C = routers[key].component;
     items.push({
       label: routers[key].name,

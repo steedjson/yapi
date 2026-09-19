@@ -1,8 +1,12 @@
+// @ts-check
 import React from 'react';
 import PropTypes from 'prop-types';
 import { Input, Button, Select, Form } from 'antd';
 const FormItem = Form.Item;
 const Option = Select.Option;
+/**
+ * @param {any} props
+ */
 function AddInterfaceForm(props) {
   const [form] = Form.useForm();
   const formItemLayout = {
@@ -16,6 +20,9 @@ function AddInterfaceForm(props) {
     }
   };
 
+  /**
+   * @param {any} values
+   */
   const handleSubmit = values => {
     props.onSubmit(values);
   };
@@ -45,7 +52,7 @@ function AddInterfaceForm(props) {
         >
           <Select>
             <Option value={0}>顶级分类</Option>
-            {props.categories.map(item => (
+            {props.categories.map((/** @type {any} */ item) => (
               <Option key={item._id} value={item._id}>
                 {item.label}
               </Option>

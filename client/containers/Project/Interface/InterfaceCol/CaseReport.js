@@ -1,6 +1,10 @@
+// @ts-check
 import React from 'react';
 import PropTypes from 'prop-types';
 import { Row, Col, Tabs } from 'antd';
+/**
+ * @param {any} json
+ */
 function jsonFormat(json) {
   // console.log('json',json)
   if (json && typeof json === 'object') {
@@ -9,15 +13,18 @@ function jsonFormat(json) {
   return json;
 }
 
+/**
+ * @param {any} props
+ */
 const CaseReport = function(props) {
   let params = jsonFormat(props.data);
-  let headers = jsonFormat(props.headers, null, '   ');
-  let res_header = jsonFormat(props.res_header, null, '   ');
+  let headers = (/** @type {any} */ (jsonFormat))(props.headers, null, '   ');
+  let res_header = (/** @type {any} */ (jsonFormat))(props.res_header, null, '   ');
   let res_body = jsonFormat(props.res_body);
   let httpCode = props.status;
   let validRes;
   if (props.validRes && Array.isArray(props.validRes)) {
-    validRes = props.validRes.map((item, index) => {
+    validRes = props.validRes.map((/** @type {any} */ item, /** @type {number} */ index) => {
       return <div key={index}>{item.message}</div>;
     });
   }
