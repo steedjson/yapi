@@ -1,4 +1,15 @@
-let hooks, pluginModule;
+// @ts-check
+/**
+ * @typedef {Object} HookDef
+ * @property {('component'|'listener')} type hook 消费形态:组件挂载点或监听函数列表
+ * @property {boolean} mulit 是否绑定多个监听函数
+ * @property {any} listener 单个监听函数、监听函数数组(component 型为 null)
+ */
+
+/** @type {Record<string, HookDef>} */
+let hooks;
+/** @type {{hooks: Record<string, HookDef>, bindHook: Function, emitHook: Function}} */
+let pluginModule;
 
 /**
  * type component  组件
@@ -247,6 +258,11 @@ hooks = {
   }
 };
 
+/**
+ * 绑定 hook
+ * @param {string} name hook 名
+ * @param {Function} listener 监听函数
+ */
 function bindHook(name, listener) {
   if (!name) {
     throw new Error('缺少hookname');
@@ -261,6 +277,11 @@ function bindHook(name, listener) {
   }
 }
 
+/**
+ * 触发 hook
+ * @param {string} name hook 名
+ * @param {...any} args 传给监听函数的参数
+ */
 function emitHook(name, ...args) {
   if (!hooks[name]) {
     throw new Error('不存在的hook name');
@@ -268,8 +289,9 @@ function emitHook(name, ...args) {
   let hook = hooks[name];
   if (hook.mulit === true && hook.type === 'listener') {
     if (Array.isArray(hook.listener)) {
+      /** @type {Promise<any>[]} */
       let promiseAll = [];
-      hook.listener.forEach(item => {
+      hook.listener.forEach((/** @type {Function} */ item) => {
         if (typeof item === 'function') {
           promiseAll.push(Promise.resolve(item.call(pluginModule, ...args)));
         }
@@ -290,9 +312,13 @@ pluginModule = {
   bindHook: bindHook,
   emitHook: emitHook
 };
+/** @type {Record<string, any>} */
 let pluginModuleList;
 try {
-  pluginModuleList = require('./plugin-module.js');
+  // 以 webpack 别名 client/ 引入而非相对路径:plugin-module.js 是构建产物且被 gitignore
+  // (全新 checkout 在 build-client 前不存在),相对路径会令 @ts-check 报 TS2307;
+  // 别名与相对路径在 webpack 下解析到同一文件,运行时无差异。
+  pluginModuleList = require('client/plugin-module.js');
 } catch (err) {
   pluginModuleList = {};
 }

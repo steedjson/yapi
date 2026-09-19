@@ -1,3 +1,4 @@
+// @ts-check
 import React, { PureComponent as Component } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
@@ -18,16 +19,26 @@ import history from './history';
 
 const plugin = require('client/plugin.js');
 
+// Route 的类型经 react-router-dom 自带 d.ts 产生 JSX key 属性误报(TS2322:
+// Property 'key' does not exist on type 'RouteProps'),而 eslint react/jsx-key
+// 又不认可展开写法的 key(参照 Project.js 的 {...{key}} 形态)。
+// 经 any 中转后以常规 key 属性书写,类型检查与 lint 两者兼顾,运行时无差异。
+const RouteAny = /** @type {any} */ (Route);
+
 const LOADING_STATUS = 0;
 
-// 路由级代码分割：React.lazy + Suspense 的轻量封装，加载期展示全局 Loading。
-// loader 内必须带 webpackChunkName 注释以命名异步 chunk（project/group/user 等），
-// 使 static/prd/ 下产出独立分包，缩小首屏主包体积。
-// 外层 ErrorBoundary 兜住分包加载失败（线上发版后旧 chunk 404 / 网络中断）与
-// 路由渲染异常：就地展示友好刷新卡片，而不是整树卸载白屏。
+/**
+ * 路由级代码分割：React.lazy + Suspense 的轻量封装，加载期展示全局 Loading。
+ * loader 内必须带 webpackChunkName 注释以命名异步 chunk（project/group/user 等），
+ * 使 static/prd/ 下产出独立分包，缩小首屏主包体积。
+ * 外层 ErrorBoundary 兜住分包加载失败（线上发版后旧 chunk 404 / 网络中断）与
+ * 路由渲染异常：就地展示友好刷新卡片，而不是整树卸载白屏。
+ * @param {() => Promise<any>} loader 动态 import 加载器
+ * @param {string} chunkName webpack 异步 chunk 名
+ */
 const createAsyncComponent = (loader, chunkName) => {
   const LazyComponent = React.lazy(loader);
-  const AsyncComponent = props => (
+  const AsyncComponent = (/** @type {any} */ props) => (
     <ErrorBoundary>
       <React.Suspense fallback={<Loading visible />}>
         <LazyComponent {...props} />
@@ -74,6 +85,7 @@ const alertContent = () => {
   }
 };
 
+/** @type {Record<string, {path: string, component: any}>} 路由表,经 app_route 钩子暴露给插件扩展 */
 let AppRoute = {
   home: {
     path: '/',
@@ -114,6 +126,7 @@ plugin.emitHook('app_route', AppRoute);
 // requireAuthentication 依赖 history.push 做登录跳转，需经兼容 HOC 注入；
 // 包装结果按组件缓存，保证组件身份稳定避免重挂载。
 const authedCache = new Map();
+/** @param {any} Component 需要登录态的路由组件 */
 const authed = Component => {
   if (!authedCache.has(Component)) {
     authedCache.set(Component, withRouter(requireAuthentication(Component)));
@@ -121,14 +134,14 @@ const authed = Component => {
   return authedCache.get(Component);
 };
 
-const AppHeader = withRouter(props => {
+const AppHeader = withRouter((/** @type {any} */ props) => {
   const isLoginPage = props.location && props.location.pathname === '/login';
   if (isLoginPage) return null;
   return props.loginState !== 1 ? <Header /> : null;
 });
 
 @connect(
-  state => {
+  (/** @type {any} */ state) => {
     return {
       loginState: state.user.loginState,
       curUserRole: state.user.role
@@ -139,7 +152,7 @@ const AppHeader = withRouter(props => {
   }
 )
 export default class App extends Component {
-  constructor(props) {
+  constructor(/** @type {any} */ props) {
     super(props);
     this.state = {
       login: LOADING_STATUS
@@ -156,13 +169,17 @@ export default class App extends Component {
     this.props.checkLoginState();
   }
 
+  /**
+   * 按登录态渲染应用骨架
+   * @param {number} status 登录状态(0 加载中/1 已登录)
+   */
   route = status => {
     let r;
     if (status === LOADING_STATUS) {
       return <Loading visible />;
     } else {
       r = (
-        <HistoryRouter history={history}>
+        <HistoryRouter history={/** @type {any} */ (history)}>
           <div className="g-main">
             <div className="router-main">
               {this.props.curUserRole === 'admin' && <Notify />}
@@ -175,10 +192,10 @@ export default class App extends Component {
                   {Object.keys(AppRoute).map(key => {
                     let item = AppRoute[key];
                     if (key === 'login' || key === 'home') {
-                      return <Route key={key} path={item.path} element={<item.component />} />;
+                      return <RouteAny key={key} path={item.path} element={<item.component />} />;
                     }
                     const Authed = authed(item.component);
-                    return <Route key={key} path={item.path} element={<Authed />} />;
+                    return <RouteAny key={key} path={item.path} element={<Authed />} />;
                   })}
                 </Routes>
               </div>

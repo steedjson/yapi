@@ -1,3 +1,4 @@
+// @ts-check
 // antd v3 图标 type 名 → @ant-design/icons 具名组件映射。
 // 仅收录代码中动态使用的名字（PROJECT_ICON 面板、ErrMsg 等场景），
 // 静态 <Icon type="xxx"/> 应直接用具名组件，不走此表。
@@ -59,6 +60,7 @@ import {
   AliwangwangOutlined
 } from '@ant-design/icons';
 
+/** @type {Record<string, React.ComponentType<any>>} v3 图标名 → v4 具名组件 */
 export const V3_TO_V4_ICON = {
   'code-o': CodeOutlined,
   swap: SwapOutlined,

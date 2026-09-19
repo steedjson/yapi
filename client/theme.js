@@ -1,3 +1,4 @@
+// @ts-check
 /**
  * 皮肤运行时模块
  *
@@ -27,6 +28,7 @@ const STORAGE_KEY = 'yapi-skin';
 /**
  * 皮肤 → antd5 theme 映射(模块级缓存,引用稳定,避免 ConfigProvider 无效重算)。
  * enterprise 钉住 YApi 基线(主色 #2395f1/13px 字号/32px 控件高),保持升级前观感。
+ * @type {Record<string, object>}
  */
 const THEME_CONFIGS = {
   enterprise: {
@@ -70,6 +72,7 @@ const THEME_CONFIGS = {
 };
 
 // —— 皮肤变更发布订阅(根组件 ConfigProvider / 其他消费者按需订阅) ——
+/** @type {Set<(skin: string) => void>} */
 const listeners = new Set();
 
 /**
@@ -83,6 +86,9 @@ function subscribe(fn) {
   };
 }
 
+/**
+ * @param {string} skin 皮肤名
+ */
 function notifyListeners(skin) {
   listeners.forEach(fn => {
     try {
@@ -94,8 +100,9 @@ function notifyListeners(skin) {
 }
 
 /**
+ * 皮肤名白名单校验(类型守卫,收窄 string|null)
  * @param {string|null} name
- * @returns {boolean}
+ * @returns {name is string}
  */
 function isSkinName(name) {
   return typeof name === 'string' && SKIN_NAMES.indexOf(name) > -1;
@@ -115,6 +122,7 @@ function readLocalSkin() {
 
 /**
  * 应用皮肤到当前文档(仅 DOM/localStorage 层,不做白名单校验,内部使用)。
+ * @param {string} skin 皮肤名
  */
 function applySkin(skin) {
   const root = document.documentElement;
@@ -166,7 +174,7 @@ export function initSkin() {
   }
   axios
     .get('/api/user/skin_config')
-    .then(res => {
+    .then((/** @type {any} */ res) => {
       const skin = res.data && res.data.data && res.data.data.skin;
       // 全局默认为 enterprise 时不做任何事(等价默认皮肤)
       if (isSkinName(skin) && skin !== 'enterprise') {
@@ -209,13 +217,13 @@ export function setGlobalSkin(name) {
   }
   return axios
     .post('/api/user/skin_config', { skin: name })
-    .then(res => {
+    .then((/** @type {any} */ res) => {
       if (res.data && res.data.errcode !== 0) {
         throw new Error(res.data.errmsg || '全局皮肤保存失败');
       }
       return res;
     })
-    .catch(err => {
+    .catch((/** @type {any} */ err) => {
       message.error((err && err.message) || '全局皮肤保存失败');
       throw err;
     });

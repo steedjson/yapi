@@ -181,6 +181,8 @@ declare module 'react-redux' {
     selector: (state: any) => any,
     equalityFn?: (a: any, b: any) => boolean
   ): any;
+  // client/index.js 使用（P7d）：根组件以 <Provider store={store}> 包裹应用。
+  export const Provider: any;
 }
 
 declare module 'antd' {
@@ -225,6 +227,8 @@ declare module 'antd' {
   export const Timeline: any;
   // containers/Project 使用（P7c）：ProjectMember.js 引用 Badge。
   export const Badge: any;
+  // client/theme.js 使用（P7d）：antd5 的 theme.darkAlgorithm（暗色皮肤算法）。
+  export const theme: any;
 }
 
 declare module 'rc-scroll-anim' {
@@ -271,6 +275,10 @@ declare namespace React {
     stopPropagation(): void;
     [key: string]: any;
   }
+  // P7d：@types/react 的 UMD 全局命名空间未被程序加载（react 模块被上方环境声明遮蔽，
+  // node_modules 内 d.ts 的 React.* 引用均为 skipLibCheck 抑制的错误类型），
+  // 组件类型按 any 放宽，供 @ts-check 文件在 JSDoc 中以 React.ComponentType<any> 标注。
+  export type ComponentType<P = any> = any;
 }
 
 /**
@@ -295,6 +303,15 @@ declare namespace JSX {
 
 declare module 'client/plugin.js' {
   export function emitHook(name: string, ...args: any[]): any;
+}
+
+// client/plugin-module.js 是 build/clientPluginModule.js 的生成物且被 gitignore
+// （全新 checkout 在 build-client 前不存在，CI typecheck 先于 build-client 执行），
+// client/plugin.js 经 webpack 别名 client/ 引入它，此处按 any 声明，
+// 使类型检查不依赖该生成物是否存在于工作区。
+declare module 'client/plugin-module.js' {
+  const pluginModuleList: any;
+  export = pluginModuleList;
 }
 
 // 以下 stub 供 containers/Project（P7c）内以 webpack 别名 client/... 绝对路径引用的
@@ -395,4 +412,15 @@ declare module 'ldapjs' {
 // （client/components/Postman/CheckCrossInstall.js 轮询探测），非页面自身代码创建。
 interface Window {
   crossRequest?: any;
+  // client/Application.js 使用（P7d）：alertContent 以 window.chrome 探测 Chrome 浏览器。
+  chrome?: any;
+}
+
+// webpack 别名 exts -> 仓库根 exts/（build/webpack.standalone.config.js alias），
+// tsconfig 未配置该映射；client/plugin-module.js（构建脚本 build/clientPluginModule.js
+// 生成）以 require('exts/yapi-plugin-*/client.js') 引入各内置插件的客户端入口，
+// 此处按 any 放宽，避免把 exts/ 插件源码拖入 client 类型化范围。
+declare module 'exts/*' {
+  const pluginClient: any;
+  export = pluginClient;
 }

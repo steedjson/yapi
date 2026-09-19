@@ -1,3 +1,4 @@
+// @ts-check
 // react-router v6 兼容层：v6 移除了 withRouter，
 // 用 hooks 构造等价的 history/location/match props 注入既有类组件，
 // 使 @withRouter 组件零改动迁移。
@@ -6,8 +7,11 @@
 import React from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
+/**
+ * @param {any} Component 待注入路由 props 的组件
+ */
 function wrapComponent(Component) {
-  const WithRouter = props => {
+  const WithRouter = (/** @type {any} */ props) => {
     const location = useLocation();
     const navigate = useNavigate();
     const params = useParams();
@@ -17,9 +21,9 @@ function wrapComponent(Component) {
       url: location.pathname
     };
     const history = {
-      push: (to, state) => navigate(to, { state }),
-      replace: (to, state) => navigate(to, { replace: true, state }),
-      go: n => navigate(n),
+      push: (/** @type {string} */ to, /** @type {any} */ state) => navigate(to, { state }),
+      replace: (/** @type {string} */ to, /** @type {any} */ state) => navigate(to, { replace: true, state }),
+      go: (/** @type {number} */ n) => navigate(n),
       goBack: () => navigate(-1),
       goForward: () => navigate(1),
       location
@@ -32,7 +36,10 @@ function wrapComponent(Component) {
 
 const cache = new Map();
 
-// 按组件缓存包装结果，保证组件身份稳定，避免每次渲染生成新类型导致子树重挂载
+/**
+ * 按组件缓存包装结果，保证组件身份稳定，避免每次渲染生成新类型导致子树重挂载
+ * @param {any} Component
+ */
 export default function withRouter(Component) {
   if (!cache.has(Component)) {
     cache.set(Component, wrapComponent(Component));
