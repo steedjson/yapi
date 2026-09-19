@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React from 'react';
 import { Table } from 'antd';
 import json5 from 'json5';
 import PropTypes from 'prop-types';
@@ -100,28 +100,23 @@ const columns = [
   }
 ];
 
-class SchemaTable extends Component {
-  static propTypes = {
-    dataSource: PropTypes.string
-  };
-
-  constructor(props) {
-    super(props);
+// 旧类组件（仅有空 constructor + render，无 state / 生命周期）直接改为函数组件，
+// 渲染逻辑逐行保持一致：dataSource 解析失败或为空时渲染 null。
+const SchemaTable = props => {
+  let product;
+  try {
+    product = json5.parse(props.dataSource);
+  } catch (e) {
+    product = null;
   }
-
-  render() {
-    let product;
-    try {
-      product = json5.parse(this.props.dataSource);
-    } catch (e) {
-      product = null;
-    }
-    if (!product) {
-      return null;
-    }
-    let data = schemaTransformToTable(product);
-    data = Array.isArray(data) ? data : [];
-    return <Table bordered size="small" pagination={false} dataSource={data} columns={columns} />;
+  if (!product) {
+    return null;
   }
-}
+  let data = schemaTransformToTable(product);
+  data = Array.isArray(data) ? data : [];
+  return <Table bordered size="small" pagination={false} dataSource={data} columns={columns} />;
+};
+SchemaTable.propTypes = {
+  dataSource: PropTypes.string
+};
 export default SchemaTable;

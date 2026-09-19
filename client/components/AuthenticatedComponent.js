@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
-import { connect } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
 import { changeMenuItem } from '../reducer/modules/menu';
 
@@ -30,48 +30,44 @@ export function resolveSafeRedirect(from, fallback = DEFAULT_REDIRECT) {
 }
 
 export function requireAuthentication(Component) {
-  return @connect(
-    state => {
-      return {
-        isAuthenticated: state.user.isLogin
-      };
-    },
-    {
-      changeMenuItem
-    }
-  )
-  class AuthenticatedComponent extends React.PureComponent {
-    constructor(props) {
-      super(props);
-    }
-    static propTypes = {
-      isAuthenticated: PropTypes.bool,
-      location: PropTypes.object,
-      history: PropTypes.object,
-      changeMenuItem: PropTypes.func
-    };
-    componentDidMount() {
+  // 旧 @connect 类组件经 Hooks 现代化，渲染结构与行为保持一致：
+  // - state.user.isLogin 改为 useSelector 订阅，changeMenuItem 改为 useDispatch 派发；
+  // - 旧 componentDidMount 改为挂载期 useEffect（未登录仅重置菜单高亮）；
+  // - location/history 仍由 Application.js 的 withRouter 兼容层以 props 注入，
+  //   本组件自身保持无路由上下文依赖，与旧实现一致。
+  const AuthenticatedComponent = props => {
+    const dispatch = useDispatch();
+    const isAuthenticated = useSelector(state => state.user.isLogin);
+
+    useEffect(() => {
       // 未登录仅重置菜单高亮；页面跳转统一由 render 中的 <Navigate> 声明式完成，
       // 不再叠加命令式 history.replace，避免双重导航
-      if (!this.props.isAuthenticated) {
-        this.props.changeMenuItem('/');
+      if (!isAuthenticated) {
+        dispatch(changeMenuItem('/'));
       }
+    }, []);
+
+    if (!isAuthenticated) {
+      // 携带当前站内位置作为 from，登录成功后回跳，恢复深链接
+      const { location } = props;
+      const from =
+        location && location.pathname && location.pathname !== LOGIN_PATH
+          ? {
+              pathname: location.pathname,
+              search: location.search,
+              hash: location.hash
+            }
+          : null;
+      return <Navigate to={LOGIN_PATH} replace state={from ? { from } : undefined} />;
     }
-    render() {
-      if (!this.props.isAuthenticated) {
-        // 携带当前站内位置作为 from，登录成功后回跳，恢复深链接
-        const { location } = this.props;
-        const from =
-          location && location.pathname && location.pathname !== LOGIN_PATH
-            ? {
-                pathname: location.pathname,
-                search: location.search,
-                hash: location.hash
-              }
-            : null;
-        return <Navigate to={LOGIN_PATH} replace state={from ? { from } : undefined} />;
-      }
-      return <Component {...this.props} />;
-    }
+    return <Component {...props} />;
   };
+  AuthenticatedComponent.propTypes = {
+    location: PropTypes.object,
+    history: PropTypes.object
+  };
+  AuthenticatedComponent.displayName = `AuthenticatedComponent(${Component.displayName ||
+    Component.name ||
+    'Component'})`;
+  return AuthenticatedComponent;
 }
