@@ -34,6 +34,8 @@ const config = {
   // entry 的模块对下游 entry 去重共享（实测 react-dom/lodash 仅存在于 lib chunk，
   // dayjs 仅存在于 lib3 chunk），index 自身引入的 vendor（antd 等）留在 index chunk，
   // 由 runtime 依赖图保证加载顺序，index.html 固定的 5 个 script 标签顺序仍然成立。
+  // （历史注记：Rsbuild 阶段三起 index.html 已改为消费 WEBPACK_INITIAL_CHUNKS 的数据驱动
+  //   注入，本条「固定 5 标签」描述仅适用于本 webpack 回滚链自身。）
   // splitChunks 关闭：各 entry 模块经 dependOn 去重后不存在跨 entry 重复；
   // 路由级动态 import()（Application.js）产出的异步 chunk 不受此开关影响，
   // 样式仍完整留在 index 与 theme-* 各自 chunk（index.css / theme-*@prd.css）。

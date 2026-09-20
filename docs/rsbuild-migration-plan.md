@@ -35,6 +35,8 @@
    - `npm start` 起服务：浏览器全功能冒烟（登录/项目/接口 CRUD/运行 Tab/动态 diff/导出下载）；
    - `npm test` 全量绿 + `npm run audit:ci` 不新增。
 4. 回滚预案：`build:client` 脚本切换保留旧 webpack 脚本为 `build:client:webpack`，一个 commit 可回退。
+   （阶段三后约束：新 index.html 依赖 `WEBPACK_INITIAL_CHUNKS`，旧链 assets.js 无该全局——
+    部分回滚构建脚本而不回退 index.html 会白屏；整 commit revert 则天然原子。）
 
 ## 2. 阶段二：dev 链路替换
 
@@ -45,7 +47,7 @@
 
 ## 3. 阶段三：分包策略交还工具
 
-- 删 `lib/lib2/lib3` 手工 entry 与 dependOn 链，改 Rsbuild `performance.chunkSplit`（按 node_modules 自动 vendor 分包）；
+- 删 `lib/lib2/lib3` 手工 entry 与 dependOn 链，改 Rsbuild 分包（计划原述 `performance.chunkSplit`；实施时该 API 在 Rsbuild 2.2.8 已 deprecated，经批准改用其接替 API 顶层 `splitChunks: { preset: 'default' }`，语义等价）；
 - 对比首屏加载的请求数/传输体积（webpack 3-chunk 基线 vs 自动分包），若明显回退则微调 strategy 参数；
 - 删除 dependOn 相关注释与配置。
 

@@ -23,7 +23,15 @@
 </script>
 
 <script>
-    document.write('<link rel="stylesheet"  href="/prd/' + window.WEBPACK_ASSETS['index.js'].css + '" />');
+    // 初始 chunk 注入数据驱动（分包策略归构建工具后不再静态可知）：
+    // build/rsbuild-assets.js 依 entrypoint 执行顺序写入 WEBPACK_INITIAL_CHUNKS
+    // （runtime 置首、入口置尾），CSS 按同一顺序在 head 注入。
+    (window.WEBPACK_INITIAL_CHUNKS || []).forEach(function(key) {
+        var asset = window.WEBPACK_ASSETS[key];
+        if (asset && asset.css) {
+            document.write('<link rel="stylesheet"  href="/prd/' + asset.css + '" />');
+        }
+    });
 </script>
 
 </head>
@@ -32,20 +40,12 @@
 
 
 <script>
-    document.write('<script src="/prd/' + window.WEBPACK_ASSETS['manifest'].js + '"><\/script>');
-</script>
-<script>
-    document.write('<script src="/prd/' + window.WEBPACK_ASSETS['lib3'].js + '"><\/script>');
-</script>
-<script>
-    document.write('<script src="/prd/' + window.WEBPACK_ASSETS['lib2'].js + '"><\/script>');
-</script>
-<script>
-    document.write('<script src="/prd/' + window.WEBPACK_ASSETS['lib'].js + '"><\/script>');
-</script>
-
-<script>
-    document.write('<script src="/prd/' + window.WEBPACK_ASSETS['index.js'].js + '"><\/script>');
+    (window.WEBPACK_INITIAL_CHUNKS || []).forEach(function(key) {
+        var asset = window.WEBPACK_ASSETS[key];
+        if (asset && asset.js) {
+            document.write('<script src="/prd/' + asset.js + '"><\/script>');
+        }
+    });
 </script>
 </body>
 </html>

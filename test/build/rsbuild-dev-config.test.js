@@ -8,16 +8,20 @@ const repoRoot = path.resolve(__dirname, '../..');
 // loadConfig({ fresh: true }) 绕过 jiti 模块缓存，同进程内切换 NODE_ENV 可再次加载
 // 生产分支。所有用例 serial，避免 NODE_ENV 互踩。
 
-test.serial('dev 分支 loadConfig：tools 顶层合并后 rspack 改写与 htmlPlugin 并存', async t => {
+test.serial('dev 分支 loadConfig：rspack 改写存活，dev 专属键在位，分包交还工具', async t => {
   const { content } = await loadConfig({ cwd: repoRoot, fresh: true });
   t.is(typeof content.tools.rspack, 'function', 'tools.rspack 改写在 dev 分支必须存活');
-  t.is(typeof content.tools.htmlPlugin, 'function', 'dev 分支必须挂载 htmlPlugin 注入清单');
   t.truthy(content.server, 'dev 分支应包含 server 配置');
   t.truthy(content.html, 'dev 分支应包含 html 配置');
   t.truthy(content.dev, 'dev 分支应包含 dev 配置');
-  t.true(
+  t.false(
     content.plugins.some(plugin => plugin && plugin.name === 'yapi:dev-html-tag-order'),
-    'dev 分支必须挂载注入顺序钉死插件'
+    '阶段三起 html 注入顺序由 entrypoint 决定，不得再挂 5 段钉序插件'
+  );
+  t.deepEqual(
+    Object.keys(content.source.entry),
+    ['index'],
+    '阶段三起 entry 仅保留真实应用入口 index（手工 vendor entry 已删除）'
   );
 });
 
@@ -27,10 +31,7 @@ test.serial('生产分支 loadConfig：tools 仅 rspack 改写，dev 专属键�
     process.env.NODE_ENV = 'production';
     const { content } = await loadConfig({ cwd: repoRoot, fresh: true });
     t.is(typeof content.tools.rspack, 'function');
-    t.true(
-      content.tools.htmlPlugin === undefined,
-      '生产分支不得携带 htmlPlugin 注入清单（避免污染阶段一产物契约）'
-    );
+    t.is(content.tools.htmlPlugin, undefined, 'html 注入清单钩子已随手工 vendor entry 一并删除');
     t.is(content.server, undefined);
     t.is(content.html, undefined);
     t.is(content.dev, undefined);
@@ -38,12 +39,17 @@ test.serial('生产分支 loadConfig：tools 仅 rspack 改写，dev 专属键�
       content.plugins.some(plugin => plugin && plugin.name === 'yapi:dev-html-tag-order'),
       '生产分支不得携带 dev 顺序插件'
     );
+    t.deepEqual(
+      Object.keys(content.source.entry),
+      ['index'],
+      '生产分支 entry 同样仅剩 index'
+    );
   } finally {
     process.env.NODE_ENV = previous;
   }
 });
 
-// ---- dev 分支 bundler 配置：注入清单与 rspack 改写全在位 ----
+// ---- dev 分支 bundler 配置：html 注入与 rspack 改写全在位 ----
 // inspectConfig 只构建配置链不触发编译，dump 即最终 rspack 配置。
 let cachedBundlerDump = null;
 
@@ -66,15 +72,23 @@ function extractHtmlIndexBlock(dump) {
   return dump.slice(start, next > -1 ? next : undefined);
 }
 
-test.serial('dev html 注入清单恰为 5 段且顺序 manifest→lib3→lib2→lib→index', async t => {
+test.serial('dev html 注入声明为单一入口 index，chunk 清单由 entrypoint 运行时决定', async t => {
   const dump = await getDevBundlerDump();
   const block = extractHtmlIndexBlock(dump);
   t.truthy(block, 'dump 应包含 html-index 插件配置块');
   const chunksMatch = block.match(/chunks:\s*\[([^\]]*)\]/);
   t.truthy(chunksMatch, 'html-index 配置块应包含 chunks 数组');
   const chunks = Array.from(chunksMatch[1].matchAll(/'([^']+)'/g), match => match[1]);
-  t.deepEqual(chunks, ['manifest', 'lib3', 'lib2', 'lib', 'index']);
-  t.regex(block, /chunksSortMode:\s*'manual'/);
+  t.deepEqual(chunks, ['index'], 'html-rspack-plugin 按入口名注入 entrypoint 全量文件');
+  t.falsy(/lib[23]?'/.test(chunksMatch[1]), '手工 vendor entry 名不得回流注入清单');
+});
+
+test.serial('dev 分包配置：splitChunks 交还工具默认规则，且无手工 vendor entry', async t => {
+  const dump = await getDevBundlerDump();
+  t.regex(dump, /splitChunks:\s*\{/, 'splitChunks 必须在位（分包交还构建工具）');
+  t.false(dump.includes("'lib2'"), '配置不得再出现 lib2 手工 vendor entry');
+  t.false(dump.includes("'lib3'"), '配置不得再出现 lib3 手工 vendor entry');
+  t.regex(dump, /runtimeChunk:\s*\{\s*name:\s*'manifest'\s*\}/, 'runtimeChunk(manifest) 必须在位');
 });
 
 test.serial('dev bundler 配置：runtimeChunk/noParse/fallback/ProvidePlugin/样式前缀化 loader 全在位', async t => {

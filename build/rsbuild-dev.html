@@ -33,9 +33,10 @@
 <body>
 <div id="yapi" style="height: 100%;"></div>
 
-<!-- Rsbuild dev 模板：CSS link 与 bundle script（manifest → lib3 → lib2 → lib → index）
-     由 html-rspack-plugin 按 entry 依赖图自动注入，不再手工引用 /prd/*@dev.js 五段。
-     HMR 客户端由 Rsbuild 构建期注入 bundle，无需模板参与。 -->
+<!-- Rsbuild dev 模板：CSS link 与 bundle script（runtime(manifest) → vendor chunks → index）
+     由 html-rspack-plugin 按 entrypoint 自动注入（阶段三分包交还工具后初始 chunk 集合
+     不再静态可知），不手工引用 /prd/*@dev.js。HMR 客户端由 Rsbuild 构建期注入 bundle，
+     无需模板参与。 -->
 
 </body>
 </html>

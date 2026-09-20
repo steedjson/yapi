@@ -3,14 +3,15 @@
 // 开发分支：npm run dev-client（NODE_ENV=development，build/rsbuild-dev.mjs，阶段二），
 // 以 NODE_ENV 条件挂载 dev 专属配置——生产路径下这些键完全不存在，产物契约不被污染。
 //
-// 设计对齐 build/webpack.standalone.config.js（生产分支），dev 链路仍走 webpack 不受影响：
-// - 分包模型沿用 webpack 的 dependOn vendor 链（lib ← lib2 ← lib3 ← index，runtime 抽为
-//   manifest），splitChunks 关闭。选该模型而非 chunkSplit 自动分包的原因：
-//   1) 初始 chunk 拓扑与 webpack 完全一致，static/index.html 的固定 5 段 script 注入
-//      （manifest → lib3 → lib2 → lib → index）零改动；
-//   2) assets.js 的 WEBPACK_ASSETS 形状（含 lib/lib2/lib3 键）可原样保留；
-//   3) rspack 原生支持 EntryDescription.dependOn（@rspack/core config/types.d.ts），
-//      dependOn 让被依赖 entry 的模块对下游 entry 去重共享，无重复打包。
+// 设计对齐 build/webpack.standalone.config.js（生产分支）；dev 链路自阶段二起同走本
+// 配置的 dev 分支（Rsbuild dev server），与生产共用 tools/分包模型（仅注入方式分支）：
+// - 分包模型（阶段三起交还构建工具）：entry 仅保留真实应用入口 index；vendor 去重由
+//   顶层 splitChunks（Rsbuild 2.x 对 performance.chunkSplit 的接替 API，2.2.8 中
+//   chunkSplit 已标记 deprecated）按工具默认规则（preset 'default'：node_modules 自动
+//   vendor 分包）承担；runtime 仍抽独立 manifest chunk，保证 vendor 内容稳定时 hash
+//   不随应用代码变更。初始 chunk 清单不再静态可知：生产由 build/rsbuild-assets.js 从
+//   构建 stats 的 entrypoint 读取并写入 assets.js 元数据，static/index.html 数据驱动
+//   注入（不再硬编码 5 段 script）；dev 由 html-rspack-plugin 按 entrypoint 自动注入。
 // - 转译经由 @rsbuild/plugin-babel 继承仓库根 babel.config.js（ie11 目标 / loose /
 //   modules:commonjs / transform-runtime），swc 仅做语法识别前置，行为与 babel-loader 时期一致。
 // - DefinePlugin 的 process.env.NODE_ENV 不再重复定义（Rsbuild 按 mode 注入），
@@ -46,8 +47,8 @@ if (yapi.WEBCONFIG.versionNotify !== undefined) {
   defineValues['process.env.versionNotify'] = JSON.stringify(yapi.WEBCONFIG.versionNotify);
 }
 
-// 开发分支专属：entry index 改由构建器生成 HTML（模板去掉手工五段 @dev.js script，
-// 由 html-rspack-plugin 按 entry 依赖图自动注入 manifest → lib3 → lib2 → lib → index）。
+// 开发分支专属：entry index 启用构建器生成 HTML（devHtmlConfig 模板），script/link 由
+// html-rspack-plugin 按 entrypoint 自动注入（runtime → vendor chunks → index）。
 const devEntryHtml = { html: true };
 const devHtmlConfig = {
   template: path.join(paths.root, 'build/rsbuild-dev.html')
@@ -135,108 +136,28 @@ const rspackTool = (config, { rspack }) => {
   );
 };
 
+// tools 顶层合并：生产/开发共用同一 rspack 改写（dev 阶段二起两分支同引用存活）。
+// 阶段三起 dev 不再需要 htmlPlugin 注入清单与 5 段顺序钉死插件（yapi:dev-html-tag-order
+// 已删除）：entry 只剩 index，html-rspack-plugin 对单一入口自动注入 entrypoint 全量
+// 文件（runtime → vendor chunks → index，顺序即 rspack entrypoint chunks 的执行顺序），
+// 不再存在 lib 时代 dependOn 链的"只注入直接依赖、manifest 位置漂移"问题。
 const prodTools = { rspack: rspackTool };
-
-// html-rspack-plugin 对 dependOn 链只注入直接依赖（实测 chunks 为 [lib3, index]），
-// 不会带上传递依赖与 runtime chunk——显式声明完整注入清单与旧链 static/dev.html
-// 的五段顺序一致。注意 chunksSortMode 'manual' 只排序 entrypoint（实测 html-rspack-plugin
-// 的 manual sorter 按 compilation.entrypoints 过滤，runtime chunk 不在其列，manifest 会
-// 被插在资产合并的天然位置），entry 顺序由此保证；manifest 置首由下方
-// yapi:dev-html-tag-order 插件在最终标签层钉死。
-// 注意：tools 必须在顶层合并（devTools 展开共用 prodTools），条件分支内不得重复
-// 定义同名顶层键——否则会整体覆盖 rspack 改写（runtimeChunk/fallback/ProvidePlugin
-// 等静默失效，回归测试 test/build/rsbuild-dev-config.test.js 双分支守护）。
-const devTools = {
-  ...prodTools,
-  htmlPlugin: (options, { entryName }) => {
-    if (entryName === 'index') {
-      options.chunks = ['manifest', 'lib3', 'lib2', 'lib', 'index'];
-    }
-    return options;
-  }
-};
-
-// dev 专属内联插件：把 html 里 5 段 dev bundle script 重排为旧链顺序
-// （manifest → lib3 → lib2 → lib → index）。只对命中的 bundle script 做稳定重排，
-// 其余标签（模板内联脚本/CSS link/favicon）位置原样保留。
-const DEV_BUNDLE_ORDER = ['manifest', 'lib3', 'lib2', 'lib', 'index'];
-const devHtmlTagOrderPlugin = {
-  name: 'yapi:dev-html-tag-order',
-  setup(api) {
-    api.modifyHTMLTags({
-      order: 'post',
-      handler: ({ headTags, bodyTags }) => {
-        const rank = tag => {
-          const src = tag.attrs && tag.attrs.src;
-          if (!src) {
-            return DEV_BUNDLE_ORDER.length;
-          }
-          // 注入的 src 会对 @ 做百分号编码（/prd/lib3%40dev.js），先归一化再匹配。
-          const normalizedSrc = src.replace(/%40/g, '@');
-          const index = DEV_BUNDLE_ORDER.findIndex(
-            name => normalizedSrc.indexOf('/' + name + '@dev.js') > -1
-          );
-          return index > -1 ? index : DEV_BUNDLE_ORDER.length;
-        };
-        const reorder = tags => {
-          const bundleIndexes = [];
-          tags.forEach((tag, index) => {
-            if (rank(tag) < DEV_BUNDLE_ORDER.length) {
-              bundleIndexes.push(index);
-            }
-          });
-          const sorted = bundleIndexes.map(index => tags[index]).sort((a, b) => rank(a) - rank(b));
-          const result = tags.slice();
-          bundleIndexes.forEach((originalIndex, position) => {
-            result[originalIndex] = sorted[position];
-          });
-          return result;
-        };
-        return { headTags: reorder(headTags), bodyTags: reorder(bodyTags) };
-      }
-    });
-  }
-};
 
 export default {
   root: paths.root,
   mode: isProduction ? 'production' : 'development',
   source: {
-    // 生产：html 入口不由构建器生成（static/index.html 为手写模板），逐入口关闭。
-    // 开发：index 入口启用 HTML（devHtmlConfig 模板自动注入 script/link）。
+    // entry 仅保留真实应用入口（阶段三）：group/project/user/follows/add-project 本就是
+    // 路由级动态 import()（client/Application.js 的 webpackChunkName 注释）产出的异步
+    // chunk，从来不是 entry；lib/lib2/lib3 手工 vendor entry（dependOn 链）已删除，
+    // vendor 去重交还构建工具（见顶层 splitChunks）。
+    // 生产：html 入口不由构建器生成（static/index.html 为手写模板）；开发：index 入口
+    // 启用 HTML（devHtmlConfig 模板自动注入 script/link）。
     entry: {
       index: {
-        dependOn: ['lib3'],
         import: [path.join(paths.client, 'index.js')],
         html: false,
         ...(isProduction ? {} : devEntryHtml)
-      },
-      lib: {
-        import: ['react', 'react-dom', 'redux', 'redux-promise', 'react-router', 'react-router-dom', 'prop-types'],
-        html: false
-      },
-      lib2: {
-        dependOn: ['lib'],
-        import: [
-          '@codemirror/state',
-          '@codemirror/view',
-          '@codemirror/language',
-          '@codemirror/commands',
-          '@codemirror/autocomplete',
-          '@codemirror/lang-javascript',
-          '@codemirror/lang-json',
-          '@codemirror/lang-xml',
-          '@codemirror/lang-html',
-          'json5',
-          'url',
-          'axios'
-        ],
-        html: false
-      },
-      lib3: {
-        dependOn: ['lib2'],
-        import: ['mockjs', 'dayjs', 'recharts'],
-        html: false
       }
     },
     //Rsbuild 内置 JS 规则默认排除 node_modules；这里放行与 webpack babel-loader
@@ -294,12 +215,15 @@ export default {
     cleanDistPath: isProduction
   },
   performance: {
-    // 保留性能默认值（printFileSize 产物报告）；分包关闭走顶层 splitChunks: false。
+    // 保留性能默认值（printFileSize 产物报告）。
   },
-  // Rsbuild 2.x 顶层分包开关：false 直通 rspack optimization.splitChunks(false)。
-  // 关闭原因见文件头「分包模型」说明——vendor 去重由 entry dependOn 链承担，
-  // 路由级动态 import() 的异步 chunk 不受此开关影响。
-  splitChunks: false,
+  // Rsbuild 2.x 顶层 splitChunks（2.2.8 中 performance.chunkSplit 已 deprecated，该键为
+  // 其接替 API，阶段三起分包交还构建工具）：preset 'default' 即工具默认规则——
+  // rspack splitChunks 缺省语义（node_modules 自动 vendor 分包，minSize 20KB，
+  // maxInitial/AsyncRequests 上限内按共享度合并）+ chunks 'all'，路由级动态 import()
+  // 的异步 chunk 共享模块同样被抽取复用。策略选型依据见 docs/rsbuild-migration-plan.md
+  // 阶段三与交付报告：首屏请求数/传输体积对比不回退（实测数据见交付报告）。
+  splitChunks: { preset: 'default' },
   plugins: [
     // Rsbuild 2.x 将 Sass 支持拆分为独立插件（复用项目 devDependencies 的 sass 包）。
     pluginSass(),
@@ -315,14 +239,11 @@ export default {
         config.compact = false;
         return config;
       }
-    }),
-    // dev 专属：钉死 html 内 5 段 bundle script 的注入顺序（数组内条件展开，
-    // 不引入新的顶层配置键）。
-    ...(isProduction ? [] : [devHtmlTagOrderPlugin])
+    })
   ],
-  // tools 顶层合并：生产仅 rspack 改写；dev 追加 htmlPlugin 注入清单（devTools 展开
-  // 共用 prodTools，rspack 改写两个分支同引用存活）。
-  tools: isProduction ? prodTools : devTools,
+  // tools 生产/开发同一引用（rspack 改写两分支存活，回归测试
+  // test/build/rsbuild-dev-config.test.js 双分支守护）。
+  tools: prodTools,
   // 开发分支专属键以条件展开挂载：生产加载本配置（npm run build-client）时这些键
   // 完全不存在，阶段一的生产配置形态零变化。
   ...(isProduction ? {} : { html: devHtmlConfig, server: devServerConfig, dev: devBuildConfig })
