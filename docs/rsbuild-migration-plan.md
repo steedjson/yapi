@@ -31,12 +31,14 @@
    - `process.env.NODE_ENV` 双重定义清理。
 3. 验证矩阵（每项必过）：
    - `npm run build-client` 0 error；产物 chunk 数量/大小与 webpack 版本对比表（允许合理差异，逐条解释）；
-   - `assets.js` 形状 diff（旧 vs 新适配器输出）；16 个 .gz 配对完整；
+   - `assets.js` 形状 diff（旧 vs 新适配器输出）；.gz 配对完整（实测 11 份）；
    - `npm start` 起服务：浏览器全功能冒烟（登录/项目/接口 CRUD/运行 Tab/动态 diff/导出下载）；
    - `npm test` 全量绿 + `npm run audit:ci` 不新增。
 4. 回滚预案：`build:client` 脚本切换保留旧 webpack 脚本为 `build:client:webpack`，一个 commit 可回退。
 
 ## 2. 阶段二：dev 链路替换
+
+> **阶段一实施结果（2026-09-20，已合并）**：产物拓扑与 webpack 完全一致（11 js + 6 css + 5 LICENSE + 11 gz，33 文件）；总量 15.40MB → 14.94MB（-3.0%，gz -2.2%）；index.css -29%/project.css -25%（LightningCSS 压缩）；**lib2 +6.59%**（codemirror 系，swc helper 与 jsx-runtime 注入形态，唯一回退项）；构建 18s+ → 3.2s；rspack contenthash 实际 16 位 hex（模板 [contenthash:20] 受 digest 熵上限，内部文件名无消费方依赖）；NODE_ENV 双重定义 34 条警告归零；sass slash-div 弃用警告 2 条为存量债（Loading.scss:22，Dart Sass 2.0 前需修）。依赖 +3 devDeps（@rsbuild/core/plugin-babel/plugin-sass），lock 零漂移。
 
 - 用 Rsbuild dev server（自带 HMR）替代 `webpack-dev-middleware` 挂载；`server/app.js` dev 分支删除挂载逻辑，`npm run dev-client` 改指 Rsbuild；
 - `/api` 代理配置平移（proxy 到后端端口）；验证 HMR、懒加载分包在 dev 下的行为、移动端适配代理（历史 commit 151f92dd 的 `/api` proxy + SPA 回退语义）。

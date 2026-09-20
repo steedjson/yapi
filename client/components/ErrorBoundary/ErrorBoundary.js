@@ -7,8 +7,10 @@ import { Result, Button } from 'antd';
 
 /**
  * 判断错误是否为异步分包加载失败（线上发版后旧 chunk 404 / 网络中断）。
- * webpack 的动态分包加载失败会抛出 name 为 ChunkLoadError 的错误，
- * 其 message 形如 "Loading chunk 4 failed."（旧版本无 name，仅能按 message 识别）。
+ * webpack 与 rspack（Rsbuild）的动态分包加载失败都抛出 name 为 ChunkLoadError 的错误：
+ * - webpack message 形如 "Loading chunk 4 failed."
+ * - rspack JSONP 运行时同 webpack；对异步 CSS 还有 "Loading css chunk 4 failed." 变体
+ *   （二者 error.name 均为 'ChunkLoadError'，message 正则作旧运行时兜底）
  * @param {*} error
  * @returns {boolean}
  */
@@ -17,7 +19,8 @@ function isChunkLoadError(error) {
     return false;
   }
   return (
-    error.name === 'ChunkLoadError' || /Loading chunk/.test(String(error.message || ''))
+    error.name === 'ChunkLoadError' ||
+    /Loading (css )?chunk/.test(String(error.message || ''))
   );
 }
 
