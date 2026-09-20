@@ -173,4 +173,13 @@ if (require.main === module) {
   });
 }
 
-module.exports = { proxyApiRequest, apiTarget, createRequestHandler };
+// isHtmlFallbackCandidate/mimeTypes 额外导出：Rsbuild dev 链路（build/rsbuild-dev-server.js）
+// 平移同一套回退口径与 MIME 表，单一事实来源，避免两处手写后漂移。
+module.exports = {
+  proxyApiRequest,
+  apiTarget,
+  createRequestHandler,
+  isHtmlFallbackCandidate,
+  fileExtensions,
+  mimeTypes
+};

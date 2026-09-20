@@ -7,7 +7,7 @@
     "dev-copy-icon": "cp -r static/iconfont ./",
     "dev-server": " nodemon server/app.js dev -L",
     "install-server": " node server/install.js",
-    "dev-client": "npm run dev-client-standalone",
+    "dev-client": "npm run dev-client-rsbuild",
     "dev": "npm run dev-server & npm run dev-client",
     "start": " node server/app.js",
     "test": "ava",
@@ -21,6 +21,8 @@
     "build-client:webpack": "NODE_ENV=production node build/webpack-standalone.js",
     "npm-publish": "node ./npm-publish.js",
     "docs": "ydoc build",
+    "dev-client-rsbuild": "npm run dev-copy-icon && NODE_ENV=development node build/rsbuild-dev.mjs",
+    "dev-client:webpack": "npm run dev-copy-icon && NODE_ENV=development node build/webpack-dev-standalone.js",
     "dev-client-standalone": "npm run dev-copy-icon && NODE_ENV=development node build/webpack-dev-standalone.js",
     "postinstall": "patch-package && simple-git-hooks"
   },
