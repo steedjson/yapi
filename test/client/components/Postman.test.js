@@ -540,3 +540,85 @@ test.serial('cWRP 等价: type=case 同 _id 仅 env 变化时按当前 case_env 
 
   utils.unmount();
 });
+
+// ---------- csl-tester 补充：ref 契约端到端（子组件内编辑 → 上抛 → 父 state → ref.state 读回）----------
+// 覆盖 render 子组件化移交说明建议的端到端断言：编辑动作发生在子组件内部（RequestParamsPanel
+// 的受控输入与启用勾选、TestPanel 的脚本开关），经回调上抛写回父组件 state，再由 ref.state
+// getter 读回——Run.js / InterfaceCaseContent 保存接口与用例时正是这样读取这些字段
+// （Run.js 取 7 个字段，InterfaceCaseContent 另取 test_script / enable_script / test_res_*）。
+// 同时补齐既有 9 条用例未经 ref 断言的 state 表面（test_script / enable_script）。
+test.serial('子组件内编辑经上抛回调写入父 state 并可由 ref.state 读回', async t => {
+  window.crossRequest = function() {};
+  const caseData = Object.assign({}, INTER_DATA, {
+    _id: 900,
+    casename: '用例一',
+    case_env: 'prod',
+    test_script: 'assert.equal(status, 200)',
+    enable_script: false
+  });
+  let postmanHandle = null;
+  const utils = render(
+    React.createElement(Postman, Object.assign({}, BASE_PROPS, {
+      data: caseData,
+      type: 'case',
+      ref: r => {
+        postmanHandle = r;
+      }
+    }))
+  );
+  await act(async () => {});
+
+  t.is(postmanHandle.state.test_script, 'assert.equal(status, 200)', 'ref.state 应暴露 test_script');
+  t.is(postmanHandle.state.enable_script, false, 'ref.state 应暴露 enable_script 初值');
+
+  // ① RequestParamsPanel：受控输入改值 → changeParam('req_params', ...) → ref.state
+  const paramInput = utils.container.querySelector('#req_params_0');
+  await act(async () => {
+    fireEvent.change(paramInput, { target: { value: '99' } });
+    await sleep(20);
+  });
+  t.is(postmanHandle.state.req_params[0].value, '99', '子组件内改值应经 ref.state 读回');
+  t.is(
+    utils.container.querySelector('#req_params_0').value,
+    '99',
+    '写入 state 的值应回灌受控输入（往返一致）'
+  );
+
+  // ② RequestParamsPanel：query 启用勾选（第 2 行 required=0）→ changeParam(..., 'enable')
+  const queryBoxes = utils.container.querySelectorAll('.params-enable input[type="checkbox"]');
+  t.is(queryBoxes.length, 2, 'query 两行应各带一个启用勾选（required=1 行禁用，required=0 行可点）');
+  const enableBefore = postmanHandle.state.req_query[1].enable;
+  await act(async () => {
+    fireEvent.click(queryBoxes[1]);
+    await sleep(20);
+  });
+  t.is(
+    postmanHandle.state.req_query[1].enable,
+    !enableBefore,
+    '子组件内勾选应经 ref.state 读回（enable 取反）'
+  );
+
+  // ③ TestPanel：切到 Test 页签后拨动脚本开关 → onEnableScriptChange → ref.state.enable_script
+  const testTab = Array.from(utils.container.querySelectorAll('.ant-tabs-tab')).find(
+    tab => tab.textContent.indexOf('Test') !== -1
+  );
+  t.truthy(testTab, 'type=case 应展示 Test 页签');
+  await act(async () => {
+    fireEvent.click(testTab);
+    await sleep(30);
+  });
+  const switchEl = utils.container.querySelector('.ant-switch');
+  t.truthy(switchEl, 'Test 面板应渲染脚本开关');
+  t.false(switchEl.classList.contains('ant-switch-checked'), '开关初值应与 enable_script=false 一致');
+  await act(async () => {
+    fireEvent.click(switchEl);
+    await sleep(20);
+  });
+  t.is(postmanHandle.state.enable_script, true, 'TestPanel 开关应经 ref.state 读回');
+  t.true(
+    utils.container.querySelector('.ant-switch').classList.contains('ant-switch-checked'),
+    '写入 state 的开关值应回灌受控组件'
+  );
+
+  utils.unmount();
+});
