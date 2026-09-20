@@ -7,6 +7,8 @@ const {
   CHUNK_FILE_RE,
   ENTRY_ASSET_KEY,
   buildWebpackAssets,
+  collectChunks,
+  extractInitialChunkFiles,
   writeAssetsJs,
   shouldGzip
 } = require('../../build/rsbuild-assets');
@@ -148,4 +150,82 @@ test('shouldGzip 对齐 CompressionPlugin 的 threshold 与 minRatio 语义', t 
 test('collectChunks 按目录归集（集成 writeAssetsJs 的输入形态）', t => {
   // 纯函数级验证：CHUNK_FILE_RE 命中产物、忽略 assets.js 自身
   t.falsy(CHUNK_FILE_RE.exec('assets.js'));
+});
+
+test('collectChunks 同名同扩展名冲突时抛错（不静默覆盖清单指向）', t => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'yapi-assets-conflict-'));
+  try {
+    // 同一 chunk 名 foo 的两个不同 hash 的 js 产物：构建器异常/旧产物残留才会出现，
+    // 静默覆盖会让 assets.js 指向被丢弃的文件，必须显式失败。
+    fs.writeFileSync(path.join(dir, 'foo@aaaaaaaaaaaaaaaa.js'), '1');
+    fs.writeFileSync(path.join(dir, 'foo@bbbbbbbbbbbbbbbb.js'), '2');
+    const error = t.throws(() => collectChunks(dir), { message: /冲突/ });
+    t.true(error.message.includes('foo@aaaaaaaaaaaaaaaa.js'));
+    t.true(error.message.includes('foo@bbbbbbbbbbbbbbbb.js'));
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('collectChunks 同名 chunk 的 js/css 并存不算冲突，正常归集', t => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'yapi-assets-pair-'));
+  try {
+    fs.writeFileSync(path.join(dir, 'index@cccccccccccccccc.js'), '1');
+    fs.writeFileSync(path.join(dir, 'index@dddddddddddddddd.css'), '2');
+    const chunks = collectChunks(dir);
+    t.deepEqual(chunks, {
+      index: { js: 'index@cccccccccccccccc.js', css: 'index@dddddddddddddddd.css' }
+    });
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+// ---- extractInitialChunkFiles（stats 入参可伪造，阶段四自 rsbuild-standalone.mjs 迁入）----
+
+function fakeStats(entrypoints) {
+  return { toJson: () => ({ entrypoints }) };
+}
+
+test('extractInitialChunkFiles stats 缺少入口 entrypoint 时抛错', t => {
+  t.throws(() => extractInitialChunkFiles(fakeStats({ other: { files: ['a.js'] } })), {
+    message: /缺少入口 entrypoint/
+  });
+  t.throws(() => extractInitialChunkFiles(fakeStats({})), {
+    message: /缺少入口 entrypoint/
+  });
+});
+
+test('extractInitialChunkFiles 入口不含任何 js/css 产物时抛错', t => {
+  // files 为空数组时回退 assets 口径（对象形态取 name），仍为空则显式失败
+  t.throws(
+    () =>
+      extractInitialChunkFiles(
+        fakeStats({ index: { files: [], assets: [] } })
+      ),
+    { message: /未包含任何 js\/css 产物/ }
+  );
+  t.throws(
+    () =>
+      extractInitialChunkFiles(
+        fakeStats({ index: { files: ['only.map'], assets: [] } })
+      ),
+    { message: /未包含任何 js\/css 产物/ }
+  );
+});
+
+test('extractInitialChunkFiles 正常提取：过滤非 js/css 并兼容 assets 对象形态', t => {
+  // files 缺省时回退 assets：字符串与 {name} 对象两种口径均要能解析
+  t.deepEqual(
+    extractInitialChunkFiles(
+      fakeStats({ index: { files: ['manifest@a.js', 'index@b.js', 'index@c.css', 'skip.txt'] } })
+    ),
+    ['manifest@a.js', 'index@b.js', 'index@c.css']
+  );
+  t.deepEqual(
+    extractInitialChunkFiles(
+      fakeStats({ index: { files: [], assets: ['manifest@a.js', { name: 'index@b.js' }] } })
+    ),
+    ['manifest@a.js', 'index@b.js']
+  );
 });

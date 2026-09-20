@@ -18,12 +18,9 @@
     "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s",
     "build-client": "npm run build-client:rsbuild",
     "build-client:rsbuild": "NODE_ENV=production node build/rsbuild-standalone.mjs",
-    "build-client:webpack": "NODE_ENV=production node build/webpack-standalone.js",
     "npm-publish": "node ./npm-publish.js",
     "docs": "ydoc build",
     "dev-client-rsbuild": "npm run dev-copy-icon && NODE_ENV=development node build/rsbuild-dev.mjs",
-    "dev-client:webpack": "npm run dev-copy-icon && NODE_ENV=development node build/webpack-dev-standalone.js",
-    "dev-client-standalone": "npm run dev-copy-icon && NODE_ENV=development node build/webpack-dev-standalone.js",
     "postinstall": "patch-package && simple-git-hooks"
   },
   "simple-git-hooks": {
@@ -119,14 +116,10 @@
     "@types/node": "^24.13.5",
     "@uiw/react-md-editor": "^4.1.2",
     "antd": "5.29.3",
-    "assets-webpack-plugin": "7.1.1",
     "ava": "6.4.1",
-    "babel-loader": "8.4.1",
     "buffer": "^6.0.3",
-    "compression-webpack-plugin": "12.0.0",
     "conventional-changelog-cli": "^2.1.1",
     "core-decorators": "^0.17.0",
-    "css-loader": "7.1.5",
     "dayjs": "1.11.23",
     "eslint": "^9.39.5",
     "eslint-plugin-import": "^2.32.0",
@@ -136,7 +129,6 @@
     "jsdom": "^30.1.0",
     "json-schema-editor-visual": "^1.0.23",
     "markdown-it-include": "^1.0.0",
-    "mini-css-extract-plugin": "2.10.2",
     "nodemon": "3.1.14",
     "patch-package": "^8.0.1",
     "prettier": "^3.9.6",
@@ -155,20 +147,12 @@
     "redux-promise": "^0.5.3",
     "rewire": "^2.5.2",
     "sass": "1.104.1",
-    "sass-loader": "17.0.1",
     "simple-git-hooks": "^2.14.0",
-    "style-loader": "^0.18.2",
-    "terser-webpack-plugin": "5.6.1",
     "typescript": "7.0.2",
-    "webpack": "5.111.0",
-    "webpack-cli": "5.1.4",
-    "webpack-dev-middleware": "8.3.0",
-    "webpack-hot-middleware": "^2.26.1",
-    "webpack-node-externals": "^1.6.0",
     "ydoc-plugin-img-view": "^1.0.1"
   },
   "engines": {
-    "node": ">=18 <25",
+    "node": ">=20.11",
     "npm": ">=8"
   }
 }

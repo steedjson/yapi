@@ -19,13 +19,18 @@
     })();
 </script>
 <script>
-    document.write('<script src="/prd/assets.js?v=' + Math.random() + '"><\/script>');
+    // assets.js URL 固定但内容随部署变，由服务端对其单独 no-cache 强制回源校验，
+    // 无需追加 Math.random() cache-bust 参数（见 server/app.js /prd 中间件）。
+    document.write('<script src="/prd/assets.js"><\/script>');
 </script>
 
 <script>
     // 初始 chunk 注入数据驱动（分包策略归构建工具后不再静态可知）：
     // build/rsbuild-assets.js 依 entrypoint 执行顺序写入 WEBPACK_INITIAL_CHUNKS
     // （runtime 置首、入口置尾），CSS 按同一顺序在 head 注入。
+    if (!window.WEBPACK_ASSETS) {
+        console.error('[yapi] WEBPACK_ASSETS 未定义：assets.js 加载失败或产物清单缺失，页面将白屏。请检查 static/prd/assets.js 是否存在（重新执行 npm run build-client 可再生）。');
+    }
     (window.WEBPACK_INITIAL_CHUNKS || []).forEach(function(key) {
         var asset = window.WEBPACK_ASSETS[key];
         if (asset && asset.css) {

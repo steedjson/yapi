@@ -1,10 +1,10 @@
-// Rsbuild 生产构建编排（阶段一）：对齐 build/webpack-standalone.js 的职责顺序——
-// 清理旧产物 -> 生成客户端插件入口（client/plugin-module.js）-> Rsbuild 构建 ->
-// 生成 assets.js（WEBPACK_ASSETS 兼容形状 + WEBPACK_INITIAL_CHUNKS 初始注入清单）->
-// 补齐 .gz 预压缩 -> 产物报告。
+// Rsbuild 生产构建编排（阶段一）：清理旧产物 -> 生成客户端插件入口（client/plugin-module.js）
+// -> Rsbuild 构建 -> 生成 assets.js（WEBPACK_ASSETS 兼容形状 + WEBPACK_INITIAL_CHUNKS
+// 初始注入清单）-> 补齐 .gz 预压缩 -> 产物报告。
 // 退出码取决于构建/适配是否出错，供 CI 与 npm script 判定。
-// 回滚：npm run build-client:webpack（旧 webpack 链原样保留）。注意: 旧链 assets.js 无
-// WEBPACK_INITIAL_CHUNKS, 回滚必须连同 static/index.html 一起回退到旧版, 否则白屏。
+// 回滚点（阶段四起）：旧 webpack 链（npm run build-client:webpack）已随阶段四删除，
+// 本批之后的回滚 = git revert 本批之前的提交（webpack 依赖、build/webpack-* 脚本与
+// static/index.html 注入逻辑一并还原，缺一不可，否则 assets.js 与 index.html 契约错配白屏）。
 import fs from 'node:fs';
 import path from 'node:path';
 import { createRequire } from 'node:module';
@@ -21,9 +21,6 @@ const rsbuildAssets = require('./rsbuild-assets.js');
 
 const distDir = path.join(paths.root, 'static/prd');
 
-// 唯一应用入口（阶段三起 entry 仅剩 index，见 rsbuild.config.mjs）。
-const APP_ENTRY_NAME = 'index';
-
 // 构建前清理旧产物，避免残留文件被误认为新产物。
 function cleanOutput() {
   if (!fs.existsSync(distDir)) {
@@ -35,27 +32,13 @@ function cleanOutput() {
 }
 
 /**
- * 从构建 stats 提取应用入口的初始 chunk 名有序清单（entrypoint 执行顺序：
- * runtime 置首、入口 chunk 置尾、vendor 居中；文件名口径）。
- * assets.js 按裸文件名消费，这里只保留 js 产物名（css 与 js 同 key 归集，
- * 注入侧经 WEBPACK_ASSETS[key].css 读取，顺序由本清单决定）。
+ * 从构建 stats 提取应用入口的初始 chunk 文件有序清单。
+ * 实现迁于 build/rsbuild-assets.js（阶段四，stats 入参可伪造便于纯函数级测试），
+ * 此处保留同名转发以维持本编排模块的调用面不变。
  * @param {import('@rsbuild/core').RspackStats|undefined} stats
  * @returns {string[]}
  */
-function extractInitialChunkFiles(stats) {
-  const jsonStats = stats.toJson({ all: false, entrypoints: true });
-  const entrypoint = jsonStats.entrypoints && jsonStats.entrypoints[APP_ENTRY_NAME];
-  if (!entrypoint) {
-    throw new Error('构建 stats 缺少入口 entrypoint: ' + APP_ENTRY_NAME);
-  }
-  const files = (entrypoint.files && entrypoint.files.length ? entrypoint.files : entrypoint.assets.map(
-    asset => (typeof asset === 'string' ? asset : asset.name)
-  )).filter(name => /\.(js|css)$/.test(name));
-  if (!files.length) {
-    throw new Error('入口 entrypoint 未包含任何 js/css 产物');
-  }
-  return files;
-}
+const extractInitialChunkFiles = rsbuildAssets.extractInitialChunkFiles;
 
 async function main() {
   cleanOutput();

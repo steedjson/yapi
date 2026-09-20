@@ -56,6 +56,7 @@
 - 移除 webpack/webpack-dev-middleware/style-loader@0.18（**顺带消除最后 1 个 critical：loader-utils 链**）及相关 build 脚本；
 - `npm run audit` 复测预期降至 22 项以内；audit-baseline.json 下调；
 - 观察期一个迭代后移除回滚脚本。
+- engines 选型：`>=20.11`（`import.meta.dirname` 需 Node ≥20.11；babel-loader@10 引擎约束 `^20.10 || >=22`；.nvmrc 钉 24.21.0 满足）。
 
 ## 5. 风险登记
 

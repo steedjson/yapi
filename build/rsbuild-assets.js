@@ -47,6 +47,9 @@ const ASSET_KEY_ORDER = [
 // 缺失即抛错，保证静默缺产物不会上线。
 const ENTRY_ASSET_KEY = 'index.js';
 
+// extractInitialChunkFiles 的目标入口名（与 rsbuild.config.mjs source.entry 一致）。
+const APP_ENTRY_NAME = 'index';
+
 // CompressionPlugin 语义对齐：原文件 >= 10KB 且 gzip 后体积/原体积 <= 0.8 才落 .gz。
 const GZIP_THRESHOLD = 10240;
 const GZIP_MIN_RATIO = 0.8;
@@ -68,6 +71,14 @@ function collectChunks(distDir) {
     if (!chunks[chunkName]) {
       chunks[chunkName] = {};
     }
+    // 同名同扩展名冲突防御：同一 chunk 的同一扩展名只允许一个产物文件（如
+    // contenthash 模板被误改导致残留旧 hash 产物、或构建器异常重复产出）。
+    // 静默覆盖会让 assets.js 指向被丢弃的文件，白屏类故障必须在此显式失败。
+    if (chunks[chunkName][ext]) {
+      throw new Error(
+        '产物存在同名同扩展名的冲突 chunk 文件: ' + chunks[chunkName][ext] + ' 与 ' + name
+      );
+    }
     chunks[chunkName][ext] = name;
   }
   return chunks;
@@ -80,6 +91,30 @@ function collectChunks(distDir) {
  */
 function toAssetKey(chunkName) {
   return chunkName === 'index' ? ENTRY_ASSET_KEY : chunkName;
+}
+
+/**
+ * 从构建 stats 提取应用入口的初始 chunk 文件有序清单（entrypoint 执行顺序：
+ * runtime 置首、入口 chunk 置尾、vendor 居中；文件名口径）。
+ * assets.js 按裸文件名消费，这里只保留 js/css 产物名（css 与 js 同 key 归集，
+ * 注入侧经 WEBPACK_ASSETS[key].css 读取，顺序由本清单决定）。
+ * 阶段四自 rsbuild-standalone.mjs 迁入：stats 入参可伪造，便于纯函数级测试。
+ * @param {import('@rsbuild/core').RspackStats|undefined} stats
+ * @returns {string[]}
+ */
+function extractInitialChunkFiles(stats) {
+  const jsonStats = stats.toJson({ all: false, entrypoints: true });
+  const entrypoint = jsonStats.entrypoints && jsonStats.entrypoints[APP_ENTRY_NAME];
+  if (!entrypoint) {
+    throw new Error('构建 stats 缺少入口 entrypoint: ' + APP_ENTRY_NAME);
+  }
+  const files = (entrypoint.files && entrypoint.files.length ? entrypoint.files : entrypoint.assets.map(
+    asset => (typeof asset === 'string' ? asset : asset.name)
+  )).filter(name => /\.(js|css)$/.test(name));
+  if (!files.length) {
+    throw new Error('入口 entrypoint 未包含任何 js/css 产物');
+  }
+  return files;
 }
 
 /**
@@ -201,10 +236,12 @@ module.exports = {
   CHUNK_FILE_RE,
   ASSET_KEY_ORDER,
   ENTRY_ASSET_KEY,
+  APP_ENTRY_NAME,
   GZIP_THRESHOLD,
   GZIP_MIN_RATIO,
   collectChunks,
   toAssetKey,
+  extractInitialChunkFiles,
   buildWebpackAssets,
   writeAssetsJs,
   shouldGzip,

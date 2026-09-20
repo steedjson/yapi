@@ -1,16 +1,65 @@
 'use strict';
 
-// Rsbuild dev server 的语义平移层：把 webpack-dev-standalone.js 手工 http 服务器的
+// Rsbuild dev server 的语义平移层：承接旧 webpack-dev-standalone.js 手工 http 服务器的
 // 三类行为（/iconfont//image/ 静态服务、/ 与 /index.html 的显式 HTML、前端路由回退）
 // 以 Connect 中间件形式挂到 Rsbuild dev server 上。
-// 回退口径与 MIME 表复用旧模块的导出（单一事实来源），由 test/build 两侧共同覆盖。
+// 阶段四起旧模块随 webpack 链删除，其回退口径与 MIME 表原样迁入本模块
+// （单一事实来源不变），由 test/build 覆盖。
 
 const fs = require('fs');
 const path = require('path');
-const { isHtmlFallbackCandidate, mimeTypes } = require('./webpack-dev-standalone.js');
 
 const DEFAULT_STATIC_ROOT = path.resolve(__dirname, '../static');
 const HTML_CONTENT_TYPE = 'text/html; charset=utf-8';
+
+// 已知静态资源扩展名：这类请求未被任何层命中时必须返回真实 404，
+// 不能被前端路由回退吞成 HTML（否则脚本/样式/字体加载失败会被掩盖成页面渲染异常）。
+const fileExtensions = new Set([
+  'js', 'mjs', 'css', 'map', 'json', 'html', 'htm', 'txt', 'xml', 'pdf', 'md',
+  'png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'svg', 'ico',
+  'woff', 'woff2', 'ttf', 'otf', 'eot',
+  'mp3', 'mp4', 'webm', 'wav', 'ogg', 'mov', 'avi',
+  'wasm', 'zip', 'gz', 'tar', 'csv'
+]);
+
+// 判定一个未被构建产物中间件命中的请求是否为前端 history 路由：
+// 仅限 GET/HEAD；API、产物(/prd/)、iconfont/image 静态目录与 HMR 除外；
+// 末段带已知资源扩展名的视为文件请求，保持 404。
+// （自旧 webpack-dev-standalone.js 原样平移，口径与 Rsbuild dev 链路共享。）
+function isHtmlFallbackCandidate(method, reqUrl) {
+  if (method !== 'GET' && method !== 'HEAD') {
+    return false;
+  }
+  const pathname = reqUrl.split('?')[0];
+  if (
+    pathname.startsWith('/api/') ||
+    pathname.startsWith('/prd/') ||
+    pathname.startsWith('/iconfont/') ||
+    pathname.startsWith('/image/') ||
+    pathname === '/__webpack_hmr'
+  ) {
+    return false;
+  }
+  const lastSegment = pathname.substring(pathname.lastIndexOf('/') + 1);
+  const dotIndex = lastSegment.lastIndexOf('.');
+  if (dotIndex <= 0) {
+    return true;
+  }
+  return !fileExtensions.has(lastSegment.slice(dotIndex + 1).toLowerCase());
+}
+
+const mimeTypes = {
+  '.woff': 'font/woff',
+  '.woff2': 'font/woff2',
+  '.ttf': 'font/ttf',
+  '.eot': 'application/vnd.ms-fontobject',
+  '.svg': 'image/svg+xml',
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.gif': 'image/gif',
+  '.ico': 'image/x-icon'
+};
 
 // 与旧链一致：非 API 响应统一禁缓存并放开跨域（iconfont 字体/图片会被跨域页面加载）。
 function applyDevResponseHeaders(res, contentType) {
@@ -128,6 +177,9 @@ function createRsbuildDevServerSetup(options) {
 
 module.exports = {
   DEFAULT_STATIC_ROOT,
+  fileExtensions,
+  isHtmlFallbackCandidate,
+  mimeTypes,
   applyDevResponseHeaders,
   createDevStaticMiddleware,
   createDevIndexHtmlMiddleware,

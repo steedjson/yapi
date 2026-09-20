@@ -3,7 +3,8 @@
 // 开发分支：npm run dev-client（NODE_ENV=development，build/rsbuild-dev.mjs，阶段二），
 // 以 NODE_ENV 条件挂载 dev 专属配置——生产路径下这些键完全不存在，产物契约不被污染。
 //
-// 设计对齐 build/webpack.standalone.config.js（生产分支）；dev 链路自阶段二起同走本
+// 设计对齐旧 build/webpack.standalone.config.js（生产分支，阶段四已删除，见 git 历史）；
+// dev 链路自阶段二起同走本
 // 配置的 dev 分支（Rsbuild dev server），与生产共用 tools/分包模型（仅注入方式分支）：
 // - 分包模型（阶段三起交还构建工具）：entry 仅保留真实应用入口 index；vendor 去重由
 //   顶层 splitChunks（Rsbuild 2.x 对 performance.chunkSplit 的接替 API，2.2.8 中
@@ -54,7 +55,7 @@ const devHtmlConfig = {
   template: path.join(paths.root, 'build/rsbuild-dev.html')
 };
 const devServerConfig = {
-  // 端口/绑定与旧 webpack-dev-standalone 一致；strictPort 保持旧链"端口被占即失败"
+  // 端口/绑定与阶段四前旧 webpack dev 链一致；strictPort 保持旧链"端口被占即失败"
   // 的语义（Rsbuild 缺省会顺延端口，必须显式关闭）。
   port: 4000,
   host: '127.0.0.1',

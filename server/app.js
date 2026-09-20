@@ -56,7 +56,14 @@ app.use(async (/** @type {any} */ ctx, /** @type {any} */ next) => {
 
 app.use(async (/** @type {any} */ ctx, /** @type {any} */ next) => {
   if (ctx.path.indexOf('/prd') === 0) {
-    ctx.set('Cache-Control', 'max-age=8640000000');
+    if (ctx.path === '/prd/assets.js') {
+      // assets.js 是产物清单: URL 固定但内容随每次部署变化(引用新 hash chunk 文件名),
+      // 必须永远回源校验(no-cache 允许 Last-Modified 304), 否则部署后回访用户会拿到
+      // 引用已删除旧 chunk 的过期清单导致白屏。
+      ctx.set('Cache-Control', 'no-cache');
+    } else {
+      ctx.set('Cache-Control', 'max-age=8640000000');
+    }
     if (yapi.commons.fileExist(yapi.path.join(yapi.WEBROOT, 'static', ctx.path + '.gz'))) {
       ctx.set('Content-Encoding', 'gzip');
       // koa-send 按改写后的整个文件名（含 .gz 后缀）推断 Content-Type，

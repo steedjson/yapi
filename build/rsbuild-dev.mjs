@@ -1,9 +1,10 @@
 // Rsbuild dev server 编排（阶段二：npm run dev-client 切换，见 docs/rsbuild-migration-plan.md）。
-// 对齐 build/rsbuild-standalone.mjs 的职责顺序：先做插件发现与 client/plugin-module.js
-// 生成（等价 webpack.standalone.config.js 加载期的 initPlugins 副作用），再 loadConfig
+// 先做插件发现与 client/plugin-module.js 生成（构建前副作用），再 loadConfig
 // 启动 Rsbuild dev server（端口 4000，代理/静态/回退语义见 rsbuild.config.mjs dev 分支与
 // build/rsbuild-dev-server.js）。
-// 回滚：npm run dev-client:webpack（旧 webpack-dev-standalone 链原样保留）。
+// 回滚点（阶段四起）：旧 webpack dev 链（npm run dev-client:webpack /
+// dev-client-standalone）已随阶段四删除，回滚 = git revert 本批之前的提交
+// （生产回滚另需连同 static/index.html 一并还原，见 rsbuild-standalone.mjs 头注释）。
 import path from 'node:path';
 import { createRequire } from 'node:module';
 import { createRsbuild, loadConfig } from '@rsbuild/core';
