@@ -57,7 +57,7 @@
     "fs-extra": "^11.4.0",
     "immer": "10.2.0",
     "js-base64": "^2.3.2",
-    "json-schema-faker": "0.6.3",
+    "json-schema-faker": "0.5.9",
     "json5": "^2.2.3",
     "jsondiffpatch": "^0.7.6",
     "jsonwebtoken": "9.0.2",
