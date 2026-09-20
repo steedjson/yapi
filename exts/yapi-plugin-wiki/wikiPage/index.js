@@ -1,73 +1,62 @@
 // @ts-check
-import React, { Component } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { message } from 'antd';
-import { connect } from 'react-redux';
+import { useSelector } from 'react-redux';
+import { Link, useParams } from 'react-router-dom';
 import axios from 'axios';
-import PropTypes from 'prop-types';
 import './index.scss';
 import { timeago } from '../../../common/utils';
-import { Link } from 'react-router-dom';
 import WikiView from './View.js';
 import WikiEditor from './Editor.js';
 
-@connect(
-  (/** @type {any} */ state) => {
-    return {
-      projectMsg: state.project.currProject
-    };
-  },
-  {}
-)
-class WikiPage extends Component {
+/**
+ * Wiki 协同编辑页。原类组件经 Hooks 现代化迁移，渲染结构与行为保持一致：
+ * - 旧 @connect 改为 useSelector，旧 props.match.params.id 改为 useParams；
+ * - 旧 constructor state 改为 useState（单对象 patch，保持浅合并语义）；
+ * - 旧 componentDidMount / componentWillUnmount 改为挂载期 useEffect 及其清理函数；
+ * - WebSocket 实例与最新 state 分别以 wsRef / latestRef 镜像，回调内读取等价
+ *   旧类组件的实时 this.WebSocket / this.state；
+ * - 已知遗留行为 bug-for-bug 保持：endWebSocket 调用
+ *   handleWebsocketAccidentClose 时不传 callback，内部 callback 调用必然抛
+ *   TypeError，被 endWebSocket 外层 try/catch 静默吞掉（'end' 消息仍会发出）。
+ */
+const WikiPage = () => {
+  const projectMsg = useSelector((/** @type {any} */ state) => state.project.currProject);
+  const { id } = /** @type {any} */ (useParams());
+
+  /** @type {any} */
+  const [state, setState] = useState({
+    isEditor: false,
+    isUpload: true,
+    desc: '',
+    markdown: '',
+    notice: projectMsg.switch_notice,
+    status: 'INIT',
+    editUid: '',
+    editName: '',
+    curdata: null
+  });
   /**
-   * @param {any} props
+   * @param {any} patch
    */
-  constructor(props) {
-    super(props);
-    /** @type {any} */
-    this.state = {
-      isEditor: false,
-      isUpload: true,
-      desc: '',
-      markdown: '',
-      notice: props.projectMsg.switch_notice,
-      status: 'INIT',
-      editUid: '',
-      editName: '',
-      curdata: null
-    };
-  }
+  const patchState = patch => setState((/** @type {any} */ prevState) => ({ ...prevState, ...patch }));
 
-  static propTypes = {
-    match: PropTypes.object,
-    projectMsg: PropTypes.object
-  };
+  /** @type {any} */
+  const wsRef = useRef(null);
 
-  async componentDidMount() {
-    const currProjectId = this.props.match.params.id;
-    await this.handleData({ project_id: currProjectId });
-    this.handleConflict();
-  }
+  // 镜像最新 redux 值、路由参数与本地 state：WebSocket 回调等异步回调中的读取
+  // 等价于旧类组件的实时 this.props / this.state
+  const latestRef = useRef({});
+  latestRef.current = { state, projectMsg, id };
 
-  componentWillUnmount() {
-    // willUnmount
-    try {
-      if (this.state.status === 'CLOSE') {
-        (/** @type {any} */ (this.WebSocket)).send('end');
-        (/** @type {any} */ (this.WebSocket)).close();
-      }
-    } catch (e) {
-      return null;
-    }
-  }
   // 结束编辑websocket
-  endWebSocket = () => {
+  const endWebSocket = () => {
     try {
-      if (this.state.status === 'CLOSE') {
+      if (latestRef.current.state.status === 'CLOSE') {
         const sendEnd = () => {
-          (/** @type {any} */ (this.WebSocket)).send('end');
+          wsRef.current.send('end');
         };
-        this.handleWebsocketAccidentClose(sendEnd);
+        handleWebsocketAccidentClose(sendEnd);
       }
     } catch (e) {
       return null;
@@ -75,21 +64,20 @@ class WikiPage extends Component {
   };
 
   // 处理多人编辑冲突问题
-  handleConflict = () => {
+  const handleConflict = () => {
     // console.log(location)
     let domain = location.hostname + (location.port !== '' ? ':' + location.port : '');
-    let s;
     //因后端 node 仅支持 ws， 暂不支持 wss
     let wsProtocol = location.protocol === 'https:' ? 'wss' : 'ws';
-    s = new WebSocket(
+    let s = new WebSocket(
       wsProtocol +
         '://' +
         domain +
         '/api/ws_plugin/wiki_desc/solve_conflict?id=' +
-        this.props.match.params.id
+        latestRef.current.id
     );
     s.onopen = () => {
-      this.WebSocket = s;
+      wsRef.current = s;
       s.send('start');
     };
 
@@ -98,7 +86,7 @@ class WikiPage extends Component {
       if (result.errno === 0) {
         // 更新
         if (result.data) {
-          this.setState({
+          patchState({
             // curdata: result.data,
             desc: result.data.desc,
             username: result.data.username,
@@ -107,12 +95,13 @@ class WikiPage extends Component {
           });
         }
         // 新建
-        this.setState({
-          isEditor: !this.state.isEditor,
+        setState((/** @type {any} */ prevState) => ({
+          ...prevState,
+          isEditor: !prevState.isEditor,
           status: 'CLOSE'
-        });
+        }));
       } else {
-        this.setState({
+        patchState({
           editUid: result.data.uid,
           editName: result.data.username,
           status: 'EDITOR'
@@ -121,7 +110,7 @@ class WikiPage extends Component {
     };
 
     s.onerror = () => {
-      this.setState({
+      patchState({
         status: 'CLOSE'
       });
       console.warn('websocket 连接失败，将导致多人编辑同一个接口冲突。');
@@ -129,17 +118,18 @@ class WikiPage extends Component {
   };
 
   // 点击编辑按钮 发送 websocket 获取数据
-  onEditor = () => {
+  const onEditor = () => {
     // this.WebSocket.send('editor');
     const sendEditor = () => {
-      (/** @type {any} */ (this.WebSocket)).send('editor');
+      wsRef.current.send('editor');
     };
-    this.handleWebsocketAccidentClose(sendEditor, (/** @type {any} */ status) => {
+    handleWebsocketAccidentClose(sendEditor, (/** @type {any} */ status) => {
       // 如果websocket 启动不成功用户依旧可以对wiki 进行编辑
       if (!status) {
-        this.setState({
-          isEditor: !this.state.isEditor
-        });
+        setState((/** @type {any} */ prevState) => ({
+          ...prevState,
+          isEditor: !prevState.isEditor
+        }));
       }
     });
   };
@@ -149,11 +139,11 @@ class WikiPage extends Component {
    * @param {any} fn
    * @param {any} [callback] 旧调用存在不传 callback 的路径（endWebSocket），此时静默失败
    */
-  handleWebsocketAccidentClose = (fn, callback) => {
+  const handleWebsocketAccidentClose = (fn, callback) => {
     // websocket 是否启动
-    if (this.WebSocket) {
+    if (wsRef.current) {
       // websocket 断开
-      if (this.WebSocket.readyState !== 1) {
+      if (wsRef.current.readyState !== 1) {
         message.error('websocket 链接失败，请重新刷新页面');
       } else {
         fn();
@@ -168,12 +158,12 @@ class WikiPage extends Component {
   /**
    * @param {any} params
    */
-  handleData = async params => {
+  const handleData = async params => {
     let result = await axios.get('/api/plugin/wiki_desc/get', { params });
     if (result.data.errcode === 0) {
       const data = result.data.data;
       if (data) {
-        this.setState({
+        patchState({
           desc: data.desc,
           markdown: data.markdown,
           username: data.username,
@@ -191,81 +181,97 @@ class WikiPage extends Component {
    * @param {any} desc
    * @param {any} markdown
    */
-  onUpload = async (desc, markdown) => {
-    const currProjectId = this.props.match.params.id;
+  const onUpload = async (desc, markdown) => {
+    const currProjectId = latestRef.current.id;
     let option = {
       project_id: currProjectId,
       desc,
       markdown,
-      email_notice: this.state.notice
+      email_notice: latestRef.current.state.notice
     };
     let result = await axios.post('/api/plugin/wiki_desc/up', option);
     if (result.data.errcode === 0) {
-      await this.handleData({ project_id: currProjectId });
-      this.setState({ isEditor: false });
+      await handleData({ project_id: currProjectId });
+      patchState({ isEditor: false });
     } else {
       message.error(`更新失败： ${result.data.errmsg}`);
     }
-    this.endWebSocket();
+    endWebSocket();
     // this.WebSocket.send('end');
   };
   // 取消编辑
-  onCancel = () => {
-    this.setState({ isEditor: false });
-    this.endWebSocket();
+  const onCancel = () => {
+    patchState({ isEditor: false });
+    endWebSocket();
   };
 
   // 邮件通知
-  onEmailNotice = (/** @type {any} */ e) => {
-    this.setState({
+  const onEmailNotice = (/** @type {any} */ e) => {
+    patchState({
       notice: e.target.checked
     });
   };
 
-  render() {
-    const { isEditor, username, editorTime, notice, uid, status, editUid, editName } = this.state;
-    const editorEable =
-      this.props.projectMsg.role === 'admin' ||
-      this.props.projectMsg.role === 'owner' ||
-      this.props.projectMsg.role === 'dev';
-    const isConflict = status === 'EDITOR';
+  // 对应旧 componentDidMount；清理函数对应旧 componentWillUnmount
+  useEffect(() => {
+    handleData({ project_id: id }).then(() => {
+      handleConflict();
+    });
+    return () => {
+      // willUnmount
+      try {
+        if (latestRef.current.state.status === 'CLOSE') {
+          wsRef.current.send('end');
+          wsRef.current.close();
+        }
+      } catch (e) {
+        return null;
+      }
+    };
+  }, []);
 
-    return (
-      <div className="g-row">
-        <div className="m-panel wiki-content">
-          <div className="wiki-content">
-            {isConflict && (
-              <div className="wiki-conflict">
-                <Link to={`/user/profile/${editUid || uid}`}>
-                  <b>{editName || username}</b>
-                </Link>
-                <span>正在编辑该wiki，请稍后再试...</span>
-              </div>
-            )}
-          </div>
-          {!isEditor ? (
-            <WikiView
-              editorEable={editorEable}
-              onEditor={this.onEditor}
-              uid={uid}
-              username={username}
-              editorTime={editorTime}
-              desc={this.state.desc}
-            />
-          ) : (
-            <WikiEditor
-              isConflict={isConflict}
-              onUpload={this.onUpload}
-              onCancel={this.onCancel}
-              notice={notice}
-              onEmailNotice={this.onEmailNotice}
-              desc={this.state.desc}
-            />
+  const { isEditor, username, editorTime, notice, uid, status, editUid, editName } = state;
+  const editorEable =
+    projectMsg.role === 'admin' ||
+    projectMsg.role === 'owner' ||
+    projectMsg.role === 'dev';
+  const isConflict = status === 'EDITOR';
+
+  return (
+    <div className="g-row">
+      <div className="m-panel wiki-content">
+        <div className="wiki-content">
+          {isConflict && (
+            <div className="wiki-conflict">
+              <Link to={`/user/profile/${editUid || uid}`}>
+                <b>{editName || username}</b>
+              </Link>
+              <span>正在编辑该wiki，请稍后再试...</span>
+            </div>
           )}
         </div>
+        {!isEditor ? (
+          <WikiView
+            editorEable={editorEable}
+            onEditor={onEditor}
+            uid={uid}
+            username={username}
+            editorTime={editorTime}
+            desc={state.desc}
+          />
+        ) : (
+          <WikiEditor
+            isConflict={isConflict}
+            onUpload={onUpload}
+            onCancel={onCancel}
+            notice={notice}
+            onEmailNotice={onEmailNotice}
+            desc={state.desc}
+          />
+        )}
       </div>
-    );
-  }
-}
+    </div>
+  );
+};
 
 export default WikiPage;

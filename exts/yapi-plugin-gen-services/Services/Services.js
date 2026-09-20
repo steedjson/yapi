@@ -1,77 +1,72 @@
 // @ts-check
-import React, { PureComponent as Component } from 'react'
-import PropTypes from 'prop-types'
-import { connect } from 'react-redux';
-import { getToken } from '../../../client/reducer/modules/project.js'
-
+import React, { useEffect } from 'react';
+import PropTypes from 'prop-types';
+import { useDispatch, useSelector } from 'react-redux';
+import { getToken } from '../../../client/reducer/modules/project.js';
 
 import './Services.scss';
 
-@connect(
-  (/** @type {any} */ state) => {
-    return {
-      token: state.project.token
-    }
-  },
-  {
-    getToken
-  }
-)
-export default class Services extends Component {
-  static propTypes = {
-    projectId: PropTypes.string,
-    token: PropTypes.string,
-    getToken: PropTypes.func
-  }
+/**
+ * 生成 ts services 设置页。原类组件经 Hooks 现代化迁移，渲染结构与行为保持一致：
+ * - 旧 @connect 改为 useSelector/useDispatch；
+ * - 旧 componentDidMount 的 getToken 拉取改为挂载期 useEffect。
+ * @param {any} props
+ */
+const Services = props => {
+  const dispatch = useDispatch();
+  const token = useSelector((/** @type {any} */ state) => state.project.token);
 
-  async componentDidMount() {
-    const id = this.props.projectId;
-    await this.props.getToken(id);
-    
-  }
-  render () {
-    const id = this.props.projectId;
-    return (
-      <div className="project-services">
-        <section className="news-box m-panel">
-          <div className="token">
-            <h5>安装工具</h5>
-            <pre>{`
+  // 对应旧 componentDidMount
+  useEffect(() => {
+    const id = props.projectId;
+    dispatch(getToken(id));
+  }, []);
+
+  const id = props.projectId;
+  return (
+    <div className="project-services">
+      <section className="news-box m-panel">
+        <div className="token">
+          <h5>安装工具</h5>
+          <pre>{`
   npm i sm2tsservice -D
   `}</pre>
-            <h5>配置【3.2.0及以上版本】</h5>
-            <pre>{`
+          <h5>配置【3.2.0及以上版本】</h5>
+          <pre>{`
   touch json2service.json
   `}</pre>
-            <pre>{`
+          <pre>{`
   {
     "url": "yapi-swagger.json",
-    "remoteUrl": "${location.protocol}//${location.hostname}${location.port ? `:${location.port}` : ''}/api/open/plugin/export-full?type=json&pid=${id}&status=all&token=${this.props.token}",
+    "remoteUrl": "${location.protocol}//${location.hostname}${location.port ? `:${location.port}` : ''}/api/open/plugin/export-full?type=json&pid=${id}&status=all&token=${token}",
     "type": "yapi",
     "swaggerParser": {}
   }
-  `}
-            </pre>
-            <h5>配置【3.2.0以下版本】</h5>
-            <pre>{`
+  `}</pre>
+          <h5>配置【3.2.0以下版本】</h5>
+          <pre>{`
   touch json2service.json
   `}</pre>
-            <pre>{`
+          <pre>{`
   {
-    "url": "${location.protocol}//${location.hostname}${location.port ? `:${location.port}` : ''}/api/open/plugin/export-full?type=json&pid=${id}&status=all&token=${this.props.token}",
+    "url": "${location.protocol}//${location.hostname}${location.port ? `:${location.port}` : ''}/api/open/plugin/export-full?type=json&pid=${id}&status=all&token=${token}",
     "type": "yapi",
     "swaggerParser": {}
   }
-  `}
-            </pre>
-            <h5>生成services代码</h5>
-            <pre>{`
+  `}</pre>
+          <h5>生成services代码</h5>
+          <pre>{`
   (./node_modules/.bin/)sm2tsservice --clear
   `}</pre>
-          </div>
-          <a href="https://github.com/gogoyqj/sm2tsservice">更多说明 sm2tsservice</a>
-        </section>
-      </div>
-    );
-  }
-}
+        </div>
+        <a href="https://github.com/gogoyqj/sm2tsservice">更多说明 sm2tsservice</a>
+      </section>
+    </div>
+  );
+};
+
+Services.propTypes = {
+  projectId: PropTypes.string
+};
+
+export default Services;

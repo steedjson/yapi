@@ -2,8 +2,8 @@
  * Created by gxl.gao on 2017/10/25.
  */
 // @ts-check
-import React, { Component } from 'react';
-import { connect } from 'react-redux';
+import React, { useEffect, useState } from 'react';
+import { useDispatch } from 'react-redux';
 import axios from 'axios';
 import PropTypes from 'prop-types';
 import './index.scss';
@@ -119,53 +119,51 @@ StatusOverview.propTypes = {
   data: PropTypes.object
 };
 
-@connect(
-  null,
-  {
-    setBreadcrumb
-  }
-)
-class statisticsPage extends Component {
-  static propTypes = {
-    setBreadcrumb: PropTypes.func
-  };
+/**
+ * 系统信息统计页。原类组件经 Hooks 现代化迁移，渲染结构与行为保持一致：
+ * - 旧 @connect(null, { setBreadcrumb }) 改为 useDispatch；
+ * - 旧 constructor state 改为 useState（单对象 patch，保持浅合并语义），
+ *   旧 UNSAFE_componentWillMount 改为挂载期 useEffect；
+ * - 数据拉取时序与 setState 语义不变。
+ */
+const statisticsPage = () => {
+  const dispatch = useDispatch();
 
+  const [state, setState] = useState({
+    count: {
+      groupCount: 0,
+      projectCount: 0,
+      interfaceCount: 0,
+      interfactCaseCount: 0
+    },
+    status: {
+      mail: '',
+      systemName: '',
+      totalmem: '',
+      freemem: '',
+      uptime: ''
+    },
+    dataTotal: []
+  });
   /**
-   * @param {any} props
+   * @param {any} patch
    */
-  constructor(props) {
-    super(props);
-    this.state = {
-      count: {
-        groupCount: 0,
-        projectCount: 0,
-        interfaceCount: 0,
-        interfactCaseCount: 0
-      },
-      status: {
-        mail: '',
-        systemName: '',
-        totalmem: '',
-        freemem: '',
-        uptime: ''
-      },
-      dataTotal: []
-    };
-  }
+  const patchState = patch => setState((/** @type {any} */ prevState) => ({ ...prevState, ...patch }));
 
-  async UNSAFE_componentWillMount() {
-    this.props.setBreadcrumb([{ name: '系统信息' }]);
-    this.getStatisData();
-    this.getSystemStatusData();
-    this.getGroupData();
-  }
+  // 对应旧 UNSAFE_componentWillMount
+  useEffect(() => {
+    dispatch(setBreadcrumb([{ name: '系统信息' }]));
+    getStatisData();
+    getSystemStatusData();
+    getGroupData();
+  }, []);
 
   // 获取统计数据
-  async getStatisData() {
+  async function getStatisData() {
     let result = await axios.get('/api/plugin/statismock/count');
     if (result.data.errcode === 0) {
       let statisData = result.data.data;
-      this.setState({
+      patchState({
         count: { ...statisData }
       });
     }
@@ -173,11 +171,11 @@ class statisticsPage extends Component {
 
   // 获取系统信息
 
-  async getSystemStatusData() {
+  async function getSystemStatusData() {
     let result = await axios.get('/api/plugin/statismock/get_system_status');
     if (result.data.errcode === 0) {
       let statusData = result.data.data;
-      this.setState({
+      patchState({
         status: { ...statusData }
       });
     }
@@ -185,39 +183,37 @@ class statisticsPage extends Component {
 
   // 获取分组详细信息
 
-  async getGroupData() {
+  async function getGroupData() {
     let result = await axios.get('/api/plugin/statismock/group_data_statis');
     if (result.data.errcode === 0) {
       let statusData = result.data.data;
       statusData.map((/** @type {any} */ item) => {
         return (item['key'] = item.name);
       });
-      this.setState({
+      patchState({
         dataTotal: statusData
       });
     }
   }
 
-  render() {
-    const { count, status, dataTotal } = this.state;
+  const { count, status, dataTotal } = state;
 
-    return (
-      <div className="g-statistic">
-        <div className="content">
-          <h2 className="title">系统状况</h2>
-          <div className="system-content">
-            <StatusOverview data={status} />
-          </div>
-          <h2 className="title">数据统计</h2>
-          <div>
-            <CountOverview date={count} />
-            <StatisTable dataSource={dataTotal} />
-            <StatisChart />
-          </div>
+  return (
+    <div className="g-statistic">
+      <div className="content">
+        <h2 className="title">系统状况</h2>
+        <div className="system-content">
+          <StatusOverview data={status} />
+        </div>
+        <h2 className="title">数据统计</h2>
+        <div>
+          <CountOverview date={count} />
+          <StatisTable dataSource={dataTotal} />
+          <StatisChart />
         </div>
       </div>
-    );
-  }
-}
+    </div>
+  );
+};
 
 export default statisticsPage;
