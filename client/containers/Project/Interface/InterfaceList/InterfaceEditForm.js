@@ -2,63 +2,53 @@
 import React, { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import { handlePath as handlePathUtil, nameLengthLimit } from '../../../../common.js';
+import { handlePath as handlePathUtil } from '../../../../common.js';
 import { changeEditStatus } from '../../../../reducer/modules/interface.js';
-import { formatCatTreeData } from 'common/utils.js';
 import json5 from 'json5';
-import { message, Affix, Tabs, Modal } from 'antd';
-import EasyDragSort from '../../../../components/EasyDragSort/EasyDragSort.js';
+import { message, Affix, Form, Button } from 'antd';
 import mockEditor from 'client/components/AceEditor/mockEditor';
-import AceEditor from 'client/components/AceEditor/AceEditor';
-import MarkdownEditor from '../../../../components/MarkdownEditor/index';
 import axios from 'axios';
-import { MOCK_SOURCE } from '../../../../constants/variable.js';
 import {
-  DEMOPATH,
   HTTP_METHOD,
-  HTTP_METHOD_KEYS,
-  Json5Example,
   checkIsJsonSchema,
   dataTpl,
-  formItemLayout,
   initState,
   validJson
 } from './interfaceEditFormUtils/formDefaults.js';
-import {
-  headerTpl,
-  paramsTpl,
-  queryTpl,
-  requestBodyTpl
-} from './interfaceEditFormUtils/paramTemplates.js';
-const jSchema = require('json-schema-editor-visual');
-const ResBodySchema = jSchema({ lang: 'zh_CN', mock: MOCK_SOURCE });
-const ReqBodySchema = jSchema({ lang: 'zh_CN', mock: MOCK_SOURCE });
 // 编辑器内嵌 antd3 的全量样式:经 build/json-schema-css-scope-loader.js 把选择器
 // 前缀化为 `.json-schema-editor-scope `,仅作用于下方编辑器容器,不再全局加载。
+// 必须排在本文件对 InterfaceEditFormParts/* 的 import 之前。babel 把 import 提升到
+// 模块顶部并保持相对顺序，而内联 require 仍在语句位置执行，故模块求值顺序为：
+// 本 import 先于（Parts → RequestBodySetting → schemaEditors.js 的）
+// require('json-schema-editor-visual')，即 scoped antd3 全量样式先于
+// json-schema-editor-visual 自带样式注入，与抽取前一致（抽取前该 CSS import 同样作为
+// import 被提升到内联 require jSchema 之前求值）。若把本 import 放到 Parts import 之后，
+// 求值顺序反转为 jsv-factory → CSS，37 个规则块会从 scoped antd3 之后搬到之前，
+// 接口路由 CSS chunk 的哈希随之改变（该未命名分包的文件名前缀随构建根而异）。
 import 'json-schema-editor-visual/node_modules/antd/dist/antd.css';
+// render 子组件化（第三批）：本文件仅保留 hooks / 副作用 / 事件处理 + 渲染组装，
+// 各 JSX 区块按边界拆入 InterfaceEditFormParts/：
+//   - BulkImportModal.js      批量添加参数弹窗
+//   - BasicSettingPanel.js    基本设置（名称/分类/路径+方法+路径参数/Tag/状态/自定义字段）
+//   - RequestParamsSetting.js 请求参数设置（页签 + Query / Headers 区块）
+//   - RequestBodySetting.js   BODY 区块（form 行 / json-schema 编辑器 / file / raw）
+//   - ResponseSetting.js      返回数据设置（JSON/RAW 页签、schema 编辑器、mock 预览容器）
+//   - RemarkSetting.js        备注（MarkdownEditor）
+//   - OtherSetting.js         其他（消息通知 / 开放接口开关）
+//   - schemaEditors.js        json-schema 编辑器单例（ResBodySchema / ReqBodySchema）
+// 子组件一律「受控展示 + 事件回调上抛」：不持有业务状态、不引入包装 DOM 元素；
+// antd Form 接线（字段注册 / 校验 / 回填）与编辑器 ref 装配（mockPreviewRef /
+// resBodyEditorRef / editorRef）完整保留在本文件，抽取前后 DOM 逐字节等价
+// （7 场景 + nomethod 崩溃等价独立进程比对，见交付报告）。
+import BulkImportModal from './InterfaceEditFormParts/BulkImportModal.js';
+import BasicSettingPanel from './InterfaceEditFormParts/BasicSettingPanel.js';
+import RequestParamsSetting from './InterfaceEditFormParts/RequestParamsSetting.js';
+import RequestBodySetting from './InterfaceEditFormParts/RequestBodySetting.js';
+import ResponseSetting from './InterfaceEditFormParts/ResponseSetting.js';
+import RemarkSetting from './InterfaceEditFormParts/RemarkSetting.js';
+import OtherSetting from './InterfaceEditFormParts/OtherSetting.js';
 
-
-import {
-  Select,
-  TreeSelect,
-  Input,
-  Tooltip,
-  Button,
-  Row,
-  Col,
-  Radio,
-  Switch,
-  Form
-} from 'antd';
-
-import { QuestionCircleOutlined } from '@ant-design/icons';
-
-const TextArea = Input.TextArea;
 const FormItem = Form.Item;
-const Option = Select.Option;
-const InputGroup = Input.Group;
-const RadioButton = Radio.Button;
-const RadioGroup = Radio.Group;
 
 function InterfaceEditForm(/** @type {any} */ props) {
   const [form] = Form.useForm();
@@ -426,6 +416,21 @@ function InterfaceEditForm(/** @type {any} */ props) {
     props.changeEditStatus(initResBody !== d.text);
   };
 
+  // 处理 res_body 的 json-schema 编辑器（原 JSX 内联 onChange 上移到父组件）
+  /**
+   * @param {any} text
+   * @returns {void}
+   */
+  const handleResBodySchemaChange = text => {
+    setState((/** @type {any} */ prev) => ({
+      ...prev,
+      res_body: text
+    }));
+    if (new Date().getTime() - startTimeRef.current > 1000) {
+      props.changeEditStatus(true);
+    }
+  };
+
   // 处理 req_body_other Editor
   /**
    * @param {any} d
@@ -438,6 +443,21 @@ function InterfaceEditForm(/** @type {any} */ props) {
       req_body_other: d.text
     }));
     props.changeEditStatus(initReqBody !== d.text);
+  };
+
+  // 处理 req_body_other 的 json-schema 编辑器（原 JSX 内联 onChange 上移到父组件）
+  /**
+   * @param {any} text
+   * @returns {void}
+   */
+  const handleReqBodySchemaChange = text => {
+    setState((/** @type {any} */ prev) => ({
+      ...prev,
+      req_body_other: text
+    }));
+    if (new Date().getTime() - startTimeRef.current > 1000) {
+      props.changeEditStatus(true);
+    }
   };
 
   // 处理批量导入参数
@@ -513,565 +533,82 @@ function InterfaceEditForm(/** @type {any} */ props) {
 
   const { custom_field, projectMsg } = props;
 
-  const res_body_use_schema_editor = checkIsJsonSchema(state.res_body) || '';
-
-  const req_body_other_use_schema_editor = checkIsJsonSchema(state.req_body_other) || '';
-
-  const paramsList = state.req_params.map((/** @type {any} */ item, /** @type {any} */ index) => {
-    return paramsTpl(item, index);
-  });
-
-  const QueryList = state.req_query.map((/** @type {any} */ item, /** @type {any} */ index) => {
-    return queryTpl(item, index, delParams);
-  });
-
-  const headerList = state.req_headers.map((/** @type {any} */ item, /** @type {any} */ index) => {
-    return headerTpl(item, index, delParams);
-  });
-
-  const requestBodyList = state.req_body_form.map(
-    (/** @type {any} */ item, /** @type {any} */ index) => {
-      return requestBodyTpl(item, index, delParams);
-    }
-  );
-
   return (
     <div>
-      <Modal
-        title="批量添加参数"
-        width={680}
-        open={state.visible}
+      <BulkImportModal
+        visible={state.visible}
+        value={state.bulkValue}
+        onChange={handleBulkValueInput}
         onOk={handleBulkOk}
         onCancel={handleBulkCancel}
-        okText="导入"
-      >
-        <div>
-          <TextArea
-            placeholder="每行一个name:examples"
-            autosize={{ minRows: 6, maxRows: 10 }}
-            value={state.bulkValue}
-            onChange={handleBulkValueInput}
-          />
-        </div>
-      </Modal>
+      />
       <Form form={form} onFinish={handleFinish} onFinishFailed={handleFinishFailed} onValuesChange={() => props.changeEditStatus(true)} preserve={false}>
-        <h2 className="interface-title" style={{ marginTop: 0 }}>
-          基本设置
-        </h2>
-        <div className="panel-sub">
-          <FormItem
-            className="interface-edit-item"
-            {...formItemLayout}
-            label="接口名称"
-            name="title"
-            initialValue={state.title}
-            rules={nameLengthLimit('接口')}
-          >
-            <Input id="title" placeholder="接口名称" />
-          </FormItem>
+        <BasicSettingPanel
+          basepath={props.basepath}
+          cat={props.cat}
+          custom_field={custom_field}
+          tags={projectMsg.tag}
+          title={state.title}
+          catid={state.catid}
+          method={state.method}
+          path={state.path}
+          tag={state.tag}
+          status={state.status}
+          custom_field_value={state.custom_field_value}
+          req_params={state.req_params}
+          onChangeMethod={onChangeMethod}
+          onPathChange={handlePath}
+          onTagClick={props.onTagClick}
+        />
 
-          <FormItem
-            className="interface-edit-item"
-            {...formItemLayout}
-            label="选择分类"
-            name="catid"
-            initialValue={state.catid + ''}
-            rules={[{ required: true, message: '请选择一个分类' }]}
-          >
-            <TreeSelect
-              treeData={formatCatTreeData(props.cat)}
-              placeholder="请选择一个分类"
-              treeDefaultExpandAll={true}
-              dropdownStyle={{ maxHeight: 400, overflow: 'auto' }}
-            />
-          </FormItem>
+        <RequestParamsSetting
+          method={state.method}
+          req_radio_type={state.req_radio_type}
+          reqHideTabs={state.hideTabs.req}
+          req_query={state.req_query}
+          req_headers={state.req_headers}
+          onRadioChange={changeRadioGroup}
+          onAddParams={addParams}
+          onShowBulk={showBulk}
+          onDragMove={handleDragMove}
+          onDelParams={delParams}
+        >
+          <RequestBodySetting
+            method={state.method}
+            reqBodyType={reqBodyType}
+            reqBodyIsJsonSchema={reqBodyIsJsonSchema}
+            isJson5={projectMsg.is_json5}
+            req_body_type={state.req_body_type}
+            req_body_other={state.req_body_other}
+            req_body_form={state.req_body_form}
+            req_body_is_json_schema={state.req_body_is_json_schema}
+            bodyHideTab={state.hideTabs.req.body}
+            onAddParams={addParams}
+            onShowBulk={showBulk}
+            onDragMove={handleDragMove}
+            onDelParams={delParams}
+            onReqBodyChange={handleReqBody}
+            onReqBodySchemaChange={handleReqBodySchemaChange}
+          />
+        </RequestParamsSetting>
 
-          <FormItem
-            className="interface-edit-item"
-            {...formItemLayout}
-            label={
-              <span>
-                接口路径&nbsp;
-                <Tooltip
-                  title={
-                    <div>
-                      <p>
-                        1. 支持动态路由,例如:
-                        {DEMOPATH}
-                      </p>
-                      <p>
-                        2. 支持 ?controller=xxx 的QueryRouter,非router的Query参数请定义到
-                        Request设置-&#62;Query
-                      </p>
-                    </div>
-                  }
-                >
-                  <QuestionCircleOutlined style={{ width: '10px' }} />
-                </Tooltip>
-              </span>
-            }
-          >
-            <InputGroup compact>
-              <Select value={state.method} onChange={onChangeMethod} style={{ width: '15%' }}>
-                {HTTP_METHOD_KEYS.map(item => {
-                  return (
-                    <Option key={item} value={item}>
-                      {item}
-                    </Option>
-                  );
-                })}
-              </Select>
+        <ResponseSetting
+          isJson5={projectMsg.is_json5}
+          resBodyType={resBodyType}
+          resBodyIsJsonSchema={resBodyIsJsonSchema}
+          res_body_type={state.res_body_type}
+          res_body={state.res_body}
+          res_body_is_json_schema={state.res_body_is_json_schema}
+          jsonType={state.jsonType}
+          onJsonTypeChange={handleJsonType}
+          onResBodyChange={handleResBody}
+          onResBodySchemaChange={handleResBodySchemaChange}
+          editorRef={resBodyEditorRef}
+        />
 
-              <Tooltip
-                title="接口基本路径，可在 项目设置 里修改"
-                style={{
-                  display: props.basepath == '' ? 'block' : 'none'
-                }}
-              >
-                <Input
-                  disabled
-                  value={props.basepath}
-                  readOnly
-                  onChange={() => {}}
-                  style={{ width: '25%' }}
-                />
-              </Tooltip>
-              <FormItem
-                name="path"
-                noStyle
-                initialValue={state.path}
-                rules={[
-                  {
-                    required: true,
-                    message: '请输入接口路径!'
-                  }
-                ]}
-              >
-                <Input onChange={handlePath} placeholder="/path" style={{ width: '60%' }} />
-              </FormItem>
-            </InputGroup>
-            <Row className="interface-edit-item">
-              <Col span={24} offset={0}>
-                {paramsList}
-              </Col>
-            </Row>
-          </FormItem>
-          <FormItem
-            className="interface-edit-item"
-            {...formItemLayout}
-            label="Tag"
-            name="tag"
-            initialValue={state.tag}
-          >
-            <Select placeholder="请选择 tag " mode="multiple">
-              {projectMsg.tag.map((/** @type {any} */ item) => {
-                return (
-                  <Option value={item.name} key={item._id}>
-                    {item.name}
-                  </Option>
-                );
-              })}
-              <Option value="tag设置" disabled style={{ cursor: 'pointer', color: '#2395f1' }}>
-                <Button type="primary" onClick={props.onTagClick}>
-                  Tag设置
-                </Button>
-              </Option>
-            </Select>
-          </FormItem>
-          <FormItem
-            className="interface-edit-item"
-            {...formItemLayout}
-            label="状态"
-            name="status"
-            initialValue={state.status}
-          >
-            <Select>
-              <Option value="done">已完成</Option>
-              <Option value="undone">未完成</Option>
-            </Select>
-          </FormItem>
-          {custom_field.enable && (
-            <FormItem
-              className="interface-edit-item"
-              {...formItemLayout}
-              label={custom_field.name}
-              name="custom_field_value"
-              initialValue={state.custom_field_value}
-            >
-              <Input placeholder="请输入" />
-            </FormItem>
-          )}
-        </div>
+        <RemarkSetting editorRef={editorRef} value={state.markdown || state.desc} />
 
-        <h2 className="interface-title">请求参数设置</h2>
-
-        <div className="container-radiogroup">
-          <RadioGroup
-            value={state.req_radio_type}
-            size="large"
-            className="radioGroup"
-            onChange={changeRadioGroup}
-          >
-            {HTTP_METHOD[state.method].request_body ? (
-              <RadioButton value="req-body">Body</RadioButton>
-            ) : null}
-            <RadioButton value="req-query">Query</RadioButton>
-            <RadioButton value="req-headers">Headers</RadioButton>
-          </RadioGroup>
-        </div>
-
-        <div className="panel-sub">
-          <FormItem className={'interface-edit-item ' + state.hideTabs.req.query}>
-            <Row type="flex" justify="space-around">
-              <Col span={12}>
-                <Button size="small" type="primary" onClick={() => addParams('req_query')}>
-                  添加Query参数
-                </Button>
-              </Col>
-              <Col span={12}>
-                <div className="bulk-import" onClick={() => showBulk('req_query')}>
-                  批量添加
-                </div>
-              </Col>
-            </Row>
-          </FormItem>
-
-          <Row className={'interface-edit-item ' + state.hideTabs.req.query}>
-            <Col>
-              <EasyDragSort
-                data={() => form.getFieldValue('req_query')}
-                onChange={handleDragMove('req_query')}
-                onlyChild="easy_drag_sort_child"
-              >
-                {QueryList}
-              </EasyDragSort>
-            </Col>
-          </Row>
-
-          <FormItem className={'interface-edit-item ' + state.hideTabs.req.headers}>
-            <Button size="small" type="primary" onClick={() => addParams('req_headers')}>
-              添加Header
-            </Button>
-          </FormItem>
-
-          <Row className={'interface-edit-item ' + state.hideTabs.req.headers}>
-            <Col>
-              <EasyDragSort
-                data={() => form.getFieldValue('req_headers')}
-                onChange={handleDragMove('req_headers')}
-                onlyChild="easy_drag_sort_child"
-              >
-                {headerList}
-              </EasyDragSort>
-            </Col>
-          </Row>
-          {HTTP_METHOD[state.method].request_body ? (
-            <div>
-              <FormItem
-                className={'interface-edit-item ' + state.hideTabs.req.body}
-                name="req_body_type"
-                initialValue={state.req_body_type}
-              >
-                <RadioGroup>
-                  <Radio value="form">form</Radio>
-                  <Radio value="json">json</Radio>
-                  <Radio value="file">file</Radio>
-                  <Radio value="raw">raw</Radio>
-                </RadioGroup>
-              </FormItem>
-
-              <Row
-                className={
-                  'interface-edit-item ' +
-                  (reqBodyType === 'form' ? state.hideTabs.req.body : 'hide')
-                }
-              >
-                <Col style={{ minHeight: '50px' }}>
-                  <Row type="flex" justify="space-around">
-                    <Col span="12" className="interface-edit-item">
-                      <Button size="small" type="primary" onClick={() => addParams('req_body_form')}>
-                        添加form参数
-                      </Button>
-                    </Col>
-                    <Col span="12">
-                      <div className="bulk-import" onClick={() => showBulk('req_body_form')}>
-                        批量添加
-                      </div>
-                    </Col>
-                  </Row>
-                  <EasyDragSort
-                    data={() => form.getFieldValue('req_body_form')}
-                    onChange={handleDragMove('req_body_form')}
-                    onlyChild="easy_drag_sort_child"
-                  >
-                    {requestBodyList}
-                  </EasyDragSort>
-                </Col>
-              </Row>
-            </div>
-          ) : null}
-
-          <Row
-            className={
-              'interface-edit-item ' +
-              (reqBodyType === 'json' ? state.hideTabs.req.body : 'hide')
-            }
-          >
-            <span>
-              JSON-SCHEMA:&nbsp;
-              {!projectMsg.is_json5 && (
-                <Tooltip title="项目 -> 设置 开启 json5">
-                  <QuestionCircleOutlined />{' '}
-                </Tooltip>
-              )}
-            </span>
-            <FormItem
-              name="req_body_is_json_schema"
-              valuePropName="checked"
-              initialValue={state.req_body_is_json_schema || !projectMsg.is_json5}
-              noStyle
-            >
-              <Switch checkedChildren="开" unCheckedChildren="关" disabled={!projectMsg.is_json5} />
-            </FormItem>
-
-            <Col
-              style={{ marginTop: '5px' }}
-              className="interface-edit-json-info json-schema-editor-scope"
-            >
-              {!reqBodyIsJsonSchema ? (
-                <span>
-                  基于 Json5, 参数描述信息用注释的方式实现{' '}
-                  <Tooltip title={<pre>{Json5Example}</pre>}>
-                    <QuestionCircleOutlined style={{ color: '#086dbf' }} />
-                  </Tooltip>
-                  “全局编辑”或 “退出全屏” 请按 F9
-                </span>
-              ) : (
-                <ReqBodySchema
-                  onChange={(/** @type {any} */ text) => {
-                    setState((/** @type {any} */ prev) => ({
-                      ...prev,
-                      req_body_other: text
-                    }));
-
-                    if (new Date().getTime() - startTimeRef.current > 1000) {
-                      props.changeEditStatus(true);
-                    }
-                  }}
-                  isMock={true}
-                  data={req_body_other_use_schema_editor}
-                />
-              )}
-            </Col>
-            <Col>
-              {!reqBodyIsJsonSchema && (
-                <AceEditor
-                  className="interface-editor"
-                  data={state.req_body_other}
-                  onChange={handleReqBody}
-                  fullScreen={true}
-                />
-              )}
-            </Col>
-          </Row>
-
-          {reqBodyType === 'file' && state.hideTabs.req.body !== 'hide' ? (
-            <Row className="interface-edit-item">
-              <Col className="interface-edit-item-other-body">
-                <FormItem name="req_body_other" initialValue={state.req_body_other}>
-                  <TextArea placeholder="" autosize={true} />
-                </FormItem>
-              </Col>
-            </Row>
-          ) : null}
-          {reqBodyType === 'raw' && state.hideTabs.req.body !== 'hide' ? (
-            <Row>
-              <Col>
-                <FormItem name="req_body_other" initialValue={state.req_body_other}>
-                  <TextArea placeholder="" autosize={{ minRows: 8 }} />
-                </FormItem>
-              </Col>
-            </Row>
-          ) : null}
-        </div>
-
-        {/* ----------- Response ------------- */}
-
-        <h2 className="interface-title">
-          返回数据设置&nbsp;
-          {!projectMsg.is_json5 && (
-            <Tooltip title="项目 -> 设置 开启 json5">
-              <QuestionCircleOutlined />{' '}
-            </Tooltip>
-          )}
-          <FormItem
-            name="res_body_is_json_schema"
-            valuePropName="checked"
-            initialValue={state.res_body_is_json_schema || !projectMsg.is_json5}
-            noStyle
-          >
-            <Switch
-              checkedChildren="json-schema"
-              unCheckedChildren="json"
-              disabled={!projectMsg.is_json5}
-            />
-          </FormItem>
-        </h2>
-        <div className="container-radiogroup">
-          <FormItem name="res_body_type" initialValue={state.res_body_type} noStyle>
-            <RadioGroup size="large" className="radioGroup">
-              <RadioButton value="json">JSON</RadioButton>
-              <RadioButton value="raw">RAW</RadioButton>
-            </RadioGroup>
-          </FormItem>
-        </div>
-        <div className="panel-sub">
-          <Row
-            className="interface-edit-item"
-            style={{
-              display: resBodyType === 'json' ? 'block' : 'none'
-            }}
-          >
-            <Col>
-              <Tabs
-                size="large"
-                defaultActiveKey="tpl"
-                onChange={handleJsonType}
-                items={[
-                  { label: '模板', key: 'tpl' },
-                  { label: '预览', key: 'preview' }
-                ]}
-              />
-              <div style={{ marginTop: '10px' }}>
-                {!resBodyIsJsonSchema ? (
-                  <div style={{ padding: '10px 0', fontSize: '15px' }}>
-                    <span>
-                      基于 mockjs 和 json5,使用注释方式写参数说明{' '}
-                      <Tooltip title={<pre>{Json5Example}</pre>}>
-                        <QuestionCircleOutlined style={{ color: '#086dbf' }} />
-                      </Tooltip>{' '}
-                      ,具体使用方法请{' '}
-                      <span
-                        className="href"
-                        onClick={() =>
-                          window.open('https://hellosean1025.github.io/yapi/documents/mock.html', '_blank')
-                        }
-                      >
-                        查看文档
-                      </span>
-                    </span>
-                    ，“全局编辑”或 “退出全屏” 请按 <span style={{ fontWeight: '500' }}>F9</span>
-                  </div>
-                ) : (
-                  <div
-                    className="json-schema-editor-scope"
-                    style={{ display: state.jsonType === 'tpl' ? 'block' : 'none' }}
-                  >
-                    <ResBodySchema
-                      onChange={(/** @type {any} */ text) => {
-                        setState((/** @type {any} */ prev) => ({
-                          ...prev,
-                          res_body: text
-                        }));
-                        if (new Date().getTime() - startTimeRef.current > 1000) {
-                          props.changeEditStatus(true);
-                        }
-                      }}
-                      isMock={true}
-                      data={res_body_use_schema_editor}
-                    />
-                  </div>
-                )}
-                {!resBodyIsJsonSchema && state.jsonType === 'tpl' && (
-                  <AceEditor
-                    className="interface-editor"
-                    data={state.res_body}
-                    onChange={handleResBody}
-                    ref={(/** @type {any} */ editor) => (resBodyEditorRef.current = editor)}
-                    fullScreen={true}
-                  />
-                )}
-                <div
-                  id="mock-preview"
-                  style={{
-                    backgroundColor: '#eee',
-                    lineHeight: '20px',
-                    minHeight: '300px',
-                    display: state.jsonType === 'preview' ? 'block' : 'none'
-                  }}
-                />
-              </div>
-            </Col>
-          </Row>
-
-          <Row
-            className="interface-edit-item"
-            style={{
-              display: resBodyType === 'raw' ? 'block' : 'none'
-            }}
-          >
-            <Col>
-              <FormItem name="res_body" initialValue={state.res_body}>
-                <TextArea style={{ minHeight: '150px' }} placeholder="" />
-              </FormItem>
-            </Col>
-          </Row>
-        </div>
-
-        {/* ----------- remark ------------- */}
-
-        <h2 className="interface-title">备 注</h2>
-        <div className="panel-sub">
-          <FormItem className={'interface-edit-item'}>
-            <div>
-              <MarkdownEditor
-                ref={editorRef}
-                className="remark-editor"
-                value={state.markdown || state.desc}
-                height={500}
-              />
-            </div>
-          </FormItem>
-        </div>
-
-        {/* ----------- email ------------- */}
-        <h2 className="interface-title">其 他</h2>
-        <div className="panel-sub">
-          <FormItem
-            className={'interface-edit-item'}
-            {...formItemLayout}
-            label={
-              <span>
-                消息通知&nbsp;
-                <Tooltip title={'开启消息通知，可在 项目设置 里修改'}>
-                  <QuestionCircleOutlined style={{ width: '10px' }} />
-                </Tooltip>
-              </span>
-            }
-            name="switch_notice"
-            valuePropName="checked"
-            initialValue={props.noticed}
-          >
-            <Switch checkedChildren="开" unCheckedChildren="关" />
-          </FormItem>
-          <FormItem
-            className={'interface-edit-item'}
-            {...formItemLayout}
-            label={
-              <span>
-                开放接口&nbsp;
-                <Tooltip title={'用户可以在 数据导出 时选择只导出公开接口'}>
-                  <QuestionCircleOutlined style={{ width: '10px' }} />
-                </Tooltip>
-              </span>
-            }
-            name="api_opened"
-            valuePropName="checked"
-            initialValue={state.api_opened}
-          >
-            <Switch checkedChildren="开" unCheckedChildren="关" />
-          </FormItem>
-        </div>
+        <OtherSetting noticed={props.noticed} api_opened={state.api_opened} />
 
         <FormItem
           className="interface-edit-item"
