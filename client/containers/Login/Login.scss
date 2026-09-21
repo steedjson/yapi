@@ -36,8 +36,10 @@
 }
 
 .card-login {
-  margin-top: 1.6rem;
-  margin-bottom: 1.6rem;
+  // antd5 的 CSS-in-JS 以更高或同 specificity 注入 .ant-card{margin:0} 且晚于静态样式表,
+  // 同 specificity 下运行时样式必胜, 故沿用本文件 .login-form-button 的 !important 先例
+  margin-top: 1.6rem !important;
+  margin-bottom: 1.6rem !important;
   border-radius: .04rem;
   position: relative;
   .login-logo {
