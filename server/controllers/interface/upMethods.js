@@ -259,7 +259,8 @@ let diffCssCache = null;
     }
 
     yapi.emitHook('interface_update', id).then();
-    await this.autoAddTag(params);
+    // 编辑表单不回传 project_id，autoAddTag 依赖它查询项目注册新 tag，须从已查出的接口文档补齐
+    await this.autoAddTag(Object.assign({}, params, { project_id: interfaceData.project_id }));
 
     ctx.body = yapi.commons.resReturn(result);
     return 1;

@@ -104,6 +104,8 @@ class projectModel extends baseModel {
    * @param {Record<string, any>} data 项目文档，可为 mongoose 文档对象
    */
   handleEnvNullData(data){
+    // findOne/get 未命中时上游会传入 null，直接透传，避免 null.toObject 抛 TypeError
+    if (!data) return data;
     data = data.toObject();
     data.toObject = ()=> data;
     let isFix = false;

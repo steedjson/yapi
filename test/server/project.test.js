@@ -472,3 +472,81 @@ test.serial('swaggerUrl: 缺失 url 时 axios 请求失败被捕获 → 402（�
   t.is(ctx.body.errcode, 402);
   t.is(ctx.body.data, null);
 });
+
+// —— handleEnvNullData(data) ——
+
+// 回归：接口带 tag 保存时 up → autoAddTag → projectModel.get 未命中会把 null
+// 传入 handleEnvNullData，判空缺失时 null.toObject 抛 TypeError 导致保存 500
+test.serial('handleEnvNullData: findOne 未命中（null）时直接返回 null 而不抛 TypeError', t => {
+  // 构造真实实例依赖 mongoose 连接，这里直接走原型方法；this.model 为一旦被
+  // 触达即抛错的哨兵，证明判空分支在触碰 this 之前就已返回
+  const sentinel = {
+    model: {
+      updateOne() {
+        throw new Error('判空分支不应触达 this.model');
+      }
+    }
+  };
+  const ret = projectModel.prototype.handleEnvNullData.call(sentinel, null);
+  t.is(ret, null);
+});
+
+// 边界：正常文档（最小 mongoose 文档形状桩，toObject 返回自身）混入非法 global 项时
+// 应过滤清洗并触发一次 updateOne 回写；返回值须重新挂上返回自身的 toObject 方法
+test.serial('handleEnvNullData: 正常文档含非法 global 项时过滤清洗并回写，返回值带 toObject 方法', t => {
+  const updateCalls = [];
+  const sentinel = {
+    model: {
+      updateOne(query, update) {
+        updateCalls.push([query, update]);
+        return Promise.resolve({});
+      }
+    }
+  };
+  const raw = {
+    _id: 101,
+    env: [
+      {
+        name: 'local',
+        global: ['bad-string', null, 42, { name: 'valid', value: 'v1' }]
+      }
+    ],
+    toObject() {
+      return this;
+    }
+  };
+  const ret = projectModel.prototype.handleEnvNullData.call(sentinel, raw);
+  // 返回对象重新挂了返回自身的 toObject（get(ctx) 后续链式调用依赖）
+  t.is(typeof ret.toObject, 'function');
+  t.is(ret.toObject(), ret);
+  // env.global 中非对象项（字符串/null/数字）被过滤，合法项原样保留
+  t.deepEqual(ret.env[0].global, [{ name: 'valid', value: 'v1' }]);
+  // isFix 为真 → 触发一次 updateOne，按 _id 回写清洗后的 env
+  t.is(updateCalls.length, 1);
+  t.deepEqual(updateCalls[0][0], { _id: 101 });
+  t.deepEqual(updateCalls[0][1], { $set: { env: ret.env } });
+});
+
+// 对照分支：global 项全部合法时不应触发 updateOne 回写
+test.serial('handleEnvNullData: global 项全部合法时不触发 updateOne 回写', t => {
+  let updateCalled = 0;
+  const sentinel = {
+    model: {
+      updateOne() {
+        updateCalled += 1;
+        return Promise.resolve({});
+      }
+    }
+  };
+  const raw = {
+    _id: 102,
+    env: [{ name: 'prod', global: [{ name: 'g', value: 'v' }] }],
+    toObject() {
+      return this;
+    }
+  };
+  const ret = projectModel.prototype.handleEnvNullData.call(sentinel, raw);
+  t.is(updateCalled, 0);
+  t.deepEqual(ret.env[0].global, [{ name: 'g', value: 'v' }]);
+  t.is(ret.toObject(), ret);
+});
