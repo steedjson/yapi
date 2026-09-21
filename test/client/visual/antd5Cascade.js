@@ -13,10 +13,13 @@
  *        - 胜出者为 antd 运行时规则且值相同 → ambiguous（无视觉差异，或本就继承同值）
  *        - 胜出者为 antd 运行时规则且值不同 → confirmed-override（记录 specificity 对比）
  *
- * dev/prod 双口径：antd5 在非 production 下注入 `css-dev-only-do-not-override-*`
- * 哈希类，选择器为 `.hash.ant-xxx`（0,2,0）；prod 单哈希类（0,1,0，见巡检计划 §0）。
- * 运行时规则同时计算 specDev（原样）与 specProd（剥离 dev 哈希类）两种特异性，
- * 求胜者时按模式取用，使一次挂载同时给出 dev/prod 两个口径的判定。
+ * dev/prod 双口径：antd 5.29.3 / @ant-design/cssinjs 注入的选择器形如
+ * `:where(.css-<hash>).ant-xxx`——`:where()` 特异性计零，dev
+ * （css-dev-only-do-not-override-*）与 prod（css-<hash>）两口径的特异性实测一致
+ * （计划 §0 的「dev 0,2,0 / prod 0,1,0」系立项时的过时假设，修订见
+ * docs/antd5-visual-audit-findings.md §4.1）。运行时规则仍同时计算 specDev
+ * （原样）与 specProd（剥离 dev 哈希类）两种特异性并按模式取用，保留双口径
+ * 机制以便版本升级导致两口径重新分化时无需改引擎。
  */
 
 // ---------------- specificity ----------------
@@ -335,6 +338,8 @@ function rightmostCompound(selector) {
 
 /**
  * 构建匹配索引：最右复合子类名 → 规则、无类最右复合子规则列表。
+ * cache 为本索引私有的元素记忆化（WeakMap），随索引一同更换——同一元素跨
+ * 两个索引（如重扫后规则集变化）不会复用旧索引的候选规则（跨 index 陈旧规则）。
  * @param {any[]} rules
  */
 function computeIndex(rules) {
@@ -352,18 +357,18 @@ function computeIndex(rules) {
       classless.push(rule);
     }
   }
-  return { byClass, classless };
+  return { byClass, classless, cache: new WeakMap() };
 }
 
-/** 元素 → 候选规则数组（类名并集 + 无类规则），WeakMap 记忆化 */
-const elementRulesCache = new WeakMap();
-
 /**
+ * 元素 → 候选规则数组（类名并集 + 无类规则），按 index 私有 WeakMap 记忆化
+ * （缓存生命周期与所属索引绑定，见 computeIndex）
  * @param {any} el
  * @param {any} index
  */
 function rulesForElement(el, index) {
-  const cached = elementRulesCache.get(el);
+  if (!index.cache) index.cache = new WeakMap();
+  const cached = index.cache.get(el);
   if (cached) return cached;
   const seen = new Set();
   const out = [];
@@ -379,7 +384,7 @@ function rulesForElement(el, index) {
   });
   // 无类规则（元素/属性选择器）统一纳入，matches 过滤
   index.classless.forEach(push);
-  elementRulesCache.set(el, out);
+  index.cache.set(el, out);
   return out;
 }
 

@@ -124,8 +124,12 @@
       color: rgba(255, 255, 255, 0.75);
     }
     // 搜索按钮：透明底融入深色栏，放大镜用亮色形成反差，右侧独立圆角。
-    // antd5 运行时注入 .css-xxx.ant-btn 样式，需提高特异性确保覆盖生效
-    .ant-input-group-addon .ant-input-search-button.ant-btn {
+    // antd5 运行时注入 `.ant-input-search-button:not(.ant-btn-color-primary)` 前景色
+    // 规则（:where() 计零后 0,6,0，且晚于静态样式表），同级特异性必被反超——
+    // 借 .search / .ant-input-group / .ant-input-group-addon 真实祖先链提升到
+    // 0,7,0（hover/focus 态 0,8,0，压过 antd hover 的 0,7,0），见
+    // docs/antd5-visual-audit-findings.md §3 F-2
+    .search .ant-input-group .ant-input-group-addon .ant-input-search-button.ant-btn {
       background: transparent;
       border: 1px solid var(--sk-border-group-input);
       border-left: none;

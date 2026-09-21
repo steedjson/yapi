@@ -8,13 +8,16 @@
  * 与候选声明比对，产出 confirmed-override / ambiguous / not-overridden 判定；
  * dev（带 css-dev-only- 哈希，0,2,0）与 prod（单哈希，0,1,0）双口径同时给出。
  *
- * 产物：/tmp/yapi-antd5-layerb/findings.json —— docs/antd5-visual-audit-findings.md
- * 登记表的数据源；断言锚点：已知事故点位 .card-login margin-top——引擎必须能对照
+ * 产物：os.tmpdir()/yapi-antd5-layerb/findings.json ——
+ * docs/antd5-visual-audit-findings.md 登记表的数据源；断言锚点：已知事故点位 .card-login margin-top——引擎必须能对照
  * 提交态产物复现 979dfa67 原始事故（产物滞后于源码修复，见登录页锚点用例注释）。
  *
- * 本批（批次 1）jsdom 可达页面：login、home 游客、group 列表、interface 用例集合、
- * interface 运行（Postman）、statistics。其余页面在 findings 登记表标注
- * needs-manual / headless 待巡检（批次 2 前由主 Agent 浏览器走查补全）。
+ * 批次 2 起本文件维持全量页面域挂载：login/register、home（游客/登录）、
+ * group（列表/成员/设置/动态）、interface（用例集合/运行/列表/详情/编辑）、
+ * project setting（项目配置/token/数据）、project activity、statistics、
+ * user（列表/资料）、follows、add-project。
+ * 仍无法挂载或伪类选择器静态不匹配的候选在汇总用例标注 needs-manual，
+ * 由主 Agent 层 C 浏览器走查补全。
  *
  * jsdom 环境必须在任何生产代码之前装载
  */
@@ -144,6 +147,59 @@ stubDefaultExport(
     );
   })
 );
+
+// ---- 批次 2 扩充页面所需的重型子组件桩（与各自既有容器测试同源口径）----
+// TimeLine：GroupLog / Activity 页挂载即发网络请求，桩为回显 props 的静态组件
+stubDefaultExport(
+  path.join(REPO_ROOT, 'client/components/TimeLine/TimeLine.js'),
+  function StubTimeLine(props) {
+    return React.createElement(
+      'section',
+      { className: 'stub-timeline', 'data-type': String(props.type), 'data-typeid': String(props.typeid) },
+      'STUB_TIMELINE'
+    );
+  }
+);
+// SchemaTable：View 页返回数据 schema 表格，依赖 Ace 与测量环境
+stubDefaultExport(
+  path.join(REPO_ROOT, 'client/components/SchemaTable/SchemaTable.js'),
+  function StubSchemaTable() {
+    return React.createElement('div', { className: 'stub-schema-table' }, 'STUB_SCHEMA_TABLE');
+  }
+);
+// mockEditor / MarkdownEditor：interface 编辑页（Edit → InterfaceEditForm）
+stubDefaultExport(path.join(REPO_ROOT, 'client/components/AceEditor/mockEditor.js'), function StubMockEditor() {
+  return { setValue: function() {} };
+});
+stubDefaultExport(
+  path.join(REPO_ROOT, 'client/components/MarkdownEditor/index.js'),
+  React.forwardRef(function StubMarkdownEditor(props, ref) {
+    React.useImperativeHandle(ref, () => ({}), []);
+    return React.createElement(
+      'div',
+      { className: 'stub-markdown-editor', 'data-value': String(props.value == null ? '' : props.value) },
+      'STUB_MARKDOWN'
+    );
+  })
+);
+// json-schema-editor-visual 主入口为未转译 ESM+JSX（Node 下 require 失败），
+// 注入等价工厂桩（与 InterfaceEditForm.test.js 同源口径）
+const jsvPath = require.resolve('json-schema-editor-visual');
+{
+  const jsvStubModule = new Module(jsvPath, null);
+  jsvStubModule.filename = jsvPath;
+  jsvStubModule.loaded = true;
+  jsvStubModule.exports = function stubJSchemaFactory() {
+    return function StubSchemaEditor(props) {
+      return React.createElement(
+        'div',
+        { className: 'stub-json-schema-editor', 'data-data': String(props.data == null ? '' : props.data) },
+        'STUB_SCHEMA_EDITOR'
+      );
+    };
+  };
+  require.cache[jsvPath] = jsvStubModule;
+}
 
 const postmanLibPath = path.join(REPO_ROOT, 'common/postmanLib.js');
 const realPostmanLib = require(postmanLibPath);
@@ -339,6 +395,379 @@ async function mountStatistics() {
   await flushEffects(150);
 }
 
+// ================= 批次 2 扩充页面挂载配方 =================
+
+// ---- register（LoginWrap 页签 2，login chunk 注册域）----
+async function mountRegister() {
+  const { default: LoginContainer } = require('../../../client/containers/Login/LoginContainer.js');
+  renderWithProviders(React.createElement(LoginContainer), {
+    seedState: { user: { loginWrapActiveKey: '2', canRegister: true } },
+    routePath: '/login',
+    initialPath: '/login'
+  });
+  await flushEffects(60);
+}
+
+// ---- 全局 Header/Footer（index chunk 登录后全局外壳深层结构）。
+// 注：Home 组件在 isLogin=true 时 <Navigate to="/group">，登录态首页即 group 页
+// （已由 mountGroupList 覆盖），此处补挂全局外壳组件而非重复挂 group。----
+async function mountGlobalChrome() {
+  const { default: Header } = require('../../../client/components/Header/Header.js');
+  const { default: Footer } = require('../../../client/components/Footer/Footer.js');
+  renderWithProviders(
+    React.createElement(
+      React.Fragment,
+      null,
+      React.createElement(Header),
+      React.createElement('main'),
+      React.createElement(Footer)
+    ),
+    {
+      seedState: {
+        user: { isLogin: true, uid: 9, role: 'member', userName: 'alice', email: 'a@b.c', type: 'site' },
+        group: { groupList: [G1], currGroup: G1, role: 'dev' },
+        project: { projectList: [] }
+      },
+      routePath: '/',
+      initialPath: '/'
+    }
+  );
+  await flushEffects(120);
+}
+
+// ---- group 成员管理（MemberList 配方）----
+const GROUP_MEMBERS = [
+  { uid: 11, username: '张三', email: 'zhangsan@test.com', role: 'owner' },
+  { uid: 22, username: '李四', email: 'lisi@test.com', role: 'dev' }
+];
+async function mountGroupMember() {
+  // 注意 stubAxios 按前缀匹配且顺序敏感：'/api/group/get' 是
+  // '/api/group/get_member_list' 的前缀，具体路由必须排在前面
+  stubAxios([
+    { match: '/api/group/get_member_list', respond: () => ({ errcode: 0, data: GROUP_MEMBERS.slice() }) },
+    { match: '/api/group/get', respond: () => ({ errcode: 0, data: Object.assign({}, G1, { role: 'owner' }) }) }
+  ]);
+  const { default: MemberList } = require('../../../client/containers/Group/MemberList/MemberList.js');
+  renderWithProviders(React.createElement(MemberList), {
+    seedState: { user: { uid: 11 }, group: { currGroup: G1, role: 'owner' } }
+  });
+  await flushEffects(120);
+}
+
+// ---- group 设置（GroupSetting 配方；custom_field1 为表单回填必填形状）----
+async function mountGroupSetting() {
+  stubAxios([
+    { match: '/api/group/get', respond: () => ({ errcode: 0, data: Object.assign({ custom_field1: { name: '业务线', enable: true } }, G1, { role: 'owner' }) }) },
+    { match: '/api/log/', respond: () => ({ errcode: 0, data: { data: [], total: 0 } }) }
+  ]);
+  const { default: GroupSetting } = require('../../../client/containers/Group/GroupSetting/GroupSetting.js');
+  renderWithProviders(React.createElement(GroupSetting), {
+    seedState: {
+      user: { uid: 11 },
+      group: { currGroup: Object.assign({ custom_field1: { name: '业务线', enable: true } }, G1), role: 'owner' },
+      news: { newsData: { notRead: {} } }
+    }
+  });
+  await flushEffects(120);
+}
+
+// ---- group 动态（GroupLog 配方；TimeLine 已桩）----
+async function mountGroupLog() {
+  const { default: GroupLog } = require('../../../client/containers/Group/GroupLog/GroupLog.js');
+  renderWithProviders(React.createElement(GroupLog), {
+    seedState: { user: { uid: 11 }, group: { currGroup: G1 } }
+  });
+  await flushEffects(60);
+}
+
+// ---- project 域共享 fixtures（ProjectSetting.test.js / InterfaceListAndView.test.js 同源）----
+const CURR_PROJECT_FULL = {
+  _id: 12,
+  name: '演示项目',
+  desc: '项目描述',
+  project_type: '站点',
+  group_id: 1,
+  basepath: '/base',
+  switch_notice: false,
+  strice: false,
+  is_json5: false,
+  tag: [],
+  role: 'owner',
+  is_mock_open: true,
+  project_mock_script: 'const a = 1;',
+  pre_script: 'console.log(1);',
+  after_script: 'console.log(2);',
+  env: [],
+  cat: [{ _id: 5, name: '分类五', desc: '分类五描述' }]
+};
+const PROJECT_SEED = {
+  user: { uid: 11 },
+  group: {
+    currGroup: { _id: 1, group_name: '分组一', group_desc: '', custom_field1: { name: '', enable: false } },
+    groupList: [{ _id: 1, group_name: '分组一' }]
+  },
+  project: { currProject: CURR_PROJECT_FULL, projectList: [], token: 'tk_seed_9f8e7d6c', swaggerUrlData: '' },
+  inter: { curdata: { catid: 3 } },
+  news: { updateLogList: [] }
+};
+
+function stubProjectApis() {
+  stubAxios([
+    { match: '/api/project/get', respond: () => ({ errcode: 0, data: Object.assign({}, CURR_PROJECT_FULL) }) },
+    { match: '/api/group/list', respond: () => ({ errcode: 0, data: { data: [{ _id: 1, group_name: '分组一' }] } }) },
+    { match: '/api/group/get', respond: () => ({ errcode: 0, data: { group_name: '分组一', _id: 1 } }) },
+    { match: '/api/project/token', respond: () => ({ errcode: 0, data: 'tk_fetched_abcd' }) },
+    { match: '/', respond: () => ({ errcode: 0, data: [] }) }
+  ]);
+}
+
+// ---- project setting（Setting，默认激活「项目配置」面板）----
+async function mountProjectSetting() {
+  stubProjectApis();
+  const { default: Setting } = require('../../../client/containers/Project/Setting/Setting.js');
+  renderWithProviders(React.createElement(Setting), {
+    seedState: PROJECT_SEED,
+    routePath: '/project/:id/setting',
+    initialPath: '/project/12/setting'
+  });
+  await flushEffects(150);
+}
+
+// ---- project token 配置页 ----
+async function mountProjectToken() {
+  stubProjectApis();
+  const { default: ProjectToken } = require('../../../client/containers/Project/Setting/ProjectToken/ProjectToken.js');
+  renderWithProviders(React.createElement(ProjectToken, { projectId: 12, curProjectRole: 'admin' }), {
+    seedState: PROJECT_SEED
+  });
+  await flushEffects(120);
+}
+
+// ---- project 数据导出页 ----
+async function mountProjectData() {
+  stubProjectApis();
+  const { default: ProjectData } = require('../../../client/containers/Project/Setting/ProjectData/ProjectData.js');
+  renderWithProviders(React.createElement(ProjectData), {
+    seedState: PROJECT_SEED,
+    routePath: '/project/:id/data',
+    initialPath: '/project/12/data'
+  });
+  await flushEffects(120);
+}
+
+// ---- project 动态页（Activity 配方；TimeLine 已桩）----
+async function mountProjectActivity() {
+  const { default: Activity } = require('../../../client/containers/Project/Activity/Activity.js');
+  const withRouter = require('../../../client/withRouter.jsx').default;
+  renderWithProviders(React.createElement(withRouter(Activity)), {
+    seedState: { user: { uid: 11 }, inter: { curdata: { _id: 1 } }, project: { currProject: { _id: 12, basepath: '/mock-path' } } },
+    routePath: '/project/:id/*',
+    initialPath: '/project/12/activity'
+  });
+  await flushEffects(60);
+}
+
+// ---- interface 列表页（InterfaceList 配方，容器测试同源 fixtures）----
+const INTERFACE_MENU_TREE = [
+  { _id: 5, name: '分类五', list: [{ _id: 100, title: '接口一', path: '/api/a' }], children: [] }
+];
+const INTERFACE_LIST_SEED = {
+  inter: {
+    curdata: {},
+    list: INTERFACE_MENU_TREE,
+    editStatus: false,
+    totalTableList: [
+      { _id: 100, title: '接口一', path: '/a', method: 'GET', project_id: 12, catid: 5, status: 'done', tag: ['核心'] },
+      { _id: 101, title: '接口二', path: '/b', method: 'POST', project_id: 12, catid: 5, status: 'undone', tag: [] }
+    ],
+    totalCount: 2,
+    catTableList: [
+      { _id: 100, title: '接口一', path: '/a', method: 'GET', project_id: 12, status: 'done', tag: ['核心'] }
+    ],
+    count: 1
+  },
+  project: { currProject: CURR_PROJECT_FULL },
+  user: { uid: 9 }
+};
+
+async function mountInterfaceList() {
+  stubAxios([
+    { match: '/api/interface/', respond: () => ({ errcode: 0, data: { count: 1, list: [] } }) },
+    { match: '/', respond: () => ({ errcode: 0, data: [] }) }
+  ]);
+  const { default: InterfaceList } = require('../../../client/containers/Project/Interface/InterfaceList/InterfaceList.js');
+  renderWithProviders(React.createElement(InterfaceList), {
+    seedState: INTERFACE_LIST_SEED,
+    routePath: '/project/:id/interface/api',
+    initialPath: '/project/12/interface/api'
+  });
+  await flushEffects(200);
+}
+
+// ---- interface 详情页（View 配方）----
+const INTERFACE_CURDATA = {
+  _id: 100,
+  title: '接口一',
+  path: '/api/a',
+  method: 'GET',
+  project_id: 12,
+  uid: 9,
+  username: '创建者',
+  status: 'done',
+  up_time: 1600000000,
+  desc: '<p>接口描述</p>',
+  req_headers: [{ name: 'Content-Type', value: 'application/json', required: '1', example: '', desc: '' }],
+  req_params: [{ name: 'id', desc: '路径参数', example: '1' }],
+  req_query: [{ name: 'q', desc: '查询', example: 'x', required: '0' }],
+  req_body_type: 'form',
+  req_body_form: [{ name: 'f1', type: 'text', required: '1', example: 'e1', desc: '表单项' }],
+  req_body_other: '',
+  req_body_is_json_schema: false,
+  res_body_type: 'json',
+  res_body: '{"a":1}',
+  res_body_is_json_schema: false,
+  custom_field_value: '自定义'
+};
+
+async function mountInterfaceView() {
+  stubAxios([
+    { match: '/', respond: () => ({ errcode: 0, data: [] }) }
+  ]);
+  const { default: View } = require('../../../client/containers/Project/Interface/InterfaceList/View.js');
+  renderWithProviders(React.createElement(View), {
+    seedState: {
+      inter: { curdata: INTERFACE_CURDATA, list: INTERFACE_MENU_TREE, editStatus: false },
+      group: { field: { enable: true, name: '业务线' } },
+      project: { currProject: CURR_PROJECT_FULL }
+    },
+    initialPath: '/project/12/interface/api/100'
+  });
+  await flushEffects(200);
+}
+
+// ---- interface 编辑页（Edit → InterfaceEditForm；冲突检测 WebSocket 桩）----
+async function mountInterfaceEdit() {
+  // Edit.js 挂载即连 /api/interface/solve_conflict；jsdom 无真实服务，
+  // 用「异步触发 onerror」的桩走容器既有语义：连接失败 → 用 store curdata 进入编辑态
+  const OriginalWebSocket = window.WebSocket;
+  window.WebSocket = function StubConflictSocket() {
+    const socket = this;
+    socket.close = function() {};
+    socket.readyState = 0;
+    setTimeout(() => {
+      if (socket.onerror) socket.onerror({});
+    }, 0);
+  };
+  stubAxios([
+    { match: '/api/interface/getMenu', respond: () => ({ errcode: 0, data: INTERFACE_MENU_TREE }) },
+    { match: '/', respond: () => ({ errcode: 0, data: [] }) }
+  ]);
+  const { default: Edit } = require('../../../client/containers/Project/Interface/InterfaceList/Edit.js');
+  renderWithProviders(React.createElement(Edit), {
+    seedState: {
+      inter: { curdata: INTERFACE_CURDATA, list: [], editStatus: false },
+      group: { field: { enable: true, name: '业务线' }, currGroup: G1 },
+      project: { currProject: CURR_PROJECT_FULL },
+      user: { uid: 9 }
+    },
+    routePath: '/project/:id/interface/api/:actionId',
+    initialPath: '/project/12/interface/api/100'
+  });
+  await flushEffects(400);
+  window.WebSocket = OriginalWebSocket;
+}
+
+// ---- user 域（User 路由容器：候选选择器均在 .g-doc/.user-box 包装下，
+// 必须挂容器而非裸 List/Profile）----
+function stubUserApis() {
+  stubAxios([
+    {
+      match: '/api/user/list',
+      respond: () => ({
+        errcode: 0,
+        data: {
+          list: [
+            { _id: 1, username: '管理员甲', email: 'admin@test.com', role: 'admin', disabled: false, up_time: 1700000000 },
+            { _id: 2, username: '成员乙', email: 'member@test.com', role: 'member', disabled: true, up_time: 1700000100 }
+          ],
+          count: 25
+        }
+      })
+    },
+    {
+      match: '/api/user/find',
+      respond: () => ({
+        errcode: 0,
+        data: { uid: 9, username: 'alice', email: 'a@b.c', role: 'member', type: 'site', add_time: 1700000000, up_time: 1700000100 }
+      })
+    }
+  ]);
+}
+
+async function mountUserList() {
+  stubUserApis();
+  const { default: User } = require('../../../client/containers/User/User.js');
+  renderWithProviders(React.createElement(User), {
+    seedState: { user: { role: 'admin', uid: 1 } },
+    routePath: '/user/*',
+    initialPath: '/user/list'
+  });
+  await flushEffects(150);
+}
+
+async function mountUserProfile() {
+  stubUserApis();
+  const { default: User } = require('../../../client/containers/User/User.js');
+  renderWithProviders(React.createElement(User), {
+    seedState: { user: { uid: 9, type: 'site', role: 'member' } },
+    routePath: '/user/*',
+    initialPath: '/user/profile/9'
+  });
+  await flushEffects(150);
+}
+
+// ---- follows 我的关注页（Follows 配方）----
+async function mountFollows() {
+  stubAxios([
+    {
+      match: '/api/follow/list',
+      respond: () => ({
+        errcode: 0,
+        data: {
+          list: [
+            { _id: 101, name: '项目A', icon: 'star-o', color: 'blue', up_time: 1700000001 },
+            { _id: 102, name: '项目B', icon: 'star-o', color: 'red', up_time: 1700000002 }
+          ]
+        }
+      })
+    }
+  ]);
+  const { default: Follows } = require('../../../client/containers/Follows/Follows.js');
+  renderWithProviders(React.createElement(Follows), {
+    seedState: { user: { uid: 11 }, follow: { data: [] }, project: { currPage: 1 } }
+  });
+  await flushEffects(150);
+}
+
+// ---- add-project 新建项目页（AddProject 配方）----
+async function mountAddProject() {
+  stubAxios([
+    { match: '/api/group/list', respond: () => ({ errcode: 0, data: { data: [G1, G2] } }) },
+    { match: '/', respond: () => ({ errcode: 0, data: [] }) }
+  ]);
+  const { default: AddProject } = require('../../../client/containers/AddProject/AddProject.js');
+  renderWithProviders(React.createElement(AddProject), {
+    seedState: {
+      user: { uid: 11, role: 'member' },
+      group: { currGroup: G1, groupList: [G1, G2] },
+      project: { currPage: 1 }
+    },
+    routePath: '/add-project',
+    initialPath: '/add-project'
+  });
+  await flushEffects(150);
+}
+
 // ================= 层 B 差分运行器 =================
 
 const MAX_ELEMENTS_PER_CANDIDATE = 5;
@@ -436,28 +865,35 @@ test.serial('层B：login 页差分（登录卡片锚点）', async t => {
   await runDiffForPage('login', mountLogin);
   t.true(PAGE_STATS.login.matchedCandidates >= 10, 'login 挂载应命中足够多候选（实际 ' + PAGE_STATS.login.matchedCandidates + '）');
 
-  // 锚点（引擎对照已知事故）：979dfa67 修复的 .card-login margin-top。
-  // 注意：源码已加 !important（client/containers/Login/Login.scss），但 static/prd
-  // 产物最后一次重建在 e50cae0b（早于修复），提交态产物中仍是无 !important 的
-  // margin-top:1.6rem——引擎按产物状态应复现「被 :where(...).ant-card{margin:0}
-  // 同特异性 (0,1,0)、运行时序胜出」的原始事故。产物重建后本锚点应翻转为
-  // not-overridden（批次 2 前置动作，见 findings 登记表）。
+  // 锚点（批次 2 翻转后口径）：979dfa67 修复的 .card-login margin-top。
+  // 源码已加 !important（client/containers/Login/Login.scss），批次 2 前置重建后
+  // 产物（index@7042c67a98c45f2a.css）已含 margin-top:1.6rem !important——
+  // margin-top/margin-bottom 应判定 not-overridden（!important 自保险胜）；
+  // border-radius 在源码中无自保，仍被 :where(...).ant-card{border-radius:8px}
+  // 同特异性 (0,1,0)、运行时序压过 → confirmed-override（批次 1 新发现修复点
+  // F-1，登记于 findings 登记表，按批次裁决修复，不在批次 2 顺手修范围）。
   const cardLogin = Array.from(REGISTRY.values()).find(e => e.candidate.selector === '.card-login');
   t.truthy(cardLogin, '应在 login 页找到 .card-login 候选');
   t.truthy(cardLogin.pages.login, '.card-login 应在 login 页渲染');
-  t.false(
+  t.true(
     cardLogin.candidate.props.find(p => p.prop === 'margin-top').important,
-    '前置事实：提交态产物中 card-login margin-top 不含 !important（产物滞后于修复）'
+    '前置事实：批次 2 重建后的产物中 card-login margin-top 已含 !important（979dfa67）'
   );
   for (const mode of ['dev', 'prod']) {
-    const v = cardLogin.pages.login.props['margin-top'][mode];
-    t.is(v && v.status, 'confirmed-override', mode + ' 口径下应复现 979dfa67 原始事故（产物态）');
-    t.true(
-      /ant-card/.test(v && v.winnerSelector),
-      '获胜规则应为 antd Card 运行时样式（实际: ' + (v && v.winnerSelector) + '）'
+    const vMargin = cardLogin.pages.login.props['margin-top'][mode];
+    t.is(vMargin && vMargin.status, 'not-overridden', mode + ' 口径下 margin-top 应自保获胜（产物已同步修复）');
+    const vRadius = cardLogin.pages.login.props['border-radius'][mode];
+    t.is(
+      vRadius && vRadius.status,
+      'confirmed-override',
+      mode + ' 口径下 border-radius 仍是已知未修复覆盖点（F-1，登记在案）'
     );
-    t.is(v && v.specCustom, '0,1,0', '自定义 .card-login 特异性 (0,1,0)');
-    t.is(v && v.specWinner, '0,1,0', 'antd 获胜规则特异性 (0,1,0)——运行时序决胜，与事故分析一致');
+    t.true(
+      /ant-card/.test(vRadius && vRadius.winnerSelector),
+      'border-radius 获胜规则应为 antd Card 运行时样式（实际: ' + (vRadius && vRadius.winnerSelector) + '）'
+    );
+    t.is(vRadius && vRadius.specCustom, '0,1,0', '自定义 .card-login 特异性 (0,1,0)');
+    t.is(vRadius && vRadius.specWinner, '0,1,0', 'antd 获胜规则特异性 (0,1,0)——运行时序决胜');
   }
 });
 
@@ -469,6 +905,19 @@ test.serial('层B：home 游客页差分', async t => {
 test.serial('层B：group 列表页差分', async t => {
   await runDiffForPage('group-list', mountGroupList);
   t.true(PAGE_STATS['group-list'].matchedCandidates >= 5, 'group 挂载应命中候选（实际 ' + PAGE_STATS['group-list'].matchedCandidates + '）');
+
+  // F-2 锚点（批次 2 修复位）：搜索按钮前景色。修复前自定义 0,5,0 被
+  // :where(...)...:not(.ant-btn-color-primary)（:where 计零后 0,6,0、运行时注入）
+  // 反超；批次 2 借 .search/.ant-input-group/.ant-input-group-addon 真实祖先链
+  // 提升到 0,7,0（hover 态 0,8,0），color/background/border 应全部自保获胜。
+  const searchBtn = Array.from(REGISTRY.values()).find(
+    e => e.candidate.selector.indexOf('.ant-input-search-button.ant-btn') !== -1
+  );
+  t.truthy(searchBtn, '应在 group-list 页找到搜索按钮候选（F-2 修复位）');
+  for (const mode of ['dev', 'prod']) {
+    const v = searchBtn.pages['group-list'] && searchBtn.pages['group-list'].props.color[mode];
+    t.is(v && v.status, 'not-overridden', mode + ' 口径下 F-2 修复位 color 应自保获胜（specificity 提升）');
+  }
 });
 
 test.serial('层B：interface 用例集合页差分', async t => {
@@ -486,6 +935,95 @@ test.serial('层B：statistics 页差分', async t => {
   t.true(PAGE_STATS.statistics.matchedCandidates >= 3, 'statistics 挂载应命中候选（实际 ' + PAGE_STATS.statistics.matchedCandidates + '）');
 });
 
+// ================= 批次 2 扩充页面用例 =================
+// 每个页面域只断言「挂载可达 + 命中足量候选」，逐属性判定由汇总用例统一登记。
+// 命中下限按各页可达自定义类数量经验值设定，跌破即提示配方失效（页面渲染崩溃/桩漂移）。
+
+test.serial('层B：register 注册页签差分', async t => {
+  await runDiffForPage('register', mountRegister);
+  t.true(PAGE_STATS.register.matchedCandidates >= 5, 'register 挂载应命中候选（实际 ' + PAGE_STATS.register.matchedCandidates + '）');
+});
+
+test.serial('层B：全局 Header/Footer 差分', async t => {
+  await runDiffForPage('global-chrome', mountGlobalChrome);
+  t.true(
+    PAGE_STATS['global-chrome'].matchedCandidates >= 3,
+    '全局外壳挂载应命中候选（实际 ' + PAGE_STATS['global-chrome'].matchedCandidates + '）'
+  );
+});
+
+test.serial('层B：group 成员管理页差分', async t => {
+  await runDiffForPage('group-member', mountGroupMember);
+  t.true(PAGE_STATS['group-member'].matchedCandidates >= 3, 'group 成员页挂载应命中候选（实际 ' + PAGE_STATS['group-member'].matchedCandidates + '）');
+});
+
+test.serial('层B：group 设置页差分', async t => {
+  await runDiffForPage('group-setting', mountGroupSetting);
+  t.true(PAGE_STATS['group-setting'].matchedCandidates >= 3, 'group 设置页挂载应命中候选（实际 ' + PAGE_STATS['group-setting'].matchedCandidates + '）');
+});
+
+test.serial('层B：group 动态页差分', async t => {
+  await runDiffForPage('group-log', mountGroupLog);
+  t.true(PAGE_STATS['group-log'].matchedCandidates >= 1, 'group 动态页挂载应命中候选（实际 ' + PAGE_STATS['group-log'].matchedCandidates + '）');
+});
+
+test.serial('层B：project setting 项目配置面板差分', async t => {
+  await runDiffForPage('project-setting', mountProjectSetting);
+  t.true(PAGE_STATS['project-setting'].matchedCandidates >= 5, 'project setting 挂载应命中候选（实际 ' + PAGE_STATS['project-setting'].matchedCandidates + '）');
+});
+
+test.serial('层B：project token 配置页差分', async t => {
+  await runDiffForPage('project-token', mountProjectToken);
+  t.true(PAGE_STATS['project-token'].matchedCandidates >= 1, 'project token 页挂载应命中候选（实际 ' + PAGE_STATS['project-token'].matchedCandidates + '）');
+});
+
+test.serial('层B：project 数据导出页差分', async t => {
+  await runDiffForPage('project-data', mountProjectData);
+  t.true(PAGE_STATS['project-data'].matchedCandidates >= 1, 'project data 页挂载应命中候选（实际 ' + PAGE_STATS['project-data'].matchedCandidates + '）');
+});
+
+test.serial('层B：project 动态页差分', async t => {
+  await runDiffForPage('project-activity', mountProjectActivity);
+  t.true(PAGE_STATS['project-activity'].matchedCandidates >= 1, 'project activity 页挂载应命中候选（实际 ' + PAGE_STATS['project-activity'].matchedCandidates + '）');
+});
+
+test.serial('层B：interface 列表页差分', async t => {
+  await runDiffForPage('interface-list', mountInterfaceList);
+  t.true(PAGE_STATS['interface-list'].matchedCandidates >= 3, 'interface 列表页挂载应命中候选（实际 ' + PAGE_STATS['interface-list'].matchedCandidates + '）');
+});
+
+test.serial('层B：interface 详情页差分', async t => {
+  await runDiffForPage('interface-view', mountInterfaceView);
+  t.true(PAGE_STATS['interface-view'].matchedCandidates >= 3, 'interface 详情页挂载应命中候选（实际 ' + PAGE_STATS['interface-view'].matchedCandidates + '）');
+});
+
+test.serial('层B：interface 编辑页差分', async t => {
+  await runDiffForPage('interface-edit', mountInterfaceEdit);
+  t.true(PAGE_STATS['interface-edit'].matchedCandidates >= 10, 'interface 编辑页挂载应命中足量候选（实际 ' + PAGE_STATS['interface-edit'].matchedCandidates + '）');
+});
+
+
+
+test.serial('层B：user 列表页差分', async t => {
+  await runDiffForPage('user-list', mountUserList);
+  t.true(PAGE_STATS['user-list'].matchedCandidates >= 3, 'user 列表页挂载应命中候选（实际 ' + PAGE_STATS['user-list'].matchedCandidates + '）');
+});
+
+test.serial('层B：user 个人资料页差分', async t => {
+  await runDiffForPage('user-profile', mountUserProfile);
+  t.true(PAGE_STATS['user-profile'].matchedCandidates >= 3, 'user 资料页挂载应命中候选（实际 ' + PAGE_STATS['user-profile'].matchedCandidates + '）');
+});
+
+test.serial('层B：follows 我的关注页差分', async t => {
+  await runDiffForPage('follows', mountFollows);
+  t.true(PAGE_STATS.follows.matchedCandidates >= 3, 'follows 挂载应命中候选（实际 ' + PAGE_STATS.follows.matchedCandidates + '）');
+});
+
+test.serial('层B：add-project 新建项目页差分', async t => {
+  await runDiffForPage('add-project', mountAddProject);
+  t.true(PAGE_STATS['add-project'].matchedCandidates >= 3, 'add-project 挂载应命中候选（实际 ' + PAGE_STATS['add-project'].matchedCandidates + '）');
+});
+
 // ================= 汇总与登记产物 =================
 
 test.serial('层B：汇总登记产物与运行时样式 sanity', async t => {
@@ -498,7 +1036,8 @@ test.serial('层B：汇总登记产物与运行时样式 sanity', async t => {
     'confirmed-override': 0,
     ambiguous: 0,
     'not-overridden': 0,
-    'needs-manual': 0
+    'needs-manual': 0,
+    'antd3-scoped': 0
   };
 
   for (const entry of REGISTRY.values()) {
@@ -554,10 +1093,31 @@ test.serial('层B：汇总登记产物与运行时样式 sanity', async t => {
     });
   }
 
-  // 未在任何挂载页面渲染的候选 → needs-manual（层 B 盲区，转人工/无头浏览器巡检）
+  // 未在任何挂载页面渲染的候选：
+  //   - 携带 antd3 双作用域守卫（:not([class*=css-])，21964bbc 引入）的规则按设计
+  //     不作用于 antd5 元素（antd5 组件全带 css- 哈希类），属计划 §6 范围外
+  //     （json-schema-editor 内嵌 antd3，编辑器自研立项处理）→ antd3-scoped；
+  //   - 其余 → needs-manual（层 B 盲区，转人工/无头浏览器巡检）。
   const renderedIds = new Set(findings.map(f => f.id));
+  const ANT_D3_SCOPE_GUARD = ':not([class*=css-])';
   for (const candidate of candidates) {
     if (!renderedIds.has(candidate.id)) {
+      if (candidate.selector.indexOf(ANT_D3_SCOPE_GUARD) !== -1) {
+        totals['antd3-scoped']++;
+        findings.push({
+          id: candidate.id,
+          selector: candidate.selector,
+          chunk: candidate.chunk,
+          media: candidate.media || '',
+          hasAntdRef: candidate.hasAntdRef,
+          props: candidate.props.map(p => p.prop + (p.important ? ':!' : '')),
+          status: 'antd3-scoped',
+          pages: [],
+          overrides: [],
+          note: 'antd3 双作用域守卫规则（:not([class*=css-])），按设计不作用于 antd5 元素，属计划 §6 范围外'
+        });
+        continue;
+      }
       totals['needs-manual']++;
       findings.push({
         id: candidate.id,
@@ -569,7 +1129,7 @@ test.serial('层B：汇总登记产物与运行时样式 sanity', async t => {
         status: 'needs-manual',
         pages: [],
         overrides: [],
-        note: 'jsdom 批次 1 未挂载对应页面或选择器在测试环境静态不匹配（:hover 等伪类）'
+        note: 'jsdom 批次 2 未挂载对应页面或选择器在测试环境静态不匹配（:hover 等伪类）'
       });
     }
   }
