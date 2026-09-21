@@ -1,5 +1,9 @@
 
-.form-item {
+// 同元素联合类提一档特异性（0,1,0 → 0,2,0）：className 经 FormItem 落在
+// .ant-form-item 根节点上, 元素恒同时携带两类, 匹配集合不变;
+// 否则会被 antd5 运行时 :where(.css-xxx).ant-form-item{margin:0}（0,1,0, 运行时序）压过
+// （批次 2a 修复 N-4, 与 add-project chunk 的 N-3 为同名异源声明, 各自独立修复）
+.form-item.ant-form-item {
   margin-bottom: .16rem;
 
   // 表单行默认对齐
@@ -294,4 +298,24 @@
   font-weight: normal;
   color: var(--sk-text-muted);
   line-height: 1.5;
+}
+
+// 删除图标(环境配置/标签面板/接口编辑): 使用点全在 project chunk 覆盖域, 规则自
+// ProjectList.scss(group chunk)迁入——该文件在本域不加载, 原规则从未生效(巡检 N-5)。
+// 提一档特异性
+// (0,1,0 → 0,2,0)压过 antd5 运行时 .anticon{color:inherit}。
+.dynamic-delete-button.anticon {
+  cursor: pointer;
+  position: relative;
+  top: 4px;
+  font-size: 24px;
+  color: #999;
+  transition: all .3s;
+  &:hover {
+    color: #777;
+  }
+  &[disabled] {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
 }

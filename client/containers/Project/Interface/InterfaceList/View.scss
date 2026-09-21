@@ -55,7 +55,11 @@
         margin-bottom: 0px;
         padding-bottom: 0px;
     }
-    .ant-table-thead {
+    // 表头前景/背景两属性各补一段真实祖先 .ant-table-wrapper（antd Table 根节点,
+    // 表头 th 必在其内）, 各提一档特异性: color 0,2,1→0,3,1、background 0,2,2→0,3,2,
+    // 压过 antd5 运行时 :where(.css-xxx).ant-table-wrapper .ant-table-thead >tr>th
+    // （0,2,2）的 color/background, 见批次 2a 修复 N-6/N-7（findings §3）
+    .ant-table-wrapper .ant-table-thead {
         th{
             color: #6d6c6c;
             font-weight: normal;
@@ -64,7 +68,7 @@
             // background-color: black;
         }
     }
-    .ant-table-thead>tr>th{
+    .ant-table-wrapper .ant-table-thead>tr>th{
         background: var(--sk-bg-faint);
     }
     .colMethod{

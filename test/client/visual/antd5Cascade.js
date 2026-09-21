@@ -13,6 +13,11 @@
  *        - 胜出者为 antd 运行时规则且值相同 → ambiguous（无视觉差异，或本就继承同值）
  *        - 胜出者为 antd 运行时规则且值不同 → confirmed-override（记录 specificity 对比）
  *
+ * ⚠️ 已知局限（N-5 实证，详见 docs/antd5-visual-audit-findings.md §4）：引擎将全部
+ * chunk 规则并入同一索引，不建模「chunk CSS 是否在该页面域实际加载」——对跨 chunk
+ * 候选，self-wins 判定可能是空真（规则从未在该页生效）。此类候选须经层 C 或加载
+ * 关系核对后方可采信；同 chunk 候选的判定不受此限。
+ *
  * dev/prod 双口径：antd 5.29.3 / @ant-design/cssinjs 注入的选择器形如
  * `:where(.css-<hash>).ant-xxx`——`:where()` 特异性计零，dev
  * （css-dev-only-do-not-override-*）与 prod（css-<hash>）两口径的特异性实测一致

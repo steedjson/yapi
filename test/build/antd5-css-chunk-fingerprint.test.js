@@ -24,17 +24,18 @@ const REPO_ROOT = path.resolve(__dirname, '..', '..');
 const PRD_DIR = path.join(REPO_ROOT, 'static', 'prd');
 
 // ---- 登记基线（与 static/prd 提交态一致；更新须按文件头说明走重扫流程）----
-// 批次 2 前置重建（6897bd64 之后）：合入 979dfa67 登录卡片修复、21964bbc
-// common.scss 修复与本批 F-2 GroupList.scss 特异性提升后全量重建，
-// 层 A/层 B 已按新产物重扫（候选/判定漂移见 findings 登记表批次 2 节）。
+// 批次 2a+3 前置重建（74ce3839 之后）：合入批次 2a 六处覆盖点修复（F-1 border-radius、
+// N-1 line-height、N-3/N-4 .form-item、N-5 删除图标色、N-6/N-7 用例表头、M-1 hover
+// 提级 0,9,0）后全量重建；index/group/project/add-project 四 chunk 哈希变化，
+// initial chunk 顺序不变；层 A/层 B 已按新产物重扫（见 findings 登记表批次 2a+3 节）。
 const BASELINE = {
   cssChunks: {
-    'index.js': 'index@7042c67a98c45f2a.css',
-    group: 'group@b6dce64e97ccded9.css',
-    project: 'project@6033852e01bd4f2c.css',
+    'index.js': 'index@39ef29962cd900dd.css',
+    group: 'group@426f689219580b35.css',
+    project: 'project@621f61c9be96dc30.css',
     user: 'user@57802eb279f54184.css',
     follows: 'follows@3f80bd4670cf7f38.css',
-    'add-project': 'add-project@f2f41aafd4e87c75.css',
+    'add-project': 'add-project@80e6a5a4d705c349.css',
     i: 'i@05d52c24969994a8.css'
   },
   initialChunks: ['manifest', 'p', 'index.js'],

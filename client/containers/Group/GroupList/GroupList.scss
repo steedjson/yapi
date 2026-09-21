@@ -127,8 +127,12 @@
     // antd5 运行时注入 `.ant-input-search-button:not(.ant-btn-color-primary)` 前景色
     // 规则（:where() 计零后 0,6,0，且晚于静态样式表），同级特异性必被反超——
     // 借 .search / .ant-input-group / .ant-input-group-addon 真实祖先链提升到
-    // 0,7,0（hover/focus 态 0,8,0，压过 antd hover 的 0,7,0），见
-    // docs/antd5-visual-audit-findings.md §3 F-2
+    // 0,7,0（见 docs/antd5-visual-audit-findings.md §3 F-2）。
+    // hover/focus 态（含 :not([disabled]) 镜像）为 0,9,0：批 2 评审勘误——antd hover
+    // 前景色规则实测 0,8,0（原注释误记 0,7,0），我方原 hover 0,8,0 仅打平、运行时序
+    // 反被压过；antd 对「输入框 hover/focus」的 border-inline-start-color 规则经
+    // 层 B 引擎实测同为 0,8,0，且我方 border-left:none 以 0,7,0 决定 border-left-style、
+    // 该色无可见载体，无需对抗（M-1 修复，批次 2a）。
     .search .ant-input-group .ant-input-group-addon .ant-input-search-button.ant-btn {
       background: transparent;
       border: 1px solid var(--sk-border-group-input);
@@ -140,8 +144,8 @@
         color: rgba(255, 255, 255, 0.85);
       }
 
-      &:hover,
-      &:focus {
+      &:hover:not([disabled]),
+      &:focus:not([disabled]) {
         background: rgba(255, 255, 255, 0.08);
         color: #fff;
 

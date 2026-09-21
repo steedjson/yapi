@@ -6,7 +6,10 @@
   background-color: var(--sk-bg-component);
 }
 
-.form-item {
+// 同元素联合类提一档特异性（0,1,0 → 0,2,0）：className 经 FormItem 落在
+// .ant-form-item 根节点上, 元素恒同时携带两类, 匹配集合不变;
+// 否则会被 antd5 运行时 :where(.css-xxx).ant-form-item{margin:0}（0,1,0, 运行时序）压过（批次 2a 修复 N-3）
+.form-item.ant-form-item {
   margin-bottom: .16rem;
 
   .ant-form-item-row {

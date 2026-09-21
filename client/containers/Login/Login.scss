@@ -40,7 +40,9 @@
   // 同 specificity 下运行时样式必胜, 故沿用本文件 .login-form-button 的 !important 先例
   margin-top: 1.6rem !important;
   margin-bottom: 1.6rem !important;
-  border-radius: .04rem;
+  // 同上：antd5 运行时注入 :where(.css-xxx).ant-card{border-radius:8px}（0,1,0，运行时序）
+  // 会压过同特异性的静态声明, 登录卡片圆角被放大一倍, 沿用 !important 自保（批次 2a 修复 F-1）
+  border-radius: .04rem !important;
   position: relative;
   .login-logo {
     font-size: 0;

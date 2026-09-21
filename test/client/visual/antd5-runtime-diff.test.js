@@ -16,6 +16,9 @@
  * group（列表/成员/设置/动态）、interface（用例集合/运行/列表/详情/编辑）、
  * project setting（项目配置/token/数据）、project activity、statistics、
  * user（列表/资料）、follows、add-project。
+ * 批次 2a 起，原 8 条 confirmed-override 中的 7 条（F-1 border-radius、N-1、N-3、
+ * N-4、N-5、N-6、N-7）已修复并逐条固化为 not-overridden 锚点；N-2 按裁决保持
+ * confirmed 在案（待层 C 后修），汇总用例把「confirmed 仅剩 N-2」钉为门禁。
  * 仍无法挂载或伪类选择器静态不匹配的候选在汇总用例标注 needs-manual，
  * 由主 Agent 层 C 浏览器走查补全。
  *
@@ -865,35 +868,32 @@ test.serial('层B：login 页差分（登录卡片锚点）', async t => {
   await runDiffForPage('login', mountLogin);
   t.true(PAGE_STATS.login.matchedCandidates >= 10, 'login 挂载应命中足够多候选（实际 ' + PAGE_STATS.login.matchedCandidates + '）');
 
-  // 锚点（批次 2 翻转后口径）：979dfa67 修复的 .card-login margin-top。
-  // 源码已加 !important（client/containers/Login/Login.scss），批次 2 前置重建后
-  // 产物（index@7042c67a98c45f2a.css）已含 margin-top:1.6rem !important——
-  // margin-top/margin-bottom 应判定 not-overridden（!important 自保险胜）；
-  // border-radius 在源码中无自保，仍被 :where(...).ant-card{border-radius:8px}
-  // 同特异性 (0,1,0)、运行时序压过 → confirmed-override（批次 1 新发现修复点
-  // F-1，登记于 findings 登记表，按批次裁决修复，不在批次 2 顺手修范围）。
+  // 锚点（批次 2a 翻转后口径）：979dfa67 修复的 .card-login margin-top + 本批 F-1
+  // 修复的 border-radius。源码已加 !important（client/containers/Login/Login.scss），
+  // 重建后产物已含 margin-top/margin-bottom/border-radius 的 !important 声明——
+  // 三属性均应判定 not-overridden（!important 自保险胜）。
   const cardLogin = Array.from(REGISTRY.values()).find(e => e.candidate.selector === '.card-login');
   t.truthy(cardLogin, '应在 login 页找到 .card-login 候选');
   t.truthy(cardLogin.pages.login, '.card-login 应在 login 页渲染');
   t.true(
     cardLogin.candidate.props.find(p => p.prop === 'margin-top').important,
-    '前置事实：批次 2 重建后的产物中 card-login margin-top 已含 !important（979dfa67）'
+    '前置事实：产物中 card-login margin-top 已含 !important（979dfa67）'
+  );
+  t.true(
+    cardLogin.candidate.props.find(p => p.prop === 'border-radius').important,
+    '前置事实：产物中 card-login border-radius 已含 !important（批次 2a F-1 修复）'
   );
   for (const mode of ['dev', 'prod']) {
     const vMargin = cardLogin.pages.login.props['margin-top'][mode];
     t.is(vMargin && vMargin.status, 'not-overridden', mode + ' 口径下 margin-top 应自保获胜（产物已同步修复）');
+    const vMarginBottom = cardLogin.pages.login.props['margin-bottom'][mode];
+    t.is(vMarginBottom && vMarginBottom.status, 'not-overridden', mode + ' 口径下 margin-bottom 应自保获胜');
     const vRadius = cardLogin.pages.login.props['border-radius'][mode];
     t.is(
       vRadius && vRadius.status,
-      'confirmed-override',
-      mode + ' 口径下 border-radius 仍是已知未修复覆盖点（F-1，登记在案）'
+      'not-overridden',
+      mode + ' 口径下 border-radius 应自保获胜（F-1 修复：!important 压过 :where(...).ant-card{border-radius:8px}）'
     );
-    t.true(
-      /ant-card/.test(vRadius && vRadius.winnerSelector),
-      'border-radius 获胜规则应为 antd Card 运行时样式（实际: ' + (vRadius && vRadius.winnerSelector) + '）'
-    );
-    t.is(vRadius && vRadius.specCustom, '0,1,0', '自定义 .card-login 特异性 (0,1,0)');
-    t.is(vRadius && vRadius.specWinner, '0,1,0', 'antd 获胜规则特异性 (0,1,0)——运行时序决胜');
   }
 });
 
@@ -909,7 +909,7 @@ test.serial('层B：group 列表页差分', async t => {
   // F-2 锚点（批次 2 修复位）：搜索按钮前景色。修复前自定义 0,5,0 被
   // :where(...)...:not(.ant-btn-color-primary)（:where 计零后 0,6,0、运行时注入）
   // 反超；批次 2 借 .search/.ant-input-group/.ant-input-group-addon 真实祖先链
-  // 提升到 0,7,0（hover 态 0,8,0），color/background/border 应全部自保获胜。
+  // 提升到 0,7,0，color/background/border 应全部自保获胜。
   const searchBtn = Array.from(REGISTRY.values()).find(
     e => e.candidate.selector.indexOf('.ant-input-search-button.ant-btn') !== -1
   );
@@ -918,6 +918,36 @@ test.serial('层B：group 列表页差分', async t => {
     const v = searchBtn.pages['group-list'] && searchBtn.pages['group-list'].props.color[mode];
     t.is(v && v.status, 'not-overridden', mode + ' 口径下 F-2 修复位 color 应自保获胜（specificity 提升）');
   }
+
+  // M-1 锚点（批次 2a 修复）：hover/focus 态判定。jsdom 对 :hover/:focus 静态不匹配
+  // （层 B 结构性盲区，动态态留层 C 走查），此处按引擎口径做静态级联裁定：
+  // 产物中按钮自身的 hover/focus 规则（含 :not([disabled]) 镜像）应为 0,9,0，压过
+  // antd 运行时 hover 前景色规则实测的 0,8,0（批 2 注释曾误记 0,7,0）——
+  // 修复前我方 hover 仅 0,8,0 打平、运行时序反被压过。只取最右复合子为按钮
+  // 自身的规则，排除其后代规则（.anticon-search 色随按钮已天然更高）。
+  const isSearchBtnSelfRule = sel => {
+    const rightmost = sel.split(/[\s>+~]+/).pop();
+    return rightmost.indexOf('.ant-input-search-button.ant-btn') !== -1;
+  };
+  const prdHoverSelectors = PRD_RULES.filter(
+    r => isSearchBtnSelfRule(r.selector) && /:(hover|focus)/.test(r.selector)
+  ).map(r => r.selector);
+  t.true(prdHoverSelectors.length >= 2, '产物应含搜索按钮 hover/focus 规则（实际 ' + prdHoverSelectors.length + ' 条）');
+  for (const sel of prdHoverSelectors) {
+    t.is(cascade.computeSpecificity(sel).join(','), '0,9,0', 'M-1：hover/focus 规则应提级到 0,9,0（' + sel + '）');
+  }
+  const antdHoverColorRule = buildRuntimeRules().find(
+    r =>
+      r.sourceKind === 'runtime' &&
+      r.selector.indexOf('.ant-input-search-button:not(.ant-btn-color-primary):not([disabled]):hover') !== -1 &&
+      r.declarations.some(d => String(d.prop).toLowerCase() === 'color')
+  );
+  t.truthy(antdHoverColorRule, 'antd 运行时应注入搜索按钮 hover 前景色规则');
+  t.is(
+    antdHoverColorRule && cascade.computeSpecificity(antdHoverColorRule.selector).join(','),
+    '0,8,0',
+    'M-1 前置事实：antd hover 前景色规则应为 0,8,0（批 2 注释误记 0,7,0，评审勘误）'
+  );
 });
 
 test.serial('层B：interface 用例集合页差分', async t => {
@@ -950,6 +980,32 @@ test.serial('层B：全局 Header/Footer 差分', async t => {
     PAGE_STATS['global-chrome'].matchedCandidates >= 3,
     '全局外壳挂载应命中候选（实际 ' + PAGE_STATS['global-chrome'].matchedCandidates + '）'
   );
+
+  // N-1 锚点（批次 2a 翻转后口径）：line-height 已从 .header-box 基础规则并入
+  // &.ant-layout-header + !important 通道（client/components/Header/Header.scss），
+  // 产物中对应候选为 .header-box.ant-layout-header（含 line-height:! 声明），
+  // 应压过 :where(...).ant-layout-header{line-height:64px}（0,1,0, 运行时序）自保获胜。
+  const headerChannel = Array.from(REGISTRY.values()).find(
+    e =>
+      e.candidate.selector === '.header-box.ant-layout-header' &&
+      e.candidate.props.some(p => p.prop === 'line-height')
+  );
+  t.truthy(headerChannel, '应找到携带 line-height 的 .header-box.ant-layout-header 候选（N-1 修复位）');
+  for (const mode of ['dev', 'prod']) {
+    const v = headerChannel.pages['global-chrome'] && headerChannel.pages['global-chrome'].props['line-height'][mode];
+    t.is(v && v.status, 'not-overridden', mode + ' 口径下 line-height 应自保获胜（N-1 修复：!important 通道）');
+    t.true(v && v.reason === 'self-wins', 'line-height 获胜者应为 .header-box 自身声明');
+  }
+
+  // N-2 登记（批次 2a 裁决：不修，待层 C 实测后倾向修外壳类而非硬压）：
+  // .search-wrapper .search-input width 仍应保持 confirmed-override——
+  // 本断言把「在案待裁决」钉进门禁，若意外翻转（如 antd 规则变化）反而需要人工复核。
+  const n2 = Array.from(REGISTRY.values()).find(e => e.candidate.selector === '.search-wrapper .search-input');
+  t.truthy(n2 && n2.pages['global-chrome'], '应找到 N-2 候选 .search-wrapper .search-input（在案待裁决）');
+  for (const mode of ['dev', 'prod']) {
+    const v = n2.pages['global-chrome'].props.width[mode];
+    t.is(v && v.status, 'confirmed-override', mode + ' 口径下 N-2 width 应保持 confirmed-override（裁决：待层 C 后修，不在本批）');
+  }
 });
 
 test.serial('层B：group 成员管理页差分', async t => {
@@ -970,6 +1026,28 @@ test.serial('层B：group 动态页差分', async t => {
 test.serial('层B：project setting 项目配置面板差分', async t => {
   await runDiffForPage('project-setting', mountProjectSetting);
   t.true(PAGE_STATS['project-setting'].matchedCandidates >= 5, 'project setting 挂载应命中候选（实际 ' + PAGE_STATS['project-setting'].matchedCandidates + '）');
+
+  // N-4/N-5 锚点（批次 2a 翻转后口径）：
+  //   N-4 project chunk .form-item margin-bottom —— 同元素联合类 .form-item.ant-form-item
+  //   提一档（0,2,0），压过 :where(...).ant-form-item{margin:0}（0,1,0, 运行时序）；
+  //   N-5 project chunk（Setting.scss，自 ProjectList.scss 迁入）.dynamic-delete-button.anticon
+  //   color —— 提一档（0,2,0），
+  //   压过运行时 .anticon{color:inherit}（0,1,0）。
+  // 注意同名候选成对出现（add-project chunk 的 N-3 在 add-project 用例锚定），此处按 chunk 区分。
+  const n4 = Array.from(REGISTRY.values()).find(
+    e => e.candidate.selector === '.form-item.ant-form-item' && e.candidate.chunk === 'project'
+  );
+  t.truthy(n4, '应找到 project chunk 的 .form-item.ant-form-item 候选（N-4 修复位）');
+  for (const mode of ['dev', 'prod']) {
+    const v = n4.pages['project-setting'] && n4.pages['project-setting'].props['margin-bottom'][mode];
+    t.is(v && v.status, 'not-overridden', mode + ' 口径下 N-4 margin-bottom 应自保获胜（specificity 提升一档）');
+  }
+  const n5 = Array.from(REGISTRY.values()).find(e => e.candidate.selector === '.dynamic-delete-button.anticon');
+  t.truthy(n5, '应找到 .dynamic-delete-button.anticon 候选（N-5 修复位）');
+  for (const mode of ['dev', 'prod']) {
+    const v = n5.pages['project-setting'] && n5.pages['project-setting'].props.color[mode];
+    t.is(v && v.status, 'not-overridden', mode + ' 口径下 N-5 color 应自保获胜（specificity 提升一档）');
+  }
 });
 
 test.serial('层B：project token 配置页差分', async t => {
@@ -995,6 +1073,27 @@ test.serial('层B：interface 列表页差分', async t => {
 test.serial('层B：interface 详情页差分', async t => {
   await runDiffForPage('interface-view', mountInterfaceView);
   t.true(PAGE_STATS['interface-view'].matchedCandidates >= 3, 'interface 详情页挂载应命中候选（实际 ' + PAGE_STATS['interface-view'].matchedCandidates + '）');
+
+  // N-6/N-7 锚点（批次 2a 翻转后口径）：用例表头 color/background——
+  // 补一段真实祖先 .ant-table-wrapper（antd Table 根）各提一档
+  // （color 0,2,1→0,3,1、background 0,2,2→0,3,2），压过
+  // :where(...).ant-table-wrapper .ant-table-thead >tr>th（0,2,2）的同名声明。
+  const n6 = Array.from(REGISTRY.values()).find(
+    e => e.candidate.selector === '.caseContainer .ant-table-wrapper .ant-table-thead th'
+  );
+  t.truthy(n6, '应找到 .caseContainer .ant-table-wrapper .ant-table-thead th 候选（N-6 修复位）');
+  for (const mode of ['dev', 'prod']) {
+    const v = n6.pages['interface-view'] && n6.pages['interface-view'].props.color[mode];
+    t.is(v && v.status, 'not-overridden', mode + ' 口径下 N-6 表头 color 应自保获胜（specificity 提升一档）');
+  }
+  const n7 = Array.from(REGISTRY.values()).find(
+    e => e.candidate.selector === '.caseContainer .ant-table-wrapper .ant-table-thead>tr>th'
+  );
+  t.truthy(n7, '应找到 .caseContainer .ant-table-wrapper .ant-table-thead>tr>th 候选（N-7 修复位）');
+  for (const mode of ['dev', 'prod']) {
+    const v = n7.pages['interface-view'] && n7.pages['interface-view'].props.background[mode];
+    t.is(v && v.status, 'not-overridden', mode + ' 口径下 N-7 表头 background 应自保获胜（specificity 提升一档）');
+  }
 });
 
 test.serial('层B：interface 编辑页差分', async t => {
@@ -1022,6 +1121,19 @@ test.serial('层B：follows 我的关注页差分', async t => {
 test.serial('层B：add-project 新建项目页差分', async t => {
   await runDiffForPage('add-project', mountAddProject);
   t.true(PAGE_STATS['add-project'].matchedCandidates >= 3, 'add-project 挂载应命中候选（实际 ' + PAGE_STATS['add-project'].matchedCandidates + '）');
+
+  // N-3 锚点（批次 2a 翻转后口径）：add-project chunk .form-item margin-bottom——
+  // 同元素联合类 .form-item.ant-form-item 提一档（0,2,0），压过
+  // :where(...).ant-form-item{margin:0}（0,1,0, 运行时序）自保获胜。
+  // 与 project chunk 的 N-4 同名异源，此处按 chunk 前缀锚定 add-project 侧。
+  const n3 = Array.from(REGISTRY.values()).find(
+    e => e.candidate.selector === '.form-item.ant-form-item' && e.candidate.chunk === 'add-project'
+  );
+  t.truthy(n3, '应找到 add-project chunk 的 .form-item.ant-form-item 候选（N-3 修复位）');
+  for (const mode of ['dev', 'prod']) {
+    const v = n3.pages['add-project'] && n3.pages['add-project'].props['margin-bottom'][mode];
+    t.is(v && v.status, 'not-overridden', mode + ' 口径下 N-3 margin-bottom 应自保获胜（specificity 提升一档）');
+  }
 });
 
 // ================= 汇总与登记产物 =================
@@ -1157,6 +1269,42 @@ test.serial('层B：汇总登记产物与运行时样式 sanity', async t => {
   console.log('[层B] 判定汇总: ' + JSON.stringify(totals));
   console.log('[层B] 页面命中: ' + JSON.stringify(PAGE_STATS));
   console.log('[层B] 登记产物: ' + outPath);
+
+  // 批次 2a 门禁：原 8 条 confirmed-override 中 7 条已按评审裁决修复（F-1 border-radius、
+  // N-1、N-3、N-4、N-5、N-6、N-7），逐条核对应翻转；仅 N-2 按裁决「待层 C 后修」
+  // 保持 confirmed-override。翻转口径：候选级 status 不得为 confirmed-override，且
+  // 全部页面/属性/口径无任何 confirmed-override 判定（overrides 为空）。允许残留
+  // 同值 ambiguous（如 .card-login 的 position，批 2 即存在、无视觉差异，层 C 口径）。
+  // 若出现其他 confirmed，说明修复引发了新覆盖或 antd 升级改变了运行时规则，必须逐条分析登记。
+  const FIXED_CONFIRMED = [
+    { id: 'F-1', selector: '.card-login', prop: 'border-radius' },
+    { id: 'N-1', selector: '.header-box.ant-layout-header', prop: 'line-height' },
+    { id: 'N-3', selector: '.form-item.ant-form-item', chunk: 'add-project', prop: 'margin-bottom' },
+    { id: 'N-4', selector: '.form-item.ant-form-item', chunk: 'project', prop: 'margin-bottom' },
+    { id: 'N-5', selector: '.dynamic-delete-button.anticon', prop: 'color' },
+    { id: 'N-6', selector: '.caseContainer .ant-table-wrapper .ant-table-thead th', prop: 'color' },
+    { id: 'N-7', selector: '.caseContainer .ant-table-wrapper .ant-table-thead>tr>th', prop: 'background' }
+  ];
+  for (const fix of FIXED_CONFIRMED) {
+    const entry = findings.find(
+      f =>
+        f.selector === fix.selector &&
+        (!fix.chunk || f.chunk === fix.chunk)
+    );
+    t.truthy(entry, '修复位候选应仍在登记中（' + fix.id + ' ' + fix.selector + '）');
+    t.true(
+      entry && entry.overrides.length === 0,
+      fix.id + '（' + fix.selector + ' ' + fix.prop + '）不应残留任何 confirmed-override 判定'
+    );
+    t.not(entry && entry.status, 'confirmed-override', fix.id + '（' + fix.selector + '）候选级状态不应为 confirmed-override');
+  }
+  const stillConfirmed = findings.filter(f => f.status === 'confirmed-override');
+  t.is(stillConfirmed.length, 1, 'confirmed-override 应仅剩 N-2（待层 C 后修），实际 ' + stillConfirmed.length + ' 条');
+  t.is(
+    stillConfirmed[0] && stillConfirmed[0].selector,
+    '.search-wrapper .search-input',
+    '剩余 confirmed 应为 N-2（.search-wrapper .search-input width）'
+  );
 
   t.true(findings.length === candidates.length, '登记应覆盖全部层 A 候选');
   t.true(totals.rendered > 0, '至少应有候选在挂载页面渲染');
