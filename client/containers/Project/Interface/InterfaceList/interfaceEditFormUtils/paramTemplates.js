@@ -47,12 +47,12 @@ const queryTpl = (data, index, delParams) => {
       </Col>
       <Col span="6" className="interface-edit-item-content-col">
         <FormItem name={['req_query', index, 'example']} initialValue={data.example}>
-          <TextArea autosize={true} placeholder="参数示例" />
+          <TextArea rows={1} autoSize={{ minRows: 1 }} placeholder="参数示例" />
         </FormItem>
       </Col>
       <Col span="9" className="interface-edit-item-content-col">
         <FormItem name={['req_query', index, 'desc']} initialValue={data.desc}>
-          <TextArea autosize={true} placeholder="备注" />
+          <TextArea rows={1} autoSize={{ minRows: 1 }} placeholder="备注" />
         </FormItem>
       </Col>
       <Col span="1" className="interface-edit-item-content-col">
@@ -99,12 +99,12 @@ const headerTpl = (data, index, delParams) => {
       </Col>
       <Col span="5" className="interface-edit-item-content-col">
         <FormItem name={['req_headers', index, 'example']} initialValue={data.example}>
-          <TextArea autosize={true} placeholder="参数示例" />
+          <TextArea rows={1} autoSize={{ minRows: 1 }} placeholder="参数示例" />
         </FormItem>
       </Col>
       <Col span="8" className="interface-edit-item-content-col">
         <FormItem name={['req_headers', index, 'desc']} initialValue={data.desc}>
-          <TextArea autosize={true} placeholder="备注" />
+          <TextArea rows={1} autoSize={{ minRows: 1 }} placeholder="备注" />
         </FormItem>
       </Col>
       <Col span="1" className="interface-edit-item-content-col">
@@ -156,12 +156,12 @@ const requestBodyTpl = (data, index, delParams) => {
       </Col>
       <Col span="5" className="interface-edit-item-content-col">
         <FormItem name={['req_body_form', index, 'example']} initialValue={data.example}>
-          <TextArea autosize={true} placeholder="参数示例" />
+          <TextArea rows={1} autoSize={{ minRows: 1 }} placeholder="参数示例" />
         </FormItem>
       </Col>
       <Col span="7" className="interface-edit-item-content-col">
         <FormItem name={['req_body_form', index, 'desc']} initialValue={data.desc}>
-          <TextArea autosize={true} placeholder="备注" />
+          <TextArea rows={1} autoSize={{ minRows: 1 }} placeholder="备注" />
         </FormItem>
       </Col>
       <Col span="1" className="interface-edit-item-content-col">
@@ -189,12 +189,12 @@ const paramsTpl = (data, index) => {
       </Col>
       <Col span="7" className="interface-edit-item-content-col">
         <FormItem name={['req_params', index, 'example']} initialValue={data.example}>
-          <TextArea autosize={true} placeholder="参数示例" />
+          <TextArea rows={1} autoSize={{ minRows: 1 }} placeholder="参数示例" />
         </FormItem>
       </Col>
       <Col span="11" className="interface-edit-item-content-col">
         <FormItem name={['req_params', index, 'desc']} initialValue={data.desc}>
-          <TextArea autosize={true} placeholder="备注" />
+          <TextArea rows={1} autoSize={{ minRows: 1 }} placeholder="备注" />
         </FormItem>
       </Col>
     </Row>

@@ -214,6 +214,15 @@ em {
   font-size: 16px;
 }
 
+// 接口编辑参数行：空 TextArea 默认 2 行，比左侧 Input/Select 高出一截
+.interface-edit-item-content-col textarea.ant-input {
+  min-height: 32px !important;
+  height: 32px !important;
+  line-height: 22px;
+  overflow-y: auto;
+  resize: vertical;
+}
+
 .ant-tree .ant-tree-node-content-wrapper{
   padding: 3px 5px;
   height: unset;

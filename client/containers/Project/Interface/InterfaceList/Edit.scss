@@ -25,6 +25,14 @@
     margin-bottom: 16px;
     .interface-edit-item-content-col{
       padding:0 1px;
+      // antd5 cssinjs 默认按 2 行算高度，会比左侧 Input/Select 高出一截
+      textarea.ant-input {
+        min-height: 32px !important;
+        height: 32px !important;
+        line-height: 22px;
+        overflow-y: auto;
+        resize: vertical;
+      }
     }
     .interface-edit-item-content-col-drag{
       width:24px;

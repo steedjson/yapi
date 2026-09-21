@@ -282,14 +282,22 @@
     }
   }
   .interface-content {
-    .ant-tabs-nav {
+    // 只给详情顶栏（预览/编辑/运行）留白，与下方 24px 正文对齐；不要扫到页内嵌套 Tabs
+    > .tabs-large > .ant-tabs-nav {
       width: 100%;
-      // background-color: #ddd;
-      // color: $color-white;
+      padding: 0 24px;
     }
     .ant-tabs-nav-wrap {
       text-align: left;
     }
+  }
+  // 参数行空 TextArea 默认 2 行，会比左侧 Input/Select 高出一截
+  .interface-edit-item-content-col textarea.ant-input {
+    min-height: 32px !important;
+    height: 32px !important;
+    line-height: 22px;
+    overflow-y: auto;
+    resize: vertical;
   }
   .interface-title {
     clear: both;
