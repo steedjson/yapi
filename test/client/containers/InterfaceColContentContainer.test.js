@@ -7,9 +7,10 @@
 // 为什么需要本文件：render 子组件化批次的「DOM 字节等价」门禁依赖抽取前的旧文件
 // （git worktree @ ff2d426c），旧文件在合并后消失、门禁随之失效——当时唯一能检出
 // 「CaseTable 外包一层 div」这类内部结构漂移的只有未入库的 /tmp harness。本文件把
-// 该门禁以「整容器规范化 DOM 快照」永久入库；规范化只剥离对结构无信息量的部分
-// （style 属性、SVG path 数据、antd CSS-in-JS 哈希、rc-select/react useId 生成 id、
-// dnd-kit 自增 id），tag/class/role/aria/href/值/text 全部保留，故结构变更必被检出
+// 该门禁以「整容器规范化 DOM 快照」永久入库；规范化（共享严版序列化器，详见
+// test/helpers/domSnapshot.js）只剥离对结构无信息量的部分（style 布局白名单之外的内
+// 联声明、SVG path 数据、antd CSS-in-JS 哈希、rc-select/react useId 生成 id、dnd-kit
+// 自增 id），tag/class/role/aria/href/值/text 全部保留，故结构变更必被检出
 // （见「快照门禁灵敏度」用例）。
 //
 // 拖拽链为何注入而非真实 pointer：jsdom 无布局，dnd-kit 的 pointer 序列算不出 over
@@ -25,6 +26,7 @@ import test from 'ava';
 import React from 'react';
 import { cleanup, fireEvent, act } from '@testing-library/react';
 import { cleanupDom, renderWithProviders, flushEffects } from '../../helpers/containers';
+import { snapshot } from '../../helpers/domSnapshot';
 
 const path = require('path');
 const Module = require('module');
@@ -213,84 +215,15 @@ function buttonByText(container, text) {
   )[0];
 }
 
-// ---- 规范化 DOM 快照 ----
-// 保留：tag / class（剥离 antd CSS-in-JS 哈希）/ 全部 attributes（style 除外）/
-//       文本节点（空白折叠）。剥离：style、SVG path 的 d 数据、rc-select 与
-//       react useId 生成的 id、dnd-kit 自增 id（均与结构无关，且跨挂载不稳定）。
-const IGNORED_ATTRS = { style: true };
-const HASH_CLASS = /^css-dev-only-do-not-override-.*$/;
-
-/**
- * @param {string} name
- * @param {string} value
- */
-function normalizeAttr(name, value) {
-  if (name === 'd') {
-    return 'SVG_PATH';
-  }
-  let out = value;
-  if (name === 'class') {
-    out = out
-      .split(/\s+/)
-      .filter(Boolean)
-      .map(c => c.replace(HASH_CLASS, 'CSSHASH'))
-      .join('.');
-  } else {
-    out = out
-      .replace(/:[rR][0-9a-z]+:/g, ':RID:')
-      .replace(/rc_select_\d+/g, 'rc_select_N')
-      .replace(/DndDescribedBy-\d+/g, 'DndDescribedBy-N')
-      .replace(/DndLiveRegion-\d+/g, 'DndLiveRegion-N');
-  }
-  return out;
-}
-
-/**
- * @param {any} node
- * @param {string[]} out
- * @param {number} depth
- */
-function serializeNode(node, out, depth) {
-  const pad = '  '.repeat(depth);
-  if (node.nodeType === 3) {
-    const text = String(node.nodeValue)
-      .replace(/\s+/g, ' ')
-      .trim();
-    if (text) {
-      out.push(pad + '"' + text + '"');
-    }
-    return;
-  }
-  if (node.nodeType !== 1) {
-    return;
-  }
-  const attrs = [];
-  Array.from(node.getAttributeNames())
-    .sort()
-    .forEach(name => {
-      if (IGNORED_ATTRS[name]) {
-        return;
-      }
-      attrs.push(name + '=' + JSON.stringify(normalizeAttr(name, node.getAttribute(name))));
-    });
-  out.push(pad + '<' + node.tagName.toLowerCase() + (attrs.length ? ' ' + attrs.join(' ') : '') + '>');
-  Array.from(node.childNodes).forEach(child => serializeNode(child, out, depth + 1));
-}
-
-/**
- * @param {any} node
- */
-function snapshot(node) {
-  const out = [];
-  serializeNode(node, out, 0);
-  return out.join('\n');
-}
+// ---- 规范化 DOM 快照序列化器已下沉为共享模块 test/helpers/domSnapshot.js ----
+// （原松版本地实现整体剥离 style 且不采集受控值；接入严版后由基线 diff 逐条确认
+//   仅含「新增采集字段导致的增量」）
 
 const EXPECTED_INITIAL_SNAPSHOT = `<div>
   <div class="interface-col">
     <div class="ant-row.ant-row-center.ant-row-top.CSSHASH" type="flex">
       <div class="ant-col.ant-col-5.CSSHASH">
-        <h2 class="interface-title">
+        <h2 class="interface-title" style="display:inline-block">
           "测试集合"
           <a href="https://hellosean1025.github.io/yapi/documents/case.html" rel="noopener noreferrer" target="_blank">
             <span aria-describedby="test-id" aria-label="question-circle" class="anticon.anticon-question-circle" role="img">
@@ -427,7 +360,7 @@ const EXPECTED_INITIAL_SNAPSHOT = `<div>
                           <button class="ant-btn.CSSHASH.ant-btn-default.ant-btn-color-default.ant-btn-variant-outlined" type="button">
                             <span>
                               "测试报告"
-    <div id="DndDescribedBy-N">
+    <div id="DndDescribedBy-N" style="display:none">
       "To pick up a draggable item, press the space bar. While dragging, use the arrow keys to move the item. Press space again to drop the item in its new position, or press escape to cancel."
     <div aria-atomic="true" aria-live="assertive" id="DndLiveRegion-N" role="status">`;
 
