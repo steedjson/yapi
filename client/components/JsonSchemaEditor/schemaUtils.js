@@ -574,6 +574,9 @@ function setNodeField(schema, nodePath, field, value) {
 /**
  * 写入 mock（YApi 形态 `{ mock: '<value>' }`；清空删除整个 mock 字段）。
  * 语义对齐旧编辑器 SchemaJson.handleChangeMock：`value ? { mock: value } : ''`。
+ * 当前值识别兼容历史字符串形态 mock（mock: '@raw-string'）：其字符串值视为当前
+ * mock 值——清空时删除整个 mock 键（批次 2 等价性修复：此前字符串形态被当作
+ * 无 mock，清空成为 no-op，与旧编辑器 changeValueAction falsy 删键不等价）。
  * @param {SchemaNode} schema
  * @param {string[]} nodePath
  * @param {string|null|undefined} mockValue
@@ -582,7 +585,14 @@ function setNodeField(schema, nodePath, field, value) {
 function setMock(schema, nodePath, mockValue) {
   const value = mockValue === null || mockValue === undefined ? '' : String(mockValue);
   const curNode = getNode(schema, nodePath);
-  const curMock = isPlainObject(curNode) && isPlainObject(curNode.mock) ? curNode.mock.mock : '';
+  let curMock = '';
+  if (isPlainObject(curNode)) {
+    if (isPlainObject(curNode.mock)) {
+      curMock = curNode.mock.mock;
+    } else if (typeof curNode.mock === 'string') {
+      curMock = curNode.mock;
+    }
+  }
   if (curMock === value) {
     return schema;
   }
