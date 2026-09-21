@@ -1,0 +1,79 @@
+/**
+ * JsonSchemaEditor 样式（antd5 技术栈）。
+ *
+ * 与旧编辑器 json-schema-editor-visual 的 antd3 scoped 机制完全无关：
+ * 不覆盖任何 antd 内部类，仅用 .jse- / .json-schema-editor 前缀的自有布局类。
+ * 颜色一律取皮肤令牌 --sk-*（四皮肤换肤只覆盖变量值），形状/间距用中性值，
+ * 控件观感由 antd5 token 体系负责，保证无样式硬编码冲突。
+ */
+
+.json-schema-editor {
+  font-size: 13px;
+
+  .jse-toolbar {
+    margin-bottom: 8px;
+  }
+
+  .jse-row {
+    display: grid;
+    grid-template-columns: minmax(180px, 1.8fr) 104px 112px minmax(110px, 1fr) minmax(120px, 1.2fr) auto;
+    gap: 6px;
+    align-items: center;
+    padding: 2px 0;
+
+    &.jse-row--no-mock {
+      grid-template-columns: minmax(180px, 1.8fr) 104px 112px minmax(120px, 1.2fr) auto;
+    }
+
+    &:hover {
+      background: var(--sk-bg-hover);
+    }
+
+    .jse-cell {
+      min-width: 0;
+
+      .ant-input,
+      .ant-select {
+        width: 100%;
+      }
+    }
+
+    .jse-cell-name {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+
+      .jse-caret {
+        flex: none;
+        width: 20px;
+        display: inline-flex;
+        justify-content: center;
+      }
+
+      .jse-name-input {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .jse-required {
+        flex: none;
+        margin-left: 4px;
+      }
+    }
+
+    .jse-cell-actions {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      white-space: nowrap;
+
+      .jse-btn {
+        padding: 2px 4px;
+      }
+
+      .jse-btn-remove:not(:disabled) {
+        color: var(--sk-text-secondary);
+      }
+    }
+  }
+}
