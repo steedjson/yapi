@@ -223,6 +223,62 @@ em {
   resize: vertical;
 }
 
+// json-schema-editor-visual 的 antd3 Modal 经 Portal 挂在 body>div>.ant-modal-root，
+// 作用域 CSS（.json-schema-editor-scope 前缀）打不中，会贴左且蒙层高度为 0；此处补回定位。
+.ant-modal-root > .ant-modal-mask {
+  position: fixed !important;
+  top: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  z-index: 1000;
+  height: 100% !important;
+  background-color: rgba(0, 0, 0, 0.45);
+}
+.ant-modal-root > .ant-modal-wrap {
+  position: fixed !important;
+  top: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  z-index: 1000;
+  overflow: auto;
+  outline: 0;
+}
+.ant-modal.json-schema-react-editor-import-modal,
+.ant-modal.json-schema-react-editor-adv-modal {
+  position: relative !important;
+  top: 100px !important;
+  width: 520px;
+  margin: 0 auto !important;
+  padding-bottom: 24px;
+  pointer-events: none;
+}
+.ant-modal.json-schema-react-editor-import-modal .ant-modal-content,
+.ant-modal.json-schema-react-editor-adv-modal .ant-modal-content {
+  position: relative;
+  background-color: #fff;
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  pointer-events: auto;
+}
+.ant-modal.json-schema-react-editor-import-modal .ant-modal-header,
+.ant-modal.json-schema-react-editor-adv-modal .ant-modal-header {
+  padding: 16px 24px;
+  background: #fff;
+  border-bottom: 1px solid #e8e8e8;
+}
+.ant-modal.json-schema-react-editor-import-modal .ant-modal-body,
+.ant-modal.json-schema-react-editor-adv-modal .ant-modal-body {
+  padding: 24px;
+}
+.ant-modal.json-schema-react-editor-import-modal .ant-modal-footer,
+.ant-modal.json-schema-react-editor-adv-modal .ant-modal-footer {
+  padding: 10px 16px;
+  text-align: right;
+  border-top: 1px solid #e8e8e8;
+}
+
 .ant-tree .ant-tree-node-content-wrapper{
   padding: 3px 5px;
   height: unset;

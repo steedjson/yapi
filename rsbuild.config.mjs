@@ -164,6 +164,9 @@ export default {
     //Rsbuild 内置 JS 规则默认排除 node_modules；这里放行与 webpack babel-loader
     // 白名单一致的两类包（yapi-plugin-*（含 exts 内联插件）与 json-schema-editor-visual）。
     include: [/node_modules[\\/]_?(yapi-plugin|json-schema-editor-visual)/],
+    // 自定义 loader（json-schema-css-scope-loader 等）不在模块图内，rspack 持久缓存
+    // 无法感知其内容变化；显式登记 build/ 目录，loader 变更即触发全量重编译。
+    buildDependencies: [path.join(paths.root, 'build')],
     define: defineValues
   },
   resolve: {

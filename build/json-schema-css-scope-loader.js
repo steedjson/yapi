@@ -3,12 +3,20 @@
 // json-schema-editor-visual(接口编辑的 JSON Schema 编辑器)内嵌 antd3,
 // 其全量 antd.css 若全局加载,antd3 的 body 基础样式与全局 .ant-* 规则
 // 会污染 antd5 应用(cssinjs 需要 StyleProvider hashPriority=high 才能压制)。
-// 本 loader 将每条规则的选择器前缀化为 `.json-schema-editor-scope `,
-// 使样式仅作用于编辑器容器;html/body/* /:root 等全局基础规则限定作用域后
-// 无意义,对应整条规则直接丢弃。@keyframes/@font-face/@import 等非选择器
-// 规则原样保留;@media/@supports 保留条件并递归处理内部规则。
+// 本 loader 为每条非全局规则生成两个作用域副本:
+// 1) `.json-schema-editor-scope <sel>`:编辑器容器内的常规组件;
+// 2) `.ant-modal-root:not([class*="css-"]) <sel>`:antd3 Modal 经 Portal 渲染到
+//    body 下 .ant-modal-root,弹窗内的 Tabs/Button 等组件不在编辑器容器内,
+//    必须靠第二副本才能命中。antd5 组件根节点恒带 css-* hash 类(dev 为
+//    css-dev-only-do-not-override-*,prod 为 css-*),antd3 root 无任何 css- 类,
+//    :not([class*="css-"]) 在 dev/prod 均可精准排除 antd5 弹窗、避免双份样式污染。
+// html/body/* /:root 等全局基础规则限定作用域后无意义,对应整条规则(含
+// 两个作用域副本)直接丢弃。@keyframes/@font-face/@import 等非选择器规则
+// 原样保留;@media/@supports 保留条件并递归生成两个作用域副本。
 
 const SCOPE = '.json-schema-editor-scope ';
+
+const MODAL_SCOPE = '.ant-modal-root:not([class*="css-"]) ';
 
 // 选择器以 html/body/* /:root 开头即视为全局规则(如 `html`、`body`、`*::before`)
 const GLOBAL_SELECTOR_RE = /^(html|body|\*|:root)(?:$|[\s.,[:#>~+*])/i;
@@ -158,10 +166,11 @@ function scopeCss(css) {
       // html/body/* /:root 全局规则整条丢弃,仅保留前置注释
       out += comments ? '\n' + comments : '';
     } else {
+      // 每条选择器生成编辑器容器与 antd3 Modal(Portal)两个作用域副本
       const scoped = splitSelectors(trimmed)
         .map(s => s.trim())
         .filter(Boolean)
-        .map(s => SCOPE + s)
+        .flatMap(s => [SCOPE + s, MODAL_SCOPE + s])
         .join(',\n');
       out += (comments ? '\n' + comments + '\n' : '\n') + scoped + ' ' + block;
     }

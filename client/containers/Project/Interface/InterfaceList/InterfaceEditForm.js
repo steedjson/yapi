@@ -88,9 +88,29 @@ function InterfaceEditForm(/** @type {any} */ props) {
       readOnly: true
     });
 
+    // json-schema-editor-visual 的 antd3 Modal 挂在 body 下，作用域 CSS 打不中；
+    // 挂载期注入定位兜底，卸载时清理（与 common.scss 中同内容规则互为冗余保险）。
+    const styleId = 'yapi-antd3-schema-modal-position';
+    let injected = document.getElementById(styleId);
+    if (!injected) {
+      injected = document.createElement('style');
+      injected.id = styleId;
+      injected.textContent = [
+        '.ant-modal-root > .ant-modal-mask{position:fixed!important;inset:0!important;z-index:1000;height:100%!important;background-color:rgba(0,0,0,.45)}',
+        '.ant-modal-root > .ant-modal-wrap{position:fixed!important;inset:0!important;z-index:1000;overflow:auto;outline:0}',
+        '.ant-modal.json-schema-react-editor-import-modal,.ant-modal.json-schema-react-editor-adv-modal{position:relative!important;top:100px!important;width:520px;margin:0 auto!important;padding-bottom:24px;pointer-events:none}',
+        '.ant-modal.json-schema-react-editor-import-modal .ant-modal-content,.ant-modal.json-schema-react-editor-adv-modal .ant-modal-content{position:relative;background:#fff;border-radius:4px;box-shadow:0 4px 12px rgba(0,0,0,.15);pointer-events:auto}'
+      ].join('');
+      document.head.appendChild(injected);
+    }
+
     return () => {
       props.changeEditStatus(false);
       isMountedRef.current = false;
+      const node = document.getElementById(styleId);
+      if (node && node.parentNode) {
+        node.parentNode.removeChild(node);
+      }
     };
   }, []);
 

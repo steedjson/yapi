@@ -484,3 +484,63 @@ test.serial('RequestParamsSetting 拖拽 data() 取实时字段值且 onChange �
     '父 state 应收到 onDragMove 产出并写回的新数组'
   );
 });
+
+// ⑤ RequestBodySetting file/raw 分支：file 渲染带占位提示的说明 TextArea，raw 渲染
+//    满宽大文本框（antd5 写法 rows/autoSize + span=24，修复收缩成 190px 小方块）
+test.serial('RequestBodySetting file 占位提示与 raw 满宽大文本框', async t => {
+  const noop = () => {};
+  const bodyProps = {
+    method: 'POST',
+    reqBodyIsJsonSchema: false,
+    isJson5: true,
+    req_body_other: 'hello',
+    req_body_form: [],
+    req_body_is_json_schema: false,
+    bodyHideTab: '',
+    onAddParams: noop,
+    onShowBulk: noop,
+    onDragMove: noop,
+    onDelParams: noop,
+    onReqBodyChange: noop,
+    onReqBodySchemaChange: noop
+  };
+
+  // file 分支：说明 TextArea 带占位提示，不渲染 raw 满宽容器
+  let utils = render(
+    <Form>
+      <RequestBodySetting {...bodyProps} reqBodyType="file" req_body_type="file" />
+    </Form>
+  );
+  let { container } = utils;
+  const fileArea = container.querySelector('.interface-edit-item-other-body textarea');
+  t.truthy(fileArea, 'file 模式应渲染 req_body_other 说明 TextArea');
+  t.is(
+    fileArea.getAttribute('placeholder'),
+    '请填写该二进制请求体的说明，如文件格式、大小限制等',
+    'file TextArea 应展示二进制请求体说明占位提示'
+  );
+  t.is(
+    container.querySelector('.interface-edit-raw-body textarea'),
+    null,
+    'file 模式不应渲染 raw 满宽文本框'
+  );
+
+  // 独立第二次 render（raw 分支）：满宽容器内 TextArea 为 8 行且回填 req_body_other
+  cleanup();
+  cleanupDom();
+  utils = render(
+    <Form>
+      <RequestBodySetting {...bodyProps} reqBodyType="raw" req_body_type="raw" />
+    </Form>
+  );
+  container = utils.container;
+  const rawArea = container.querySelector('.interface-edit-raw-body textarea');
+  t.truthy(rawArea, 'raw 模式应渲染满宽容器内的 TextArea');
+  t.is(rawArea.getAttribute('rows'), '8', 'raw TextArea 应为 8 行（antd5 rows/autoSize 写法）');
+  t.is(rawArea.getAttribute('placeholder'), '请输入 raw 请求体内容', 'raw TextArea 应展示输入占位提示');
+  t.is(rawArea.style.width, '100%', 'raw TextArea 应满宽（内联 width:100%，修复收缩成小方块）');
+  // 注：源码传入 style.minHeight='174px'，但 rc-textarea autoSize 挂载后会重算并覆盖
+  // 内联 min-height（jsdom 无布局，重算值为负），故此处不做 minHeight 的 DOM 断言
+  t.is(rawArea.value, 'hello', 'raw TextArea 的值应来自 req_body_other');
+  t.is(container.querySelector('#single-file'), null, 'raw 模式不应渲染 file 上传控件');
+});

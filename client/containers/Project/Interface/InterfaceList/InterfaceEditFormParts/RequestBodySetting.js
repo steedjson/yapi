@@ -5,7 +5,8 @@
  *
  * 职责（单一）：渲染 req_body_type 单选框（form / json / file / raw）与四种取值下的
  * 编辑界面——form 行（添加参数 / 批量添加 / 拖拽排序）、json（JSON-SCHEMA 开关 +
- * schema 编辑器 / json5 提示 + AceEditor）、file（TextArea）、raw（TextArea）。
+ * schema 编辑器 / json5 提示 + AceEditor）、file（文件说明 TextArea）、raw（满宽
+ * 多行 TextArea，antd5 写法 rows/autoSize + span=24，修复收缩成小方块的问题）。
  *
  * 边界与等价性：
  *   - 只做受控展示 + 事件上抛：req_body_type / req_body_other / req_body_form 与
@@ -171,16 +172,21 @@ const RequestBodySetting = props => {
         <Row className="interface-edit-item">
           <Col className="interface-edit-item-other-body">
             <FormItem name="req_body_other" initialValue={req_body_other}>
-              <TextArea placeholder="" autosize={true} />
+              <TextArea placeholder="请填写该二进制请求体的说明，如文件格式、大小限制等" autosize={true} />
             </FormItem>
           </Col>
         </Row>
       ) : null}
       {reqBodyType === 'raw' && bodyHideTab !== 'hide' ? (
         <Row>
-          <Col>
+          <Col span={24} className="interface-edit-raw-body">
             <FormItem name="req_body_other" initialValue={req_body_other}>
-              <TextArea placeholder="" autosize={{ minRows: 8 }} />
+              <TextArea
+                placeholder="请输入 raw 请求体内容"
+                rows={8}
+                autoSize={{ minRows: 8 }}
+                style={{ width: '100%', minHeight: '174px' }}
+              />
             </FormItem>
           </Col>
         </Row>
