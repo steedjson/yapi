@@ -223,7 +223,7 @@ em {
   resize: vertical;
 }
 
-// json-schema-editor-visual 的 antd3 Modal 经 Portal 挂在 body>div>.ant-modal-root，
+// [已退役] json-schema-editor-visual 的 antd3 Modal（编辑器自研批次 4 后无引用，下述规则为死规则，留待下批清理） 经 Portal 挂在 body>div>.ant-modal-root，
 // 作用域 CSS（.json-schema-editor-scope 前缀）打不中，会贴左且蒙层高度为 0；此处补回定位。
 .ant-modal-root > .ant-modal-mask {
   position: fixed !important;

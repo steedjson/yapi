@@ -2,8 +2,8 @@
 
 function getPluginExclude(isWin) {
   return isWin
-    ? /(node_modules\\(?!_?(yapi-plugin|json-schema-editor-visual)))/
-    : /(node_modules\/(?!_?(yapi-plugin|json-schema-editor-visual)))/;
+    ? /(node_modules\\(?!_?yapi-plugin))/
+    : /(node_modules\/(?!_?yapi-plugin))/;
 }
 
 // 生产页 static/index.html 读取 WEBPACK_ASSETS['index.js']，且自行拼接了 '/prd/' 前缀；

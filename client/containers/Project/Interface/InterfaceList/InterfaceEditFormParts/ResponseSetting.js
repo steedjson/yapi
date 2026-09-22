@@ -16,7 +16,7 @@
  *     `state.res_body_is_json_schema || !projectMsg.is_json5`，就地求值）；
  *   - 编辑器接线不变：res_body 的 AceEditor 实例由父组件持有并经 editorRef 下传
  *     （ref 回调写法不变，handleMockPreview 仍经该实例读取 curData）；schema 编辑器为
- *     共用单例（见 schemaEditors.js）；#mock-preview 容器 id 与父组件持有的 mockEditor
+ *     共享组件引用（见 schemaEditors.js）；#mock-preview 容器 id 与父组件持有的 mockEditor
  *     实例一一对应，显隐表达式（jsonType === 'preview'）与抽取前一致；
  *   - 不引入包装 DOM 元素：根节点为 Fragment（h2 / container-radiogroup / panel-sub
  *     三者在原父组件中的兄弟顺序保持）。

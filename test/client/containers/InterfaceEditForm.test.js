@@ -288,6 +288,8 @@ test.serial('InterfaceEditForm: json-schema 开启态渲染自研编辑器且编
   // 编辑上抛：点「添加属性」→ 编辑器新增一行，且 onChange 经父组件 handler 链
   //（handleReqBodySchemaChange → changeEditStatus）派发 redux action。
   // 父 handler 的 changeEditStatus 调度带 1 秒静默窗，先等窗口过去再编辑。
+  // 注意：此 1100ms 硬编码等待与生产 1 秒静默窗耦合（静默窗时长变化须同步调整），
+  // 批次后续清理静默窗时一并处理（登记项，暂不改变行为）。
   const rowCountBefore = bodyEditor.querySelectorAll('.jse-row').length;
   await new Promise(resolve => setTimeout(resolve, 1100));
   await act(async () => {

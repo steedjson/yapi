@@ -36,13 +36,6 @@ const WATCHED_PROP_PREFIXES = [
   'overflow'
 ];
 
-/**
- * 计划明确排除的二级风险源（docs/antd5-visual-audit-plan.md §6）：
- * json-schema-editor-visual 内嵌 antd3 的作用域样式由 json-schema-css-scope-loader
- * 负责，属「编辑器自研」立项范围，不在本专项候选内（显式排除并计数，不静默）。
- */
-const OUT_OF_SCOPE_SELECTOR_PREFIXES = ['.json-schema-editor-scope'];
-
 /** chunk 名 → 路由页面域（报告可读性用） */
 const CHUNK_PAGES = {
   index: '全局外壳 / login / home / add-project 之外的首屏公共样式',
@@ -306,7 +299,6 @@ function scanCandidates(prdDir) {
     antdOnlyRules: 0,
     noWatchedPropRules: 0,
     noClassRules: 0,
-    outOfScopeRules: 0,
     candidates: 0
   };
 
@@ -320,19 +312,9 @@ function scanCandidates(prdDir) {
       stats.totalRules++;
       // 多选择器规则按逗号拆为逐条候选（共享同一组声明）
       const selectorParts = splitTopLevel(rule.selector, ',');
-      for (const selector of selectorParts) {
-        const normalizedSelector = selector.replace(/\s+/g, ' ').trim();
-        // :is()/:where() 包裹的作用域选择器同样剥壳检测
-        const unwrapped = normalizedSelector.replace(/^:(is|where)\(/, '');
-        if (
-          OUT_OF_SCOPE_SELECTOR_PREFIXES.some(
-            prefix => unwrapped === prefix || unwrapped.indexOf(prefix + ' ') === 0
-          )
-        ) {
-          stats.outOfScopeRules++;
-          continue; // json-schema-editor-visual 作用域样式：计划排除项，显式计数
-        }
-        const { antd, custom } = splitSelectorClasses(selector);
+      for (const rawSelector of selectorParts) {
+        const normalizedSelector = rawSelector.replace(/\s+/g, ' ').trim();
+        const { antd, custom } = splitSelectorClasses(normalizedSelector);
         if (antd.length && !custom.length) {
           stats.antdOnlyRules++;
           continue; // antd 库自有规则（历史 antd3 产物），不属自定义候选
@@ -374,7 +356,6 @@ function scanCandidates(prdDir) {
 
 module.exports = {
   WATCHED_PROP_PREFIXES,
-  OUT_OF_SCOPE_SELECTOR_PREFIXES,
   CHUNK_PAGES,
   isWatchedProp,
   splitSelectorClasses,

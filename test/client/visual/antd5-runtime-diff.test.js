@@ -185,24 +185,8 @@ stubDefaultExport(
     );
   })
 );
-// json-schema-editor-visual 主入口为未转译 ESM+JSX（Node 下 require 失败），
-// 注入等价工厂桩（与 InterfaceEditForm.test.js 同源口径）
-const jsvPath = require.resolve('json-schema-editor-visual');
-{
-  const jsvStubModule = new Module(jsvPath, null);
-  jsvStubModule.filename = jsvPath;
-  jsvStubModule.loaded = true;
-  jsvStubModule.exports = function stubJSchemaFactory() {
-    return function StubSchemaEditor(props) {
-      return React.createElement(
-        'div',
-        { className: 'stub-json-schema-editor', 'data-data': String(props.data == null ? '' : props.data) },
-        'STUB_SCHEMA_EDITOR'
-      );
-    };
-  };
-  require.cache[jsvPath] = jsvStubModule;
-}
+// 批次 3 消费方切换后 schemaEditors.js 渲染真实自研组件；批次 4 旧包
+// json-schema-editor-visual 已删除，此处的 jsv require.cache 工厂死桩一并清除。
 
 const postmanLibPath = path.join(REPO_ROOT, 'common/postmanLib.js');
 const realPostmanLib = require(postmanLibPath);

@@ -1,10 +1,6 @@
 // @ts-check
 // antd 5 组件样式为 css-in-js 运行时注入,不再有全局 antd css;reset 提供基础 normalize。
 import 'antd/dist/reset.css';
-// json-schema-editor-visual(接口编辑的 JSON Schema 编辑器)内嵌 antd3 的全量样式
-// 已不再全局加载:由 build/json-schema-css-scope-loader.js 前缀化后随
-// InterfaceEditForm 的编辑器容器(./containers/Project/Interface/InterfaceList/InterfaceEditForm.js)
-// 以 .json-schema-editor-scope 作用域加载,避免 antd3 全局规则污染应用。
 import './styles/common.scss';
 import './plugin';
 import React from 'react';
@@ -35,8 +31,7 @@ const store = createStore();
  */
 function ThemedRoot({ children }) {
   const skinTheme = useSkinTheme();
-  // hashPriority high: cssinjs 规则以 .css-hash 前缀提升特异性,压过显式加载的
-  // json-schema-editor-visual 内嵌 antd3 全量样式(否则 antd3 默认蓝覆盖皮肤 token)
+  // hashPriority high: cssinjs 规则以 .css-hash 前缀提升特异性
   return (
     <StyleProvider hashPriority="high">
       <ConfigProvider locale={zhCN} theme={skinTheme}>

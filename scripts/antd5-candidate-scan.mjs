@@ -55,7 +55,6 @@ function renderReport(candidates, stats) {
   lines.push('| 纯 antd 类规则（排除） | ' + stats.antdOnlyRules + ' |');
   lines.push('| 无类选择器规则（排除） | ' + stats.noClassRules + ' |');
   lines.push('| 无观察属性规则（排除） | ' + stats.noWatchedPropRules + ' |');
-  lines.push('| json-schema-editor 作用域规则（计划排除） | ' + stats.outOfScopeRules + ' |');
   lines.push('| **自定义候选规则** | **' + stats.candidates + '** |');
   lines.push('');
   lines.push('## 分 chunk 统计');

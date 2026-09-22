@@ -15,17 +15,6 @@ import {
   initState,
   validJson
 } from './interfaceEditFormUtils/formDefaults.js';
-// 编辑器内嵌 antd3 的全量样式:经 build/json-schema-css-scope-loader.js 把选择器
-// 前缀化为 `.json-schema-editor-scope `,仅作用于下方编辑器容器,不再全局加载。
-// 必须排在本文件对 InterfaceEditFormParts/* 的 import 之前。babel 把 import 提升到
-// 模块顶部并保持相对顺序，而内联 require 仍在语句位置执行，故模块求值顺序为：
-// 本 import 先于（Parts → RequestBodySetting → schemaEditors.js 的）
-// require('json-schema-editor-visual')，即 scoped antd3 全量样式先于
-// json-schema-editor-visual 自带样式注入，与抽取前一致（抽取前该 CSS import 同样作为
-// import 被提升到内联 require jSchema 之前求值）。若把本 import 放到 Parts import 之后，
-// 求值顺序反转为 jsv-factory → CSS，37 个规则块会从 scoped antd3 之后搬到之前，
-// 接口路由 CSS chunk 的哈希随之改变（该未命名分包的文件名前缀随构建根而异）。
-import 'json-schema-editor-visual/node_modules/antd/dist/antd.css';
 // render 子组件化（第三批）：本文件仅保留 hooks / 副作用 / 事件处理 + 渲染组装，
 // 各 JSX 区块按边界拆入 InterfaceEditFormParts/：
 //   - BulkImportModal.js      批量添加参数弹窗
@@ -88,29 +77,9 @@ function InterfaceEditForm(/** @type {any} */ props) {
       readOnly: true
     });
 
-    // json-schema-editor-visual 的 antd3 Modal 挂在 body 下，作用域 CSS 打不中；
-    // 挂载期注入定位兜底，卸载时清理（与 common.scss 中同内容规则互为冗余保险）。
-    const styleId = 'yapi-antd3-schema-modal-position';
-    let injected = document.getElementById(styleId);
-    if (!injected) {
-      injected = document.createElement('style');
-      injected.id = styleId;
-      injected.textContent = [
-        '.ant-modal-root > .ant-modal-mask{position:fixed!important;inset:0!important;z-index:1000;height:100%!important;background-color:rgba(0,0,0,.45)}',
-        '.ant-modal-root > .ant-modal-wrap{position:fixed!important;inset:0!important;z-index:1000;overflow:auto;outline:0}',
-        '.ant-modal.json-schema-react-editor-import-modal,.ant-modal.json-schema-react-editor-adv-modal{position:relative!important;top:100px!important;width:520px;margin:0 auto!important;padding-bottom:24px;pointer-events:none}',
-        '.ant-modal.json-schema-react-editor-import-modal .ant-modal-content,.ant-modal.json-schema-react-editor-adv-modal .ant-modal-content{position:relative;background:#fff;border-radius:4px;box-shadow:0 4px 12px rgba(0,0,0,.15);pointer-events:auto}'
-      ].join('');
-      document.head.appendChild(injected);
-    }
-
     return () => {
       props.changeEditStatus(false);
       isMountedRef.current = false;
-      const node = document.getElementById(styleId);
-      if (node && node.parentNode) {
-        node.parentNode.removeChild(node);
-      }
     };
   }, []);
 

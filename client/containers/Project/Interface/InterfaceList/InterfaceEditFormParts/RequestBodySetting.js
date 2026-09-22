@@ -18,7 +18,7 @@
  *   - 拖拽排序仍取表单实例的实时值：form 经 Form.useFormInstance() 从外层 <Form> 的
  *     context 取得（与父组件 useForm 的实例同一），getFieldValue 的调用时机与取值不变；
  *   - 编辑器接线不变：raw 分支的 AceEditor 由父组件持有实例（本组件只透传 data 与
- *     onChange），json 分支的 schema 编辑器为共用单例（见 schemaEditors.js）；
+ *     onChange），json 分支的 schema 编辑器为共享组件引用（见 schemaEditors.js）；
  *   - 不引入包装 DOM 元素：根节点为 Fragment，四个条件分支的兄弟顺序与各自的外层
  *     元素（<div> / <Row>）与抽取前一致。
  */

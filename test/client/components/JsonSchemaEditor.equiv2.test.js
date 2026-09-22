@@ -22,8 +22,7 @@ import fs from 'fs';
 
 const u = require('../../../client/components/JsonSchemaEditor/schemaUtils.js');
 
-const REPO_ROOT = path.resolve(__dirname, '..', '..', '..');
-const OLD_PKG = path.join(REPO_ROOT, 'node_modules', 'json-schema-editor-visual', 'package');
+const OLD_PKG = path.join(__dirname, '..', '..', 'fixtures', 'json-schema-editor-visual');
 
 function loadOldEditorModel() {
   const babelCore = require('@babel/core');
@@ -49,7 +48,7 @@ function loadOldEditorModel() {
 }
 
 const oldModel = loadOldEditorModel();
-const moox = require('moox');
+const moox = require('../../../test/fixtures/json-schema-editor-visual/moox-lite.js');
 
 function createOldStore() {
   return moox({ schema: oldModel }).getStore();

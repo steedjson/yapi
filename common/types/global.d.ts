@@ -403,11 +403,6 @@ declare module 'cpu-load' {
   export = cpuLoad;
 }
 
-declare module 'json-schema-editor-visual' {
-  const createSchemaEditor: (...args: any[]) => any;
-  export = createSchemaEditor;
-}
-
 declare module '*/mockEditor' {
   const mockEditor: any;
   export default mockEditor;

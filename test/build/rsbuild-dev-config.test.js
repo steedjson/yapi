@@ -91,7 +91,7 @@ test.serial('dev 分包配置：splitChunks 交还工具默认规则，且无手
   t.regex(dump, /runtimeChunk:\s*\{\s*name:\s*'manifest'\s*\}/, 'runtimeChunk(manifest) 必须在位');
 });
 
-test.serial('dev bundler 配置：runtimeChunk/noParse/fallback/ProvidePlugin/样式前缀化 loader 全在位', async t => {
+test.serial('dev bundler 配置：runtimeChunk/noParse/fallback/ProvidePlugin 全在位且编辑器 loader 已退役', async t => {
   const dump = await getDevBundlerDump();
 
   t.regex(dump, /runtimeChunk:\s*\{\s*name:\s*'manifest'\s*\}/, 'runtimeChunk(manifest) 必须在位');
@@ -110,6 +110,8 @@ test.serial('dev bundler 配置：runtimeChunk/noParse/fallback/ProvidePlugin/�
   t.regex(dump, /setImmediate\.js/, 'setImmediate shim 必须在位');
   t.regex(dump, /Buffer:\s*\[\s*'buffer'/, 'ProvidePlugin Buffer 必须在位');
 
-  t.regex(dump, /json-schema-css-scope-loader\.js/, 'json-schema 样式前缀化 loader 必须在位');
-  t.regex(dump, /enforce:\s*'pre'/, '样式前缀化规则必须 enforce: pre');
+  // 批次 4（编辑器自研收官）：json-schema-editor-visual 依赖与作用域 loader 已删除，
+  // 负向门禁防止其接线回流（回流 = antd3 全量样式重新进依赖图）。
+  t.false(dump.includes('json-schema-css-scope-loader'), '退役的样式前缀化 loader 不得回流 bundler 配置');
+  t.false(dump.includes('json-schema-editor-visual'), '退役的旧编辑器依赖不得回流 bundler 配置');
 });

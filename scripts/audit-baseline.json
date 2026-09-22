@@ -1,8 +1,8 @@
 {
   "critical": 0,
-  "high": 13,
+  "high": 4,
   "moderate": 5,
   "low": 0,
-  "total": 18,
-  "note": "基线来源：2026-09-19 在本仓库（分支 codex/refactor-foundation）以官方 registry https://registry.npmjs.org 实测 npm audit --json 的 metadata.vulnerabilities 计数。由上一基线（critical 1 / high 14 / moderate 8 / total 23）经 Rsbuild 迁移阶段四清理 webpack 依赖链下调：移除 style-loader@0.18（消除其嵌套 loader-utils@1 critical 链）、webpack、webpack-dev-middleware、webpack-hot-middleware、webpack-cli、webpack-node-externals、babel-loader、css-loader、sass-loader、mini-css-extract-plugin、terser-webpack-plugin、compression-webpack-plugin、assets-webpack-plugin（回滚链退役，回滚点=清理批次之前的 git commit）。本基线仅作为 CI 基线差分门禁的对比下限，不代表这些漏洞可接受；修复后应主动下调。更新方式：本地运行 npm audit --registry=https://registry.npmjs.org --json，以其 metadata.vulnerabilities 的计数替换上述数值（total 应等于四个 severity 之和）；或运行 npm run audit:ci 查看当前计数与基线的对比结果。"
+  "total": 9,
+  "note": "基线来源：2026-09-22 在本仓库（分支 codex/refactor-foundation）以官方 registry https://registry.npmjs.org 实测 npm audit --json 的 metadata.vulnerabilities 计数。由上一基线（critical 0 / high 13 / moderate 5 / total 18）经 JSON Schema 编辑器批次 4 清理下调：删除 json-schema-editor-visual@1.0.23 直接依赖，其携带的停更链（rc-editor-mention/rc-editor-core/draft-js/fbjs/immutable/isomorphic-fetch/node-fetch/内嵌 antd3 及包自身）共 9 项 high 全部消除。本基线仅作为 CI 基线差分门禁的对比下限，不代表这些漏洞可接受；修复后应主动下调。更新方式：本地运行 npm audit --registry=https://registry.npmjs.org --json，以其 metadata.vulnerabilities 的计数替换上述数值（total 应等于四个 severity 之和）；或运行 npm run audit:ci 查看当前计数与基线的对比结果。"
 }

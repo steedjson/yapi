@@ -16,6 +16,8 @@ module.exports = [
       'log/**',
       'runtime/**',
       'iconfont/**',
+      // 测试夹具：vendored 历史代码（旧编辑器 models），冻结不改、不参与 lint
+      'test/fixtures/**',
       // ydoc 文档目录，index.jsx 为 front matter 配置而非源码
       'docs/**',
       'common/json-schema-mockjs.js',

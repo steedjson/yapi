@@ -9,7 +9,7 @@
  * 旧编辑器装载方式（可 require 性结论，见对照文档 §1）：
  * - models/schema.js 为 CJS/ESM 混排但无 JSX → @babel/core(仅 commonjs 插件) 转译后
  *   经 Module._compile 以原路径求值；
- * - 以真实 moox@1.0.2（自带嵌套 immer@1.x/redux）创建 store，
+ * - 以 moox-lite 夹具（应用自带 immer 10 produce，语义对齐真实 moox）创建 store，
  *   store.dispatch({type: 'moox/schema/<action>', params}) 驱动，与生产链路同构。
  */
 import test from 'ava';
@@ -22,8 +22,7 @@ const { MOCK_SOURCE } = require('../../../client/constants/variable.js');
 
 // ================= 旧编辑器动作链装载 =================
 
-const REPO_ROOT = path.resolve(__dirname, '..', '..', '..');
-const OLD_PKG = path.join(REPO_ROOT, 'node_modules', 'json-schema-editor-visual', 'package');
+const OLD_PKG = path.join(__dirname, '..', '..', 'fixtures', 'json-schema-editor-visual');
 
 /** 转译并求值 models/schema.js（进程内仅一次；后续直接复用动作对象） */
 function loadOldEditorModel() {
@@ -50,7 +49,7 @@ function loadOldEditorModel() {
 }
 
 const oldModel = loadOldEditorModel();
-const moox = require('moox');
+const moox = require('../../../test/fixtures/json-schema-editor-visual/moox-lite.js');
 
 function createOldStore() {
   return moox({ schema: oldModel }).getStore();

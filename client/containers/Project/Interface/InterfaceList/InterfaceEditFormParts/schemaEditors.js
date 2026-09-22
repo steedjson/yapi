@@ -11,12 +11,13 @@
  *   - isMock：是否显示 mock 列（下拉复用 constants.MOCK_SOURCE），
  * 故 RequestBodySetting / ResponseSetting 的 JSX 零改动。
  *
- * 自研组件为纯受控组件（无内部 store），无需保留旧版「同一次工厂调用的单例身份」：
- * 两个导出同为同一组件引用，各挂载点的编辑器状态天然独立。
+ * 自研组件为纯受控组件（无内部 store）：旧版模块级 store 残留内存，新版无 store
+ * 纯受控，无需保留旧版「同一次工厂调用的单例身份」；两个导出同为同一组件引用，
+ * 各挂载点的编辑器状态天然独立。
  *
- * 回退方案：git revert 本提交即整体恢复旧工厂单例——旧依赖 json-schema-editor-visual
- * 与 InterfaceEditForm.js 的 scoped antd3 css import 均保留至批次 4 才清理，revert 后
- * 构建与运行即恢复（不在本文件保留注释态旧代码）。
+ * 回退方案：批次 4 已删除旧依赖 json-schema-editor-visual 与 InterfaceEditForm.js 的
+ * scoped antd3 css import，单独 revert 批次 3 提交不再可构建——须连同批次 4 清理
+ * 提交一并回退（不在本文件保留注释态旧代码）。
  */
 import JsonSchemaEditor from '../../../../../components/JsonSchemaEditor/index.js';
 
