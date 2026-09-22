@@ -8,7 +8,11 @@ import 'client/components/MarkdownEditor/contents.scss';
 
 /**
  * Wiki 编辑器包装。原类组件经 Hooks 现代化迁移，渲染结构与行为保持一致：
- * - 旧实例属性 this.editor（MarkdownEditor ref）改为 useRef 持有。
+ * - 旧实例属性 this.editor（MarkdownEditor ref）改为 useRef 持有；
+ * - 缺陷打捞：MarkdownEditor 的 value 为「仅初始值」语义，而本组件 desc 会在
+ *   websocket 协同消息（多人编辑同步）与冲突解决后被父组件更新，旧实现不跟随导致
+ *   编辑区停留在旧内容；此处以 key={desc} 在外部内容变更时重挂载（与 InterfaceContent
+ *   的 key={actionId} 重挂载约定一致）。
  * @param {any} props
  */
 const WikiEditor = props => {
@@ -29,6 +33,7 @@ const WikiEditor = props => {
         style={{ display: !isConflict ? 'block' : 'none' }}
       >
         <MarkdownEditor
+          key={desc}
           ref={(/** @type {any} */ el) => (editorRef.current = el)}
           value={desc}
           height={500}

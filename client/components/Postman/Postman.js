@@ -102,7 +102,11 @@ const Run = forwardRef((props, ref) => {
     setState(next);
   };
 
-  const aceEditorRef = useRef(null);
+  // 双编辑器 ref 隔离（缺陷打捞）：BODY 原始体与 Test 脚本各持一份。
+  // 旧实现共用 aceEditorRef，两面板挂载顺序决定归属（访问 Test 页签后 ref 指向 Test 编辑器），
+  // 导致 BODY「高级参数设置」读到 Test 编辑器光标（showModal 的 req_body_other 分支）。
+  const bodyEditorRef = useRef(null);
+  const testEditorRef = useRef(null);
   const crossRequestIntervalRef = useRef(null);
 
   useImperativeHandle(
@@ -313,7 +317,7 @@ const Run = forwardRef((props, ref) => {
    * @param {string} code
    */
   const handleInsertCode = code => {
-    aceEditorRef.current.editor.insertCode(code);
+    testEditorRef.current.editor.insertCode(code);
   };
 
   /**
@@ -487,7 +491,7 @@ const Run = forwardRef((props, ref) => {
     if (type === 'req_body_other') {
       // req_body
       // 编辑器适配层提供光标绝对偏移（等价原 ace positionToIndex(getCursor())）
-      cursurPosition = aceEditorRef.current.editor.editor.getCursorIndex();
+      cursurPosition = bodyEditorRef.current.editor.editor.getCursorIndex();
       // 获取选中的数据
       inputValue = getInstallValue(val || '', cursurPosition).val;
     } else {
@@ -674,7 +678,7 @@ const Run = forwardRef((props, ref) => {
         req_body_type={req_body_type}
         req_body_form={req_body_form}
         req_body_other={state.req_body_other}
-        editorRef={aceEditorRef}
+        editorRef={bodyEditorRef}
         onChangeParam={changeParam}
         onShowModal={showModal}
         onBodyChange={handleRequestBody}
@@ -717,7 +721,7 @@ const Run = forwardRef((props, ref) => {
                     <TestPanel
                       enable_script={state.enable_script}
                       test_script={state.test_script}
-                      editorRef={aceEditorRef}
+                      editorRef={testEditorRef}
                       onEnableScriptChange={(/** @type {any} */ enable_script) =>
                         applyState({ enable_script })
                       }

@@ -129,14 +129,22 @@ stubDefaultExport(
   }
 );
 
+let markdownEditorMountCount = 0;
+
 const MarkdownEditorStub = React.forwardRef(function StubMarkdownEditor(props, ref) {
+  // 每次挂载分配自增 id：供「key 重挂载同步外部值」类用例观测挂载/重挂载
+  const mountId = React.useMemo(() => ++markdownEditorMountCount, []);
   React.useImperativeHandle(ref, () => ({
     getHtml: () => '<p>stub-html</p>',
     getMarkdown: () => '# stub-md'
   }));
   return React.createElement(
     'div',
-    { className: 'stub-markdown-editor', 'data-value': String(props.value == null ? '' : props.value) },
+    {
+      className: 'stub-markdown-editor',
+      'data-value': String(props.value == null ? '' : props.value),
+      'data-mount-id': String(mountId)
+    },
     'STUB_MARKDOWN_EDITOR'
   );
 });

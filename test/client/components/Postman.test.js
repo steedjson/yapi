@@ -27,9 +27,28 @@ function stubDefaultExport(absPath, Stub) {
   require.cache[absPath] = stubModule;
 }
 
+// AceEditor 打桩：除渲染占位外，暴露精简 imperative handle（insertCode / getCursorIndex），
+// 供「双编辑器 ref 隔离」用例按 className 区分调用归属（BODY=pretty-editor / Test=case-script）。
+const aceInstances = [];
 stubDefaultExport(
   path.join(REPO_ROOT, 'client/components/AceEditor/AceEditor.js'),
-  React.forwardRef(function StubAceEditor(props) {
+  React.forwardRef(function StubAceEditor(props, ref) {
+    const instance = React.useMemo(() => {
+      const inst = { className: props.className, getCursorIndexCalls: 0, inserted: [] };
+      aceInstances.push(inst);
+      return inst;
+    }, []);
+    React.useImperativeHandle(ref, () => ({
+      editor: {
+        insertCode: code => instance.inserted.push(code),
+        editor: {
+          getCursorIndex: () => {
+            instance.getCursorIndexCalls += 1;
+            return 0;
+          }
+        }
+      }
+    }));
     return React.createElement(
       'div',
       {
@@ -91,6 +110,7 @@ const ORIGINAL_AXIOS_POST = require('axios').post;
 test.serial.afterEach.always(() => {
   cleanup();
   cleanupDom();
+  aceInstances.length = 0;
   crossRequestCalls.length = 0;
   crossRequestDelay = 30;
   crossRequestResponder = () => ({
@@ -618,6 +638,46 @@ test.serial('子组件内编辑经上抛回调写入父 state 并可由 ref.stat
   t.true(
     utils.container.querySelector('.ant-switch').classList.contains('ant-switch-checked'),
     '写入 state 的开关值应回灌受控组件'
+  );
+
+  utils.unmount();
+});
+
+// 9) 双编辑器 ref 隔离：Test 页签挂载后，BODY「高级参数设置」仍读取 BODY 编辑器光标
+//    （旧实现两面板共用 aceEditorRef，后挂载的 Test 编辑器抢占 ref → 光标读取错编辑器）
+test.serial('Postman 双编辑器 ref 隔离: Test 页签挂载后 BODY 高级参数仍读 BODY 编辑器', async t => {
+  const utils = render(
+    React.createElement(Postman, Object.assign({}, BASE_PROPS, { data: INTER_DATA, type: 'case' }))
+  );
+  await act(async () => {});
+  const bodyInstance = aceInstances.find(i => i.className === 'pretty-editor');
+  t.truthy(bodyInstance, 'BODY 编辑器应已挂载（pretty-editor）');
+
+  // 切到 Test 页签，挂载 Test 编辑器（旧实现会把共享 ref 指向它）
+  const testTab = Array.from(utils.container.querySelectorAll('.ant-tabs-tab')).find(
+    tab => tab.textContent.indexOf('Test') !== -1
+  );
+  t.truthy(testTab, 'type=case 应展示 Test 页签');
+  await act(async () => {
+    fireEvent.click(testTab);
+    await sleep(30);
+  });
+  const testInstance = aceInstances.find(i => i.className === 'case-script');
+  t.truthy(testInstance, 'Test 编辑器应已挂载（case-script）');
+
+  // 打开 BODY「高级参数设置」→ showModal 的 req_body_other 分支读取光标
+  const advanceButton = findButton(utils, '高级参数设置');
+  t.truthy(advanceButton, 'BODY 应渲染高级参数设置入口');
+  await act(async () => {
+    fireEvent.click(advanceButton);
+    await sleep(30);
+  });
+
+  t.is(bodyInstance.getCursorIndexCalls, 1, '应读取 BODY 编辑器光标');
+  t.is(
+    testInstance.getCursorIndexCalls,
+    0,
+    '不应读取 Test 编辑器光标（旧实现共享 ref 时此处为 1）'
   );
 
   utils.unmount();

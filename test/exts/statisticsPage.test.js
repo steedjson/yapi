@@ -76,9 +76,9 @@ test.serial('statistics 接口 errcode 非 0：保持初始零值且仍派发面
 
   const boxes = Array.from(container.querySelectorAll('h2.gutter-box')).map(h => h.textContent);
   // 数据统计保持初始零值；系统信息保持空串占位。
-  // 第 4 项为 ''：历史遗留拼写（初始键 interfactCaseCount vs 渲染读
-  // interfaceCaseCount），errcode!==0 不回填时显现，此用例钉住该行为
-  t.deepEqual(boxes.slice(4, 8), ['0', '0', '0', '']);
+  // 第 4 项亦为 '0'：缺陷打捞批修正了初始键拼写（interfactCaseCount →
+  // interfaceCaseCount），与其余三项卡片一致显示零值
+  t.deepEqual(boxes.slice(4, 8), ['0', '0', '0', '0']);
   t.deepEqual(boxes.slice(0, 4), ['', ' %', ' G /  G ', '']);
   // 表格无分组数据行
   t.falsy(container.textContent.includes('group1'));

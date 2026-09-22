@@ -71,3 +71,29 @@ test.serial('WikiEditor 冲突态：编辑器隐藏、更新按钮禁用', t => 
   cleanup();
   cleanupDom();
 });
+
+test.serial('WikiEditor 外部 desc 变更（协同消息/冲突解决）：重挂载并跟随新内容，同值不重挂载', t => {
+  const { render } = require('@testing-library/react');
+  const utils = render(renderEditor({ desc: 'A' }));
+  const before = utils.container.querySelector('.stub-markdown-editor');
+  t.is(before.getAttribute('data-value'), 'A');
+  const mountIdBefore = before.getAttribute('data-mount-id');
+
+  utils.rerender(renderEditor({ desc: 'B' }));
+  const after = utils.container.querySelector('.stub-markdown-editor');
+  t.is(after.getAttribute('data-value'), 'B', '外部 desc 变更后编辑区内容应跟随');
+  t.not(
+    after.getAttribute('data-mount-id'),
+    mountIdBefore,
+    '应通过 key={desc} 重挂载同步（MarkdownEditor value 为仅初始值语义）'
+  );
+
+  utils.rerender(renderEditor({ desc: 'B' }));
+  t.is(
+    utils.container.querySelector('.stub-markdown-editor').getAttribute('data-mount-id'),
+    after.getAttribute('data-mount-id'),
+    '同值重渲染不应触发重挂载'
+  );
+  cleanup();
+  cleanupDom();
+});

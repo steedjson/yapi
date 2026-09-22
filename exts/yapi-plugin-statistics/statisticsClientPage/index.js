@@ -134,7 +134,7 @@ const statisticsPage = () => {
       groupCount: 0,
       projectCount: 0,
       interfaceCount: 0,
-      interfactCaseCount: 0
+      interfaceCaseCount: 0
     },
     status: {
       mail: '',
