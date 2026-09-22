@@ -80,6 +80,7 @@ const {
 
 const axios = require('axios');
 const { Provider } = require('react-redux');
+const { StyleProvider } = require('@ant-design/cssinjs');
 const { MemoryRouter, Routes, Route } = require('react-router-dom');
 const originalAxiosGet = axios.get;
 const originalAxiosPost = axios.post;
@@ -271,24 +272,29 @@ test.serial('AddColModal 父级 props 变化时默认选中首集合并回填用
   t.falsy(document.body.querySelector('.add-col-modal'), 'visible=false 不渲染弹窗内容');
 
   // 模拟父组件重渲染打开弹窗（旧实现中任意 props 变化经 cWRP 回填列表首项与 caseName）。
-  // rerender 须复刻 renderWithProviders 的包裹结构（Provider > MemoryRouter >
-  // Routes > Route），组件类型与位置完全一致才会原位复用实例（props 变化而非重挂载）
+  // rerender 须复刻 renderWithProviders 的包裹结构（StyleProvider(hashPriority=high) >
+  // Provider > MemoryRouter > Routes > Route），组件类型与位置完全一致才会原位复用实例
+  // （props 变化而非重挂载）
   utils.rerender(
     React.createElement(
-      Provider,
-      { store: utils.store },
+      StyleProvider,
+      { hashPriority: 'high' },
       React.createElement(
-        MemoryRouter,
-        {
-          future: { v7_startTransition: true, v7_relativeSplatPath: true },
-          initialEntries: [ROUTE.initialPath]
-        },
+        Provider,
+        { store: utils.store },
         React.createElement(
-          Routes,
-          null,
+          MemoryRouter,
+          {
+            future: { v7_startTransition: true, v7_relativeSplatPath: true },
+            initialEntries: [ROUTE.initialPath]
+          },
           React.createElement(
-            Route,
-            { path: ROUTE.routePath, element: React.createElement(AddColModal, { ...props, visible: true }) }
+            Routes,
+            null,
+            React.createElement(
+              Route,
+              { path: ROUTE.routePath, element: React.createElement(AddColModal, { ...props, visible: true }) }
+            )
           )
         )
       )

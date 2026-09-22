@@ -25,7 +25,6 @@ import '../../helpers/jsdom-setup';
 import test from 'ava';
 import React from 'react';
 import { cleanup } from '@testing-library/react';
-import fs from 'fs';
 import path from 'path';
 import { cleanupDom, renderWithProviders, flushEffects, stubDefaultExport, REPO_ROOT } from '../../helpers/containers';
 
@@ -44,34 +43,11 @@ Module._resolveFilename = function(request, parent, isMain, options) {
 };
 
 // ---- 层 A 扫描库与层 B 级联引擎（与 antd5-runtime-diff.test.js 同源口径）----
-const scanLib = require('../../../scripts/antd5-css-lib.cjs');
 const cascade = require('./antd5Cascade.js');
+const { PRD_DIR, scanLib, loadPrdRules, buildRuntimeRules } = require('./prdRules.js');
 
-const PRD_DIR = path.join(REPO_ROOT, 'static', 'prd');
-const PRD_CHUNK_RANK = { index: 0 };
 const scanResult = scanLib.scanCandidates(PRD_DIR);
 const candidates = scanResult.candidates;
-
-function loadPrdRules() {
-  const files = fs
-    .readdirSync(PRD_DIR)
-    .filter(f => f.endsWith('.css'))
-    .sort();
-  const rules = [];
-  files.forEach((file, fileIdx) => {
-    const rank = file in PRD_CHUNK_RANK ? PRD_CHUNK_RANK[file] : 1 + fileIdx;
-    const raw = scanLib.parseCssRules(fs.readFileSync(path.join(PRD_DIR, file), 'utf8'), file);
-    rules.push(
-      ...cascade.buildCascadeRules(raw, {
-        sourceKind: 'prd',
-        sourceName: file,
-        rank,
-        orderBase: (1 + rank) * 1000000
-      })
-    );
-  });
-  return rules;
-}
 const PRD_RULES = loadPrdRules();
 
 // ---- 重型子组件桩（与 antd5-runtime-diff.test.js 同源口径）----
@@ -133,22 +109,6 @@ function collectRuntimeStyles() {
       runtimeStyleTexts.push(text);
     }
   });
-}
-
-function buildRuntimeRules() {
-  const rules = [];
-  runtimeStyleTexts.forEach((text, idx) => {
-    const raw = scanLib.parseCssRules(text, 'runtime:' + idx);
-    rules.push(
-      ...cascade.buildCascadeRules(raw, {
-        sourceKind: 'runtime',
-        sourceName: 'runtime:' + idx,
-        rank: 9,
-        orderBase: 10000000 + idx * 100000
-      })
-    );
-  });
-  return rules;
 }
 
 // ================= 挂载配方（与 antd5-runtime-diff.test.js 同源的最小集）=================
@@ -353,7 +313,7 @@ function assertFixpoint(t, fix) {
   }
   t.true(elements.length > 0, fix.id + '：当前挂载页面应渲染 ' + fix.selector + '（实际 ' + elements.length + ' 个）');
 
-  const allRules = PRD_RULES.concat(buildRuntimeRules());
+  const allRules = PRD_RULES.concat(buildRuntimeRules(runtimeStyleTexts));
   const index = cascade.computeIndex(allRules);
   let worst = null;
   for (const el of elements.slice(0, MAX_ELEMENTS)) {
@@ -424,9 +384,10 @@ test.serial('快照：group 列表 F-2 搜索按钮基础态 + M-1 hover/focus �
 
   // M-1 静态级联裁定：jsdom 对 :hover/:focus 静态不匹配（层 B 结构性盲区，
   // 动态态由主 Agent 层 C 走查），此处固化特异性关系——
-  // 我方 hover/focus 规则（:not([disabled]) 镜像）0,9,0 必须 > antd 运行时
-  // hover 前景色规则 0,8,0（批 2 曾误记 0,7,0，评审勘误），修复前 0,8,0 打平
-  // 会被运行时序反超。
+  // 我方 hover/focus 规则（:not([disabled]) 镜像）0,9,0 与 antd 运行时 hover
+  // 前景色规则 0,9,0 平局（层 C 修正：hashPriority=high 下 hash 类计 1，
+  // antd 实为 0,9,0；批 2 曾按 :where() 计零误记为 0,8,0），平局由静态源序
+  // 后发获胜（cssinjs prepend 先于全部静态 CSS，层 C 实测 hover 色为 #fff）。
   const btnPrefix = '.ant-input-search-button.ant-btn';
   const isSelfRule = sel => {
     const rightmost = sel.split(/[\s>+~]+/).pop();
@@ -437,7 +398,7 @@ test.serial('快照：group 列表 F-2 搜索按钮基础态 + M-1 hover/focus �
   for (const rule of ourHoverRules) {
     t.is(cascade.computeSpecificity(rule.selector).join(','), '0,9,0', 'M-1：' + rule.selector);
   }
-  const antdHoverColor = buildRuntimeRules().find(
+  const antdHoverColor = buildRuntimeRules(runtimeStyleTexts).find(
     r =>
       r.sourceKind === 'runtime' &&
       r.selector.indexOf('.ant-input-search-button:not(.ant-btn-color-primary):not([disabled]):hover') !== -1 &&
@@ -445,13 +406,14 @@ test.serial('快照：group 列表 F-2 搜索按钮基础态 + M-1 hover/focus �
   );
   t.truthy(antdHoverColor, 'antd 运行时应注入搜索按钮 hover 前景色规则');
   const antdHoverSpec = cascade.computeSpecificity(antdHoverColor.selector).join(',');
-  t.is(antdHoverSpec, '0,8,0', 'M-1 前置事实：antd hover 前景色规则应为 0,8,0');
+  t.is(antdHoverSpec, '0,9,0', 'M-1 前置事实：antd hover 前景色规则为 0,9,0（hash 类计 1，层 C 修正）');
   for (const rule of ourHoverRules) {
     const ours = cascade.computeSpecificity(rule.selector);
     const theirs = cascade.computeSpecificity(antdHoverColor.selector);
+    // 平局允许：我方静态规则源序晚于 cssinjs 运行时样式（prepend），同特异性由我方获胜
     t.true(
-      ours[0] > theirs[0] || (ours[0] === theirs[0] && ours[1] > theirs[1]) || (ours[0] === theirs[0] && ours[1] === theirs[1] && ours[2] > theirs[2]),
-      'M-1：我方 hover/focus（' + ours.join(',') + '）应压过 antd hover（' + theirs.join(',') + '）'
+      ours[0] > theirs[0] || (ours[0] === theirs[0] && ours[1] > theirs[1]) || (ours[0] === theirs[0] && ours[1] === theirs[1] && ours[2] >= theirs[2]),
+      'M-1：我方 hover/focus（' + ours.join(',') + '）应不弱于 antd hover（' + theirs.join(',') + '）'
     );
   }
   cleanup();
@@ -505,7 +467,7 @@ test.serial('快照：interface 详情页 N-6/N-7 用例表头前景/背景', as
   collectRuntimeStyles();
   assertFixpoint(t, {
     id: 'N-6 color',
-    selector: '.caseContainer .ant-table-wrapper .ant-table-thead th',
+    selector: '.caseContainer .ant-table-wrapper .ant-table-container .ant-table-thead th',
     chunk: 'project',
     prop: 'color',
     value: '#6d6c6c'

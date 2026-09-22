@@ -49,37 +49,12 @@ Module._resolveFilename = function(request, parent, isMain, options) {
 };
 
 // ---- 层 A 扫描库（scripts/antd5-css-lib.cjs：pirates 不钩 .cjs，双端同源口径）----
-const scanLib = require('../../../scripts/antd5-css-lib.cjs');
 const cascade = require('./antd5Cascade.js');
 
-// ---- 静态产物规则与候选（全 chunk 一次性载入，只读提交态产物）----
-const PRD_DIR = path.join(REPO_ROOT, 'static', 'prd');
-const PRD_CHUNK_RANK = { index: 0 };
+// ---- 静态产物规则与候选（共享装载器 prdRules.js：真实注入序 initial → runtime → 异步 chunk）----
+const { PRD_DIR, scanLib, loadPrdRules, buildRuntimeRules } = require('./prdRules.js');
 const scanResult = scanLib.scanCandidates(PRD_DIR);
 const candidates = scanResult.candidates;
-
-function loadPrdRules() {
-  const files = fs
-    .readdirSync(PRD_DIR)
-    .filter(f => f.endsWith('.css'))
-    .sort();
-  const rules = [];
-  files.forEach((file, fileIdx) => {
-    // index 是真实页面的首载公共包（rank 0）；其余路由包按字典序排在其后。
-    // 秩空间互相错开（×1e6），路由包整体晚于 index、早于运行时注入（1e7 起）。
-    const rank = file in PRD_CHUNK_RANK ? PRD_CHUNK_RANK[file] : 1 + fileIdx;
-    const raw = scanLib.parseCssRules(fs.readFileSync(path.join(PRD_DIR, file), 'utf8'), file);
-    rules.push(
-      ...cascade.buildCascadeRules(raw, {
-        sourceKind: 'prd',
-        sourceName: file,
-        rank,
-        orderBase: (1 + rank) * 1000000
-      })
-    );
-  });
-  return rules;
-}
 const PRD_RULES = loadPrdRules();
 
 // ---- antd5 运行时样式归集（跨页面按文本去重，保持首次注入顺序）----
@@ -94,23 +69,6 @@ function collectRuntimeStyles() {
       runtimeStyleTexts.push(text);
     }
   });
-}
-
-function buildRuntimeRules() {
-  const rules = [];
-  runtimeStyleTexts.forEach((text, idx) => {
-    const raw = scanLib.parseCssRules(text, 'runtime:' + idx);
-    rules.push(
-      ...cascade.buildCascadeRules(raw, {
-        sourceKind: 'runtime',
-        sourceName: 'runtime:' + idx,
-        // 运行时 <style> 注入晚于一切静态 <link>：源序从 1e7 起，压过 prd 全部秩空间
-        rank: 9,
-        orderBase: 10000000 + idx * 100000
-      })
-    );
-  });
-  return rules;
 }
 
 // ---- axios 桩：宽松兜底（未知端点返回空数据），页面挂载各自覆盖关心的端点 ----
@@ -771,7 +729,7 @@ async function runDiffForPage(page, mountFn) {
   await mountFn();
   collectRuntimeStyles();
 
-  const allRules = PRD_RULES.concat(buildRuntimeRules());
+  const allRules = PRD_RULES.concat(buildRuntimeRules(runtimeStyleTexts));
   const index = cascade.computeIndex(allRules);
   const pageStat = { matchedCandidates: 0, unsupportedSelectors: 0, evaluated: 0 };
   const matchedSelectorIds = new Set();
@@ -920,7 +878,7 @@ test.serial('层B：group 列表页差分', async t => {
   for (const sel of prdHoverSelectors) {
     t.is(cascade.computeSpecificity(sel).join(','), '0,9,0', 'M-1：hover/focus 规则应提级到 0,9,0（' + sel + '）');
   }
-  const antdHoverColorRule = buildRuntimeRules().find(
+  const antdHoverColorRule = buildRuntimeRules(runtimeStyleTexts).find(
     r =>
       r.sourceKind === 'runtime' &&
       r.selector.indexOf('.ant-input-search-button:not(.ant-btn-color-primary):not([disabled]):hover') !== -1 &&
@@ -929,8 +887,8 @@ test.serial('层B：group 列表页差分', async t => {
   t.truthy(antdHoverColorRule, 'antd 运行时应注入搜索按钮 hover 前景色规则');
   t.is(
     antdHoverColorRule && cascade.computeSpecificity(antdHoverColorRule.selector).join(','),
-    '0,8,0',
-    'M-1 前置事实：antd hover 前景色规则应为 0,8,0（批 2 注释误记 0,7,0，评审勘误）'
+    '0,9,0',
+    'M-1 前置事实：antd hover 前景色规则为 0,9,0（hash 类计 1；层 C 修正前误按 :where() 计零记为 0,8,0）'
   );
 });
 
@@ -981,15 +939,12 @@ test.serial('层B：全局 Header/Footer 差分', async t => {
     t.true(v && v.reason === 'self-wins', 'line-height 获胜者应为 .header-box 自身声明');
   }
 
-  // N-2 登记（批次 2a 裁决：不修，待层 C 实测后倾向修外壳类而非硬压）：
-  // .search-wrapper .search-input width 仍应保持 confirmed-override——
-  // 本断言把「在案待裁决」钉进门禁，若意外翻转（如 antd 规则变化）反而需要人工复核。
+  // N-2 裁决（层 C，2026-09）：.search-wrapper .search-input 的 width:2rem 为
+  // antd3 时代遗留死声明——真实 prod 下 antd 的 width:100%（0,4,0）稳定获胜，
+  // 且 2rem=200px 反而宽于搜索框实际宽度（层 C 实测 190/198px），强行压过会造成
+  // 溢出；已按「修外壳类而非硬压」删除该声明。此断言防止死声明回流。
   const n2 = Array.from(REGISTRY.values()).find(e => e.candidate.selector === '.search-wrapper .search-input');
-  t.truthy(n2 && n2.pages['global-chrome'], '应找到 N-2 候选 .search-wrapper .search-input（在案待裁决）');
-  for (const mode of ['dev', 'prod']) {
-    const v = n2.pages['global-chrome'].props.width[mode];
-    t.is(v && v.status, 'confirmed-override', mode + ' 口径下 N-2 width 应保持 confirmed-override（裁决：待层 C 后修，不在本批）');
-  }
+  t.falsy(n2, 'N-2 死声明已删除，.search-wrapper .search-input 不应再作为层 A 候选出现（防回流）');
 });
 
 test.serial('层B：group 成员管理页差分', async t => {
@@ -1058,17 +1013,18 @@ test.serial('层B：interface 详情页差分', async t => {
   await runDiffForPage('interface-view', mountInterfaceView);
   t.true(PAGE_STATS['interface-view'].matchedCandidates >= 3, 'interface 详情页挂载应命中候选（实际 ' + PAGE_STATS['interface-view'].matchedCandidates + '）');
 
-  // N-6/N-7 锚点（批次 2a 翻转后口径）：用例表头 color/background——
-  // 补一段真实祖先 .ant-table-wrapper（antd Table 根）各提一档
-  // （color 0,2,1→0,3,1、background 0,2,2→0,3,2），压过
-  // :where(...).ant-table-wrapper .ant-table-thead >tr>th（0,2,2）的同名声明。
+  // N-6/N-7 锚点（层 C 修正后口径）：用例表头 color/background——
+  // N-6 在 .ant-table-wrapper 之后再补真实祖先 .ant-table-container 提至 0,4,1
+  // （层 C 实测：批次 2a 的 0,3,1 写法不敌 antd 运行时 .css-<hash>.ant-table-wrapper
+  // .ant-table-thead >tr>th 的 0,3,2）；N-7 background 0,3,2 与 antd 平局，
+  // 静态源序后发获胜（hashPriority=high 下 cssinjs prepend 先于全部静态 CSS）。
   const n6 = Array.from(REGISTRY.values()).find(
-    e => e.candidate.selector === '.caseContainer .ant-table-wrapper .ant-table-thead th'
+    e => e.candidate.selector === '.caseContainer .ant-table-wrapper .ant-table-container .ant-table-thead th'
   );
-  t.truthy(n6, '应找到 .caseContainer .ant-table-wrapper .ant-table-thead th 候选（N-6 修复位）');
+  t.truthy(n6, '应找到 .caseContainer .ant-table-wrapper .ant-table-container .ant-table-thead th 候选（N-6 修复位）');
   for (const mode of ['dev', 'prod']) {
     const v = n6.pages['interface-view'] && n6.pages['interface-view'].props.color[mode];
-    t.is(v && v.status, 'not-overridden', mode + ' 口径下 N-6 表头 color 应自保获胜（specificity 提升一档）');
+    t.is(v && v.status, 'not-overridden', mode + ' 口径下 N-6 表头 color 应自保获胜（specificity 提升到 0,4,1）');
   }
   const n7 = Array.from(REGISTRY.values()).find(
     e => e.candidate.selector === '.caseContainer .ant-table-wrapper .ant-table-thead>tr>th'
@@ -1187,7 +1143,9 @@ test.serial('层B：汇总登记产物与运行时样式 sanity', async t => {
       ),
       overrides
     });
-  }
+    // 层 C 修正后（hashPriority=high + prepend 注入序）：confirmed 面仅剩 N-2/N-6，
+    // 均已随本批处理；保留以下兜底导出便于后续回归时快速定位。
+    if (overrides.length) console.log('/*DEBUG-CONFIRMED*/ ' + JSON.stringify({ id: entry.candidate.id, selector: entry.candidate.selector, chunk: entry.candidate.chunk, props: entry.candidate.props.map(p => p.prop), overrides }));  }
 
   // 未在任何挂载页面渲染的候选：
   //   - 携带 antd3 双作用域守卫（:not([class*=css-])，21964bbc 引入）的规则按设计
@@ -1254,11 +1212,13 @@ test.serial('层B：汇总登记产物与运行时样式 sanity', async t => {
   console.log('[层B] 页面命中: ' + JSON.stringify(PAGE_STATS));
   console.log('[层B] 登记产物: ' + outPath);
 
-  // 批次 2a 门禁：原 8 条 confirmed-override 中 7 条已按评审裁决修复（F-1 border-radius、
-  // N-1、N-3、N-4、N-5、N-6、N-7），逐条核对应翻转；仅 N-2 按裁决「待层 C 后修」
-  // 保持 confirmed-override。翻转口径：候选级 status 不得为 confirmed-override，且
-  // 全部页面/属性/口径无任何 confirmed-override 判定（overrides 为空）。允许残留
-  // 同值 ambiguous（如 .card-login 的 position，批 2 即存在、无视觉差异，层 C 口径）。
+  // 批次 2a 门禁（层 C 修正后口径）：原 8 条 confirmed-override 经真实口径重扫
+  // （hashPriority=high：hash 类计 1；cssinjs prepend：全部静态规则源序晚于运行时）
+  // 后，F-1/N-1/N-3/N-4/N-5/N-7 均自保获胜；N-6 的 0,3,1 写法在真实口径下不敌
+  // antd 0,3,2，已补 .ant-table-container 提至 0,4,1 修正；N-2 死声明已删除。
+  // 翻转口径：候选级 status 不得为 confirmed-override，且全部页面/属性/口径无任何
+  // confirmed-override 判定（overrides 为空）。允许残留同值 ambiguous（如
+  // .card-login 的 position，批 2 即存在、无视觉差异，层 C 口径）。
   // 若出现其他 confirmed，说明修复引发了新覆盖或 antd 升级改变了运行时规则，必须逐条分析登记。
   const FIXED_CONFIRMED = [
     { id: 'F-1', selector: '.card-login', prop: 'border-radius' },
@@ -1266,7 +1226,7 @@ test.serial('层B：汇总登记产物与运行时样式 sanity', async t => {
     { id: 'N-3', selector: '.form-item.ant-form-item', chunk: 'add-project', prop: 'margin-bottom' },
     { id: 'N-4', selector: '.form-item.ant-form-item', chunk: 'project', prop: 'margin-bottom' },
     { id: 'N-5', selector: '.dynamic-delete-button.anticon', prop: 'color' },
-    { id: 'N-6', selector: '.caseContainer .ant-table-wrapper .ant-table-thead th', prop: 'color' },
+    { id: 'N-6', selector: '.caseContainer .ant-table-wrapper .ant-table-container .ant-table-thead th', prop: 'color' },
     { id: 'N-7', selector: '.caseContainer .ant-table-wrapper .ant-table-thead>tr>th', prop: 'background' }
   ];
   for (const fix of FIXED_CONFIRMED) {
@@ -1283,12 +1243,7 @@ test.serial('层B：汇总登记产物与运行时样式 sanity', async t => {
     t.not(entry && entry.status, 'confirmed-override', fix.id + '（' + fix.selector + '）候选级状态不应为 confirmed-override');
   }
   const stillConfirmed = findings.filter(f => f.status === 'confirmed-override');
-  t.is(stillConfirmed.length, 1, 'confirmed-override 应仅剩 N-2（待层 C 后修），实际 ' + stillConfirmed.length + ' 条');
-  t.is(
-    stillConfirmed[0] && stillConfirmed[0].selector,
-    '.search-wrapper .search-input',
-    '剩余 confirmed 应为 N-2（.search-wrapper .search-input width）'
-  );
+  t.is(stillConfirmed.length, 0, '层 C 修正后 confirmed-override 应为 0（N-2 已删除、N-6 已修正），实际 ' + stillConfirmed.length + ' 条');
 
   t.true(findings.length === candidates.length, '登记应覆盖全部层 A 候选');
   t.true(totals.rendered > 0, '至少应有候选在挂载页面渲染');

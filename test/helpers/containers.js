@@ -22,6 +22,7 @@ const { Provider } = require('react-redux');
 const { createStore, applyMiddleware } = require('redux');
 const promiseMiddleware = require('redux-promise');
 const { MemoryRouter, Routes, Route } = require('react-router-dom');
+const { StyleProvider } = require('@ant-design/cssinjs');
 const { cleanupDom } = require('./jsdom-setup');
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
@@ -78,7 +79,14 @@ function renderWithProviders(ui, opts) {
     );
   }
   const utils = render(
-    React.createElement(Provider, { store }, React.createElement(MemoryRouter, routerProps, element))
+    // StyleProvider hashPriority="high" 与 client/index.js 的生产挂载链一致：
+    // cssinjs 以 .css-hash 前缀（计 1 类）注入 antd 规则，而非 :where() 计零；
+    // 缺此包裹时 jsdom 下的特异性模型与生产不符（层 C 实测发现的偏差）。
+    React.createElement(
+      StyleProvider,
+      { hashPriority: 'high' },
+      React.createElement(Provider, { store }, React.createElement(MemoryRouter, routerProps, element))
+    )
   );
   return Object.assign({ store, dispatched }, utils);
 }

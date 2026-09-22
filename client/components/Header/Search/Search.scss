@@ -2,9 +2,11 @@ $color-grey:#979DA7;
 
 .search-wrapper{
   cursor: auto;
-  .search-input{
-    width: 2rem;
-  }
+  // N-2 裁决（层 C，2026-09）：原 width: 2rem（200px）为 antd3 时代遗留死声明——
+  // 真实 prod 下 antd 的 .css-<hash>.ant-select-single .ant-select-selector
+  // .ant-select-selection-search-input{width:100%}（0,4,0）稳定获胜，且 2rem 反而
+  // 宽于搜索框实际宽度（层 C 实测 190/198px），强行压过会造成输入区溢出；
+  // 按「修外壳类而非硬压」删除死声明，输入框宽度由 antd 的 100% 自然决定。
   .srch-icon{
   }
 }

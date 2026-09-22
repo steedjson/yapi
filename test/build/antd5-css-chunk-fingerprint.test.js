@@ -34,11 +34,14 @@ const PRD_DIR = path.join(REPO_ROOT, 'static', 'prd');
 // index（内容随分包重排）、project（同）；group/user/follows/add-project 内容不变。
 // 初始 chunk 顺序变为 manifest -> antd -> 0 -> index.js。层 A/层 B 已按新产物重扫
 // （candidates 1194，confirmed-override 1 为登录页既有锚点，判定无漂移）。
+// 层 C 收尾批（2026-09）：N-2 死声明（Search.scss .search-input width:2rem）删除 →
+// index 哈希变化；N-6 提级（View.scss 补 .ant-table-container，0,3,1→0,4,1）→
+// project 哈希变化。层 A/层 B 已按新产物重扫（candidates 1193，confirmed-override 0）。
 const BASELINE = {
   cssChunks: {
-    'index.js': 'index@5f0ed3672c1fad56.css',
+    'index.js': 'index@d086ece37364de01.css',
     group: 'group@426f689219580b35.css',
-    project: 'project@a301d24a566740de.css',
+    project: 'project@d4dabd953a4429a2.css',
     user: 'user@57802eb279f54184.css',
     follows: 'follows@3f80bd4670cf7f38.css',
     'add-project': 'add-project@80e6a5a4d705c349.css'

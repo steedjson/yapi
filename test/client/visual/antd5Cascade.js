@@ -18,13 +18,12 @@
  * 候选，self-wins 判定可能是空真（规则从未在该页生效）。此类候选须经层 C 或加载
  * 关系核对后方可采信；同 chunk 候选的判定不受此限。
  *
- * dev/prod 双口径：antd 5.29.3 / @ant-design/cssinjs 注入的选择器形如
- * `:where(.css-<hash>).ant-xxx`——`:where()` 特异性计零，dev
- * （css-dev-only-do-not-override-*）与 prod（css-<hash>）两口径的特异性实测一致
- * （计划 §0 的「dev 0,2,0 / prod 0,1,0」系立项时的过时假设，修订见
- * docs/antd5-visual-audit-findings.md §4.1）。运行时规则仍同时计算 specDev
- * （原样）与 specProd（剥离 dev 哈希类）两种特异性并按模式取用，保留双口径
- * 机制以便版本升级导致两口径重新分化时无需改引擎。
+ * dev/prod 双口径：本应用在 client/index.js 用 `StyleProvider hashPriority="high"`，
+ * antd 5.29.3 / @ant-design/cssinjs 注入的选择器为 `.css-<hash>.ant-xxx`（hash 类
+ * **计 1 类特异性**，非 `:where()` 计零）；dev（css-dev-only-do-not-override-*）与
+ * prod（css-<hash>）形态一致，两口径特异性相同。层 C 实测（2026-09）发现早期
+ * 「:where() 计零」假设导致自保判定失真，现 specProd 与 specDev 均按原样计数，
+ * 保留双口径机制以便版本升级导致两口径重新分化时无需改引擎。
  */
 
 // ---------------- specificity ----------------
@@ -241,16 +240,10 @@ function competesWith(prop) {
 // ---------------- 规则构建 ----------------
 
 /**
- * 剥离 antd5 dev 哈希类，得到 prod 口径的选择器（0,1,0 单哈希形态按计划事实近似为
- * 剥离后的组件类；全剥空则保留原选择器）。
  * @param {string} selector
  */
 function stripDevHash(selector) {
-  const stripped = String(selector)
-    .replace(/\.css-dev-only-do-not-override-[a-z0-9]+/gi, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-  return stripped || String(selector).trim();
+  return String(selector);
 }
 
 /** print-only 的 media 不适用（jsdom 按 screen 求值），其余一律视为适用并标注 media-dependent */
@@ -287,7 +280,8 @@ function buildCascadeRules(rawRules, meta) {
         sourceName: meta.sourceName,
         sourceOrder: meta.orderBase + rule.order,
         specDev: spec,
-        specProd: meta.sourceKind === 'runtime' ? computeSpecificity(stripDevHash(normalized)) : spec
+        // hashPriority="high" 下 dev/prod 哈希类均计 1 类，两口径特异性一致
+        specProd: spec
       });
     }
   }

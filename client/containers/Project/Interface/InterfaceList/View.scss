@@ -55,11 +55,11 @@
         margin-bottom: 0px;
         padding-bottom: 0px;
     }
-    // 表头前景/背景两属性各补一段真实祖先 .ant-table-wrapper（antd Table 根节点,
-    // 表头 th 必在其内）, 各提一档特异性: color 0,2,1→0,3,1、background 0,2,2→0,3,2,
-    // 压过 antd5 运行时 :where(.css-xxx).ant-table-wrapper .ant-table-thead >tr>th
-    // （0,2,2）的 color/background, 见批次 2a 修复 N-6/N-7（findings §3）
-    .ant-table-wrapper .ant-table-thead {
+    // 表头前景色：antd5 运行时规则为 .css-<hash>.ant-table-wrapper .ant-table-thead
+    // >tr>th（hashPriority="high" 下 hash 类计 1，实测 0,3,2），批次 2a 的 0,3,1
+    // 写法实际不敌（层 C 实测 N-6 未生效）；此处再补一段真实祖先 .ant-table-container
+    // （Table 表头必在其内）提至 0,4,1 自保。
+    .ant-table-wrapper .ant-table-container .ant-table-thead {
         th{
             color: #6d6c6c;
             font-weight: normal;
@@ -68,6 +68,8 @@
             // background-color: black;
         }
     }
+    // 背景：0,3,2 与 antd 平局、静态源序后发获胜；小尺寸表格（本页用例表）仍由
+    // interface.scss 的 .ant-table-small 规则（同为自定义通道，见 N-7 登记）接管。
     .ant-table-wrapper .ant-table-thead>tr>th{
         background: var(--sk-bg-faint);
     }
