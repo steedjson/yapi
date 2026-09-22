@@ -44,24 +44,10 @@ stubDefaultExport(
   })
 );
 
-// json-schema-editor-visual 主入口为未转译的 ESM+JSX 源码（生产构建由 webpack
-// babel-loader 处理），与既有 InterfaceEditForm.test.js 一致注入等价工厂桩
-const jsvPath = require.resolve('json-schema-editor-visual');
-{
-  const jsvStubModule = new Module(jsvPath, null);
-  jsvStubModule.filename = jsvPath;
-  jsvStubModule.loaded = true;
-  jsvStubModule.exports = function stubJSchemaFactory() {
-    return function StubSchemaEditor(props) {
-      return React.createElement(
-        'div',
-        { className: 'stub-json-schema-editor', 'data-data': String(props.data) },
-        'STUB_SCHEMA_EDITOR'
-      );
-    };
-  };
-  require.cache[jsvPath] = jsvStubModule;
-}
+// 批次 3 消费方切换后，schemaEditors.js 已不再 require json-schema-editor-visual，
+// 子组件渲染真实自研 JsonSchemaEditor（antd5 纯栈，可直接进 jsdom）：旧版工厂桩
+// （替身 .stub-json-schema-editor）随之删除，schema 编辑器相关断言改按自研组件
+// 根类名 .json-schema-editor 选取（与 InterfaceEditForm.test.js 端到端用例同口径）。
 
 // EasyDragSort：在真实实现之上叠加 props 捕获（仍委托真实实现渲染，wrapper div 与
 // 拖拽 handler 装配与生产一致），供拖拽契约用例断言 data() 与 onChange 的接线
@@ -341,7 +327,7 @@ test.serial('ResponseSetting 按 resBodyType 与 json-schema 开关切换编辑�
     'jsonType=tpl 时 mock 预览容器应隐藏'
   );
   t.is(
-    container.querySelectorAll('.json-schema-editor-scope .stub-json-schema-editor').length,
+    container.querySelectorAll('.json-schema-editor-scope .json-schema-editor').length,
     0,
     '非 json-schema 时不应渲染 schema 编辑器'
   );
@@ -363,9 +349,9 @@ test.serial('ResponseSetting 按 resBodyType 与 json-schema 开关切换编辑�
     </Form>
   );
   t.is(
-    container.querySelectorAll('.json-schema-editor-scope .stub-json-schema-editor').length,
+    container.querySelectorAll('.json-schema-editor-scope .json-schema-editor').length,
     1,
-    'json-schema 开时应在作用域容器内渲染 schema 编辑器'
+    'json-schema 开时应在作用域容器内渲染（自研）schema 编辑器'
   );
   t.falsy(container.querySelector('.interface-editor'), 'json-schema 开时不应再渲染 raw 编辑器');
   t.is(

@@ -2,7 +2,7 @@
 import '../../helpers/jsdom-setup';
 import test from 'ava';
 import React from 'react';
-import { cleanup } from '@testing-library/react';
+import { act, cleanup, fireEvent } from '@testing-library/react';
 import { renderWithProviders, flushEffects, cleanupDom } from '../../helpers/containers';
 
 const path = require('path');
@@ -33,19 +33,9 @@ const {
 } = require('../../../client/containers/Project/Interface/InterfaceList/interfaceEditFormUtils/formDefaults.js');
 const { queryTpl, paramsTpl } = require('../../../client/containers/Project/Interface/InterfaceList/interfaceEditFormUtils/paramTemplates.js');
 
-// json-schema-editor-visual 主入口为未转译的 ESM+JSX 源码（生产构建由 webpack
-// babel-loader 处理），Node/ava 下 require 原文件会触发 require(esm) 语法检测失败；
-// 这里在 require 被测组件之前向 require.cache 注入等价工厂桩（返回确定性组件）。
-const jsvPath = require.resolve('json-schema-editor-visual');
-const jsvStubModule = new Module(jsvPath, null);
-jsvStubModule.filename = jsvPath;
-jsvStubModule.loaded = true;
-jsvStubModule.exports = function stubJSchemaFactory() {
-  return function StubSchemaEditor() {
-    return React.createElement('div', { className: 'stub-json-schema-editor' }, 'STUB_SCHEMA_EDITOR');
-  };
-};
-require.cache[jsvPath] = jsvStubModule;
+// 批次 3 消费方切换后，schemaEditors.js 已不再 require json-schema-editor-visual，
+// 两处 schema 编辑器渲染真实自研 JsonSchemaEditor（antd5 纯栈，可直接进 jsdom）：
+// 旧版 require.cache 工厂桩（替身 .stub-json-schema-editor）随之删除，提升测试真实性。
 
 // AceEditor / mockEditor / MarkdownEditor 挂载即依赖 Ace 编辑器与测量环境，
 // 与既有容器测试一致打桩为回显 props 的静态组件，隔离编辑器内部实现
@@ -205,8 +195,10 @@ test('queryTpl/paramsTpl: 给定 data/index/delParams 输出确定性行结构',
 });
 
 // ---------- 组件渲染冒烟（渲染编排等价性已由迁移期逐字节对比单独证明）----------
+// 两个渲染用例共享 document.body（挂载 + 末尾 cleanup/cleanupDom），必须串行
+//（ava 中普通 test() 为文件内并发语义，与本仓库其他渲染测试同口径用 test.serial）
 
-test('InterfaceEditForm: 空表单渲染出基础表单骨架', async t => {
+test.serial('InterfaceEditForm: 空表单渲染出基础表单骨架', async t => {
   const Comp = require('../../../client/containers/Project/Interface/InterfaceList/InterfaceEditForm.js').default;
   const seedState = {
     group: { field: { enable: true, name: '自定义字段' } },
@@ -236,6 +228,82 @@ test('InterfaceEditForm: 空表单渲染出基础表单骨架', async t => {
   t.true(utils.container.innerHTML.indexOf('请求参数设置') !== -1);
   t.true(utils.container.innerHTML.indexOf('返回数据设置') !== -1);
   t.true(utils.container.innerHTML.indexOf('自定义字段') !== -1);
+  cleanup();
+  cleanupDom();
+});
+
+// ---------- 编辑 Tab 端到端（批次 3 消费方切换）：json-schema 开启态渲染自研编辑器 ----------
+
+test.serial('InterfaceEditForm: json-schema 开启态渲染自研编辑器且编辑操作上抛父组件', async t => {
+  const Comp = require('../../../client/containers/Project/Interface/InterfaceList/InterfaceEditForm.js').default;
+  const seedState = {
+    group: { field: { enable: false } },
+    project: {
+      currProject: {
+        tag: [],
+        // 项目未开 json5：两个 JSON-SCHEMA 开关按初值规约（is_json_schema || !is_json5）恒为开
+        is_json5: false
+      }
+    }
+  };
+  const utils = renderWithProviders(
+    React.createElement(Comp, {
+      cat: [{ _id: '1', name: '分类A' }],
+      curdata: {
+        method: 'POST',
+        title: 'POST 接口',
+        req_body_type: 'json',
+        req_body_other: JSON.stringify({
+          type: 'object',
+          properties: { user: { type: 'string' } },
+          required: ['user']
+        }),
+        res_body_type: 'json',
+        res_body: '{"a":1}'
+      },
+      mockUrl: 'http://mock/11',
+      basepath: '/api/base',
+      noticed: true,
+      onSubmit: () => Promise.resolve({}),
+      onTagClick: () => {}
+    }),
+    { seedState }
+  );
+  await flushEffects(30);
+
+  // json-schema 开启态：请求 BODY 与返回数据两处各渲染一个自研编辑器
+  //（批次 3 前此处为旧编辑器工厂桩 .stub-json-schema-editor）
+  const editors = utils.container.querySelectorAll(
+    '.json-schema-editor-scope .json-schema-editor'
+  );
+  t.is(editors.length, 2, '请求 BODY 与返回数据应各渲染一个自研 json-schema 编辑器');
+
+  // data 契约（入）：req_body_other 的 schema 树渲染为可编辑行
+  const bodyEditor = editors[0];
+  const userNameInput = Array.from(bodyEditor.querySelectorAll('.jse-name-input')).find(
+    i => i.value === 'user'
+  );
+  t.truthy(userNameInput, 'BODY 编辑器应按 req_body_other 的 schema 渲染出 user 行');
+
+  // 编辑上抛：点「添加属性」→ 编辑器新增一行，且 onChange 经父组件 handler 链
+  //（handleReqBodySchemaChange → changeEditStatus）派发 redux action。
+  // 父 handler 的 changeEditStatus 调度带 1 秒静默窗，先等窗口过去再编辑。
+  const rowCountBefore = bodyEditor.querySelectorAll('.jse-row').length;
+  await new Promise(resolve => setTimeout(resolve, 1100));
+  await act(async () => {
+    fireEvent.click(bodyEditor.querySelector('.jse-add-root'));
+    await new Promise(resolve => setTimeout(resolve, 30));
+  });
+  t.is(
+    bodyEditor.querySelectorAll('.jse-row').length,
+    rowCountBefore + 1,
+    '「添加属性」后编辑器应新增一行'
+  );
+  t.true(
+    utils.dispatched.some(a => a.type === 'yapi/interface/CHANGE_EDIT_STATUS' && a.status === true),
+    '编辑器 onChange 应上抛父组件并派发 changeEditStatus(true)'
+  );
+
   cleanup();
   cleanupDom();
 });

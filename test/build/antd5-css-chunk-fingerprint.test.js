@@ -24,22 +24,24 @@ const REPO_ROOT = path.resolve(__dirname, '..', '..');
 const PRD_DIR = path.join(REPO_ROOT, 'static', 'prd');
 
 // ---- 登记基线（与 static/prd 提交态一致；更新须按文件头说明走重扫流程）----
-// 批次 2a+3 前置重建（74ce3839 之后）：合入批次 2a 六处覆盖点修复（F-1 border-radius、
-// N-1 line-height、N-3/N-4 .form-item、N-5 删除图标色、N-6/N-7 用例表头、M-1 hover
-// 提级 0,9,0）后全量重建；index/group/project/add-project 四 chunk 哈希变化，
-// initial chunk 顺序不变；层 A/层 B 已按新产物重扫（见 findings 登记表批次 2a+3 节）。
+// 批次 3（json-schema 编辑器消费方切换）后全量重建：schemaEditors.js 不再 require
+// json-schema-editor-visual，旧编辑器 JS 链（antd3 组件 / rc-editor-mention / moox）
+// 从依赖图消失——接口路由 chunk 由 i@…js(3.3MB) 缩为 d@…js(539KB)，chunk 序号重排：
+// 接口路由 i→d、vendor p→v；project/d 两 CSS 哈希随之更新，其余 CSS 内容不变。
+// scoped antd3（InterfaceEditForm.js 保留的 antd.css import，批次 4 才删）仍由
+// 接口路由 chunk（现名 d）承载。层 A/层 B 已按新产物重扫（候选/判定无漂移）。
 const BASELINE = {
   cssChunks: {
     'index.js': 'index@39ef29962cd900dd.css',
     group: 'group@426f689219580b35.css',
-    project: 'project@621f61c9be96dc30.css',
+    project: 'project@da05384b69118c2b.css',
     user: 'user@57802eb279f54184.css',
     follows: 'follows@3f80bd4670cf7f38.css',
     'add-project': 'add-project@80e6a5a4d705c349.css',
-    i: 'i@05d52c24969994a8.css'
+    d: 'd@0581957deda8b206.css'
   },
-  initialChunks: ['manifest', 'p', 'index.js'],
-  scopedAntd3Carrier: 'i',
+  initialChunks: ['manifest', 'v', 'index.js'],
+  scopedAntd3Carrier: 'd',
   scopeMarker: '.json-schema-editor-scope'
 };
 

@@ -13,8 +13,10 @@
 //
 // 挂载方式：经 Edit.js（接口编辑 Tab 容器）间接挂载 InterfaceEditForm，复刻真实
 // 页面数据链（store 种子 curdata + 冲突检测 WebSocket 失败语义）。重型编辑器
-// （AceEditor / mockEditor / MarkdownEditor / json-schema-editor-visual）按既有
-// 容器测试同源口径打桩；序列化器已剥离 antd CSS-in-JS 哈希（CSSHASH）与 SVG path。
+// （AceEditor / mockEditor / MarkdownEditor）按既有容器测试同源口径打桩；
+// 批次 3 消费方切换后 schema 编辑器为真实自研 JsonSchemaEditor（antd5 纯栈可进
+// jsdom，不再打桩，旧 .stub-json-schema-editor 替身基线已随本批重采）；
+// 序列化器已剥离 antd CSS-in-JS 哈希（CSSHASH）与 SVG path。
 //
 // jsdom 环境必须在任何生产代码之前装载
 import '../../helpers/jsdom-setup';
@@ -39,23 +41,9 @@ Module._resolveFilename = function(request, parent, isMain, options) {
   return originalResolveFilename.call(this, request, parent, isMain, options);
 };
 
-// ---- json-schema-editor-visual 主入口为未转译 ESM+JSX，注入等价工厂桩 ----
-const jsvPath = require.resolve('json-schema-editor-visual');
-{
-  const jsvStubModule = new Module(jsvPath, null);
-  jsvStubModule.filename = jsvPath;
-  jsvStubModule.loaded = true;
-  jsvStubModule.exports = function stubJSchemaFactory() {
-    return function StubSchemaEditor(props) {
-      return React.createElement(
-        'div',
-        { className: 'stub-json-schema-editor', 'data-data': String(props.data == null ? '' : props.data) },
-        'STUB_SCHEMA_EDITOR'
-      );
-    };
-  };
-  require.cache[jsvPath] = jsvStubModule;
-}
+// ---- 批次 3 消费方切换：json-schema-editor-visual 不再被 schemaEditors.js require，
+// 旧工厂桩成为死代码，删除之——容器渲染真实自研 JsonSchemaEditor，快照基线本批重采。
+// （基线口径同文件头说明：以当前提交态为准重新采集。）
 
 // ---- 重型编辑器打桩（与 InterfaceEditFormParts.test.js / PostmanContainer 同源）----
 stubDefaultExport(
@@ -580,8 +568,17 @@ const EXPECTED_EDITFORM_SNAPSHOT = `<div>
                 <span class="ant-switch-inner-unchecked">
                   "关"
             <div class="ant-col.interface-edit-json-info.json-schema-editor-scope.CSSHASH">
-              <div class="stub-json-schema-editor" data-data="">
-                "STUB_SCHEMA_EDITOR"
+              <div class="json-schema-editor">
+                <div class="jse-toolbar">
+                  <button class="ant-btn.CSSHASH.ant-btn-default.ant-btn-color-default.ant-btn-variant-outlined.ant-btn-sm.jse-add-root" type="button">
+                    <span class="ant-btn-icon">
+                      <span aria-label="plus" class="anticon.anticon-plus" role="img">
+                        <svg aria-hidden="true" data-icon="plus" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
+                          <path d="SVG_PATH">
+                          <path d="SVG_PATH">
+                    <span>
+                      "添加属性"
+                <div class="jse-tree">
             <div class="ant-col.CSSHASH">
         <h2 class="interface-title">
           "返回数据设置"
@@ -635,8 +632,17 @@ const EXPECTED_EDITFORM_SNAPSHOT = `<div>
                     <div aria-hidden="false" aria-labelledby="rc-tabs-test-tab-tpl" class="ant-tabs-tabpane.ant-tabs-tabpane-active" id="rc-tabs-test-panel-tpl" role="tabpanel" tabindex="0">
               <div>
                 <div class="json-schema-editor-scope" style="display:block">
-                  <div class="stub-json-schema-editor" data-data="">
-                    "STUB_SCHEMA_EDITOR"
+                  <div class="json-schema-editor">
+                    <div class="jse-toolbar">
+                      <button class="ant-btn.CSSHASH.ant-btn-default.ant-btn-color-default.ant-btn-variant-outlined.ant-btn-sm.jse-add-root" type="button">
+                        <span class="ant-btn-icon">
+                          <span aria-label="plus" class="anticon.anticon-plus" role="img">
+                            <svg aria-hidden="true" data-icon="plus" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
+                              <path d="SVG_PATH">
+                              <path d="SVG_PATH">
+                        <span>
+                          "添加属性"
+                    <div class="jse-tree">
                 <div id="mock-preview" style="display:none">
           <div class="ant-row.interface-edit-item.CSSHASH" style="display:none">
             <div class="ant-col.CSSHASH">

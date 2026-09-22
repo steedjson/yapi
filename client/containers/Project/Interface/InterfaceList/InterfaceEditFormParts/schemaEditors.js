@@ -1,20 +1,23 @@
 // @ts-check
 /**
- * InterfaceEditForm 子组件共用模块：json-schema 可视化编辑器单例。
+ * InterfaceEditForm 子组件共用模块：json-schema 可视化编辑器。
  *
- * 原在 InterfaceEditForm.js 模块作用域创建（ResBodySchema / ReqBodySchema 各一次
- * jSchema 调用），抽取后由 RequestParamsSetting / ResponseSetting 共用同一对单例：
- * 创建时机（模块加载期一次）与实例身份（同一次工厂调用的产物）与抽取前一致，
- * 编辑器内部状态不会因拆分为两个子组件而各自重建。
+ * 批次 3（消费方切换）：原 json-schema-editor-visual 工厂单例
+ * （`jSchema({ lang: 'zh_CN', mock: MOCK_SOURCE })` 产出的 ResBodySchema /
+ * ReqBodySchema）切换为自研 JsonSchemaEditor（client/components/JsonSchemaEditor，
+ * antd5 纯栈、零新依赖）。props 契约与旧编辑器一致：
+ *   - data：JSON Schema 字符串（空串 / 非法 JSON / 历史脏数据容错）；
+ *   - onChange：输出 JSON Schema 字符串；
+ *   - isMock：是否显示 mock 列（下拉复用 constants.MOCK_SOURCE），
+ * 故 RequestBodySetting / ResponseSetting 的 JSX 零改动。
  *
- * 说明：内嵌 antd3 全量样式的导入（经 build/json-schema-css-scope-loader.js 前缀化）
- * 保留在 InterfaceEditForm.js 原位置，避免构建期样式导入顺序变化；本模块只负责
- * 工厂调用与单例导出。
+ * 自研组件为纯受控组件（无内部 store），无需保留旧版「同一次工厂调用的单例身份」：
+ * 两个导出同为同一组件引用，各挂载点的编辑器状态天然独立。
+ *
+ * 回退方案：git revert 本提交即整体恢复旧工厂单例——旧依赖 json-schema-editor-visual
+ * 与 InterfaceEditForm.js 的 scoped antd3 css import 均保留至批次 4 才清理，revert 后
+ * 构建与运行即恢复（不在本文件保留注释态旧代码）。
  */
-import { MOCK_SOURCE } from '../../../../../constants/variable.js';
+import JsonSchemaEditor from '../../../../../components/JsonSchemaEditor/index.js';
 
-const jSchema = require('json-schema-editor-visual');
-const ResBodySchema = jSchema({ lang: 'zh_CN', mock: MOCK_SOURCE });
-const ReqBodySchema = jSchema({ lang: 'zh_CN', mock: MOCK_SOURCE });
-
-export { ResBodySchema, ReqBodySchema };
+export { JsonSchemaEditor as ResBodySchema, JsonSchemaEditor as ReqBodySchema };
