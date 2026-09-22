@@ -89,26 +89,23 @@
 
 ## 二、评估后暂缓（含推进路径）
 
-### 1. 构建工具 Webpack5 → Rsbuild（已立项，见 docs/rsbuild-migration-plan.md）
+### 1. 构建工具 Webpack5 → Rsbuild → **已完成**（四阶段全部合并：c9cbb369 / 8068d615 / 9a448877 / 83da75e6）
 
-- 立项计划已产出（2026-09-20，基于构建链事实核查）：分四阶段可执行计划，含产物契约（window.WEBPACK_ASSETS 形状/服务端 .gz 预压缩链）、验证矩阵与回滚预案，见 [docs/rsbuild-migration-plan.md](docs/rsbuild-migration-plan.md)。
-- 关键事实（已核查）：`assets.js` 清单**仅浏览器端消费**（static/index.html document.write 注入，server/app.js 只做静态与预压缩 .gz 服务），迁移面为「构建器替换 + 模板注入改造」，无服务端代码契约。
+- 阶段一~四全部合并：生产构建切换（产物拓扑与 webpack 逐文件对齐，构建 18s+ → 3.2s）、dev 链路替换、分包策略交还工具、webpack 系 13 个 devDeps 清理（audit critical 清零）。
+- 立项计划、产物契约与各阶段实测结果（lib2 +6.59% 唯一回退项、rspack contenthash 16 位、dev-only 行为偏差清单）见 [docs/rsbuild-migration-plan.md](docs/rsbuild-migration-plan.md)。
 
-### 2. 剩余 Class 组件 → Hooks（持续进行；containers 已开工）
+### 2. 剩余 Class 组件 → Hooks → **已完成**（client/ + exts/ 双收官，见「一、第四阶段」表）
 
-- 累计已完成 27 个组件迁移：**components 22 个**（GuideBtns、Breadcrumb、Loading、Footer、ErrMsg、Notify、Label、Subnav、MyPopConfirm、ProjectCard、TimeLine、Header、Search、Intro、MockDoc、UsernameAutoComplete、CaseEnv、EasyDragSort、ModalPostman/index、MockList、MethodsList、VariablesSelect）+ **containers 首批 5 个**（GroupLog、LoginContainer、User/User、Activity、NewsList，commit 4b810d53），消灭了全部 UNSAFE_ 生命周期与 `ReactDOM.findDOMNode`/字符串 ref 废弃 API。
-- 目前 `client/components/` 下仅存 4 个业务类组件（`Postman.js`, `SchemaTable.js`, `AceEditor.js`, `AuthenticatedComponent.js`，注：`ErrorBoundary.js` 按 React 18 规范必须保持为类组件）；`client/containers/` 下 38 个类组件中已迁移 5 个，**剩 33 个**（含 InterfaceColContent 1224 行、InterfaceMenu 931 行等大件）。
-- **containers 测试基建已建立**（commit 4b810d53）：`test/helpers/containers.js`（makeStore / renderWithProviders（Provider+MemoryRouter，复刻 Application.js 挂载语义）/ flushEffects / stubDefaultExport / cleanupDom），可支撑后续批次；containers 测试覆盖从 0 → 12 用例。
-- 迁移范式（本批确立并复用）：`@connect` → `useSelector`/`useDispatch`；`this.props.match.params` → `useParams()`（应用 v6 经 [client/withRouter.jsx](client/withRouter.jsx) 兼容层注入，等价性已核验）；类 state → `useState`；未使用的 connect 映射保留为裸 `useSelector` 订阅（先例：ProjectCard）；`propTypes` 改为函数属性赋值。
-- **每批硬要求**：零行为变更（迁移前后同上下文渲染 HTML 逐字节一致）+ 同步补该批组件的测试。
-- 迁移中顺带清理 `core-decorators` 的 `@autobind`（改箭头函数属性）与 `@connect`（改 hooks）。
+- 全仓类组件清零：`client/` 仅存 `ErrorBoundary.js`（React 18 规范要求保持类组件）；`client/containers/` 38 个与 `exts/` 7 个类组件全部迁移完毕（收官批含 Home 等最后 5 个 client 类组件）。
+- 累计消灭全部 UNSAFE_ 生命周期、`ReactDOM.findDOMNode`/字符串 ref 废弃 API 与 `@connect`/`@autobind` 装饰器；`core-decorators` 已无实际 import（仅剩 1 处注释 + `global.d.ts` 声明），待随依赖批移除。
+- containers 测试基建（`test/helpers/containers.js`）与迁移范式（useSelector/useDispatch、useParams 兼容层、函数属性 propTypes）继续适用于后续组件改造。
 
-### 3. TypeScript 健全化（持续进行）
+### 3. TypeScript 健全化（持续进行；存量欠账已清零）
 
-- 现状：`tsconfig.json` 按文件白名单 + `checkJs: false`（**仅有 `// @ts-check` 指令的文件被检查**）。白名单 + 5 个新纳入文件已全量绿，`npm run typecheck` 0 错误。
+- 现状：`tsconfig.json` 按文件白名单 + `checkJs: false`（**仅有 `// @ts-check` 指令的文件被检查**）。白名单覆盖 client/ 129（全部受检文件均带 `// @ts-check`）、exts/ 50、server/ 61、common/ 16 个条目，`npm run typecheck` 0 错误；此前登记的「开启 checkJs 后 containers 1183 / components 550 错误」基线已随 P7d/P8b 收官清零，不再适用。
 - 已完成的现代化：Node API 类型改由显式 `@types/node@^24`（与 .nvmrc 一致）提供，删除了 `global.d.ts` 中手写且与真实类型冲突的 Buffer/process/require/crypto 垫片。
-- 推进路径：每次触碰旧文件顺手加 `// @ts-check` 并清零其错误。**实测剩余工作量基线**（开启 `checkJs` 后的错误数）：`client/containers` 1183、`client/components` 550 等（`server/` 全仓业务代码与全部核心入口、`common/` 全部 14 个模块已全部达成 0 错误受检，受检率达 100%）。
-- 遗留技术细节：① `json5@2` 自带类型只导出 `{parse, stringify}` 无 default，而项目内 CJS/ESM 两种用法并存，故仍保留等价声明——若统一改命名导入即可删除；② `mockjs` 与 `json-schema-editor-visual` 无自带类型，仍需声明；③ `common/lib.js` 的 `Compare*` 三个函数 `@param {*} flag` 尚可收紧为 `boolean`（本次只收紧了 `@returns`）。
+- 推进路径：每次触碰未纳入文件时顺手加 `// @ts-check` + 纳入 include 并清零错误。**当前未纳入清单**：client/ 4 个（`constants/variable.js`、`history.js`、`reducer/modules/reducer.js`、`utils/sanitize.js`）、exts/ 14 个插件入口 `index.js`/`defaultTheme.js`（清单/主题数据文件）。
+- 遗留技术细节：① `json5@2` 自带类型只导出 `{parse, stringify}` 无 default，而项目内 CJS/ESM 两种用法并存，故仍保留等价声明——若统一改命名导入即可删除；② `mockjs` 无自带类型，仍需声明（`json-schema-editor-visual` 已随自研编辑器批次 4 删除，其声明已无消费方）；③ `common/lib.js` 的 `Compare*` 三个函数 `@param {*} flag` 尚可收紧为 `boolean`（本次只收紧了 `@returns`）。
 
 ### 4. 状态管理 Redux+redux-promise → 轻量方案（暂缓）
 
@@ -198,7 +195,7 @@
 
 ### 7. 其他遗留依赖与待审查项
 
-- 停更/弃用：`url@0.11.0`（官方弃用）、`webpack-node-externals@1.6.0`、`rewire@2.5.2`、`core-decorators@0.17.0`（仍有 3 文件使用）、`mockjs 1.0.1-beta3`、`easy-json-schema 0.0.2-beta`、`mime@2`、`compare-versions@3`；`prop-types` 仍被 73 个文件使用（React 18 已非必需）。
+- 停更/弃用：`url@0.11.0`（官方弃用）、`webpack-node-externals@1.6.0`、`rewire@2.5.2`、`core-decorators@0.17.0`（已无实际 import，仅 1 处注释 + `global.d.ts` 声明，待随依赖批移除）、`mockjs 1.0.1-beta3`、`easy-json-schema 0.0.2-beta`、`mime@2`、`compare-versions@3`；`prop-types` 仍被 75 个文件使用（React 18 已非必需）。
 - 7 处 `dangerouslySetInnerHTML`（markdown/HTML 备注渲染链路）建议做一次 XSS 专项审查。
 
 ### 建议优先级（供裁决）
@@ -265,3 +262,4 @@
 | 首屏性能优化批次 1：vendor 拆分 + 懒加载（commit 本次） | 首屏瓶颈：vendor 包 5.6MB（gz 1.7MB），antd5 全量+CodeMirror+recharts+markdown 系+swagger-client(7.6MB)+ajv 系混装——根因是 rspack defaultVendors chunks:'all' 不区分初始/异步引用，插件链与 client/common.js 的同步 import 是重库进首屏的唯一通道 | 使用面侦察先行（库×chunk×首屏必要性矩阵）→ splitChunks 自定义（antd 组 enforce+all priority10 独立初始 chunk、rc-anim 组 enforce+async priority20 抢占）→ 6 处异步化（statistics/wiki/adv-mock React.lazy、import-swagger 动态 import、import-har/postman 运行时动态获取+async 化、mockjs 惰性化 getMockText 改 Promise）| **首屏 gz 1.78MB→0.75MB（-56%，达成 ≤1MB 目标）**；antd chunk raw 2.25MB/gz 603KB 长缓存友好；原 vendor 5.6MB 拆解为 antd 2.25MB+异步共享块 ~4.3MB。3 处 Suspense fallback 与 createAsyncComponent 一致（Loading visible）。tester 补 5 个懒加载链真实渲染用例（statistics/wiki/adv-mock 越过 fallback 断言、import-swagger 等价 deepEqual、add_reducer 同步钉住）。**遗留 Major**：statistics 的懒加载链缺 ErrorBoundary（app_route 注册在顶层 Routes 与 Project 平级，chunk 加载失败整树白屏）——并入批次 2 顺手修；import-har/postman 的 utilsPromise 缓存 rejected promise（失败后需刷新）；getMockText 无单例缓存（无调用方无影响）。门禁（三方独立复跑 + UI 实测）：typecheck 0、lint 0/0、**npm test 923** 全绿冷库、audit:ci 通过、层 A 1194 候选/层 B 23 全绿无漂移 |
 
 | 首屏优化批次 2：brotli 预压缩 + ErrorBoundary 补齐（commit 本次） | 首屏传输仅 gzip 单轨（br 可再省 20%）；statistics 懒加载链缺 ErrorBoundary（chunk 加载失败整树白屏——app_route 注册在顶层 Routes 与 Project 平级唯一无覆盖） | 生成侧 brotliDistFiles（zlib level 11，独立 shouldBrotli ratio≤0.9 不复用 gzip 0.8，阈值 10KB 与 gzip 同档）；服务侧 .br 优先协商（acceptsEncodings RFC 7231 q 值口径，gzip 永远兜底，assets.js no-cache 豁免保持）；三插件 ErrorBoundary>Suspense>Lazy 三层补齐（createAsyncComponent 同构镜像，不导出工厂防打包环）；**顺手收口**：.gz 分支补协商守卫（与 .br 镜像，消除批 1 既有 RFC 偏差） | **br 再省 20.6%**：首屏 776KB(gz)→617KB(br)，antd chunk 603KB(gz)→470KB(br)——**Resource Timing 浏览器实测网络层传输 459KB（decoded 2195KB）**。 tester 入库 prdEncoding.test.js 5 用例（真实 HTTP：br 命中字节级一致/gz 兜底/无配对原样/no-cache 保持/q=0 拒绝）+ errorBoundaryLazyChain 2 用例（ChunkLoadError 兜底渲染实测）。计划外接线（rsbuild-standalone 4 行）经用户裁决批准。阈值 10KB 决策已登记（9095B statistics chunk 未获 .br 损失 2-3KB/次）。双源漂移风险登记：AsyncComponent 工厂建议下沉独立模块（五处统一引用）。门禁（三方独立复跑 + UI 实测）：typecheck 0、lint 0/0、**npm test 933** 全绿冷库、audit:ci 通过 |
+| 首屏优化批次 3：antd5 引入面实测与收缩（commit 90f4b8d0，**结论：不立项**） | 批 1/2 后剩余理论优化空间为 antd chunk 内 svg/icons 体积 | 产物特征统计（antd@*.js 的 svg path/包名频次）+ 引入面 grep 全量核查 | **不立项（无引入浪费）**：v4IconMap 具名导入仅 54 个；chunk 内 1325 个 svg path（~556KB 源码 / gz ~100KB）为「54 + antd 组件内部 ~150 个」的合理构成；45 处 antd import 全部具名、无 barrel 全量引用；rc-* 49 种均为组件本体依赖（tree-shaking 生效）；唯一理论空间 v4IconMap 按需化 gz 收益 <100KB，成本收益比不成立。详见 [docs/first-paint-perf-plan.md](docs/first-paint-perf-plan.md) §3 |
