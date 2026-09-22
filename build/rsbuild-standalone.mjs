@@ -70,14 +70,20 @@ async function main() {
     .map(name => name.replace(/@[0-9a-f]{8,32}\.js$/, ''));
   const assets = rsbuildAssets.writeAssetsJs(distDir, initialChunkNames);
   const gzFiles = rsbuildAssets.gzipDistFiles(distDir);
+  // 批次 2（首屏性能优化）：.gz 旁并列生成 .br（level 11，判定独立 ratio<=0.9），
+  // server/app.js 按 Accept-Encoding 协商、gzip 永远兜底。
+  const brFiles = rsbuildAssets.brotliDistFiles(distDir);
 
   logger.info('Webpack 兼容清单 assets.js 已生成，chunk 键: ' + Object.keys(assets).join(', '));
   logger.info('初始注入顺序（WEBPACK_INITIAL_CHUNKS）: ' + initialChunkNames.join(' -> '));
   logger.info(`已生成 .gz 配对 ${gzFiles.length} 份（>=10KB 且压缩比 <=0.8 才落盘）。`);
-  logger.info('产物清单（字节）：');
+  logger.info(`已生成 .br 配对 ${brFiles.length} 份（>=10KB 且压缩比 <=0.9 才落盘，level 11）。`);
+  logger.info('产物清单（字节，原始行为 raw (gz …) (br …) 双轨传输量）：');
   for (const item of rsbuildAssets.listArtifactReport(distDir)) {
-    const sizeText = item.gzSize !== undefined ? `${item.size} (gz ${item.gzSize})` : `${item.size}`;
-    logger.info(`  ${item.file}  ${sizeText}`);
+    const parts = [`${item.size}`];
+    if (item.gzSize !== undefined) parts.push(`gz ${item.gzSize}`);
+    if (item.brSize !== undefined) parts.push(`br ${item.brSize}`);
+    logger.info(`  ${item.file}  ${parts.join(' / ')}`);
   }
 }
 

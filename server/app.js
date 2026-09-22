@@ -64,7 +64,23 @@ app.use(async (/** @type {any} */ ctx, /** @type {any} */ next) => {
     } else {
       ctx.set('Cache-Control', 'max-age=8640000000');
     }
-    if (yapi.commons.fileExist(yapi.path.join(yapi.WEBROOT, 'static', ctx.path + '.gz'))) {
+    // 首屏性能优化批次 2（docs/first-paint-perf-plan.md）：brotli 优先协商，gzip 兜底。
+    // 判定用 koa 原生 acceptsEncodings（RFC 7231 q 值口径：显式 q=0 拒绝不协商），
+    // 与 koa-static 底层 koa-send 的 br/gzip 分支判定一致。
+    // 顺序：先 .br 后 .gz，.br 不存在或客户端不接受时落入既有 .gz 分支（永远兜底）。
+    if (
+      ctx.acceptsEncodings('br', 'identity') === 'br' &&
+      yapi.commons.fileExist(yapi.path.join(yapi.WEBROOT, 'static', ctx.path + '.br'))
+    ) {
+      ctx.set('Content-Encoding', 'br');
+      // koa-send 按改写后的整个文件名（含 .br 后缀）推断 Content-Type，会得到
+      // application/octet-stream 类错误类型，此处按原始扩展名显式声明（同 .gz 分支）
+      ctx.type = yapi.path.extname(ctx.path).replace('.', '');
+      ctx.path = ctx.path + '.br';
+    } else if (
+      ctx.acceptsEncodings('gzip', 'identity') === 'gzip' &&
+      yapi.commons.fileExist(yapi.path.join(yapi.WEBROOT, 'static', ctx.path + '.gz'))
+    ) {
       ctx.set('Content-Encoding', 'gzip');
       // koa-send 按改写后的整个文件名（含 .gz 后缀）推断 Content-Type，
       // 会返回 application/gzip 导致浏览器拒绝应用样式，此处按原始扩展名显式声明

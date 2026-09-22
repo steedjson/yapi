@@ -400,6 +400,15 @@ declare module 'client/components/Loading/Loading' {
   export default Loading;
 }
 
+// client/components/ErrorBoundary/ErrorBoundary.js 供 exts 插件 client.js 的
+// 懒加载链兜底使用（批次2 M-1 顺手修，与 Application.js createAsyncComponent 同构）；
+// tsconfig 未配置 client/* 的 paths 映射，按最小子集声明。
+declare module 'client/components/ErrorBoundary/ErrorBoundary' {
+  import type { ComponentType, ReactNode } from 'react';
+  const ErrorBoundary: ComponentType<{ children?: ReactNode; fallback?: ReactNode }>;
+  export default ErrorBoundary;
+}
+
 // node-schedule 未内置类型且无对应 @types 包；swagger-auto-sync 插件（P8b）以
 // scheduleJob(cron, fn) / Job.cancel() 形态使用。
 declare module 'node-schedule' {

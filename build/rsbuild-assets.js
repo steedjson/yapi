@@ -54,6 +54,13 @@ const APP_ENTRY_NAME = 'index';
 const GZIP_THRESHOLD = 10240;
 const GZIP_MIN_RATIO = 0.8;
 
+// Brotli 独立判定（首屏性能优化批次 2，docs/first-paint-perf-plan.md）：不复用 gzip 的
+// ratio<=0.8 门槛——brotli 对中等体积文本的有效压缩率曲线与 gzip 不同（gzip 达不到
+// 0.8 体积段 brotli 仍常有 10%+ 增益），沿用 0.8 会误杀该段文件丢收益。阈值维持
+// 10KB 同档：更小的文件预压缩绝对收益（字节）与协商命中后的磁盘占用比不划算。
+const BROTLI_THRESHOLD = 10240;
+const BROTLI_MIN_RATIO = 0.9;
+
 /**
  * 扫描产物目录，按 chunk 名归集 js/css 文件名（裸文件名，无目录前缀）。
  * @param {string} distDir static/prd 绝对路径
@@ -191,6 +198,16 @@ function shouldGzip(size, gzSize) {
 }
 
 /**
+ * Brotli 的 threshold/minRatio 判定（与 gzip 判定相互独立，见 BROTLI_MIN_RATIO 注释）。
+ * @param {number} size 原文件字节数
+ * @param {number} brSize brotli 后字节数
+ * @returns {boolean}
+ */
+function shouldBrotli(size, brSize) {
+  return size >= BROTLI_THRESHOLD && brSize / size <= BROTLI_MIN_RATIO;
+}
+
+/**
  * 为产物目录内全部 js/css 生成 .gz 配对（server/app.js 的静态改写依赖该命名）。
  * @param {string} distDir static/prd 绝对路径
  * @returns {{file: string, size: number, gzSize: number}[]} 生成 .gz 的文件清单
@@ -217,18 +234,59 @@ function gzipDistFiles(distDir) {
 }
 
 /**
+ * 为产物目录内全部 js/css 生成 .br 配对（zlib.brotliCompressSync level 11，零依赖）。
+ * 与 gzipDistFiles 并列、判定独立（BROTLI_MIN_RATIO=0.9 > GZIP_MIN_RATIO=0.8）：
+ * 同一文件允许同时落 .gz 与 .br 双配对，服务端按 Accept-Encoding 协商、gzip 永远兜底。
+ * @param {string} distDir static/prd 绝对路径
+ * @returns {{file: string, size: number, brSize: number}[]} 生成 .br 的文件清单
+ */
+function brotliDistFiles(distDir) {
+  const written = [];
+  for (const name of fs.readdirSync(distDir)) {
+    if (!/\.(js|css)$/.test(name)) {
+      continue;
+    }
+    const fullPath = path.join(distDir, name);
+    const content = fs.readFileSync(fullPath);
+    if (content.length < BROTLI_THRESHOLD) {
+      continue;
+    }
+    const br = zlib.brotliCompressSync(content, { level: 11 });
+    if (!shouldBrotli(content.length, br.length)) {
+      continue;
+    }
+    fs.writeFileSync(fullPath + '.br', br);
+    written.push({ file: name, size: content.length, brSize: br.length });
+  }
+  return written;
+}
+
+/**
  * 产物尺寸报告行（供构建结束打印，与 webpack 版产物对比）。
  * @param {string} distDir static/prd 绝对路径
- * @returns {{file: string, size: number, gzSize?: number}[]}
+ * @returns {{file: string, size: number, gzSize?: number, brSize?: number}[]}
  */
 function listArtifactReport(distDir) {
   return fs
     .readdirSync(distDir)
-    .filter(name => /\.(js|css)(\.gz)?$/.test(name) && !name.endsWith('.LICENSE.txt'))
+    .filter(name => /\.(js|css)(\.(gz|br))?$/.test(name) && !name.endsWith('.LICENSE.txt'))
     .sort()
     .map(name => {
       const size = fs.statSync(path.join(distDir, name)).size;
-      return name.endsWith('.gz') ? { file: name, size, gzSize: size } : { file: name, size };
+      // 原始产物行记录其 gz/br 双轨传输量（配对缺失时字段缺省），压缩产物行只报自身
+      if (!/\.(gz|br)$/.test(name)) {
+        const row = { file: name, size };
+        const gzName = name + '.gz';
+        const brName = name + '.br';
+        if (fs.existsSync(path.join(distDir, gzName))) {
+          row.gzSize = fs.statSync(path.join(distDir, gzName)).size;
+        }
+        if (fs.existsSync(path.join(distDir, brName))) {
+          row.brSize = fs.statSync(path.join(distDir, brName)).size;
+        }
+        return row;
+      }
+      return { file: name, size };
     });
 }
 
@@ -239,12 +297,16 @@ module.exports = {
   APP_ENTRY_NAME,
   GZIP_THRESHOLD,
   GZIP_MIN_RATIO,
+  BROTLI_THRESHOLD,
+  BROTLI_MIN_RATIO,
   collectChunks,
   toAssetKey,
   extractInitialChunkFiles,
   buildWebpackAssets,
   writeAssetsJs,
   shouldGzip,
+  shouldBrotli,
   gzipDistFiles,
+  brotliDistFiles,
   listArtifactReport
 };

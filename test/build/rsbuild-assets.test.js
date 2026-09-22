@@ -2,14 +2,20 @@ import test from 'ava';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
+import crypto from 'crypto';
 
 const {
   CHUNK_FILE_RE,
   ENTRY_ASSET_KEY,
+  BROTLI_MIN_RATIO,
+  BROTLI_THRESHOLD,
   buildWebpackAssets,
+  brotliDistFiles,
   collectChunks,
   extractInitialChunkFiles,
+  listArtifactReport,
   writeAssetsJs,
+  shouldBrotli,
   shouldGzip
 } = require('../../build/rsbuild-assets');
 
@@ -176,6 +182,92 @@ test('collectChunks 同名 chunk 的 js/css 并存不算冲突，正常归集', 
     t.deepEqual(chunks, {
       index: { js: 'index@cccccccccccccccc.js', css: 'index@dddddddddddddddd.css' }
     });
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+// ---- brotli 预压缩（首屏性能优化批次 2，docs/first-paint-perf-plan.md）----
+
+test('shouldBrotli 判定独立于 gzip：阈值同档 10KB，ratio 门槛放宽至 0.9', t => {
+  // 判定面与 gzip 相互独立：门槛常量按批次 2 设计取值（不得复用 gzip 的 0.8）
+  t.is(BROTLI_THRESHOLD, 10240);
+  t.is(BROTLI_MIN_RATIO, 0.9);
+  t.not(BROTLI_MIN_RATIO, 0.8);
+
+  // 小于 10KB 不落盘
+  t.false(shouldBrotli(10239, 1));
+  // gzip 判不达标（ratio 0.8001）而 brotli 判达标的中间段：批次 2 独立门槛的收益面
+  t.false(shouldGzip(20000, 16001));
+  t.true(shouldBrotli(20000, 16001));
+  // ratio 0.9 边界（<= 0.9 视为有效）
+  t.true(shouldBrotli(10240, 9216));
+  // 压缩不达标不落盘
+  t.false(shouldBrotli(10240, 9217));
+});
+
+test('brotliDistFiles 生成 .br 配对，与 .gz 判定独立且产物可解压回原文', t => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'yapi-brotli-'));
+  const zlib = require('zlib');
+  try {
+    // 高重复文本：gzip ratio 0.8001 边界不易稳定构造，改钉独立判定的两个核心面：
+    // (1) 大文件 .br 落盘且满足 ratio<=0.9；(2) gz 未落盘时 brotli 步骤不触碰 .gz。
+    const text = Buffer.from(('s3cret-seed-' + crypto.randomBytes(2).toString('hex') + ' ').repeat(2048));
+    fs.writeFileSync(path.join(dir, 'foo@aaaaaaaaaaaaaaaa.js'), text);
+    fs.writeFileSync(path.join(dir, 'manifest@aaaaaaaaaaaaaaaa.js'), 'small');
+    fs.writeFileSync(path.join(dir, 'bar@aaaaaaaaaaaaaaaa.css'), text);
+
+    const brFiles = brotliDistFiles(dir);
+    const names = brFiles.map(item => item.file).sort();
+    t.deepEqual(names, ['bar@aaaaaaaaaaaaaaaa.css', 'foo@aaaaaaaaaaaaaaaa.js']);
+    for (const item of brFiles) {
+      t.is(item.size, text.length);
+      t.true(item.brSize <= item.size * 0.9, 'brotli 产物应满足 ratio<=0.9');
+      const onDisk = fs.readFileSync(path.join(dir, item.file + '.br'));
+      t.is(item.brSize, onDisk.length);
+      // 配对必须可无损还原（zlib.brotliDecompressSync round-trip）
+      t.true(zlib.brotliDecompressSync(onDisk).equals(text));
+    }
+    // 小文件不产 .br；大文件 .br 落盘时与其同名的 .gz 不被本步骤触碰
+    t.false(fs.existsSync(path.join(dir, 'manifest@aaaaaaaaaaaaaaaa.js.br')));
+    t.false(fs.existsSync(path.join(dir, 'foo@aaaaaaaaaaaaaaaa.js.gz')));
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('listArtifactReport 放行 .br 产物并对原始产物双轨记录 gz/br', t => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'yapi-report-'));
+  const zlib = require('zlib');
+  try {
+    const text = Buffer.from('a'.repeat(20480));
+    fs.writeFileSync(path.join(dir, 'foo@aaaaaaaaaaaaaaaa.js'), text);
+    fs.writeFileSync(
+      path.join(dir, 'foo@aaaaaaaaaaaaaaaa.js.gz'),
+      zlib.gzipSync(text, { level: 9 })
+    );
+    fs.writeFileSync(
+      path.join(dir, 'foo@aaaaaaaaaaaaaaaa.js.br'),
+      zlib.brotliCompressSync(text, { level: 11 })
+    );
+    fs.writeFileSync(path.join(dir, 'bar@aaaaaaaaaaaaaaaa.css'), text);
+    fs.writeFileSync(path.join(dir, 'baz@aaaaaaaaaaaaaaaa.js.LICENSE.txt'), 'sidecar');
+
+    const report = listArtifactReport(dir);
+    const foo = report.find(item => item.file === 'foo@aaaaaaaaaaaaaaaa.js');
+    t.truthy(foo, '原始 js 产物必须在报告中');
+    t.is(foo.size, 20480);
+    t.true(foo.gzSize > 0, '原始产物行应双轨记录 gz 传输量');
+    t.true(foo.brSize > 0, '原始产物行应双轨记录 br 传输量');
+    // .gz 与 .br 压缩产物各自成行（filter 放行 .br，LICENSE sidecar 仍被排除）
+    t.truthy(report.find(item => item.file === 'foo@aaaaaaaaaaaaaaaa.js.gz'));
+    t.truthy(report.find(item => item.file === 'foo@aaaaaaaaaaaaaaaa.js.br'));
+    t.falsy(report.find(item => item.file === 'baz@aaaaaaaaaaaaaaaa.js.LICENSE.txt'));
+    // 无配对的产物行不虚报 gz/br 字段
+    const bar = report.find(item => item.file === 'bar@aaaaaaaaaaaaaaaa.css');
+    t.is(bar.size, 20480);
+    t.falsy('gzSize' in bar);
+    t.falsy('brSize' in bar);
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }

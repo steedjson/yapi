@@ -26,7 +26,7 @@
 
 ## 2. 批次 2：brotli 预压缩
 
-- `build/rsbuild-assets.js` 的 gzip 步骤扩展 brotli（node zlib 内置 brotli，零依赖）；
+- `build/rsbuild-assets.js` 的 gzip 步骤扩展 brotli（node zlib 内置 brotli，零依赖）；阈值决策：size≥10KB（与 gzip 同档，保守——9095B 的 statistics chunk 因此未获 .br，损失 2-3KB/次，换取压缩开销比合理）；
 - `server/app.js` 静态中间件：Accept-Encoding 含 br 时优先 `.br`（比 gzip 再省 15-20%）；
 - assets.js 不受影响（清单只记原始文件名）。
 
