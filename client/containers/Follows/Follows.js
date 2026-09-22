@@ -1,10 +1,11 @@
 // @ts-check
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import './Follows.scss';
 import PropTypes from 'prop-types';
 import { useDispatch, useSelector } from 'react-redux';
 import { Row, Col } from 'antd';
-import { getFollowList } from '../../reducer/modules/follow';
+// 关注列表数据源已迁至 Zustand（试点），面包屑仍走 Redux（user 模块未迁移）
+import useFollowStore from '../../store/followStore';
 import { setBreadcrumb } from '../../reducer/modules/user';
 import ProjectCard from '../../components/ProjectCard/ProjectCard.js';
 import ErrMsg from '../../components/ErrMsg/ErrMsg.js';
@@ -12,18 +13,16 @@ import ErrMsg from '../../components/ErrMsg/ErrMsg.js';
 const Follows = () => {
   const dispatch = useDispatch();
   const uid = useSelector(state => state.user.uid);
-  const [data, setData] = useState(/** @type {any[]} */ ([]));
+  // zustand 经 JS 推断的 store 类型是有损的，显式收窄 data 以保住回调的上下文类型
+  const data = /** @type {any[]} */ (useFollowStore(state => state.data));
+  const getFollowList = useFollowStore(state => state.getFollowList);
 
   // 用 ref 始终指向最新值，异步回调读取语义与旧类组件 this.props 一致
   const latestRef = useRef({});
   latestRef.current = { uid };
 
   function fetchList() {
-    return dispatch(getFollowList(latestRef.current.uid)).then((/** @type {any} */ res) => {
-      if (res.payload.data.errcode === 0) {
-        setData(res.payload.data.data.list);
-      }
-    });
+    return getFollowList(latestRef.current.uid);
   }
 
   // 供 ProjectCard 回调：关注状态变化后重新拉取列表
@@ -37,7 +36,8 @@ const Follows = () => {
     fetchList();
   }, []);
 
-  let listData = data;
+  // data 为 store 状态数组，排序前须拷贝，严禁原地 sort 变更 store
+  let listData = data.slice();
   listData = listData.sort((a, b) => {
     return b.up_time - a.up_time;
   });
