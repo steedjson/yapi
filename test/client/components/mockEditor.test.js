@@ -595,3 +595,49 @@ test.serial('l) editor.clearSelection 把非空选区折叠到原 head, 且不�
   t.is(editor.editor.getCursorIndex(), 2, '重复调用 clearSelection 不应移动光标');
   t.is(editor.getValue(), before, '重复调用 clearSelection 不应改变文档');
 });
+
+// ---------- F9 全屏与 wordList 补全（TECH_DEBT 登记的覆盖空白） ----------
+
+const { startCompletion } = require('@codemirror/autocomplete');
+
+function pressF9(view) {
+  view.contentDOM.dispatchEvent(
+    new KeyboardEvent('keydown', { key: 'F9', code: 'F9', bubbles: true, cancelable: true })
+  );
+}
+
+test.serial('F9 全屏：声明 fullScreen 的编辑器按键切换 body/挂载节点 fullScreen 类', t => {
+  const { container, editor } = createEditor({ fullScreen: true });
+
+  pressF9(editor.editor.view);
+  t.true(document.body.classList.contains('fullScreen'), '首次 F9 进入全屏');
+  t.true(container.classList.contains('fullScreen'), '挂载节点同步 fullScreen 类');
+
+  pressF9(editor.editor.view);
+  t.false(document.body.classList.contains('fullScreen'), '再次 F9 退出全屏');
+  t.false(container.classList.contains('fullScreen'), '挂载节点同步移除 fullScreen 类');
+});
+
+test.serial('F9 全屏：未声明 fullScreen 的编辑器按键不生效', t => {
+  const { container, editor } = createEditor();
+
+  pressF9(editor.editor.view);
+
+  t.false(document.body.classList.contains('fullScreen'), '默认编辑器不响应 F9');
+  t.false(container.classList.contains('fullScreen'));
+});
+
+test.serial('wordList 选项：@ 触发补全列出注入的 mock 字段（name 作 detail）', async t => {
+  const { editor } = createEditor({ wordList: { name: 'WORDLIST_NAME', mock: '@mockFieldX' } });
+
+  editor.setValue('@');
+  const view = editor.editor.view;
+  view.dispatch({ selection: { anchor: view.state.doc.length } });
+  startCompletion(view);
+  await new Promise(resolve => setTimeout(resolve, 50));
+
+  const tooltip = document.querySelector('.cm-tooltip-autocomplete');
+  t.truthy(tooltip, '应弹出补全面板');
+  t.regex(tooltip.textContent, /@mockFieldX/, '注入的 mock 值（含 @ 前缀，与内置词表约定一致）应出现在补全列表');
+  t.regex(tooltip.textContent, /WORDLIST_NAME/, 'name 作为 detail 展示');
+});

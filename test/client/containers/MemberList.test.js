@@ -131,3 +131,36 @@ test.serial('非管理员视角仅展示角色文案且无添加成员入口', a
     '非管理员不应有「添加成员」入口'
   );
 });
+
+test.serial('分组切换: currGroup 变化触发成员列表重拉（先成员列表后分组信息）', async t => {
+  const logRequests = [];
+  mockGroupApis(logRequests, 'owner');
+  const reducer = (state, action) => {
+    if (action.type === 'TEST/SET_GROUP') {
+      return Object.assign({}, state, {
+        group: Object.assign({}, state.group, { currGroup: action.payload })
+      });
+    }
+    return state;
+  };
+  const utils = renderWithProviders(React.createElement(MemberList), {
+    seedState: seedState(),
+    reducer
+  });
+  await flushEffects();
+  t.is(
+    logRequests.filter(req => req.url === '/api/group/get_member_list').length,
+    1,
+    '挂载期拉取一次成员列表'
+  );
+
+  utils.store.dispatch({ type: 'TEST/SET_GROUP', payload: { _id: 72, group_name: '新分组' } });
+  await flushEffects();
+
+  const memberCalls = logRequests.filter(req => req.url === '/api/group/get_member_list');
+  t.is(memberCalls.length, 2, '分组变化后应再次拉取成员列表');
+  t.is(memberCalls[1].params.id, 72, '第二次拉取应使用新分组 id');
+  const groupCalls = logRequests.filter(req => req.url === '/api/group/get');
+  t.is(groupCalls.length, 2, '分组切换分支同样重拉分组信息');
+  t.is(groupCalls[1].params.id, 72);
+});

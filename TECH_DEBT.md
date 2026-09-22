@@ -118,10 +118,10 @@
 ## 三、遗留观察项（MINOR，不阻塞）
 
 - **构建产物与提交策略**：`static/prd/` 受 Git 跟踪且构建会清空重建。纯注解/配置类改动**不必提交产物**（评审实测：其编译结果与已提交产物的编译结果逐字节相同），否则产生 ~19-33 条文件级噪声 diff；但仓库存在相反先例（`8d8ee461` 提交过产物），若发布流程要求产物始终对应一次全新构建，应另开 `chore(build)` 提交。
-- **测试缺口（存量）**：`common/HandleImportData.js` 缺少 3 处 axios 异常 catch 分支、`dataSync !== 'normal'` 分支及 BasePath 更新分支测试。
+- ~~**测试缺口（存量）**：`common/HandleImportData.js` 缺少 3 处 axios 异常 catch 分支、`dataSync !== 'normal'` 分支及 BasePath 更新分支测试。~~ → **已补（测试缺口批，5 用例）**。
 - `common/utils.js` 的 `schemaValidator` catch 分支声明 `message: string`，但抛出非 Error 时实为 `undefined`（已在源码注释说明；收紧需改运行时，未做）。
 - `common/lib.js` 的 `Compare*` 三个函数 `@param {*} flag` 尚可收紧为 `boolean`（本批只收紧了 `@returns`，`return flag` 一句因 `flag` 为 `*` 仍不受检）。
-- 测试覆盖仍有空白（评审实测存活变异点）：`mockEditor` 的 `wordList` 与 F9 全屏交互、`fullScreen` 选项。
+- ~~测试覆盖仍有空白（评审实测存活变异点）：`mockEditor` 的 `wordList` 与 F9 全屏交互、`fullScreen` 选项。~~ → **已补（测试缺口批，3 用例）**。
 - `MarkdownEditor` 的 `value` 为「仅初始值」语义（已由测试钉死，依据调用方 `InterfaceContent.js:173-174` 的 `key={actionId}` 重挂载）。但 **wiki 插件调用方**（`exts/yapi-plugin-wiki/wikiPage/Editor.js:32` 的 `value={desc}`）存在挂载后 prop 变更路径（websocket 冲突消息、上传后写 desc），这些场景编辑区不跟随更新，需浏览器验证后决定是否补 prop 同步。
 - 新增测试文件存在超 100 列行（约 11 行/文件，高于既有测试基线），仓库无 format 门禁；修正时**勿**运行 `prettier --write`（会把 `function(` 改成 `function (`，与仓库主流风格相反）。
 - `mockEditor.js` 模块级 wordList 多实例累积重复项 —— 忠实移植的既有瑕疵。
@@ -132,7 +132,7 @@
 - old 兼容：`add`/`resetPassword` 生成 legacy 密码格式（首次登录自动升级）—— 如后续可改既有测试，可一并 scrypt 化。
 - 沙箱进程池边界收窄观察项：常驻 Worker 下恶意脚本可篡改注入的 assert/Random 模块对象（影响同 Worker 后续任务直至 1000 次轮换）；任务队列无背压上限；context 不可序列化时误判为崩溃换 Worker —— 均为低风险设计取舍，知悉即可。
 - ~~**NewsList 既有缺陷**~~ → **已修复（commit 本次）**：扩展属性收敛至 meta，遵循标准 FSA，dispatch 返回真实 Promise，loading 状态正常经历 [true, false] 复位，对应单测断言已更新。
-- **containers 迁移批次的跟踪项（来自 commit 4b810d53 评审）**：① 本批 5 个迁移文件中 4 个（GroupLog/Activity/NewsList/User）原不在 tsconfig 白名单——**GroupLog/User 已随 P7b 纳入，Activity/NewsList 仍不在**（白名单策略现状，风险低）；② `test/helpers/containers.js` 的 `makeStore` 对非 FSA action 会重复记录 2 次（当前断言不受影响）；③ `flushEffects` 的 15ms 固定等待在当前用例下确定，但对接真实定时器桩时会脆弱；④ helper 暂不支持 `navigate` 跳转辅助与活 store 更新驱动断言。
+- **containers 迁移批次的跟踪项（来自 commit 4b810d53 评审）**：① 本批 5 个迁移文件中 4 个（GroupLog/Activity/NewsList/User）原不在 tsconfig 白名单——**GroupLog/User 已随 P7b 纳入，Activity/NewsList 仍不在**（白名单策略现状，风险低）；② `test/helpers/containers.js` 的 `makeStore` 对非 FSA action 会重复记录 2 次（当前断言不受影响）；③ `flushEffects` 的 15ms 固定等待在当前用例下确定，但对接真实定时器桩时会脆弱；④ ~~helper 暂不支持 `navigate` 跳转辅助与活 store 更新驱动断言~~ → **已补（测试缺口批：renderWithProviders 新增 navigate + reducer 选项）**。
 - **本机环境备注**：`config.json` 指向 27018（mongo:8.0 容器，2026-09-22 实测运行中）；本地全量测试需要 DB——若容器未启动，5 个连库测试（dbReady×3、startupTasks×2）会因 mongoose 选主 30s > AVA 超时而 pending；CI 自带 mongo service 不受影响。
 - ~~`npm test` 偶发 unhandled rejection（teardown 与在途 DB 操作竞态）~~ → **已根治（commit 0d3944c1）**：`connect()` 就绪语义现覆盖全部启动期 DB 工作（核心索引 + 插件索引 + 计数器索引与初始化，串行），冷库 17 次启动零复现。**残余观察项（不阻塞，多进程形态才可命中）**：① 多 worker 共享冷库时，计数器初始化竞争败者进程的插件闭包 `ready` 保持 false，其后续对该模型的 save 会进入 5ms 重试循环（旧实现同位置同样如此，且旧实现还伴随数据损坏 + 索引坏死）；② 脏库若已被旧缺陷写入重复计数器文档，唯一索引任务每次启动会失败日志一次（不阻塞、不加重损坏），需一次性清洗脚本；③ `drainStartupTasks` 无单任务超时保护（依赖驱动 socket 超时兜底）；④ `dbReady.test.js` 的"索引缺失"断言在热库上效力弱化（CI 冷库形态不受影响）。
 
@@ -176,7 +176,7 @@
 ### 4. 测试盲区：containers 零覆盖 → **已完成**
 
 - 原状：66 个测试文件中 0 个覆盖 `client/containers/`。现 containers 测试已成体系（容器级 DOM 快照门禁 + 组件用例，见「一、第四阶段」render 子组件化批次 1–3 与 Hooks 迁移各批）。
-- 剩余覆盖缺口（见「三、遗留观察项」）：Project id 变化重拉、ProjectList/MemberList 切组重拉、3 个弹窗契约（AutoTestModal 优先）。
+- ~~剩余覆盖缺口：Project id 变化重拉、ProjectList/MemberList 切组重拉、3 个弹窗契约（AutoTestModal 优先）~~ → **已补（测试缺口批）**：Project/ProjectList/MemberList 重拉 ×3 + AutoTestModal 契约 ×5；剩余 CaseReportModal/CaseScriptModal 契约（后者入口自上游 fork 起不可达，随产品决策）。
 
 ### 5. exts/ 插件完全未现代化 → **已完成**
 
@@ -263,3 +263,4 @@
 | 首屏优化批次 2：brotli 预压缩 + ErrorBoundary 补齐（commit 本次） | 首屏传输仅 gzip 单轨（br 可再省 20%）；statistics 懒加载链缺 ErrorBoundary（chunk 加载失败整树白屏——app_route 注册在顶层 Routes 与 Project 平级唯一无覆盖） | 生成侧 brotliDistFiles（zlib level 11，独立 shouldBrotli ratio≤0.9 不复用 gzip 0.8，阈值 10KB 与 gzip 同档）；服务侧 .br 优先协商（acceptsEncodings RFC 7231 q 值口径，gzip 永远兜底，assets.js no-cache 豁免保持）；三插件 ErrorBoundary>Suspense>Lazy 三层补齐（createAsyncComponent 同构镜像，不导出工厂防打包环）；**顺手收口**：.gz 分支补协商守卫（与 .br 镜像，消除批 1 既有 RFC 偏差） | **br 再省 20.6%**：首屏 776KB(gz)→617KB(br)，antd chunk 603KB(gz)→470KB(br)——**Resource Timing 浏览器实测网络层传输 459KB（decoded 2195KB）**。 tester 入库 prdEncoding.test.js 5 用例（真实 HTTP：br 命中字节级一致/gz 兜底/无配对原样/no-cache 保持/q=0 拒绝）+ errorBoundaryLazyChain 2 用例（ChunkLoadError 兜底渲染实测）。计划外接线（rsbuild-standalone 4 行）经用户裁决批准。阈值 10KB 决策已登记（9095B statistics chunk 未获 .br 损失 2-3KB/次）。双源漂移风险登记：AsyncComponent 工厂建议下沉独立模块（五处统一引用）。门禁（三方独立复跑 + UI 实测）：typecheck 0、lint 0/0、**npm test 933** 全绿冷库、audit:ci 通过 |
 | 首屏优化批次 3：antd5 引入面实测与收缩（commit 90f4b8d0，**结论：不立项**） | 批 1/2 后剩余理论优化空间为 antd chunk 内 svg/icons 体积 | 产物特征统计（antd@*.js 的 svg path/包名频次）+ 引入面 grep 全量核查 | **不立项（无引入浪费）**：v4IconMap 具名导入仅 54 个；chunk 内 1325 个 svg path（~556KB 源码 / gz ~100KB）为「54 + antd 组件内部 ~150 个」的合理构成；45 处 antd import 全部具名、无 barrel 全量引用；rc-* 49 种均为组件本体依赖（tree-shaking 生效）；唯一理论空间 v4IconMap 按需化 gz 收益 <100KB，成本收益比不成立。详见 [docs/first-paint-perf-plan.md](docs/first-paint-perf-plan.md) §3 |
 | 缺陷打捞批：可达缺陷修复 + 回归测试（commit 本次） | 台账在册缺陷中「可达且有明确正确行为」的一组：① patchState(fn) 空操作致集合通用配置永不合并（弹窗恒显默认值，点确定会用默认值覆盖服务端配置）；② 脚本开关切换丢失 checkScript.content；③ antd5 升级批把 MockCol→CaseDesModal 外部 prop 误改 open=（组件读 visible，弹窗永不显示）；④ InterfaceEditForm 缺 method 时 initState/渲染多处 HTTP_METHOD[...].request_body 崩溃（含 formDefaults 小写兜底键不存在 + 默认 method 'get' 与常量表大写键不一致） | patchState 支持函数式更新（对象片段语义不变）；CommonSettingModal 开关展开全片段 + checkScript/checkResponseField 结构缺失兜底；MockCol 回改 visible=；formDefaults 方法名归一化 + 默认 'GET' + 组件侧守卫；清理 InterfaceColContent 遗留 console.log | 新增 4 测试（容器级 colData 合并回显、开关保 content、结构缺失兜底、缺 method 渲染、MockCol 弹窗打开）；门禁：lint 0/0、typecheck 0、**npm test 937** 全绿冷库、build-client 成功（adv-mock/project 产物重建）。仍在册（需产品决策/低价值）：拖拽 index 竞态、CaseScriptModal 不可达、taskId 时序、Postman aceEditorRef、wiki endWebSocket 静默吞、statistics 拼写、MockCol saveFormRef |
+| 测试缺口批：路由重拉/分组切换/弹窗契约/导入异常/编辑器交互（commit 本次） | 台账在册测试缺口：HandleImportData 3 处 axios 异常 + dataSync 分支 + BasePath 分支；Project id 变化重拉与 ProjectList/MemberList 切组重拉（缺路由内导航与活 store 驱动）；AutoTestModal 契约（3 弹窗优先项）；mockEditor wordList/F9/fullScreen | 测试基建：renderWithProviders 新增 `utils.navigate(to)`（NavigationCapture 捕获 useNavigate）与 `opts.reducer`（活 store 更新驱动），makeStore 支持自定义 reducer；新增 16 用例：HandleImportData ×5、AutoTestModal 契约 ×5、mockEditor F9/wordList ×3、Project id 变化 ×1、ProjectList 切组 ×1、MemberList 切组 ×1 | 门禁：lint 0/0、typecheck 0、**npm test 953** 全绿冷库；无生产代码改动（纯测试/基建）。仍在册：wiki Editor value prop 同步（需浏览器验证后决定）、CaseReportModal/CaseScriptModal 契约（后者入口不可达） |

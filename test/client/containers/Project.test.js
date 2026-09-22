@@ -161,3 +161,45 @@ test.serial('项目未就绪: currProject 为空时渲染全局 Loading', async 
   t.truthy(container.querySelector('.loading-box'), '项目未就绪应渲染 Loading');
   t.is(container.querySelector('[data-stub]'), null, '未就绪时不应渲染子路由内容');
 });
+
+test.serial('项目 id 变化: 路由内导航触发重拉（对应旧 cWRP 分支）', async t => {
+  const projectCalls = [];
+  axios.get = url => {
+    if (url.indexOf('/api/project/get') === 0) {
+      projectCalls.push(url);
+      return Promise.resolve({ data: { errcode: 0, data: CURR_PROJECT } });
+    }
+    if (url.indexOf('/api/group/get') === 0) {
+      return Promise.resolve({ data: { errcode: 0, data: { _id: 1, group_name: '分组一' } } });
+    }
+    return Promise.resolve({ data: { errcode: 0, data: {} } });
+  };
+  const utils = renderWithProviders(React.createElement(Project), {
+    routePath: '/project/:id/*',
+    initialPath: '/project/12/interface/api/lists',
+    seedState: makeSeed({ _id: 1, group_name: '分组一', type: 'public', role: 'owner' })
+  });
+  await flushEffects();
+  t.is(
+    utils.dispatched.filter(a => a.type === 'yapi/project/GET_CURR_PROJECT').length,
+    1,
+    '挂载期拉取一次'
+  );
+
+  utils.navigate('/project/13/interface/api/lists');
+  await flushEffects();
+
+  t.is(
+    utils.dispatched.filter(a => a.type === 'yapi/project/GET_CURR_PROJECT').length,
+    2,
+    'id 变化后应再次拉取（旧 cWRP 分支）'
+  );
+  t.true(
+    projectCalls.some(url => url.indexOf('id=13') > -1),
+    '第二次拉取应使用新 id，实际: ' + projectCalls.join(',')
+  );
+  t.truthy(
+    utils.container.querySelector('[data-stub="INTERFACE"]'),
+    '导航后子路由仍正常分发'
+  );
+});

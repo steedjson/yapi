@@ -149,3 +149,38 @@ test.serial('无权限成员: 添加项目按钮禁用并有 Tooltip 提示', as
   t.truthy(addBtn, '应渲染添加项目按钮');
   t.is(addBtn.disabled, true, '无权限时按钮应禁用');
 });
+
+test.serial('分组切换: currGroup 变化触发重拉（对应旧 cWRP 分支）', async t => {
+  const listCalls = [];
+  axios.get = (url, config) => {
+    if (url.indexOf('/api/project/list') === 0) {
+      listCalls.push(config && config.params ? config.params.group_id : null);
+      return Promise.resolve({ data: { errcode: 0, data: { list: [], total: 0 } } });
+    }
+    return Promise.resolve({ data: { errcode: 0, data: {} } });
+  };
+  const reducer = (state, action) => {
+    if (action.type === 'TEST/SET_GROUP') {
+      return Object.assign({}, state, {
+        group: Object.assign({}, state.group, { currGroup: action.payload })
+      });
+    }
+    return state;
+  };
+  const utils = renderWithProviders(React.createElement(ProjectList), {
+    seedState: makeSeed(),
+    reducer
+  });
+  await flushEffects();
+  t.is(listCalls.length, 1, '挂载期以当前分组拉取一次');
+  t.is(listCalls[0], 1);
+
+  utils.store.dispatch({
+    type: 'TEST/SET_GROUP',
+    payload: { _id: 2, group_name: '分组二', type: 'private', role: 'owner' }
+  });
+  await flushEffects();
+
+  t.is(listCalls.length, 2, '分组变化后应再次拉取');
+  t.is(listCalls[1], 2, '第二次拉取应使用新分组 id');
+});
