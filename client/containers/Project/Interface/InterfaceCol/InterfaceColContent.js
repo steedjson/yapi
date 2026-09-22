@@ -525,7 +525,9 @@ const InterfaceColContent = () => {
   const onDrop = () => {
     /** @type {any[]} */
     const changes = [];
-    state.rows.forEach((/** @type {any} */ item, /** @type {number} */ index) => {
+    // 读 rowsRef（setRows 同步镜像）而非渲染期 state.rows：
+    // pointerup 先于重排 render 提交时，state.rows 仍为旧序，会持久化错误的 index（缺陷打捞）
+    rowsRef.current.forEach((/** @type {any} */ item, /** @type {number} */ index) => {
       changes.push({ id: item._id, index: index });
     });
     axios.post('/api/col/up_case_index', changes).then(() => {
@@ -541,7 +543,8 @@ const InterfaceColContent = () => {
     if (!over || active.id === over.id) {
       return;
     }
-    const rows = state.rows;
+    // 读 rowsRef：连续 dragOver 事件在渲染提交前依次累积，避免后续事件基于旧序覆盖前次换位
+    const rows = rowsRef.current;
     const oldIndex = rows.findIndex((/** @type {any} */ item) => item.id === active.id);
     const newIndex = rows.findIndex((/** @type {any} */ item) => item.id === over.id);
     if (oldIndex === -1 || newIndex === -1) {

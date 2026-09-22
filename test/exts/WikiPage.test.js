@@ -68,7 +68,7 @@ test.serial('wiki WebSocket 降级路径：连接未建立时点击编辑仍可�
   cleanupDom();
 });
 
-test.serial('wiki 编辑提交路径：errno=0 推送切入编辑态，取消后发送 end（无 callback 的静默吞错路径）', async t => {
+test.serial('wiki 编辑提交路径：errno=0 推送切入编辑态，取消后发送 end（无 callback 的 end 发送路径）', async t => {
   FakeWebSocket.reset();
   axiosMock.setRoutes([
     { match: '/api/plugin/wiki_desc/get', respond: () => ({ errcode: 0, data: WIKI_DATA }) }
@@ -86,8 +86,9 @@ test.serial('wiki 编辑提交路径：errno=0 推送切入编辑态，取消后
   await flushEffects(30);
   t.truthy(findButton(container, '更新'));
 
-  // 点击取消：endWebSocket 在 status='CLOSE' 下发送 'end'；其内部无 callback
-  // 的调用必然抛 TypeError，被外层 try/catch 静默吞掉——此处钉住该遗留行为
+  // 点击取消：endWebSocket 在 status='CLOSE' 下发送 'end'；F 批已为
+  // handleWebsocketAccidentClose 补 callback 存在性守卫（旧实现在此处抛 TypeError
+  // 并被外层 try/catch 静默吞掉），对外行为不变——'end' 仍发出、连接不关闭
   fireEvent.click(findButton(container, '取消'));
   await flushEffects(30);
 

@@ -148,9 +148,11 @@ const WikiPage = () => {
       } else {
         fn();
       }
-      (/** @type {any} */ (callback))(true);
+      // 缺陷打捞：endWebSocket 等调用点不传 callback，旧实现直接调用会抛 TypeError
+      // 并被外层 try/catch 静默吞掉（控制台噪声）；改为存在性守卫，对外行为不变
+      if (typeof callback === 'function') callback(true);
     } else {
-      (/** @type {any} */ (callback))(false);
+      if (typeof callback === 'function') callback(false);
     }
   };
 

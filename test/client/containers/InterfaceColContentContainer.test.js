@@ -557,3 +557,33 @@ test.serial('通用规则配置：集合 colData 合并进 commonSetting 并在�
     '开关状态应回显集合 colData（默认 state 全 false）'
   );
 });
+test.serial('拖拽竞态：pointerup 先于重排提交时按最新顺序上送（同一闭包 dragOver→dragEnd）', async t => {
+  const utils = await renderContainer();
+  t.deepEqual(rowKeysOf(utils.container), ['case-1', 'case-2', 'case-3'], '前置条件：初始顺序');
+
+  // 同一渲染闭包内连续触发 dragOver → dragEnd（模拟 pointerup 先于重排 render 提交）：
+  // 旧实现 onDrop 读渲染期 state.rows（仍为初始序）会持久化旧顺序
+  const dnd = capturedDnd.current;
+  await act(async () => {
+    dnd.onDragOver({ active: { id: 'case-1' }, over: { id: 'case-3' } });
+    dnd.onDragEnd({ active: { id: 'case-1' }, over: { id: 'case-3' } });
+    await new Promise(resolve => setTimeout(resolve, 30));
+  });
+
+  const posts = CALLS.filter(c => c[0] === 'POST' && c[1] === '/api/col/up_case_index');
+  t.is(posts.length, 1, '松手应恰好上送一次顺序接口');
+  t.deepEqual(
+    JSON.parse(posts[0][2]),
+    [
+      { id: 'case-2', index: 0 },
+      { id: 'case-3', index: 1 },
+      { id: 'case-1', index: 2 }
+    ],
+    'POST 载荷应为换位后的最新顺序（旧实现为渲染期旧序 case-1/2/3）'
+  );
+  t.deepEqual(
+    rowKeysOf(utils.container),
+    ['case-2', 'case-3', 'case-1'],
+    '重排最终仍应渲染为新顺序'
+  );
+});
