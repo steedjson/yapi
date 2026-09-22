@@ -1,5 +1,5 @@
 // InterfaceColContent 子组件 CommonSettingModal（通用规则配置弹窗）单测：
-// 受控渲染 + 编辑动作回调上抛（含抽取时刻意保留的 checkScript 展开行为）。
+// 受控渲染 + 编辑动作回调上抛（含缺陷打捞后的 checkScript 全片段展开与结构缺失兜底）。
 // jsdom 环境必须在任何生产代码之前装载
 import '../../helpers/jsdom-setup';
 import test from 'ava';
@@ -191,7 +191,7 @@ test.serial('回调上抛：字段名/值输入框上抛嵌套片段', t => {
   );
 });
 
-test.serial('回调上抛（刻意保留的既有行为）：脚本开关片段只含 enable，不携带 content', t => {
+test.serial('回调上抛（缺陷打捞修复）：脚本开关片段保留 content，不清空编辑器内容', t => {
   const { calls } = renderModal({
     commonSetting: {
       checkHttpCodeIs200: false,
@@ -205,8 +205,8 @@ test.serial('回调上抛（刻意保留的既有行为）：脚本开关片段�
 
   t.deepEqual(
     calls,
-    [{ checkScript: { enable: true } }],
-    '抽取前该 handler 展开的是顶层 state.checkScript（不存在），content 随之丢失，本批次按原样保留'
+    [{ checkScript: { enable: true, content: 'assert.equal(status, 200)' } }],
+    '开关切换展开 commonSetting.checkScript 全片段（原实现展开不存在的 state.checkScript，content 丢失）'
   );
 });
 
@@ -245,4 +245,21 @@ test.serial('回调上抛：弹窗确定/取消按钮分别触发 onOk / onCance
   fireEvent.click(cancel);
 
   t.deepEqual(calls, [['ok'], ['cancel']], '两个按钮各自回调一次');
+});
+
+test.serial('结构缺失兜底：commonSetting 缺 checkScript / checkResponseField 时渲染默认值且不崩溃', t => {
+  renderModal({
+    commonSetting: {
+      checkHttpCodeIs200: false,
+      checkResponseSchema: false
+    }
+  });
+
+  const sws = switches();
+  t.is(sws.length, 4, '缺结构时四项开关仍渲染');
+  t.is(sws[3].getAttribute('aria-checked'), 'false', '脚本开关回退默认关闭');
+  const ins = inputs();
+  t.is(ins.length, 2, '字段名/值输入框仍渲染');
+  t.is(ins[0].value, '', '字段名回退默认空串');
+  t.is(ins[1].value, '', '字段值回退默认空串');
 });

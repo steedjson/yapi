@@ -2,7 +2,8 @@
 //   ① 整容器 DOM 树快照门禁（含 CaseTable 内部结构，任何多包一层 div 都检出）；
 //   ② 用例行渲染集（顺序 / 截断 / 报告按钮归属）；
 //   ③ onDragOver 重排 → onDragEnd → POST /api/col/up_case_index 载荷链路；
-//   ④ openReport → CaseReportModal 打开链路（body portal）。
+//   ④ openReport → CaseReportModal 打开链路（body portal）；
+//   ⑤ 通用规则配置弹窗：colData 合并回显（patchState 函数式更新回归门禁）。
 //
 // 为什么需要本文件：render 子组件化批次的「DOM 字节等价」门禁依赖抽取前的旧文件
 // （git worktree @ ff2d426c），旧文件在合并后消失、门禁随之失效——当时唯一能检出
@@ -40,6 +41,24 @@ Module._resolveFilename = function(request, parent, isMain, options) {
   }
   return originalResolveFilename.call(this, request, parent, isMain, options);
 };
+
+// ---- cross-request 插件探测打桩：暴露就绪回调，避免真实轮询（jsdom 无插件）----
+// 容器以 initCrossRequest(cb) 接收 hasPlugin；既有用例依赖回调不触发（工具栏保持
+// 「开始测试」禁用态，见 DOM 快照），故此处只登记回调，由需要 hasPlugin=true 的用例显式触发。
+const crossRequestStub = { callback: null };
+const crossRequestPath = path.join(REPO_ROOT, 'client/components/Postman/CheckCrossInstall.js');
+const crossRequestModule = new Module(crossRequestPath, null);
+crossRequestModule.filename = crossRequestPath;
+crossRequestModule.loaded = true;
+crossRequestModule.exports = {
+  __esModule: true,
+  initCrossRequest: cb => {
+    crossRequestStub.callback = cb;
+    return 0;
+  },
+  default: () => null
+};
+require.cache[crossRequestPath] = crossRequestModule;
 
 // ---- DndContext 包装：记录最近一次渲染的拖拽回调，供测试按真实时序注入 ----
 const dndCore = require('@dnd-kit/core');
@@ -136,10 +155,11 @@ const FIXTURES = {
         validRes: [{ message: '请求异常' }]
       }
     }),
-    checkHttpCodeIs200: false,
-    checkResponseField: { name: 'code', value: '0', enable: false },
-    checkResponseSchema: false,
-    checkScript: { enable: false, content: '' }
+    // 与服务端保存形态一致；刻意与父组件初始 state 取不同值，供「合并生效」断言区分
+    checkHttpCodeIs200: true,
+    checkResponseField: { name: 'biz_code', value: '7', enable: true },
+    checkResponseSchema: true,
+    checkScript: { enable: true, content: 'assert.equal(status, 200)' }
   },
   caseList: [
     makeCase('case-1', LONG_CASENAME, LONG_PATH),
@@ -504,4 +524,36 @@ test.serial('openReport → CaseReportModal：点击测试报告打开弹窗并�
   const modalText = modal.textContent;
   t.true(modalText.indexOf(REPORT_URL) !== -1, '弹窗应展示所点用例的报告内容（Url）');
   t.truthy(modal.querySelector('.case-report'), '弹窗正文应复用 CaseReport 组件');
+});
+
+test.serial('通用规则配置：集合 colData 合并进 commonSetting 并在弹窗回显（patchState 函数式更新）', async t => {
+  const utils = await renderContainer();
+
+  // cross-request 插件就绪回调（真实实现为轮询；此处注入 true 以渲染工具栏三按钮）
+  await act(async () => {
+    crossRequestStub.callback(true);
+    await new Promise(resolve => setTimeout(resolve, 20));
+  });
+  t.truthy(buttonByText(utils.container, '通用规则配置'), 'hasPlugin=true 后应渲染通用规则配置按钮');
+
+  await act(async () => {
+    fireEvent.click(buttonByText(utils.container, '通用规则配置'));
+    await new Promise(resolve => setTimeout(resolve, 80));
+  });
+
+  const modal = document.body.querySelector('.ant-modal');
+  t.truthy(modal, '点击「通用规则配置」应打开弹窗');
+  t.is(
+    modal.querySelector('input[placeholder="字段名"]').value,
+    'biz_code',
+    '字段名应回显集合 colData（修复前 patchState(fn) 空操作，此处为默认 code）'
+  );
+  t.is(modal.querySelector('input[placeholder="值"]').value, '7', '字段值应回显集合 colData');
+  const sws = modal.querySelectorAll('.ant-switch');
+  t.is(sws.length, 4, '四项通用规则开关');
+  t.deepEqual(
+    Array.from(sws).map(sw => sw.getAttribute('aria-checked')),
+    ['true', 'true', 'true', 'true'],
+    '开关状态应回显集合 colData（默认 state 全 false）'
+  );
 });

@@ -261,8 +261,10 @@ const MockCol = () => {
       <Table columns={columns} dataSource={list} pagination={false} rowKey="_id" />
       {caseDesModalVisible && (
         // 旧实现 ref={this.saveFormRef} 实为 undefined（未消费），等价保持：不传 ref
+        // 缺陷打捞：antd5 升级批误改外部 prop 为 open=，而 CaseDesModal 读取的是 visible
+        // （组件契约与 PropTypes 均为 visible，弹窗因此永不显示），此处回改 visible=
         <CaseDesModal
-          open={caseDesModalVisible}
+          visible={caseDesModalVisible}
           isAdd={isAdd}
           caseData={caseData}
           onOk={handleOk}

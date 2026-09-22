@@ -15,9 +15,9 @@
  *     换成 onChangeCommonSetting(片段)，合并结果与原实现逐字段一致；
  *   - AceEditor onChange 载荷（mockEditor.curData，形如 { text }）在本组件内取 .text 后
  *     拼入 commonSetting.checkScript.content 片段上抛；
- *   - 刻意保留原实现的一处既有行为：脚本开关开启时原代码展开的是 state.checkScript
- *     （顶层不存在，等价于 {}），因此合并结果只带 enable、content 丢失。此处按原样保留
- *     （{ checkScript: { enable: e } }），避免顺手修复导致行为/ DOM 变化；
+ *   - 脚本开关上抛完整 checkScript 片段（含 content）：原实现在此展开顶层 state.checkScript
+ *     （不存在，等价 {}），导致切换开关丢失编辑器内容；本批缺陷打捞修复为展开
+ *     commonSetting.checkScript（content 保留），并对外层结构缺失提供默认值兜底；
  *   - 不引入包装 DOM 元素：根节点即原父组件中的 <Modal>。
  */
 import React, { useRef } from 'react';
@@ -36,6 +36,11 @@ const defaultModalStyle = {
  */
 const CommonSettingModal = props => {
   const { visible, commonSetting, onChangeCommonSetting, onOk, onCancel } = props;
+
+  // 服务端 colData 可能缺失嵌套结构（旧集合/导入集合）：兜底默认值与父组件初始 state 一致，
+  // 防止修复 patchState 合并后弹窗读取 undefined.enable 崩溃
+  const checkResponseField = commonSetting.checkResponseField || { name: '', value: '', enable: false };
+  const checkScript = commonSetting.checkScript || { enable: false, content: '' };
 
   // 脚本编辑器实例：仅本弹窗的「插入代码」使用
   const aceEditorRef = useRef(null);
@@ -56,7 +61,7 @@ const CommonSettingModal = props => {
       if (typeof e === 'object' && e) {
         value = e.target.value;
       }
-      const { checkResponseField } = commonSetting;
+      // 使用组件顶部兜底后的 checkResponseField（结构缺失时仍可合并）
       onChangeCommonSetting({
         checkResponseField: {
           ...checkResponseField,
@@ -98,13 +103,13 @@ const CommonSettingModal = props => {
             </Tooltip></label>
           </Col>
           <Col  className="col-item" span="6">
-            <Input value={commonSetting.checkResponseField.name} onChange={changeCommonFieldSetting('name')} placeholder="字段名"  />
+            <Input value={checkResponseField.name} onChange={changeCommonFieldSetting('name')} placeholder="字段名"  />
           </Col>
           <Col  className="col-item" span="6">
-            <Input  onChange={changeCommonFieldSetting('value')}  value={commonSetting.checkResponseField.value}   placeholder="值"  />
+            <Input  onChange={changeCommonFieldSetting('value')}  value={checkResponseField.value}   placeholder="值"  />
           </Col>
           <Col  className="col-item" span="6">
-            <Switch  onChange={changeCommonFieldSetting('enable')}  checked={commonSetting.checkResponseField.enable}  checkedChildren="开" unCheckedChildren="关"  />
+            <Switch  onChange={changeCommonFieldSetting('enable')}  checked={checkResponseField.enable}  checkedChildren="开" unCheckedChildren="关"  />
           </Col>
         </Row>
 
@@ -131,25 +136,26 @@ const CommonSettingModal = props => {
           </Col>
           <Col className="col-item"  span="14">
             <div><Switch onChange={(/** @type {any} */ e) => {
-              // 与抽取前一致：原实现展开的是 state.checkScript（顶层不存在），
-              // 结果片段仅含 enable，不得顺手改为 commonSetting.checkScript
+              // 缺陷打捞修复：展开 checkScript 全片段（含 content），
+              // 避免切换开关清空编辑器内容（原实现展开不存在的 state.checkScript）
               onChangeCommonSetting({
                 checkScript: {
+                  ...checkScript,
                   enable: e
                 }
               });
-            }} checked={commonSetting.checkScript.enable}  checkedChildren="开" unCheckedChildren="关"  /></div>
+            }} checked={checkScript.enable}  checkedChildren="开" unCheckedChildren="关"  /></div>
             <AceEditor
               onChange={(/** @type {any} */ d) => {
                 onChangeCommonSetting({
                   checkScript: {
-                    ...commonSetting.checkScript,
+                    ...checkScript,
                     content: d.text
                   }
                 });
               }}
               className="case-script"
-              data={commonSetting.checkScript.content}
+              data={checkScript.content}
               ref={(/** @type {any} */ aceEditor) => {
                 aceEditorRef.current = aceEditor;
               }}

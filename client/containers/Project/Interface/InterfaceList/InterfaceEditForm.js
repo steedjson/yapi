@@ -43,8 +43,10 @@ function InterfaceEditForm(/** @type {any} */ props) {
   const [form] = Form.useForm();
   const [state, setState] = useState(() => {
     const initStateData = initState(props.curdata, props.mockUrl);
-    // 原 componentDidMount 中对 req_radio_type 的初始化
-    initStateData.req_radio_type = HTTP_METHOD[initStateData.method].request_body
+    // 原 componentDidMount 中对 req_radio_type 的初始化；缺陷打捞：method 缺失/小写时
+    // HTTP_METHOD[...] 为 undefined（原实现直接 .request_body 崩溃），归一化后回退 req-query
+    const methodConfig = HTTP_METHOD[String(initStateData.method || '').toUpperCase()];
+    initStateData.req_radio_type = methodConfig && methodConfig.request_body
       ? 'req-body'
       : 'req-query';
     return initStateData;

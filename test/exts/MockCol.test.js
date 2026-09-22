@@ -47,6 +47,7 @@ const MOCK_LIST_B = MOCK_LIST_A.map(item =>
 const CURDATA = {
   _id: 100,
   title: '接口一',
+  method: 'GET',
   res_body: '{"a":1}',
   res_body_type: 'json',
   res_body_is_json_schema: false,
@@ -181,6 +182,27 @@ test.serial('MockCol owner 点击「已开启」：hide 请求成功后重拉列
   t.regex(container.textContent, /未开启/);
   // 挂载 + 重拉共两次 FETCH_MOCK_COL
   t.is(dispatched.filter(a => a.type === 'yapi/mockCol/FETCH_MOCK_COL').length, 2);
+
+  cleanup();
+  cleanupDom();
+});
+
+test.serial('MockCol owner 点击「添加期望」：CaseDesModal 按 visible 契约打开（open/visible 回归门禁）', async t => {
+  axiosMock.setRoutes([
+    { match: '/api/plugin/advmock/case/list', respond: () => ({ errcode: 0, data: MOCK_LIST_A }) }
+  ]);
+  const { container } = renderMockColWithLiveStore('owner');
+  await flushEffects(60);
+
+  const addButton = findButton(container, '添加期望');
+  t.truthy(addButton, 'owner 应看到添加期望按钮');
+
+  fireEvent.click(addButton);
+  await flushEffects(80);
+
+  const modal = document.body.querySelector('.ant-modal');
+  t.truthy(modal, '修复前父组件传 open= 而组件读 visible，弹窗永不渲染');
+  t.is(modal.querySelector('.ant-modal-title').textContent, '添加期望');
 
   cleanup();
   cleanupDom();

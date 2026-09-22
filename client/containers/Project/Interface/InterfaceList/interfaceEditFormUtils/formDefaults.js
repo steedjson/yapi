@@ -121,7 +121,9 @@ function initState(curdata, mockUrl) {
       headers: 'hide'
     }
   };
-  const methodConfig = HTTP_METHOD[curdata.method] || HTTP_METHOD.get;
+  // 方法名归一化后查表（大小写/缺失均回退 GET；原实现 HTTP_METHOD[curdata.method] || HTTP_METHOD.get
+  // 的小写兜底键不存在，缺失/小写 method 会在此处 methodConfig.default_tab 崩溃）
+  const methodConfig = HTTP_METHOD[String(curdata.method || '').toUpperCase()] || HTTP_METHOD.GET;
   curdata['hideTabs']['req'][methodConfig.default_tab] = '';
   return Object.assign(
     {
@@ -129,7 +131,9 @@ function initState(curdata, mockUrl) {
       title: '',
       path: '',
       status: 'undone',
-      method: 'get',
+      // 缺陷打捞：默认方法用小写 'get' 时 HTTP_METHOD['get'] 不存在，
+      // 表单渲染期多处 .request_body 读取会崩溃；HTTP_METHOD 键为大写，此处对齐
+      method: 'GET',
 
       req_params: [],
 

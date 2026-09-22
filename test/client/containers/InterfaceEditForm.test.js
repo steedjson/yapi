@@ -232,6 +232,34 @@ test.serial('InterfaceEditForm: 空表单渲染出基础表单骨架', async t =
   cleanupDom();
 });
 
+test.serial('InterfaceEditForm: curdata 缺 method 时不再崩溃（req_radio_type 回退 req-query）', async t => {
+  const Comp = require('../../../client/containers/Project/Interface/InterfaceList/InterfaceEditForm.js').default;
+  const seedState = {
+    group: { field: { enable: false } },
+    project: { currProject: { tag: [], is_json5: true } }
+  };
+  const utils = renderWithProviders(
+    React.createElement(Comp, {
+      cat: [],
+      curdata: {},
+      mockUrl: 'http://mock/11',
+      basepath: '/api/base',
+      noticed: false,
+      onSubmit: () => Promise.resolve({}),
+      onTagClick: () => {}
+    }),
+    { seedState }
+  );
+  await flushEffects(30);
+  t.true(
+    utils.container.querySelector('input#title') !== null,
+    '缺 method 时仍渲染表单骨架（修复前 HTTP_METHOD[undefined].request_body 崩溃）'
+  );
+  t.true(utils.container.innerHTML.indexOf('请求参数设置') !== -1);
+  cleanup();
+  cleanupDom();
+});
+
 // ---------- 编辑 Tab 端到端（批次 3 消费方切换）：json-schema 开启态渲染自研编辑器 ----------
 
 test.serial('InterfaceEditForm: json-schema 开启态渲染自研编辑器且编辑操作上抛父组件', async t => {

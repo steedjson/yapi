@@ -128,9 +128,16 @@ const InterfaceColContent = () => {
     }
   }));
   /**
-   * @param {any} patch
+   * 浅合并 patch 到 state；支持对象片段与函数式更新（(prevState) => 片段），
+   * 与旧类组件 this.setState 的两种形态等价（handleColIdChange 的 colData 合并
+   * 依赖函数式形态读取最新 prevState；原实现因展开函数变成空操作）。
+   * @param {any | ((prevState: any) => any)} patch
    */
-  const patchState = patch => setState((/** @type {any} */ prevState) => ({ ...prevState, ...patch }));
+  const patchState = patch =>
+    setState((/** @type {any} */ prevState) => ({
+      ...prevState,
+      ...(typeof patch === 'function' ? patch(prevState) : patch)
+    }));
 
   // 旧实例字段：测试报告 / 断言上下文 / 当前集合 id / 插件轮询定时器
   const reportsRef = useRef({});
@@ -699,7 +706,6 @@ const InterfaceColContent = () => {
       ...setting
 
     };
-    console.log(params)
 
     axios.post('/api/col/up_col', params).then(async (/** @type {any} */ res) => {
       if (res.data.errcode) {
