@@ -30,11 +30,15 @@
 - `server/app.js` 静态中间件：Accept-Encoding 含 br 时优先 `.br`（比 gzip 再省 15-20%）；
 - assets.js 不受影响（清单只记原始文件名）。
 
-## 3. 批次 3：antd5 引入面实测与收缩
+## 3. 批次 3：antd5 引入面实测与收缩（2026-09-22 实测结论：不立项）
 
-- rollup-plugin-visualizer 或 rsbuild `performance.profile` 实测 bundle 构成；
-- `@ant-design/icons` 引入面核查（全量 vs 按需）；
-- 清理实测发现的引入浪费。
+实测方法：产物特征统计（antd@*.js 的 svg path/包名频次）+ 引入面 grep。
+结论：**无引入浪费，优化空间有限，不立项**——
+- icons：v4IconMap 具名导入仅 54 个（v3→v4 迁移兼容层，设计组件），antd 组件内部另有 ~150 个；
+- chunk 内 1325 个 svg path（~556KB 源码，gz 后约 100KB）为「54 + antd 内部」的合理构成；
+- 无全量 barrel 引用（45 处全部为具名 import）；
+- rc-* 49 种全部为 antd 组件本体依赖（tree-shaking 已生效）；
+- 唯一理论空间是 v4IconMap 的按需化（gz 收益 <100KB），成本收益比不成立。
 
 ## 4. 验收门禁
 
