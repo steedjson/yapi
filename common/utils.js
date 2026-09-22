@@ -378,14 +378,11 @@ exports.schemaValidator = function(schema, params) {
       message: message
     };
   } catch (/** @type {any} */ e) {
-    // 诚实性说明: 本函数声明的返回类型为 {valid: boolean, message: string},
-    // 但本分支的 message 取自 e.message —— 仅当抛出值为 Error 时它才是字符串。
-    // 若 catch 到非 Error（如 throw 'xxx'），e.message 为 undefined，此处返回的
-    // message 实际为 undefined，声明比运行时偏乐观。要收紧声明必须改动运行时
-    // （如 String(e) 兜底），超出本次「仅改注解」的范围，故保留现状并在此标注。
+    // 非 Error 抛出值（如 throw 'xxx'）经 String() 兜底：保证返回的 message 恒为字符串，
+    // 与声明的 {valid: boolean, message: string} 一致（原实现 e.message 在非 Error 时为 undefined）
     return {
       valid: false,
-      message: e.message
+      message: e instanceof Error ? e.message : String(e)
     };
   }
 };

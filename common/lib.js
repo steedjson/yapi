@@ -47,7 +47,7 @@ function Compare(objA, objB) {
 /**
  * @param {*} objA 数组 A
  * @param {*} objB 数组 B
- * @param {*} flag 初始比较结果
+ * @param {boolean} flag 初始比较结果
  * @returns {boolean} 是否相等
  */
 function CompareArray(objA, objB, flag) {
@@ -65,7 +65,7 @@ function CompareArray(objA, objB, flag) {
 /**
  * @param {*} objA 对象 A
  * @param {*} objB 对象 B
- * @param {*} flag 初始比较结果
+ * @param {boolean} flag 初始比较结果
  * @returns {boolean} 是否相等
  */
 function CompareObj(objA, objB, flag) {

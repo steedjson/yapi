@@ -216,3 +216,20 @@ test('schemaValidator', t => {
   t.true(typeof illegalSchema.message === 'string' && illegalSchema.message.length > 0);
 })
 
+
+// K 批（类型诚实性收口）：message 恒为字符串——非 Error 抛出经 String() 兜底，
+// 与声明的 {valid: boolean, message: string} 一致（原实现 e.message 在非 Error 时为 undefined）
+test('schemaValidator 异常分支: 非 Error 抛出时 message 经 String 兜底为字符串', t => {
+  // Proxy 在 JSON.stringify（缓存 key 生成）阶段抛出字符串而非 Error
+  const evilSchema = new Proxy(
+    {},
+    {
+      ownKeys() {
+        throw 'boom-string';
+      }
+    }
+  );
+  const res = schemaValidator(evilSchema, { a: 1 });
+  t.is(res.valid, false);
+  t.is(res.message, 'boom-string');
+});
