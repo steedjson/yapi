@@ -11,41 +11,34 @@ import { cleanupDom } from '../../helpers/jsdom-setup';
 
 const axios = require('axios');
 const { default: Srch } = require('../../../client/components/Header/Search/Search.js');
+// group 切片已迁至 Zustand（批次3）：Srch 经 useGroupStore 读取
+const useGroupStore = require('../../../client/store/groupStore').default;
 
 // handleSearch/onSelect 内部直接调用 axios,测试必须拦截(axios 为 CJS 单例,
 // 生产代码调用时才读取 .get,替换属性即可生效)
 const originalAxiosGet = axios.get;
 
+const INITIAL_GROUP_STATE = {
+  groupList: [],
+  currGroup: { group_name: '', group_desc: '', custom_field1: { name: '', enable: false } },
+  field: { name: '', enable: false },
+  member: [],
+  role: '',
+  groupRequestId: 0
+};
+
 test.serial.afterEach.always(() => {
   cleanup();
   cleanupDom();
   axios.get = originalAxiosGet;
+  useGroupStore.setState(INITIAL_GROUP_STATE);
 });
 
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-// 组件经 useSelector 读取 group.groupList / project.projectList、useDispatch 派发 action,
-// store 与生产保持一致挂 redux-promise 中间件,并记录经完整中间件链的 action
-function makeStore(seedState) {
-  const dispatched = [];
-  const record = action => {
-    if (action && action.type && action.type.indexOf('@@') !== 0) {
-      dispatched.push(action);
-    }
-  };
-  const store = applyMiddleware(promiseMiddleware)(createStore)(function(state, action) {
-    record(action);
-    return state === undefined ? seedState : state;
-  }, seedState);
-  const originalDispatch = store.dispatch;
-  store.dispatch = action => {
-    record(action);
-    return originalDispatch(action);
-  };
-  return { store, dispatched };
-}
+// 组件经 useGroupStore 读取 group 切片、useSelector 读取 project 切片并 dispatch 派发
 
 const SEARCH_RESULT = {
   errcode: 0,
@@ -57,7 +50,11 @@ const SEARCH_RESULT = {
 };
 
 function renderSrch() {
-  const { store, dispatched } = makeStore({ group: { groupList: [] }, project: { projectList: [] } });
+  useGroupStore.setState({ ...INITIAL_GROUP_STATE, groupList: [] });
+  // project 切片仍走 redux（Srch 的 group 读取已迁 Zustand），store 仅作 Provider 占位
+  const store = applyMiddleware(promiseMiddleware)(createStore)(function(state) {
+    return state === undefined ? { project: { projectList: [] } } : state;
+  }, { project: { projectList: [] } });
   let locationRef = null;
   function LocationProbe() {
     locationRef = useLocation();
@@ -74,7 +71,7 @@ function renderSrch() {
       </MemoryRouter>
     </Provider>
   );
-  return Object.assign({ dispatched, getLocation: () => locationRef }, utils);
+  return Object.assign({ getLocation: () => locationRef }, utils);
 }
 
 function getInput(container) {
@@ -155,8 +152,15 @@ test.serial('选择分组候选项跳转对应分组页', async t => {
 
 test.serial('选择项目候选项拉取分组信息并跳转项目页', async t => {
   const getCalls = [];
-  axios.get = url => {
+  axios.get = (/** @type {string} */ url) => {
     getCalls.push(url);
+    if (url === '/api/group/get') {
+      // fetchGroupMsg 已迁真实 store：errcode 0 时会写入 currGroup/field，
+      // 桩须返回真实分组契约（含 custom_field1），否则 apply 阶段抛错中断导航
+      return Promise.resolve({
+        data: { errcode: 0, data: { _id: 1, group_name: '电商分组', custom_field1: { name: '', enable: false } } }
+      });
+    }
     return Promise.resolve({ data: SEARCH_RESULT });
   };
   const { container, getLocation } = renderSrch();
@@ -170,6 +174,10 @@ test.serial('选择项目候选项拉取分组信息并跳转项目页', async t
   });
 
   t.is(getLocation().pathname, '/project/2', '选择项目应导航到 /project/:id');
+  t.truthy(
+    getCalls.indexOf('/api/group/get') > -1,
+    '选择项目前应先拉取分组信息（fetchGroupMsg）'
+  );
   t.truthy(
     getCalls.indexOf('/api/project/search?q=电商') === 0,
     '选择前应先有搜索请求'

@@ -13,16 +13,27 @@ const { MemoryRouter, Routes, Route, useLocation } = require('react-router-dom')
 
 // GroupList.js 引入 SCSS，经 jsdom-setup 的资源 stub 后可被 Node 端 AVA 加载
 const { default: GroupList } = require('../../client/containers/Group/GroupList/GroupList.js');
-const groupReducer = require('../../client/reducer/modules/group.js').default;
+// group 切片已迁至 Zustand（批次3）：组件经 useGroupStore 读写，测试直接播种真实 store
+const useGroupStore = require('../../client/store/groupStore').default;
 
 const originalAxiosGet = axios.get;
 const originalAxiosPost = axios.post;
+
+const INITIAL_GROUP_STATE = {
+  groupList: [],
+  currGroup: { group_name: '', group_desc: '', custom_field1: { name: '', enable: false } },
+  field: { name: '', enable: false },
+  member: [],
+  role: '',
+  groupRequestId: 0
+};
 
 test.serial.afterEach.always(() => {
   cleanup();
   cleanupDom();
   axios.get = originalAxiosGet;
   axios.post = originalAxiosPost;
+  useGroupStore.setState(INITIAL_GROUP_STATE);
 });
 
 const G1 = { _id: 71, group_name: '前端组', group_desc: 'd1', type: 'public' };
@@ -53,14 +64,27 @@ function mockGroupApis(log) {
 }
 
 function renderGroupList(initialPath) {
+  // user 切片仍走 redux 固定 reducer；group 切片经真实 Zustand store 播种
+  useGroupStore.setState({
+    ...INITIAL_GROUP_STATE,
+    currGroup: G1,
+    groupList: LIST,
+    role: 'dev'
+  });
   const seed = {
-    group: { currGroup: G1, groupList: LIST, role: 'dev' },
     user: { role: 'regular', studyTip: 1, study: true }
   };
-  const store = applyMiddleware(promiseMiddleware)(createStore)(function(state, action) {
+  const store = applyMiddleware(promiseMiddleware)(createStore)(function(state) {
     if (state === undefined) state = seed;
-    return { group: groupReducer(state.group, action), user: state.user };
+    return state;
   }, seed);
+  // 反向断言用：记录仍流经 redux 的 action（group 切片迁移后不应再有 yapi/group/*）
+  const dispatched = [];
+  const originalDispatch = store.dispatch;
+  store.dispatch = action => {
+    dispatched.push(action);
+    return originalDispatch(action);
+  };
   let currentPath = '';
   const PathEcho = () => {
     const loc = useLocation();
@@ -91,16 +115,21 @@ function renderGroupList(initialPath) {
     )
   );
   utils.getPath = () => currentPath;
+  utils.dispatched = dispatched;
   return utils;
 }
 
 test.serial('GroupList 渲染：挂载拉取分组列表并按路由选中分组', async t => {
   const log = [];
   mockGroupApis(log);
-  const { container, getPath } = renderGroupList('/group/71');
+  const { container, getPath, dispatched } = renderGroupList('/group/71');
   await flushEffects();
 
   t.truthy(log.find(entry => entry[0] === 'GET' && entry[1] === '/api/group/list'), '挂载应请求分组列表');
+  t.falsy(
+    dispatched.find(a => a.type && a.type.indexOf('yapi/group/') === 0),
+    'group 切片已迁 Zustand，不应再派发 yapi/group/* redux action'
+  );
   const items = Array.from(container.querySelectorAll('.ant-menu-item'));
   t.is(items.length, 3, '应渲染 3 个分组菜单项');
   t.is(items[0].textContent.indexOf('前端组'), 0, '菜单应包含前端组');

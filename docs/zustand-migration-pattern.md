@@ -1,8 +1,9 @@
-# Zustand 迁移模式（follow 试点 + 批次2，供后续 reducer 模块复制）
+# Zustand 迁移模式（follow 试点 + 批次2 + 批次3，供后续 reducer 模块复制）
 
-状态：follow 试点与批次2（menu/mockCol/news）均已完成（2026-09，分支 `codex/refactor-foundation`）。
+状态：follow 试点、批次2（menu/mockCol/news）与批次3（interfaceCol/addInterface/group）均已完成（2026-09，分支 `codex/refactor-foundation`）。
 试点对象：`follow`（`client/reducer/modules/follow.js` → `client/store/followStore.js`）。
 批次2 对象：`menu`（→ `client/store/menuStore.js`）、`mockCol`（→ `client/store/mockColStore.js`）、`news`（→ `client/store/newsStore.js`）。
+批次3 对象：`interfaceCol`（→ `client/store/interfaceColStore.js`）、`addInterface`（→ `client/store/addInterfaceStore.js`）、`group`（→ `client/store/groupStore.js`）。
 
 ## 1. 背景与总体策略
 
@@ -139,3 +140,45 @@ const useFollowStore = create((set, get) => ({
 - `npm test` 全量冷库：996 passed（976 基线 + 20 新增），0 failed，0 unhandled rejection；
 - `npx tsc --noEmit`：0 错误；`npm run lint`：0/0；`npm run audit:ci`：通过（各 severity 与 total 均不高于基线）；
 - grep 终态：全仓无 `state.news` / `state.menu` / `state.mockCol` 状态读取方；combineReducers 仅剩 user/group/project/inter/interfaceCol/addInterface。
+
+## 11. 批次3 实例记录（interfaceCol / addInterface / group，2026-09）
+
+### 11.1 迁移内容
+
+| 模块 | store 文件 | 状态字段（与旧 initialState 完全一致） | 动作 | combineReducers 注销点 |
+| --- | --- | --- | --- | --- |
+| interfaceCol | `client/store/interfaceColStore.js` | `interfaceColList`（单条占位）/ `isShowCol` / `isRender` / `currColId` / `currCaseId` / `currCase` / `currCaseList` / `variableParamsList` / `envList` | 5 个 fetch + `setColData`（同步浅合并） | `client/reducer/modules/reducer.js` |
+| addInterface | `client/store/addInterfaceStore.js` | `interfaceName` / `url` / `method` / `seqGroup` / `reqParams` / `resParams` / `project` / `clipboard`（存函数） | 10 个同步动作 + `fetchInterfaceProject` | 同上 |
+| group | `client/store/groupStore.js` | `groupList` / `currGroup` / `field` / `member` / `role` / `groupRequestId` | `fetchGroupList` / `updateGroupList`（同步）/ `setCurrGroup` / `fetchGroupMsg` / `fetchGroupMemberList` + 4 个纯请求 POST | 同上 |
+
+- 模块级 `groupRequestSequence` 保留在 store 文件内，SET_CURR_GROUP 与 FETCH_GROUP_MSG 共用「最后发起获胜」序号，与旧 reducer 同一模式；两动作的过期守卫 + errcode 守卫内聚为 `isStaleOrFailed`。
+- **isRander/isRender 拼写分裂**：旧 initialState 是 `isRender`，而消费方经 `setColData({isRander})` 动态写入/读取 `isRander`。store 保持 initialState 原样 + `setColData` 允许动态新增 key（zustand set 对象入参默认浅合并，等价旧 `{...state, ...payload}`），行为逐字节一致。
+- interfaceCol 五个 fetch 沿用旧 reducer「无 errcode 守卫」语义（HTTP 200 即写 `res.data.data`）；group 的 `fetchGroupList`/`fetchGroupMemberList` 同款。addMember/delMember/changeMemberRole/changeGroupMsg/deleteGroup 在旧 reducer 本就无状态写入，迁为纯请求动作。
+- 三个旧 reducer 模块文件保留在盘上（`client/reducer/modules/{interfaceCol,addInterface,group}.js`）：addInterface 迁移前已无任何 import 方；interfaceCol 全部消费方随本批切换；`groupReducer.test.js` 仍直接覆盖 group.js。批次 4 可视消费方清零情况清理。
+- tsconfig include 未补（本批边界未含 tsconfig），三个 store 均经消费方 import 传递纳入编译（tsc 0 错误验证）。
+
+### 11.2 消费方迁移要点（批次3 新增语义）
+
+1. **响应解包层级统一换挡**：`dispatch(xxx(p)).then(res => res.payload.data…)` → `xxx(p).then(res => res.data…)`；`await dispatch(xxx(p))` → `await xxx(p)`，取值层级 `payload.data` → `data`。
+2. **混合消费方大量存在**：ProjectMember（group fetch + project 成员动作）、ProjectMessage/AddProject（connect 保留 project 映射与 project/user 动作注入，group 状态/动作改走 useGroupStore——**注意 connect 移除某字段后，组件内解构 `const { groupList } = props` 会遮蔽同名 hook 变量，必须一并删除**）、ProjectList/Project（保留 useDispatch 驱动 project/user 动作）。
+3. **纯消费方彻底移除 react-redux**：VariablesSelect/AddColModal/Interface.js/MemberList/GroupLog 完全移除 useSelector/useDispatch（含「历史遗留仅声明未消费」的 user 切片订阅——其存在不影响行为，随迁移一并移除并在注释注明）。
+4. **GroupSetting 的本地函数名冲突**：组件自有 `deleteGroup` 函数，store 动作以 `deleteGroupAction = useGroupStore(state => state.deleteGroup)` 引入（沿用旧 `deleteGroup as deleteGroupAction` 惯例）。
+5. **VariablesSelect 的原地 sort**：响应数组与 store 的 `variableParamsList` 同引用，改为 `slice()` 拷贝后排序（§5.3 规则）。
+
+### 11.3 批次3 测试适配新坑（比 §10.3 更进一步）
+
+- **「冻结 reducer 隐藏的历史缺陷」集中爆发**：旧组件测试的固定 reducer 从不执行真实 reducer 逻辑，因此两类问题被掩盖——
+  1. **测试桩响应形状不完整**：MemberList/ProjectSettingPanels 的 `/api/group/get` 桩只返 `{role}` 或 `{group_name, _id}`，缺 `custom_field1`（真实服务端必返）；真实 store 的 fetchGroupMsg apply 会读 `data.custom_field1.name` 抛 TypeError（旧 reducer 同样会抛，只是从未真正执行）。修正桩为真实契约。
+  2. **桩无视请求参数恒返同一对象**：MemberList 的 group/get 桩对任意 id 都返 `_id: 71`。真实 store 忠实写入后，`fetchGroupMsg(72)` 反而把 currGroup 写回 71 → 触发「分组回跳 → 成员列表再次重拉」连锁（断言 2 次实际 3 次）。修正桩按 `config.params.id` 回显。
+- **断言迁移**：`dispatched.find(a => a.type === 'yapi/group/FETCH_GROUP_MSG')` 类断言改为断言 HTTP 请求发生（stub 记录 GET），并加反向断言「不再派发 `yapi/group/*`」；动态驱动 currGroup 变化的 `TEST/SET_GROUP` dispatch 改为 act 内 `useGroupStore.setState({currGroup})`。
+- **connect 组件的 mapStateToProps 清空**：AddProject 的 mapStateToProps 仅剩 group 字段 → 改为 `connect(null, mapDispatchToProps)`；组件内 hook 值与本地 useState 镜像重名时注意改名（`storeGroupList`）。
+- 源码结构断言测试（groupSelectionRace.test.js）同步适配：`dispatch(xxx)` → `xxx()`、`payload.data.data` → `res.data.data`。
+- **visual 快照/差分测试同坑**：antd5-fixpoint、antd5-runtime-diff 的 mountProjectSetting/mountGroupSetting/mountAddProject 配方同样只种 redux group 切片——改种 groupStore（快照 DOM 不变，仅数据源换轨），并同步修正 group/list 双层包裹、group/get 缺 custom_field1 两类桩契约。
+- **eslint 注意**：仓库 `no-unused-vars` 无 `_` 前缀豁免（args: 'after-used'），固定 reducer 不再消费 action 时应直接去掉形参 `function(state)`，而非改名 `_action`。
+
+### 11.4 批次3 验证数据
+
+- 新增 store 单测 26 条（interfaceCol 7 / addInterface 6 / group 13）全绿；
+- `npm test` 全量冷库：见交付报告（预期 996 基线 + 26 新增，既有测试适配无净减）；
+- `npx tsc --noEmit`：0 错误（消费方 3 文件按 §5.4 逐点 JSDoc 收窄）；`npm run lint`：0/0；`npm run audit:ci`：通过；
+- grep 终态：全仓无 `state.interfaceCol` / `state.addInterface` / `state.group` 状态读取方；combineReducers 仅剩 user/project/inter。

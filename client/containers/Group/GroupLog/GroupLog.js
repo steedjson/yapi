@@ -1,13 +1,13 @@
 // @ts-check
 import React from 'react';
 import TimeTree from '../../../components/TimeLine/TimeLine';
-import { useSelector } from 'react-redux';
+// group 切片已迁至 Zustand（批次3）
+import useGroupStore from '../../../store/groupStore';
 import PropTypes from 'prop-types';
 
 const GroupLog = () => {
-  const curGroupId = useSelector(state => state.group.currGroup._id);
-  // 旧 @connect 映射的 uid 历史遗留仅声明未消费，保留订阅避免行为差异
-  useSelector(state => state.user.uid + '');
+  const curGroupId = useGroupStore(state => state.currGroup._id);
+  // 旧 @connect 映射的 uid 历史遗留仅声明未消费，随迁移移除
   return (
     <div className="g-row">
       <section className="news-box m-panel">

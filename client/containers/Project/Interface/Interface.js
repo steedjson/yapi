@@ -2,7 +2,8 @@
 import React, { useEffect } from 'react';
 import { Tabs, Layout } from 'antd';
 import { Routes, Route, matchPath, useLocation, useNavigate, useParams } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
+// interfaceCol 切片已迁至 Zustand（批次3）
+import useInterfaceColStore from '../../../store/interfaceColStore';
 const { Content, Sider } = Layout;
 
 import './interface.scss';
@@ -14,7 +15,6 @@ import InterfaceContent from './InterfaceList/InterfaceContent.js';
 import InterfaceColMenu from './InterfaceCol/InterfaceColMenu.js';
 import InterfaceColContent from './InterfaceCol/InterfaceColContent.js';
 import InterfaceCaseContent from './InterfaceCol/InterfaceCaseContent.js';
-import { setColData } from '../../../reducer/modules/interfaceCol.js';
 // v6 matchPath：end 默认 true，等价于 v5 的 exact: true
 const contentRouter = {
   path: '/project/:id/interface/:action/:actionId'
@@ -68,15 +68,15 @@ const InterfaceRoute = () => {
  * - 旧 withRouter 注入的 match/history 改为 useParams/useNavigate/useLocation。
  */
 const Interface = () => {
-  const dispatch = useDispatch();
-  const isShowCol = useSelector(state => state.interfaceCol.isShowCol);
+  const isShowCol = useInterfaceColStore(state => state.isShowCol);
+  const setColData = useInterfaceColStore(state => state.setColData);
   const params = useParams();
   const location = useLocation();
   const navigate = useNavigate();
 
   // 对应旧 UNSAFE_componentWillMount
   useEffect(() => {
-    dispatch(setColData({ isShowCol: true }));
+    setColData({ isShowCol: true });
   }, []);
 
   /**

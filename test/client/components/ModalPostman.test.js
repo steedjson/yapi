@@ -10,8 +10,10 @@ import { cleanupDom } from '../../helpers/jsdom-setup';
 
 const axios = require('axios');
 const { default: ModalPostman } = require('../../../client/components/ModalPostman/index.js');
+// interfaceCol 切片已迁至 Zustand（批次3）：VariablesSelect 经 useInterfaceColStore 读取
+const useInterfaceColStore = require('../../../client/store/interfaceColStore').default;
 
-// VariablesSelect(envType='case')挂载即派发 fetchVariableParamsList,payload 为 axios 请求,
+// VariablesSelect(envType='case')挂载即请求用例变量数据,
 // 每个用例都必须先打桩(axios 为 CJS 单例,生产代码调用时才读取 .get,替换属性即可生效)
 const originalAxiosGet = axios.get;
 
@@ -23,12 +25,34 @@ const CASE_RECORDS = [
   { _id: 421, index: 1, casename: '下单用例', params: {}, body: {} }
 ];
 
-const FETCH_VARIABLE_PARAMS_LIST = 'yapi/interfaceCol/FETCH_VARIABLE_PARAMS_LIST';
+const INITIAL_INTERFACE_COL_STATE = {
+  interfaceColList: [
+    {
+      _id: 0,
+      name: '',
+      uid: 0,
+      project_id: 0,
+      desc: '',
+      add_time: 0,
+      up_time: 0,
+      caseList: [{}]
+    }
+  ],
+  isShowCol: true,
+  isRender: false,
+  currColId: 0,
+  currCaseId: 0,
+  currCase: {},
+  currCaseList: [],
+  variableParamsList: [],
+  envList: []
+};
 
 test.serial.afterEach.always(() => {
   cleanup();
   cleanupDom();
   axios.get = originalAxiosGet;
+  useInterfaceColStore.setState(INITIAL_INTERFACE_COL_STATE);
 });
 
 function sleep(ms) {
@@ -42,34 +66,20 @@ async function flushEffects(ms) {
   });
 }
 
-// VariablesSelect 经 useSelector 读取 interfaceCol.currColId、useDispatch 派发 action,
-// store 与生产保持一致挂 redux-promise 中间件,并记录经完整中间件链的 action
 function makeStore(seedState) {
-  const dispatched = [];
-  const record = action => {
-    if (action && action.type && action.type.indexOf('@@') !== 0) {
-      dispatched.push(action);
-    }
-  };
-  const store = applyMiddleware(promiseMiddleware)(createStore)(function(state, action) {
-    record(action);
+  return applyMiddleware(promiseMiddleware)(createStore)(function(state) {
     return state === undefined ? seedState : state;
   }, seedState);
-  const originalDispatch = store.dispatch;
-  store.dispatch = action => {
-    record(action);
-    return originalDispatch(action);
-  };
-  return { store, dispatched };
 }
 
-// 渲染高级参数设置弹窗,handleOk/handleCancel 为手工记录调用的 mock
+// VariablesSelect 经 useInterfaceColStore 读取 currColId 并发起请求,
+// redux store 仅作 Provider 占位（剩余切片不再被本组件消费）
 function renderModalPostman(props) {
-  const { store, dispatched } = makeStore({ interfaceCol: { currColId: CURR_CASE_ID } });
+  useInterfaceColStore.setState({ ...INITIAL_INTERFACE_COL_STATE, currColId: CURR_CASE_ID });
   const okValues = [];
   const cancelCalls = [];
   const utils = render(
-    <Provider store={store}>
+    <Provider store={makeStore({})}>
       <ModalPostman
         visible={true}
         handleOk={val => {
@@ -87,7 +97,7 @@ function renderModalPostman(props) {
   );
   // 弹窗经 antd Modal 传送到 document.body,查询须基于 document
   const doc = utils.container.ownerDocument;
-  return Object.assign({ okValues, cancelCalls, dispatched, store, doc }, utils);
+  return Object.assign({ okValues, cancelCalls, doc }, utils);
 }
 
 function getExpressionItem(doc) {
@@ -115,7 +125,7 @@ test.serial('visible=true 渲染弹窗、标题与 常量/mock数据/变量 三�
     getUrls.push(url);
     return Promise.resolve({ data: { errcode: 0, data: CASE_RECORDS } });
   };
-  const { doc, container, dispatched } = renderModalPostman();
+  const { doc, container } = renderModalPostman();
   await flushEffects();
 
   t.truthy(doc.querySelector('.modal-postman .ant-modal'), 'visible=true 应渲染弹窗');
@@ -144,13 +154,9 @@ test.serial('visible=true 渲染弹窗、标题与 常量/mock数据/变量 三�
   // 此时按 currColId 拉取用例变量数据并渲染变量树
   openCollapsePanel(doc, '变量');
   await flushEffects();
-  const varActions = dispatched.filter(a => a.type === FETCH_VARIABLE_PARAMS_LIST);
-  // 原始 action(payload=promise)与中间件 fulfilled 二次派发(payload=响应)type 相同
-  t.truthy(varActions.length >= 1, '展开变量面板应派发 FETCH_VARIABLE_PARAMS_LIST');
-  t.is(
-    getUrls[0],
-    '/api/col/case_list_by_var_params?col_id=' + CURR_CASE_ID,
-    '应按当前集合 id 请求用例变量数据'
+  t.truthy(
+    getUrls[0] === '/api/col/case_list_by_var_params?col_id=' + CURR_CASE_ID,
+    '展开变量面板应按当前集合 id 请求用例变量数据'
   );
   await flushEffects();
   t.truthy(doc.body.textContent.indexOf('登录用例') > -1, '变量树应渲染当前用例之前的用例名');

@@ -6,6 +6,8 @@ import { Link } from 'react-router-dom';
 import { fetchProjectList } from '../../../reducer/modules/project';
 import ProjectCard from '../../../components/ProjectCard/ProjectCard.js';
 import ErrMsg from '../../../components/ErrMsg/ErrMsg.js';
+// group 切片已迁至 Zustand（批次3），user/project 模块仍未迁移
+import useGroupStore from '../../../store/groupStore';
 import { setBreadcrumb } from '../../../reducer/modules/user';
 
 import './ProjectList.scss';
@@ -25,7 +27,7 @@ const ProjectList = () => {
   // 历史遗留仅声明未消费，保留订阅避免行为差异
   useSelector((/** @type {any} */ state) => state.project.userInfo);
   useSelector((/** @type {any} */ state) => state.project.tableLoading);
-  const currGroup = useSelector((/** @type {any} */ state) => state.group.currGroup);
+  const currGroup = useGroupStore((/** @type {any} */ state) => state.currGroup);
   const currPage = useSelector((/** @type {any} */ state) => state.project.currPage);
 
   const [state, setState] = useState(

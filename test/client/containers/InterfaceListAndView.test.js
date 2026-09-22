@@ -67,6 +67,14 @@ test.serial.afterEach.always(() => {
   cleanupDom();
   axios.get = originalAxiosGet;
   axios.post = originalAxiosPost;
+  useGroupStore.setState({
+    groupList: [],
+    currGroup: { group_name: '', group_desc: '', custom_field1: { name: '', enable: false } },
+    field: { name: '', enable: false },
+    member: [],
+    role: '',
+    groupRequestId: 0
+  });
 });
 
 const CURR_PROJECT = {
@@ -155,9 +163,26 @@ const CURDATA = {
 
 const VIEW_SEED = {
   inter: { curdata: CURDATA, list: MENU_TREE, editStatus: false },
-  group: { field: { enable: true, name: '业务线' } },
   project: { currProject: CURR_PROJECT }
 };
+
+// group 切片已迁至 Zustand（批次3）：View 经 useGroupStore 读取 field
+const useGroupStore = require('../../../client/store/groupStore').default;
+const INITIAL_GROUP_STATE = {
+  groupList: [],
+  currGroup: { group_name: '', group_desc: '', custom_field1: { name: '', enable: false } },
+  field: { name: '', enable: false },
+  member: [],
+  role: '',
+  groupRequestId: 0
+};
+
+function seedGroupStore() {
+  useGroupStore.setState({
+    ...INITIAL_GROUP_STATE,
+    field: { enable: true, name: '业务线' }
+  });
+}
 
 test.serial('InterfaceList 挂载拉取全部接口列表并渲染表格', async t => {
   const getCalls = [];
@@ -242,6 +267,7 @@ test.serial('InterfaceList 点击添加接口按钮打开弹窗', async t => {
 });
 
 test.serial('View 渲染接口详情完整信息', async t => {
+  seedGroupStore();
   const utils = renderWithProviders(React.createElement(View), {
     seedState: VIEW_SEED,
     initialPath: '/project/12/interface/api/100'
@@ -264,6 +290,7 @@ test.serial('View 渲染接口详情完整信息', async t => {
 });
 
 test.serial('View 无 title 时挂载后展示暂无数据兜底', async t => {
+  seedGroupStore();
   const utils = renderWithProviders(React.createElement(View), {
     seedState: { ...VIEW_SEED, inter: { ...VIEW_SEED.inter, curdata: {} } },
     initialPath: '/project/12/interface/api/100'

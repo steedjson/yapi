@@ -4,6 +4,8 @@ import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { handlePath as handlePathUtil } from '../../../../common.js';
 import { changeEditStatus } from '../../../../reducer/modules/interface.js';
+// group 切片已迁至 Zustand（批次3），inter/project 模块仍未迁移
+import useGroupStore from '../../../../store/groupStore';
 import json5 from 'json5';
 import { message, Affix, Form, Button } from 'antd';
 import mockEditor from 'client/components/AceEditor/mockEditor';
@@ -41,6 +43,7 @@ const FormItem = Form.Item;
 
 function InterfaceEditForm(/** @type {any} */ props) {
   const [form] = Form.useForm();
+  const custom_field = useGroupStore(state => state.field);
   const [state, setState] = useState(() => {
     const initStateData = initState(props.curdata, props.mockUrl);
     // 原 componentDidMount 中对 req_radio_type 的初始化；缺陷打捞：method 缺失/小写时
@@ -522,7 +525,7 @@ function InterfaceEditForm(/** @type {any} */ props) {
     }));
   };
 
-  const { custom_field, projectMsg } = props;
+  const { projectMsg } = props;
 
   return (
     <div>
@@ -623,8 +626,6 @@ function InterfaceEditForm(/** @type {any} */ props) {
 }
 
 InterfaceEditForm.propTypes = {
-  custom_field: PropTypes.object,
-  groupList: PropTypes.array,
   curdata: PropTypes.object,
   mockUrl: PropTypes.string,
   onSubmit: PropTypes.func,
@@ -639,7 +640,6 @@ InterfaceEditForm.propTypes = {
 export default connect(
   (/** @type {any} */ state) => {
     return {
-      custom_field: state.group.field,
       projectMsg: state.project.currProject
     };
   },

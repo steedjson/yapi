@@ -2,17 +2,11 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { DeleteOutlined } from '@ant-design/icons';
 import PropTypes from 'prop-types';
-import { useDispatch, useSelector } from 'react-redux';
 import { Table, Select, Button, Modal, Row, Col, message, Popconfirm, Space, Divider } from 'antd';
 import { Link } from 'react-router-dom';
 import './MemberList.scss';
-import {
-  fetchGroupMemberList,
-  fetchGroupMsg,
-  addMember,
-  delMember,
-  changeMemberRole
-} from '../../../reducer/modules/group.js';
+// group 切片已迁至 Zustand（批次3）
+import useGroupStore from '../../../store/groupStore';
 import ErrMsg from '../../../components/ErrMsg/ErrMsg.js';
 import UsernameAutoComplete from '../../../components/UsernameAutoComplete/UsernameAutoComplete.js';
 const Option = Select.Option;
@@ -30,11 +24,13 @@ function arrayAddKey(arr) {
 }
 
 const MemberList = () => {
-  const dispatch = useDispatch();
-  const currGroup = useSelector(state => state.group.currGroup);
-  // 旧 @connect 映射的 uid/role 历史遗留仅声明未消费，保留订阅避免行为差异
-  useSelector(state => state.user.uid);
-  useSelector(state => state.group.role);
+  const currGroup = useGroupStore(state => state.currGroup);
+  const fetchGroupMemberList = useGroupStore(state => state.fetchGroupMemberList);
+  const fetchGroupMsg = useGroupStore(state => state.fetchGroupMsg);
+  const addMember = useGroupStore(state => state.addMember);
+  const delMember = useGroupStore(state => state.delMember);
+  const changeMemberRole = useGroupStore(state => state.changeMemberRole);
+  // 旧 @connect 映射的 uid/role 历史遗留仅声明未消费（role 读取迁入 store 订阅），随迁移移除
   const [userInfo, setUserInfo] = useState(/** @type {any[]} */ ([]));
   const [role, setRole] = useState('');
   const [visible, setVisible] = useState(false);
@@ -52,8 +48,8 @@ const MemberList = () => {
 
   // 重新获取列表
   function reFetchList() {
-    dispatch(fetchGroupMemberList(currGroup._id)).then((/** @type {any} */ res) => {
-      setUserInfo(arrayAddKey(res.payload.data.data));
+    fetchGroupMemberList(currGroup._id).then((/** @type {any} */ res) => {
+      setUserInfo(arrayAddKey(res.data.data));
       setVisible(false);
     });
   }
@@ -61,15 +57,13 @@ const MemberList = () => {
   // 增 - 添加成员
 
   function handleOk() {
-    dispatch(
-      addMember({
-        id: currGroup._id,
-        member_uids: inputUids,
-        role: inputRole
-      })
-    ).then((/** @type {any} */ res) => {
-      if (!res.payload.data.errcode) {
-        const { add_members, exist_members } = res.payload.data.data;
+    addMember({
+      id: currGroup._id,
+      member_uids: inputUids,
+      role: inputRole
+    }).then((/** @type {any} */ res) => {
+      if (!res.data.errcode) {
+        const { add_members, exist_members } = res.data.data;
         const addLength = add_members.length;
         const existLength = exist_members.length;
         setInputRole('dev');
@@ -96,9 +90,9 @@ const MemberList = () => {
   function deleteConfirm(member_uid) {
     return () => {
       const id = currGroup._id;
-      dispatch(delMember({ id, member_uid })).then((/** @type {any} */ res) => {
-        if (!res.payload.data.errcode) {
-          message.success(res.payload.data.errmsg);
+      delMember({ id, member_uid }).then((/** @type {any} */ res) => {
+        if (!res.data.errcode) {
+          message.success(res.data.errmsg);
           reFetchList(); // 添加成功后重新获取分组成员列表
         }
       });
@@ -113,9 +107,9 @@ const MemberList = () => {
     const id = currGroup._id;
     const role = e.split('-')[0];
     const member_uid = e.split('-')[1];
-    dispatch(changeMemberRole({ id, member_uid, role })).then((/** @type {any} */ res) => {
-      if (!res.payload.data.errcode) {
-        message.success(res.payload.data.errmsg);
+    changeMemberRole({ id, member_uid, role }).then((/** @type {any} */ res) => {
+      if (!res.data.errcode) {
+        message.success(res.data.errmsg);
         reFetchList(); // 添加成功后重新获取分组成员列表
       }
     });
@@ -132,20 +126,20 @@ const MemberList = () => {
     if (fetchedGroupIdRef.current === null) {
       // 对应原 componentDidMount：先取分组信息（角色），再取成员列表
       fetchedGroupIdRef.current = currGroupId;
-      dispatch(fetchGroupMsg(currGroupId)).then((/** @type {any} */ res) => {
-        setRole(res.payload.data.data.role);
+      fetchGroupMsg(currGroupId).then((/** @type {any} */ res) => {
+        setRole(res.data.data.role);
       });
-      dispatch(fetchGroupMemberList(currGroupId)).then((/** @type {any} */ res) => {
-        setUserInfo(arrayAddKey(res.payload.data.data));
+      fetchGroupMemberList(currGroupId).then((/** @type {any} */ res) => {
+        setUserInfo(arrayAddKey(res.data.data));
       });
     } else if (fetchedGroupIdRef.current !== currGroupId) {
       // 对应原 UNSAFE_componentWillReceiveProps：分组切换时重拉（先成员列表，后分组信息）
       fetchedGroupIdRef.current = currGroupId;
-      dispatch(fetchGroupMemberList(currGroupId)).then((/** @type {any} */ res) => {
-        setUserInfo(arrayAddKey(res.payload.data.data));
+      fetchGroupMemberList(currGroupId).then((/** @type {any} */ res) => {
+        setUserInfo(arrayAddKey(res.data.data));
       });
-      dispatch(fetchGroupMsg(currGroupId)).then((/** @type {any} */ res) => {
-        setRole(res.payload.data.data.role);
+      fetchGroupMsg(currGroupId).then((/** @type {any} */ res) => {
+        setRole(res.data.data.role);
       });
     }
   });

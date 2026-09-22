@@ -84,10 +84,22 @@ stubDefaultExport(
 );
 
 const axios = require('axios');
+
+// group 切片已迁至 Zustand（批次3）：InterfaceEditForm 经 useGroupStore 读取 field
+const useGroupStore = require('../../../client/store/groupStore').default;
+const INITIAL_GROUP_STATE = {
+  groupList: [],
+  currGroup: { group_name: '', group_desc: '', custom_field1: { name: '', enable: false } },
+  field: { name: '', enable: false },
+  member: [],
+  role: '',
+  groupRequestId: 0
+};
 const originalAxiosGet = axios.get;
 const originalAxiosPost = axios.post;
 
 test.serial.afterEach.always(() => {
+  useGroupStore.setState(INITIAL_GROUP_STATE);
   cleanup();
   cleanupDom();
   axios.get = originalAxiosGet;
@@ -135,10 +147,14 @@ async function renderEditForm() {
   axios.get = () => Promise.resolve({ data: { errcode: 0, data: [] } });
   axios.post = () => Promise.resolve({ data: { errcode: 0, data: [] } });
   const { default: Edit } = require('../../../client/containers/Project/Interface/InterfaceList/Edit.js');
+  useGroupStore.setState({
+    ...INITIAL_GROUP_STATE,
+    field: { enable: true, name: '业务线' },
+    currGroup: { _id: 1, group_name: '分组一' }
+  });
   const utils = renderWithProviders(React.createElement(Edit), {
     seedState: {
       inter: { curdata: CURRDATA, list: [], editStatus: false },
-      group: { field: { enable: true, name: '业务线' }, currGroup: { _id: 1, group_name: '分组一' } },
       project: {
         currProject: {
           _id: 12,

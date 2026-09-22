@@ -98,7 +98,10 @@ function mockApis(overrides) {
           ]
         }
       }),
-      '/api/group/get': () => ({ data: { errcode: 0, data: { group_name: '分组一', _id: 1 } } }),
+      '/api/group/get': () => ({
+        // 真实契约：返回完整分组对象（含 custom_field1），真实 store 会写入 currGroup
+        data: { errcode: 0, data: { group_name: '分组一', _id: 1, custom_field1: { name: '', enable: false } } }
+      }),
       '/api/project/get_member_list': () => ({
         data: {
           errcode: 0,

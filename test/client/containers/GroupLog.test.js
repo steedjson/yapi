@@ -25,17 +25,38 @@ stubDefaultExport(
 );
 
 const { default: GroupLog } = require('../../../client/containers/Group/GroupLog/GroupLog.js');
+// group 切片已迁至 Zustand（批次3）：组件经 useGroupStore 读取，测试直接播种真实 store
+const useGroupStore = require('../../../client/store/groupStore').default;
+
+const INITIAL_GROUP_STATE = {
+  groupList: [],
+  currGroup: { group_name: '', group_desc: '', custom_field1: { name: '', enable: false } },
+  field: { name: '', enable: false },
+  member: [],
+  role: '',
+  groupRequestId: 0
+};
 
 test.serial.afterEach.always(() => {
   cleanup();
   cleanupDom();
+  useGroupStore.setState(INITIAL_GROUP_STATE);
 });
 
-function seedState(currGroupId) {
-  return { user: { uid: 11 }, group: { currGroup: { _id: currGroupId } } };
+function seedState() {
+  return { user: { uid: 11 } };
+}
+
+// currGroup 播种真实 Zustand store（旧 redux group 种子已随迁移失效）
+function seedGroupStore(currGroupId) {
+  useGroupStore.setState({
+    ...INITIAL_GROUP_STATE,
+    currGroup: { _id: currGroupId }
+  });
 }
 
 test.serial('渲染分组动态面板并将 store 当前分组 id 传给 TimeLine', t => {
+  seedGroupStore(101);
   const { container } = renderWithProviders(React.createElement(GroupLog), {
     seedState: seedState(101)
   });
@@ -49,11 +70,12 @@ test.serial('渲染分组动态面板并将 store 当前分组 id 传给 TimeLin
   t.is(
     timeline.getAttribute('data-typeid'),
     '101',
-    'TimeLine typeid 应取自 state.group.currGroup._id'
+    'TimeLine typeid 应取自 store 当前分组 _id'
   );
 });
 
 test.serial('store 中分组变化时传给 TimeLine 的 typeid 跟随变化', t => {
+  seedGroupStore(205);
   const { container } = renderWithProviders(React.createElement(GroupLog), {
     seedState: seedState(205)
   });

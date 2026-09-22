@@ -7,6 +7,8 @@ import GroupLog from './GroupLog/GroupLog.js';
 import GroupSetting from './GroupSetting/GroupSetting.js';
 import PropTypes from 'prop-types';
 import { useSelector } from 'react-redux';
+// group 切片已迁至 Zustand（批次3），user 模块仍未迁移
+import useGroupStore from '../../store/groupStore';
 import { Tabs, Layout, Spin } from 'antd';
 import ErrMsg from '../../components/ErrMsg/ErrMsg.js';
 const { Content, Sider } = Layout;
@@ -22,12 +24,10 @@ import axios from 'axios';
  */
 const Group = () => {
   // 与旧 @connect 映射保持一致：curGroupId 为历史遗留仅声明未消费，保留订阅避免行为差异
-  useSelector((/** @type {any} */ state) => state.group.currGroup._id);
+  useGroupStore(state => state.currGroup._id);
   const curUserRole = useSelector((/** @type {any} */ state) => state.user.role);
-  const curUserRoleInGroup = useSelector(
-    (/** @type {any} */ state) => state.group.currGroup.role || state.group.role
-  );
-  const currGroup = useSelector((/** @type {any} */ state) => state.group.currGroup);
+  const curUserRoleInGroup = useGroupStore(state => state.currGroup.role || state.role);
+  const currGroup = useGroupStore(state => state.currGroup);
   const [groupId, setGroupId] = useState(-1);
   const [loadError, setLoadError] = useState(false);
 

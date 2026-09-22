@@ -4,7 +4,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Route, Routes, Navigate, matchPath, useLocation, useParams } from 'react-router-dom';
 import withRouter from '../../withRouter';
 import { Subnav } from '../../components/index';
-import { fetchGroupMsg } from '../../reducer/modules/group';
+// group 切片已迁至 Zustand（批次3），user/project 模块仍未迁移
+import useGroupStore from '../../store/groupStore';
 import { setBreadcrumb } from '../../reducer/modules/user';
 import { getProject } from '../../reducer/modules/project';
 import Interface from './Interface/Interface.js';
@@ -28,7 +29,8 @@ const plugin = require('client/plugin.js');
 const Project = () => {
   const dispatch = useDispatch();
   const curProject = useSelector((/** @type {any} */ state) => state.project.currProject);
-  const currGroup = useSelector((/** @type {any} */ state) => state.group.currGroup);
+  const currGroup = useGroupStore((/** @type {any} */ state) => state.currGroup);
+  const fetchGroupMsg = useGroupStore((/** @type {any} */ state) => state.fetchGroupMsg);
   const { id } = /** @type {any} */ (useParams());
   const location = useLocation();
   const [loadError, setLoadError] = useState(false);
@@ -43,7 +45,7 @@ const Project = () => {
       const project = await dispatch(getProject(projectId));
       const projectData = project && project.payload && project.payload.data.data;
       if (!projectData) throw new Error('project not found');
-      await dispatch(fetchGroupMsg(projectData.group_id));
+      await fetchGroupMsg(projectData.group_id);
       setLoadError(false);
       dispatch(setBreadcrumb([{ name: projectData.name }]));
     } catch (/** @type {any} */ e) {

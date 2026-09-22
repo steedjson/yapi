@@ -4,12 +4,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 //import constants from '../../../../constants/variable.js'
 import { message } from 'antd';
-import {
-  fetchInterfaceColList,
-  fetchCaseList,
-  setColData,
-  fetchCaseEnvList
-} from '../../../../reducer/modules/interfaceCol';
+// interfaceCol 切片已迁至 Zustand（批次3），project/user 模块仍未迁移
+import useInterfaceColStore from '../../../../store/interfaceColStore';
 import { getToken } from '../../../../reducer/modules/project';
 import { arrayMove } from '@dnd-kit/sortable';
 import axios from 'axios';
@@ -80,16 +76,24 @@ function handleReport(json) {
  */
 const InterfaceColContent = () => {
   const dispatch = useDispatch();
-  const interfaceColList = useSelector(state => state.interfaceCol.interfaceColList);
-  const currColId = useSelector(state => state.interfaceCol.currColId);
-  const currCaseId = useSelector(state => state.interfaceCol.currCaseId);
+  const interfaceColList = useInterfaceColStore(state => state.interfaceColList);
+  const currColId = useInterfaceColStore(state => state.currColId);
+  const currCaseId = useInterfaceColStore(state => state.currCaseId);
   // 历史遗留仅声明未消费，保留订阅避免行为差异
-  useSelector(state => state.interfaceCol.isShowCol);
-  const isRander = useSelector(state => state.interfaceCol.isRander);
-  const currCaseList = useSelector(state => state.interfaceCol.currCaseList);
+  useInterfaceColStore(state => state.isShowCol);
+  // zustand 经 allowJs 的类型推断有损（isRander 为历史动态 key / 数组初始为空），
+  // 用 JSDoc 收窄（迁移模式文档 §5.4）
+  const isRander = /** @type {any} */ (
+    useInterfaceColStore((/** @type {any} */ state) => state.isRander)
+  );
+  const currCaseList = /** @type {any[]} */ (useInterfaceColStore(state => state.currCaseList));
+  const envList = /** @type {any[]} */ (useInterfaceColStore(state => state.envList));
+  const fetchInterfaceColList = useInterfaceColStore(state => state.fetchInterfaceColList);
+  const fetchCaseList = useInterfaceColStore(state => state.fetchCaseList);
+  const fetchCaseEnvList = useInterfaceColStore(state => state.fetchCaseEnvList);
+  const setColData = useInterfaceColStore(state => state.setColData);
   const currProject = useSelector(state => state.project.currProject);
   const token = useSelector(state => state.project.token);
-  const envList = useSelector(state => state.interfaceCol.envList);
   const curProjectRole = useSelector(state => state.project.currProject.role);
   // 历史遗留仅声明未消费，保留订阅避免行为差异
   useSelector(state => state.project.projectEnv);
@@ -236,26 +240,26 @@ const InterfaceColContent = () => {
    * @param {any} newColId
    */
   const handleColIdChange = async newColId => {
-    dispatch(setColData({
+    setColData({
       currColId: +newColId,
       isShowCol: true,
       isRander: false
-    }));
+    });
 
-    const result = await dispatch(fetchCaseList(newColId));
-    if (result.payload.data.errcode === 0) {
-      reportsRef.current = handleReport(result.payload.data.colData.test_report);
+    const result = await fetchCaseList(newColId);
+    if (result.data.errcode === 0) {
+      reportsRef.current = handleReport(result.data.colData.test_report);
       patchState((/** @type {any} */ prevState) => ({
         ...prevState,
         commonSetting:{
           ...prevState.commonSetting,
-          ...result.payload.data.colData
+          ...result.data.colData
         }
       }));
     }
 
-    await dispatch(fetchCaseList(newColId));
-    await dispatch(fetchCaseEnvList(newColId));
+    await fetchCaseList(newColId);
+    await fetchCaseEnvList(newColId);
     changeCollapseClose();
     handleColdata(latestRef.current.currCaseList);
   };
@@ -264,10 +268,10 @@ const InterfaceColContent = () => {
   useEffect(() => {
     (async () => {
       const currentParamsId = latestRef.current.id;
-      const result = await dispatch(fetchInterfaceColList(currentParamsId));
+      const result = await fetchInterfaceColList(currentParamsId);
       await dispatch(getToken(currentParamsId));
       const routeActionId = latestRef.current.actionId;
-      const colList = result && result.payload && result.payload.data && result.payload.data.data;
+      const colList = result && result.data && result.data.data;
       const firstCol = Array.isArray(colList) && colList.length > 0 ? colList[0] : null;
       currColIdRef.current = +routeActionId || (firstCol ? firstCol._id : 0);
       // this.props.history.push('/project/' + params.id + '/interface/col/' + currColId);
@@ -317,7 +321,7 @@ const InterfaceColContent = () => {
         return message.error(res.data.errmsg);
       }
       const projectId = latestRef.current.id;
-      await dispatch(fetchInterfaceColList(projectId));
+      await fetchInterfaceColList(projectId);
       message.success('接口集合简介更新成功');
     });
   };
@@ -531,7 +535,7 @@ const InterfaceColContent = () => {
       changes.push({ id: item._id, index: index });
     });
     axios.post('/api/col/up_case_index', changes).then(() => {
-      dispatch(fetchInterfaceColList(latestRef.current.id));
+      fetchInterfaceColList(latestRef.current.id);
     });
   };
   // 拖拽经过其它行时实时重排（等价原 dnd.Row 的 hover 换位体验）
@@ -618,12 +622,12 @@ const InterfaceColContent = () => {
     }
     patchState({ advVisible: false });
     const advCurrColId = currColIdRef.current;
-    dispatch(setColData({
+    setColData({
       currColId: +advCurrColId,
       isShowCol: true,
       isRander: false
-    }));
-    await dispatch(fetchCaseList(advCurrColId));
+    });
+    await fetchCaseList(advCurrColId);
 
     handleColdata(latestRef.current.currCaseList);
   };

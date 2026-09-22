@@ -74,6 +74,21 @@ function collectRuntimeStyles() {
 // ---- axios 桩：宽松兜底（未知端点返回空数据），页面挂载各自覆盖关心的端点 ----
 const axios = require('axios');
 
+// group 切片已迁至 Zustand（批次3）：GroupList/GroupSetting/ProjectMessage/AddProject 等经 useGroupStore 读取
+const useGroupStore = require('../../../client/store/groupStore').default;
+const INITIAL_GROUP_STATE = {
+  groupList: [],
+  currGroup: { group_name: '', group_desc: '', custom_field1: { name: '', enable: false } },
+  field: { name: '', enable: false },
+  member: [],
+  role: '',
+  groupRequestId: 0
+};
+
+function seedGroupStore(groupState) {
+  useGroupStore.setState(Object.assign({}, INITIAL_GROUP_STATE, groupState));
+}
+
 function stubAxios(overrides) {
   const routes = overrides || [];
   const respond = (url) => {
@@ -390,7 +405,7 @@ async function mountGroupMember() {
   // '/api/group/get_member_list' 的前缀，具体路由必须排在前面
   stubAxios([
     { match: '/api/group/get_member_list', respond: () => ({ errcode: 0, data: GROUP_MEMBERS.slice() }) },
-    { match: '/api/group/get', respond: () => ({ errcode: 0, data: Object.assign({}, G1, { role: 'owner' }) }) }
+    { match: '/api/group/get', respond: () => ({ errcode: 0, data: Object.assign({}, G1, { role: 'owner', custom_field1: { name: '', enable: false } }) }) }
   ]);
   const { default: MemberList } = require('../../../client/containers/Group/MemberList/MemberList.js');
   renderWithProviders(React.createElement(MemberList), {
@@ -405,6 +420,11 @@ async function mountGroupSetting() {
     { match: '/api/group/get', respond: () => ({ errcode: 0, data: Object.assign({ custom_field1: { name: '业务线', enable: true } }, G1, { role: 'owner' }) }) },
     { match: '/api/log/', respond: () => ({ errcode: 0, data: { list: [], total: 0 } }) }
   ]);
+  seedGroupStore({
+    currGroup: Object.assign({ custom_field1: { name: '业务线', enable: true } }, G1),
+    groupList: [G1],
+    role: 'owner'
+  });
   const { default: GroupSetting } = require('../../../client/containers/Group/GroupSetting/GroupSetting.js');
   renderWithProviders(React.createElement(GroupSetting), {
     seedState: {
@@ -418,6 +438,7 @@ async function mountGroupSetting() {
 
 // ---- group 动态（GroupLog 配方；TimeLine 已桩）----
 async function mountGroupLog() {
+  seedGroupStore({ currGroup: G1 });
   const { default: GroupLog } = require('../../../client/containers/Group/GroupLog/GroupLog.js');
   renderWithProviders(React.createElement(GroupLog), {
     seedState: { user: { uid: 11 }, group: { currGroup: G1 } }
@@ -459,8 +480,9 @@ const PROJECT_SEED = {
 function stubProjectApis() {
   stubAxios([
     { match: '/api/project/get', respond: () => ({ errcode: 0, data: Object.assign({}, CURR_PROJECT_FULL) }) },
-    { match: '/api/group/list', respond: () => ({ errcode: 0, data: { data: [{ _id: 1, group_name: '分组一' }] } }) },
-    { match: '/api/group/get', respond: () => ({ errcode: 0, data: { group_name: '分组一', _id: 1 } }) },
+    // 真实契约：list 的 data 直接是数组（旧桩多包一层 data.data，被旧冻结 reducer 掩盖）
+    { match: '/api/group/list', respond: () => ({ errcode: 0, data: [{ _id: 1, group_name: '分组一' }] }) },
+    { match: '/api/group/get', respond: () => ({ errcode: 0, data: { group_name: '分组一', _id: 1, custom_field1: { name: '', enable: false } } }) },
     { match: '/api/project/token', respond: () => ({ errcode: 0, data: 'tk_fetched_abcd' }) },
     { match: '/', respond: () => ({ errcode: 0, data: [] }) }
   ]);
@@ -469,6 +491,10 @@ function stubProjectApis() {
 // ---- project setting（Setting，默认激活「项目配置」面板）----
 async function mountProjectSetting() {
   stubProjectApis();
+  seedGroupStore({
+    currGroup: { _id: 1, group_name: '分组一', group_desc: '', custom_field1: { name: '', enable: false } },
+    groupList: [{ _id: 1, group_name: '分组一' }]
+  });
   const { default: Setting } = require('../../../client/containers/Project/Setting/Setting.js');
   renderWithProviders(React.createElement(Setting), {
     seedState: PROJECT_SEED,
@@ -697,9 +723,10 @@ async function mountFollows() {
 // ---- add-project 新建项目页（AddProject 配方）----
 async function mountAddProject() {
   stubAxios([
-    { match: '/api/group/list', respond: () => ({ errcode: 0, data: { data: [G1, G2] } }) },
+    { match: '/api/group/list', respond: () => ({ errcode: 0, data: [G1, G2] }) },
     { match: '/', respond: () => ({ errcode: 0, data: [] }) }
   ]);
+  seedGroupStore({ currGroup: G1, groupList: [G1, G2] });
   const { default: AddProject } = require('../../../client/containers/AddProject/AddProject.js');
   renderWithProviders(React.createElement(AddProject), {
     seedState: {
@@ -1252,6 +1279,7 @@ test.serial('层B：汇总登记产物与运行时样式 sanity', async t => {
 test.serial.afterEach.always(() => {
   cleanup();
   cleanupDom();
+  useGroupStore.setState(INITIAL_GROUP_STATE);
   axios.get = originalAxiosGet;
   axios.post = originalAxiosPost;
   delete window.crossRequest;

@@ -25,19 +25,19 @@ test('Group 保留 get_mygroup 个人分组创建与 loading/error gate', t => {
   t.true(/<Spin/.test(groupSrc));
 });
 
-test('GroupList 初始化 await fetchGroupList 后使用响应 payload.data.data, 不读陈旧列表', t => {
+test('GroupList 初始化 await fetchGroupList 后使用响应 data.data, 不读陈旧列表', t => {
   const mountIdx = groupListSrc.indexOf('useEffect(() => {');
   t.truthy(mountIdx, '应能定位到挂载期 useEffect（对应旧 UNSAFE_componentWillMount）');
   const body = groupListSrc.slice(mountIdx, groupListSrc.indexOf('}, []);', mountIdx));
-  t.true(/await dispatch\(fetchGroupList\(\)\)/.test(body), '初始化应等待列表请求返回');
-  t.true(/payload\.data\.data/.test(body), '应使用响应 payload 中的最新列表');
+  t.true(/await fetchGroupList\(\)/.test(body), '初始化应等待列表请求返回');
+  t.true(/res\.data\.data/.test(body), '应使用响应 body 中的最新列表');
   t.true(
     /syncGroupSelection\(list, paramsRef\.current\)/.test(body),
-    '应把 payload 派生的列表与挂载期路由参数传入同步方法，不得把可能陈旧的 redux 列表直接传入'
+    '应把 payload 派生的列表与挂载期路由参数传入同步方法，不得把可能陈旧的 store 列表直接传入'
   );
 });
 
-test('GroupList 仍是选中分组的唯一派发方（syncGroupSelection 内派发 setCurrGroup）', t => {
-  t.true(/dispatch\(setCurrGroup\(target\)\)/.test(groupListSrc));
+test('GroupList 仍是选中分组的唯一派发方（syncGroupSelection 内调用 setCurrGroup）', t => {
+  t.true(/setCurrGroup\(target\)/.test(groupListSrc));
   t.true(/navigate\(buildGroupPath\(target\._id\), \{ replace: true \}\)/.test(groupListSrc));
 });

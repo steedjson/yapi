@@ -2,11 +2,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
-import {
-  fetchInterfaceColList,
-  setColData,
-  fetchCaseData
-} from '../../../../reducer/modules/interfaceCol';
+// interfaceCol 切片已迁至 Zustand（批次3），project 模块仍未迁移
+import useInterfaceColStore from '../../../../store/interfaceColStore';
 import { fetchProjectList } from '../../../../reducer/modules/project';
 import axios from 'axios';
 import ImportInterface from './ImportInterface';
@@ -91,11 +88,15 @@ const ColModalForm = props => {
 export default function InterfaceColMenu(props) {
   const { router } = props;
   const dispatch = useDispatch();
-  const interfaceColList = useSelector(state => state.interfaceCol.interfaceColList);
-  const currCase = useSelector(state => state.interfaceCol.currCase);
+  // zustand 经 allowJs 的类型推断有损（初始占位形状有限），用 JSDoc 收窄（迁移模式文档 §5.4）
+  const interfaceColList = /** @type {any[]} */ (useInterfaceColStore(state => state.interfaceColList));
+  const currCase = /** @type {any} */ (useInterfaceColStore(state => state.currCase));
   // 历史遗留仅声明未消费，保留订阅避免行为差异
-  useSelector(state => state.interfaceCol.isRander);
-  const currCaseId = useSelector(state => state.interfaceCol.currCaseId);
+  useInterfaceColStore((/** @type {any} */ state) => state.isRander);
+  const currCaseId = useInterfaceColStore(state => state.currCaseId);
+  const fetchInterfaceColList = useInterfaceColStore(state => state.fetchInterfaceColList);
+  const fetchCaseData = useInterfaceColStore(state => state.fetchCaseData);
+  const setColData = useInterfaceColStore(state => state.setColData);
   // 当前项目的信息
   const curProject = useSelector(state => state.project.currProject);
   const navigate = useNavigate();
@@ -128,9 +129,9 @@ export default function InterfaceColMenu(props) {
   latestRef.current = { id, currCaseId };
 
   const getList = async () => {
-    const r = await dispatch(fetchInterfaceColList(latestRef.current.id));
+    const r = await fetchInterfaceColList(latestRef.current.id);
     patchState({
-      list: r.payload.data.data
+      list: r.data.data
     });
     return r;
   };
@@ -174,14 +175,14 @@ export default function InterfaceColMenu(props) {
           const nodeId = keys[0].split('_')[1];
           const project_id = latestRef.current.id;
           if (type === 'col') {
-            dispatch(setColData({
+            setColData({
               isRander: false
-            }));
+            });
             navigate('/project/' + project_id + '/interface/col/' + nodeId);
           } else {
-            dispatch(setColData({
+            setColData({
               isRander: false
-            }));
+            });
             navigate('/project/' + project_id + '/interface/case/' + nodeId);
           }
         }
@@ -220,7 +221,7 @@ export default function InterfaceColMenu(props) {
         if (!res.data.errcode) {
           message.success('删除集合成功');
           const result = await getList();
-          const nextColId = result.payload.data.data[0]._id;
+          const nextColId = result.data.data[0]._id;
 
           navigate('/project/' + paramsId + '/interface/col/' + nextColId);
         } else {
@@ -269,7 +270,7 @@ export default function InterfaceColMenu(props) {
     // 刷新接口列表
     // await dispatch(fetchInterfaceColList(project_id));
     getList();
-    dispatch(setColData({ isRander: true }));
+    setColData({ isRander: true });
     message.success('克隆测试集成功');
   };
 
@@ -277,8 +278,8 @@ export default function InterfaceColMenu(props) {
    * @param {any} caseId
    */
   const caseCopy = async caseId => {
-    const caseData = await dispatch(fetchCaseData(caseId));
-    let data = caseData.payload.data.data;
+    const caseData = await fetchCaseData(caseId);
+    let data = caseData.data.data;
     data = JSON.parse(JSON.stringify(data));
     data.casename = `${data.casename}_copy`;
     delete data._id;
@@ -317,7 +318,7 @@ export default function InterfaceColMenu(props) {
             navigate('/project/' + paramsId + '/interface/col/');
           } else {
             // dispatch(fetchInterfaceColList(latestRef.current.id));
-            dispatch(setColData({ isRander: true }));
+            setColData({ isRander: true });
           }
         } else {
           message.error(res.data.errmsg);
@@ -379,7 +380,7 @@ export default function InterfaceColMenu(props) {
       // await dispatch(fetchInterfaceColList(project_id));
       getList();
 
-      dispatch(setColData({ isRander: true }));
+      setColData({ isRander: true });
     } else {
       message.error(res.data.errmsg);
     }
@@ -430,7 +431,7 @@ export default function InterfaceColMenu(props) {
       await axios.post('/api/col/up_case', { id: dragNodeKey.split('_')[1], col_id: dropColId });
       // dispatch(fetchInterfaceColList(id));
       getList();
-      dispatch(setColData({ isRander: true }));
+      setColData({ isRander: true });
     } else {
       const changes = arrayChangeIndex(interfaceColList, dragIndex, dropIndex);
       axios.post('/api/col/up_col_index', changes).then();

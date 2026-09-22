@@ -4,9 +4,9 @@ import { Modal, Collapse, Row, Col, Input, message, Button } from 'antd';
 import { FolderOpenOutlined } from '@ant-design/icons';
 import PropTypes from 'prop-types';
 import axios from 'axios';
-import { useDispatch, useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
-import { fetchInterfaceColList } from '../../../../../reducer/modules/interfaceCol';
+// interfaceCol 切片已迁至 Zustand（批次3）
+import useInterfaceColStore from '../../../../../store/interfaceColStore';
 
 const { TextArea } = Input;
 
@@ -28,8 +28,8 @@ const { TextArea } = Input;
  */
 const AddColModal = props => {
   const { visible, caseName, onOk, onCancel } = props;
-  const interfaceColList = useSelector(state => state.interfaceCol.interfaceColList);
-  const dispatch = useDispatch();
+  const interfaceColList = useInterfaceColStore(state => state.interfaceColList);
+  const fetchInterfaceColList = useInterfaceColStore(state => state.fetchInterfaceColList);
   const { id: projectId } = /** @type {any} */ (useParams());
 
   const [state, setState] = useState(/** @type {any} */ ({
@@ -46,7 +46,7 @@ const AddColModal = props => {
 
   // 对应旧 UNSAFE_componentWillMount：拉取项目集合列表
   useEffect(() => {
-    dispatch(fetchInterfaceColList(projectId));
+    fetchInterfaceColList(projectId);
   }, []);
 
   // 对应旧 UNSAFE_componentWillReceiveProps
@@ -71,7 +71,7 @@ const AddColModal = props => {
     const res = await axios.post('/api/col/add_col', { name, desc, project_id: projectId });
     if (!res.data.errcode) {
       message.success('添加集合成功');
-      await dispatch(fetchInterfaceColList(projectId));
+      await fetchInterfaceColList(projectId);
 
       patchState({ id: res.data.data._id });
     } else {

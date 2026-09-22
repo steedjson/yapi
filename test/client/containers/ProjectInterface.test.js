@@ -85,11 +85,38 @@ const { MemoryRouter, Routes, Route } = require('react-router-dom');
 const originalAxiosGet = axios.get;
 const originalAxiosPost = axios.post;
 
+// interfaceCol 切片已迁至 Zustand（批次3）：组件经 useInterfaceColStore 读写
+const useInterfaceColStore = require('../../../client/store/interfaceColStore').default;
+
+const INITIAL_INTERFACE_COL_STATE = {
+  interfaceColList: [
+    {
+      _id: 0,
+      name: '',
+      uid: 0,
+      project_id: 0,
+      desc: '',
+      add_time: 0,
+      up_time: 0,
+      caseList: [{}]
+    }
+  ],
+  isShowCol: true,
+  isRender: false,
+  currColId: 0,
+  currCaseId: 0,
+  currCase: {},
+  currCaseList: [],
+  variableParamsList: [],
+  envList: []
+};
+
 test.serial.afterEach.always(() => {
   cleanup();
   cleanupDom();
   axios.get = originalAxiosGet;
   axios.post = originalAxiosPost;
+  useInterfaceColStore.setState(INITIAL_INTERFACE_COL_STATE);
 });
 
 const COL_LIST = [
@@ -142,11 +169,15 @@ function stubColApis(getCalls, postCalls) {
 }
 
 function runSeed() {
+  // interfaceCol 切片改经真实 Zustand store 播种（挂载链会用同名 stub 数据收敛覆盖）
+  useInterfaceColStore.setState({
+    ...INITIAL_INTERFACE_COL_STATE,
+    interfaceColList: COL_LIST
+  });
   return {
     user: { uid: 11 },
     inter: { curdata: CURR_INTERFACE, list: [], editStatus: false },
-    project: { currProject: CURR_PROJECT },
-    interfaceCol: { interfaceColList: COL_LIST }
+    project: { currProject: CURR_PROJECT }
   };
 }
 
@@ -221,6 +252,10 @@ test.serial('Run 点击保存打开 AddColModal，确认后提交用例并关闭
 
 test.serial('AddColModal 支持选择集合并以输入的用例名回调 onOk', async t => {
   const onOkCalls = [];
+  useInterfaceColStore.setState({
+    ...INITIAL_INTERFACE_COL_STATE,
+    interfaceColList: [{ _id: 5, name: '集合一' }, { _id: 6, name: '集合二' }]
+  });
   renderWithProviders(
     React.createElement(AddColModal, {
       visible: true,
@@ -229,9 +264,7 @@ test.serial('AddColModal 支持选择集合并以输入的用例名回调 onOk',
       onCancel: () => {}
     }),
     {
-      seedState: {
-        interfaceCol: { interfaceColList: [{ _id: 5, name: '集合一' }, { _id: 6, name: '集合二' }] }
-      },
+      seedState: {},
       ...ROUTE
     }
   );
@@ -263,10 +296,12 @@ test.serial('AddColModal 父级 props 变化时默认选中首集合并回填用
     onOk: (colId, caseName) => onOkCalls.push([colId, caseName]),
     onCancel: () => {}
   };
+  useInterfaceColStore.setState({
+    ...INITIAL_INTERFACE_COL_STATE,
+    interfaceColList: [{ _id: 5, name: '集合一' }, { _id: 6, name: '集合二' }]
+  });
   const utils = renderWithProviders(React.createElement(AddColModal, props), {
-    seedState: {
-      interfaceCol: { interfaceColList: [{ _id: 5, name: '集合一' }, { _id: 6, name: '集合二' }] }
-    },
+    seedState: {},
     ...ROUTE
   });
   t.falsy(document.body.querySelector('.add-col-modal'), 'visible=false 不渲染弹窗内容');
@@ -399,15 +434,16 @@ test.serial('ImportInterface 全选/取消全选经 selectInterface 回调过滤
 test.serial('InterfaceCaseContent 挂载拉取用例数据并渲染用例标题与 Postman', async t => {
   const getCalls = [];
   stubColApis(getCalls, []);
+  useInterfaceColStore.setState({
+    ...INITIAL_INTERFACE_COL_STATE,
+    interfaceColList: COL_LIST,
+    currColId: 5,
+    currCaseId: 100,
+    currCase: { _id: 100, casename: '用例一', project_id: 12, interface_id: 88 }
+  });
   const { container } = renderWithProviders(React.createElement(InterfaceCaseContent), {
     seedState: {
       user: { uid: 11 },
-      interfaceCol: {
-        interfaceColList: COL_LIST,
-        currColId: 5,
-        currCaseId: 100,
-        currCase: { _id: 100, casename: '用例一', project_id: 12, interface_id: 88 }
-      },
       project: {
         currProject: { _id: 12, basepath: '/base', pre_script: 'p1', after_script: 'a1' },
         projectEnv: { env: [{ name: 'local', domain: 'http://localhost' }] }
@@ -450,15 +486,16 @@ test.serial('InterfaceCaseContent 更新用例提交 Postman state，用例名�
   const getCalls = [];
   const postCalls = [];
   stubColApis(getCalls, postCalls);
+  useInterfaceColStore.setState({
+    ...INITIAL_INTERFACE_COL_STATE,
+    interfaceColList: COL_LIST,
+    currColId: 5,
+    currCaseId: 100,
+    currCase: { _id: 100, casename: '用例一', project_id: 12, interface_id: 88 }
+  });
   const { container } = renderWithProviders(React.createElement(InterfaceCaseContent), {
     seedState: {
       user: { uid: 11 },
-      interfaceCol: {
-        interfaceColList: COL_LIST,
-        currColId: 5,
-        currCaseId: 100,
-        currCase: { _id: 100, casename: '用例一', project_id: 12, interface_id: 88 }
-      },
       project: {
         currProject: { _id: 12, basepath: '/base', pre_script: 'p1', after_script: 'a1' },
         projectEnv: { env: [] }

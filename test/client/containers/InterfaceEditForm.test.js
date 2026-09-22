@@ -7,6 +7,21 @@ import { renderWithProviders, flushEffects, cleanupDom } from '../../helpers/con
 
 const path = require('path');
 
+// group 切片已迁至 Zustand（批次3）：InterfaceEditForm 经 useGroupStore 读取 field
+const useGroupStore = require('../../../client/store/groupStore').default;
+const INITIAL_GROUP_STATE = {
+  groupList: [],
+  currGroup: { group_name: '', group_desc: '', custom_field1: { name: '', enable: false } },
+  field: { name: '', enable: false },
+  member: [],
+  role: '',
+  groupRequestId: 0
+};
+
+function seedGroupStore(field) {
+  useGroupStore.setState({ ...INITIAL_GROUP_STATE, field });
+}
+
 // InterfaceEditForm 经裸路径引入 client/components/AceEditor 等，jsdom-setup 只映射
 // common/ 前缀，这里补 client/ 前缀的等价映射，必须在 require 被测组件之前安装
 const REPO_ROOT = path.resolve(__dirname, '..', '..', '..');
@@ -200,8 +215,8 @@ test('queryTpl/paramsTpl: 给定 data/index/delParams 输出确定性行结构',
 
 test.serial('InterfaceEditForm: 空表单渲染出基础表单骨架', async t => {
   const Comp = require('../../../client/containers/Project/Interface/InterfaceList/InterfaceEditForm.js').default;
+  seedGroupStore({ enable: true, name: '自定义字段' });
   const seedState = {
-    group: { field: { enable: true, name: '自定义字段' } },
     project: {
       currProject: {
         tag: [{ _id: 't1', name: 'tagA' }],
@@ -234,8 +249,8 @@ test.serial('InterfaceEditForm: 空表单渲染出基础表单骨架', async t =
 
 test.serial('InterfaceEditForm: curdata 缺 method 时不再崩溃（req_radio_type 回退 req-query）', async t => {
   const Comp = require('../../../client/containers/Project/Interface/InterfaceList/InterfaceEditForm.js').default;
+  seedGroupStore({ enable: false });
   const seedState = {
-    group: { field: { enable: false } },
     project: { currProject: { tag: [], is_json5: true } }
   };
   const utils = renderWithProviders(
@@ -264,8 +279,8 @@ test.serial('InterfaceEditForm: curdata 缺 method 时不再崩溃（req_radio_t
 
 test.serial('InterfaceEditForm: json-schema 开启态渲染自研编辑器且编辑操作上抛父组件', async t => {
   const Comp = require('../../../client/containers/Project/Interface/InterfaceList/InterfaceEditForm.js').default;
+  seedGroupStore({ enable: false });
   const seedState = {
-    group: { field: { enable: false } },
     project: {
       currProject: {
         tag: [],

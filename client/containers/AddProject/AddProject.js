@@ -10,7 +10,8 @@ import {
   PlusOutlined
 } from '@ant-design/icons';
 import { addProject } from '../../reducer/modules/project.js';
-import { fetchGroupList } from '../../reducer/modules/group.js';
+// group 切片已迁至 Zustand（批次3），user/project 模块仍未迁移
+import useGroupStore from '../../store/groupStore';
 import { setBreadcrumb } from '../../reducer/modules/user';
 const { TextArea } = Input;
 const FormItem = Form.Item;
@@ -40,26 +41,29 @@ const formItemLayout = {
  */
 function ProjectList(props) {
   const [form] = Form.useForm();
+  const currGroup = useGroupStore(state => state.currGroup);
+  const storeGroupList = useGroupStore(state => state.groupList);
+  const fetchGroupList = useGroupStore(state => state.fetchGroupList);
   const [groupList, setGroupList] = useState(/** @type {any[]} */ ([]));
   const [currGroupId, setCurrGroupId] = useState(null);
 
   useEffect(() => {
     (async () => {
       props.setBreadcrumb([{ name: '新建项目' }]);
-      if (!props.currGroup._id) {
-        await props.fetchGroupList();
+      if (!currGroup._id) {
+        await fetchGroupList();
       }
     })();
   }, []);
 
   // 对齐原 UNSAFE_componentWillMount:分组列表就绪后同步本地 state
   useEffect(() => {
-    if (props.groupList.length === 0) {
+    if (storeGroupList.length === 0) {
       return;
     }
-    setGroupList(props.groupList);
-    setCurrGroupId(props.currGroup._id ? props.currGroup._id : props.groupList[0]._id);
-  }, [props.groupList, props.currGroup]);
+    setGroupList(storeGroupList);
+    setCurrGroupId(currGroup._id ? currGroup._id : storeGroupList[0]._id);
+  }, [storeGroupList, currGroup]);
 
   // 对齐 antd3 的 initialValue pristine 回填语义:分组初始值就绪后写入表单
   useEffect(() => {
@@ -208,23 +212,14 @@ function ProjectList(props) {
 }
 
 ProjectList.propTypes = {
-  groupList: PropTypes.array,
-  currGroup: PropTypes.object,
   addProject: PropTypes.func,
   history: PropTypes.object,
-  setBreadcrumb: PropTypes.func,
-  fetchGroupList: PropTypes.func
+  setBreadcrumb: PropTypes.func
 };
 
 export default connect(
-  (/** @type {any} */ state) => {
-    return {
-      groupList: state.group.groupList,
-      currGroup: state.group.currGroup
-    };
-  },
+  null,
   {
-    fetchGroupList,
     addProject,
     setBreadcrumb
   }

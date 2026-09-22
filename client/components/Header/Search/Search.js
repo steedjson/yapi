@@ -6,9 +6,9 @@ import { SearchOutlined } from '@ant-design/icons';
 import './Search.scss';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { setCurrGroup, fetchGroupMsg } from '../../../reducer/modules/group';
-// menu 切片已迁至 Zustand（批次2），group/interface 模块仍未迁移
+// menu / group 切片均已迁至 Zustand（批次2 / 批次3），interface 模块仍未迁移
 import useMenuStore from '../../../store/menuStore';
+import useGroupStore from '../../../store/groupStore';
 
 import { fetchInterfaceListMenu } from '../../../reducer/modules/interface';
 
@@ -16,7 +16,9 @@ export default function Srch() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const changeMenuItem = useMenuStore(state => state.changeMenuItem);
-  useSelector(state => state.group.groupList);
+  const setCurrGroup = useGroupStore(state => state.setCurrGroup);
+  const fetchGroupMsg = useGroupStore(state => state.fetchGroupMsg);
+  useGroupStore(state => state.groupList);
   useSelector(state => state.project.projectList);
   const [dataSource, setDataSource] = useState(/** @type {any[]} */ ([]));
   // 选项附带的自定义数据索引(见 handleSearch),非响应式,用 ref 承载
@@ -33,9 +35,9 @@ export default function Srch() {
     if (meta.type === '分组') {
       changeMenuItem('/group');
       navigate('/group/' + meta.id);
-      dispatch(setCurrGroup({ group_name: value, _id: meta.id - 0 }));
+      setCurrGroup({ group_name: value, _id: meta.id - 0 });
     } else if (meta.type === '项目') {
-      await dispatch(fetchGroupMsg(meta.groupId));
+      await fetchGroupMsg(meta.groupId);
       navigate('/project/' + meta.id);
     } else if (meta.type === '接口') {
       await dispatch(fetchInterfaceListMenu(meta.projectId));

@@ -29,19 +29,38 @@ const { default: ProjectList } = require(
 
 const originalAxiosGet = axios.get;
 
+// group 切片已迁至 Zustand（批次3）：组件经 useGroupStore 读取 currGroup
+const useGroupStore = require('../../../client/store/groupStore').default;
+
+const INITIAL_GROUP_STATE = {
+  groupList: [],
+  currGroup: { group_name: '', group_desc: '', custom_field1: { name: '', enable: false } },
+  field: { name: '', enable: false },
+  member: [],
+  role: '',
+  groupRequestId: 0
+};
+
 test.serial.afterEach.always(() => {
   cleanup();
   cleanupDom();
   axios.get = originalAxiosGet;
+  useGroupStore.setState(INITIAL_GROUP_STATE);
 });
 
 const CURR_GROUP = { _id: 1, group_name: '演示分组', type: 'private', role: 'owner' };
+
+function seedGroupStore(currGroup) {
+  useGroupStore.setState({
+    ...INITIAL_GROUP_STATE,
+    currGroup: currGroup || CURR_GROUP
+  });
+}
 
 function makeSeed(overrides) {
   return Object.assign(
     {
       user: {},
-      group: { currGroup: CURR_GROUP },
       project: { projectList: [], userInfo: {}, tableLoading: false, currPage: 1 }
     },
     overrides
@@ -53,6 +72,7 @@ test.serial('空列表(私有分组): 挂载即拉取项目列表并渲染空态
     t.is(url, '/api/project/list', '挂载期应请求项目列表接口');
     return Promise.resolve({ data: { errcode: 0, data: { list: [] } } });
   };
+  seedGroupStore();
 
   const { container, dispatched } = renderWithProviders(React.createElement(ProjectList), {
     seedState: makeSeed()
@@ -74,6 +94,7 @@ test.serial('空列表(私有分组): 挂载即拉取项目列表并渲染空态
 
 test.serial('有数据: redux 列表刷新后同步本地列表并分区渲染', async t => {
   axios.get = () => Promise.resolve({ data: { errcode: 0, data: { list: [] } } });
+  seedGroupStore();
 
   const seedState = makeSeed();
   const store = makeDynamicStore(seedState);
@@ -135,6 +156,12 @@ test.serial('有数据: redux 列表刷新后同步本地列表并分区渲染',
 
 test.serial('无权限成员: 添加项目按钮禁用并有 Tooltip 提示', async t => {
   axios.get = () => Promise.resolve({ data: { errcode: 0, data: { list: [] } } });
+  seedGroupStore({
+    _id: 1,
+    group_name: '演示分组',
+    type: 'public',
+    role: 'guest'
+  });
 
   const { container } = renderWithProviders(React.createElement(ProjectList), {
     seedState: makeSeed({
@@ -159,25 +186,20 @@ test.serial('分组切换: currGroup 变化触发重拉（对应旧 cWRP 分支�
     }
     return Promise.resolve({ data: { errcode: 0, data: {} } });
   };
-  const reducer = (state, action) => {
-    if (action.type === 'TEST/SET_GROUP') {
-      return Object.assign({}, state, {
-        group: Object.assign({}, state.group, { currGroup: action.payload })
-      });
-    }
-    return state;
-  };
-  const utils = renderWithProviders(React.createElement(ProjectList), {
-    seedState: makeSeed(),
-    reducer
+  seedGroupStore();
+  renderWithProviders(React.createElement(ProjectList), {
+    seedState: makeSeed()
   });
   await flushEffects();
   t.is(listCalls.length, 1, '挂载期以当前分组拉取一次');
   t.is(listCalls[0], 1);
 
-  utils.store.dispatch({
-    type: 'TEST/SET_GROUP',
-    payload: { _id: 2, group_name: '分组二', type: 'private', role: 'owner' }
+  // group 切片已迁 Zustand：在 act 内直接更新 store，组件订阅重渲染后触发切换分支
+  await act(async () => {
+    useGroupStore.setState({
+      currGroup: { _id: 2, group_name: '分组二', type: 'private', role: 'owner' }
+    });
+    await new Promise(resolve => setTimeout(resolve, 15));
   });
   await flushEffects();
 

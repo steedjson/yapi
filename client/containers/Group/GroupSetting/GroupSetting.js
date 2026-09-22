@@ -1,20 +1,13 @@
 // @ts-check
 import React, { useEffect, useRef, useState } from 'react';
 import { SaveOutlined } from '@ant-design/icons';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
 import { QuestionCircleOutlined, ExclamationCircleOutlined, UpOutlined, DownOutlined } from '@ant-design/icons';
 import { Input, Button, message, Card, Alert, Modal, Switch, Row, Col, Tooltip } from 'antd';
-// news 切片已迁至 Zustand（批次2），group 模块仍未迁移
+// news / group 切片均已迁至 Zustand（批次2 / 批次3），user 模块仍未迁移
 import useNewsStore from '../../../store/newsStore';
-import {
-  changeGroupMsg,
-  fetchGroupList,
-  setCurrGroup,
-  fetchGroupMsg,
-  updateGroupList,
-  deleteGroup as deleteGroupAction
-} from '../../../reducer/modules/group.js';
+import useGroupStore from '../../../store/groupStore';
 const { TextArea } = Input;
 import { trim } from '../../../common.js';
 import './GroupSetting.scss';
@@ -30,10 +23,15 @@ const confirm = Modal.confirm;
  *   等价于旧类组件的实时 this.props 语义。
  */
 const GroupSetting = () => {
-  const dispatch = useDispatch();
   const fetchNewsData = useNewsStore(state => state.fetchNewsData);
-  const groupList = useSelector(state => state.group.groupList);
-  const currGroup = useSelector(state => state.group.currGroup);
+  const changeGroupMsg = useGroupStore(state => state.changeGroupMsg);
+  const fetchGroupList = useGroupStore(state => state.fetchGroupList);
+  const setCurrGroup = useGroupStore(state => state.setCurrGroup);
+  const fetchGroupMsg = useGroupStore(state => state.fetchGroupMsg);
+  const updateGroupList = useGroupStore(state => state.updateGroupList);
+  const deleteGroupAction = useGroupStore(state => state.deleteGroup);
+  const groupList = useGroupStore(state => state.groupList);
+  const currGroup = useGroupStore(state => state.currGroup);
   const curUserRole = useSelector(state => state.user.role);
 
   // 旧 UNSAFE_componentWillMount 的 initState：首帧即以当前分组回填表单
@@ -111,41 +109,39 @@ const GroupSetting = () => {
     if (custom_field1_rule) {
       return;
     }
-    const res = await dispatch(
-      changeGroupMsg({
-        group_name: currGroupName,
-        group_desc: currGroupDesc,
-        custom_field1: {
-          name: custom_field1_name,
-          enable: custom_field1_enable
-        },
-        id: currGroup._id
-      })
-    );
+    const res = await changeGroupMsg({
+      group_name: currGroupName,
+      group_desc: currGroupDesc,
+      custom_field1: {
+        name: custom_field1_name,
+        enable: custom_field1_enable
+      },
+      id: currGroup._id
+    });
 
-    if (!res.payload.data.errcode) {
+    if (!res.data.errcode) {
       message.success('修改成功！');
       // 旧实现向 fetchGroupList 传入 this.props.groupList，action creator 从未消费该参数，随迁移移除
-      await dispatch(fetchGroupList());
-      dispatch(updateGroupList(groupListRef.current));
+      await fetchGroupList();
+      updateGroupList(groupListRef.current);
       const nextGroup = groupListRef.current.find((/** @type {any} */ group) => {
         return +group._id === +id;
       });
-      dispatch(setCurrGroup(nextGroup));
-      dispatch(fetchGroupMsg(currGroupRef.current._id));
+      setCurrGroup(nextGroup);
+      fetchGroupMsg(currGroupRef.current._id);
       fetchNewsData(currGroupRef.current._id, 'group', 1, 10);
     }
   };
 
   // 删除分组
   const deleteGroup = async () => {
-    const res = await dispatch(deleteGroupAction({ id: currGroupRef.current._id }));
-    if (!res.payload.data.errcode) {
+    const res = await deleteGroupAction({ id: currGroupRef.current._id });
+    if (!res.data.errcode) {
       message.success('删除成功');
-      await dispatch(fetchGroupList());
+      await fetchGroupList();
       const nextGroup = groupListRef.current[0] || { group_name: '', group_desc: '' };
       // 旧实现此处 setState 写入从未声明的 state.groupList（仅触发一次额外渲染，无 DOM 影响），随迁移移除
-      dispatch(setCurrGroup(nextGroup));
+      setCurrGroup(nextGroup);
     }
   };
 

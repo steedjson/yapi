@@ -2,6 +2,8 @@
 import './View.scss';
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
+// group 切片已迁至 Zustand（批次3），inter/project 模块仍未迁移
+import useGroupStore from '../../../../store/groupStore';
 import { FileOutlined, CopyOutlined } from '@ant-design/icons';
 import { Table, Row, Col, Tooltip, message } from 'antd';
 import { Link } from 'react-router-dom';
@@ -25,7 +27,7 @@ const HTTP_METHOD = constants.HTTP_METHOD;
  */
 const View = () => {
   const curData = useSelector(state => state.inter.curdata);
-  const custom_field = useSelector(state => state.group.field);
+  const custom_field = useGroupStore(state => state.field);
   const currProject = useSelector(state => state.project.currProject);
 
   const [state, setState] = useState({

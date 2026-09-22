@@ -2,12 +2,14 @@
 import '../../helpers/jsdom-setup';
 import test from 'ava';
 import React from 'react';
-import { cleanup, fireEvent } from '@testing-library/react';
+import { cleanup, fireEvent, act } from '@testing-library/react';
 import { cleanupDom, renderWithProviders, flushEffects } from '../../helpers/containers';
 
 const axios = require('axios');
 
 const { default: MemberList } = require('../../../client/containers/Group/MemberList/MemberList.js');
+// group 切片已迁至 Zustand（批次3）：组件经 useGroupStore 读写，测试直接播种真实 store
+const useGroupStore = require('../../../client/store/groupStore').default;
 
 const originalAxiosGet = axios.get;
 
@@ -17,10 +19,20 @@ const MEMBERS = [
   { uid: 33, username: '王五', email: 'wangwu@test.com', role: 'guest' }
 ];
 
+const INITIAL_GROUP_STATE = {
+  groupList: [],
+  currGroup: { group_name: '', group_desc: '', custom_field1: { name: '', enable: false } },
+  field: { name: '', enable: false },
+  member: [],
+  role: '',
+  groupRequestId: 0
+};
+
 test.serial.afterEach.always(() => {
   cleanup();
   cleanupDom();
   axios.get = originalAxiosGet;
+  useGroupStore.setState(INITIAL_GROUP_STATE);
 });
 
 function seedState() {
@@ -30,11 +42,35 @@ function seedState() {
   };
 }
 
+// 组件读取 currGroup 已走 Zustand：播种真实 store（redux 种子仅保留 user 切片占位）
+function seedGroupStore() {
+  useGroupStore.setState({
+    ...INITIAL_GROUP_STATE,
+    currGroup: { _id: 71, group_name: '测试分组' },
+    role: 'dev'
+  });
+}
+
 function mockGroupApis(logRequests, groupRole) {
   axios.get = (url, config) => {
     logRequests.push({ url, params: config && config.params });
     if (url === '/api/group/get') {
-      return Promise.resolve({ data: { errcode: 0, data: { role: groupRole } } });
+      // 真实契约：/api/group/get 按请求 id 返回完整分组对象（含 custom_field1），
+      // 真实 store 会将其写入 currGroup，故 _id 必须与请求参数一致，否则会触发
+      // 「分组回跳 → 成员列表重拉」的连锁反应（旧冻结 reducer 从不消费故未暴露）
+      const id = (config && config.params && config.params.id) || 71;
+      return Promise.resolve({
+        data: {
+          errcode: 0,
+          data: {
+            _id: id,
+            group_name: id === 71 ? '测试分组' : '新分组',
+            type: 'public',
+            role: groupRole,
+            custom_field1: { name: '', enable: false }
+          }
+        }
+      });
     }
     if (url === '/api/group/get_member_list') {
       return Promise.resolve({ data: { errcode: 0, data: MEMBERS.slice() } });
@@ -46,6 +82,7 @@ function mockGroupApis(logRequests, groupRole) {
 test.serial('owner 视角渲染成员表格（用户名/角色）并提供添加成员入口', async t => {
   const logRequests = [];
   mockGroupApis(logRequests, 'owner');
+  seedGroupStore();
   const { container } = renderWithProviders(React.createElement(MemberList), {
     seedState: seedState()
   });
@@ -84,6 +121,7 @@ test.serial('owner 视角渲染成员表格（用户名/角色）并提供添加
 test.serial('点击「添加成员」展开 Modal（用户名自动补全 + 权限选择）', async t => {
   const logRequests = [];
   mockGroupApis(logRequests, 'owner');
+  seedGroupStore();
   const { container } = renderWithProviders(React.createElement(MemberList), {
     seedState: seedState()
   });
@@ -114,6 +152,7 @@ test.serial('点击「添加成员」展开 Modal（用户名自动补全 + 权�
 test.serial('非管理员视角仅展示角色文案且无添加成员入口', async t => {
   const logRequests = [];
   mockGroupApis(logRequests, 'member');
+  seedGroupStore();
   const { container } = renderWithProviders(React.createElement(MemberList), {
     seedState: seedState()
   });
@@ -135,17 +174,9 @@ test.serial('非管理员视角仅展示角色文案且无添加成员入口', a
 test.serial('分组切换: currGroup 变化触发成员列表重拉（先成员列表后分组信息）', async t => {
   const logRequests = [];
   mockGroupApis(logRequests, 'owner');
-  const reducer = (state, action) => {
-    if (action.type === 'TEST/SET_GROUP') {
-      return Object.assign({}, state, {
-        group: Object.assign({}, state.group, { currGroup: action.payload })
-      });
-    }
-    return state;
-  };
-  const utils = renderWithProviders(React.createElement(MemberList), {
-    seedState: seedState(),
-    reducer
+  seedGroupStore();
+  renderWithProviders(React.createElement(MemberList), {
+    seedState: seedState()
   });
   await flushEffects();
   t.is(
@@ -154,7 +185,11 @@ test.serial('分组切换: currGroup 变化触发成员列表重拉（先成员�
     '挂载期拉取一次成员列表'
   );
 
-  utils.store.dispatch({ type: 'TEST/SET_GROUP', payload: { _id: 72, group_name: '新分组' } });
+  // group 切片已迁 Zustand：在 act 内直接更新 store，组件订阅重渲染后触发切换分支
+  await act(async () => {
+    useGroupStore.setState({ currGroup: { _id: 72, group_name: '新分组' } });
+    await new Promise(resolve => setTimeout(resolve, 15));
+  });
   await flushEffects();
 
   const memberCalls = logRequests.filter(req => req.url === '/api/group/get_member_list');

@@ -65,13 +65,28 @@ const CURR_PROJECT = {
   env: []
 };
 
+// group 切片已迁至 Zustand（批次3）：ProjectMessage 等面板经 useGroupStore 读取
+const useGroupStore = require('../../../client/store/groupStore').default;
+const INITIAL_GROUP_STATE = {
+  groupList: [],
+  currGroup: { group_name: '', group_desc: '', custom_field1: { name: '', enable: false } },
+  field: { name: '', enable: false },
+  member: [],
+  role: '',
+  groupRequestId: 0
+};
+
+function seedGroupStore() {
+  useGroupStore.setState({
+    ...INITIAL_GROUP_STATE,
+    currGroup: { _id: 1, group_name: '分组一', group_desc: '', custom_field1: { name: '', enable: false } },
+    groupList: [{ _id: 1, group_name: '分组一' }]
+  });
+}
+
 function makeSeed(role) {
   return {
     user: { uid: 11 },
-    group: {
-      currGroup: { _id: 1, group_name: '分组一', group_desc: '', custom_field1: { name: '', enable: false } },
-      groupList: [{ _id: 1, group_name: '分组一' }]
-    },
     project: {
       currProject: Object.assign({}, CURR_PROJECT, { role }),
       projectList: [],
@@ -90,10 +105,14 @@ function mockProjectApis(getCalls) {
       return Promise.resolve({ data: { errcode: 0, data: Object.assign({}, CURR_PROJECT) } });
     }
     if (url === '/api/group/list') {
-      return Promise.resolve({ data: { errcode: 0, data: { data: [{ _id: 1, group_name: '分组一' }] } } });
+      // 真实契约：data 直接是分组数组（旧桩多包一层 data.data，被旧冻结 reducer 掩盖）
+      return Promise.resolve({ data: { errcode: 0, data: [{ _id: 1, group_name: '分组一' }] } });
     }
     if (url === '/api/group/get') {
-      return Promise.resolve({ data: { errcode: 0, data: { group_name: '分组一', _id: 1 } } });
+      // 真实契约：返回完整分组对象（含 custom_field1），真实 store 会写入 currGroup
+      return Promise.resolve({
+        data: { errcode: 0, data: { group_name: '分组一', _id: 1, custom_field1: { name: '', enable: false } } }
+      });
     }
     if (url === '/api/project/token') {
       return Promise.resolve({ data: { errcode: 0, data: 'tk_fetched_abcd' } });
@@ -182,7 +201,7 @@ test.serial('ProjectToken 展示 store 中 token，admin 角色可见刷新入�
   mockProjectApis(getCalls);
   const { container } = renderWithProviders(
     React.createElement(ProjectToken, { projectId: 12, curProjectRole: 'admin' }),
-    { seedState: makeSeed('admin') }
+    { PRE_SEED: seedGroupStore(), seedState: makeSeed('admin') }
   );
   await flushEffects();
 
@@ -202,7 +221,7 @@ test.serial('ProjectToken dev 角色不渲染刷新入口', async t => {
   mockProjectApis([]);
   const { container } = renderWithProviders(
     React.createElement(ProjectToken, { projectId: 12, curProjectRole: 'dev' }),
-    { seedState: makeSeed('dev') }
+    { PRE_SEED: seedGroupStore(), seedState: makeSeed('dev') }
   );
   await flushEffects();
 
@@ -219,7 +238,7 @@ test.serial('ProjectMock 首帧回填 mock 配置，切换开关并保存提交�
   };
   const { container } = renderWithProviders(
     React.createElement(ProjectMock, { projectId: 12 }),
-    { seedState: makeSeed('owner') }
+    { PRE_SEED: seedGroupStore(), seedState: makeSeed('owner') }
   );
 
   // 首帧即回填（等价旧 UNSAFE_componentWillMount 首帧前赋值）
@@ -259,7 +278,7 @@ test.serial('ProjectRequest 首帧回填前后脚本并支持保存提交', asyn
   };
   const { container } = renderWithProviders(
     React.createElement(ProjectRequest, { projectId: 12 }),
-    { seedState: makeSeed('owner') }
+    { PRE_SEED: seedGroupStore(), seedState: makeSeed('owner') }
   );
 
   t.is(

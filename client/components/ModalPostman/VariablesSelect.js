@@ -2,8 +2,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import { Tree } from 'antd';
-import { useSelector, useDispatch } from 'react-redux';
-import { fetchVariableParamsList } from '../../reducer/modules/interfaceCol.js';
+// interfaceCol 切片已迁至 Zustand（批次3）
+import useInterfaceColStore from '../../store/interfaceColStore';
 
 const CanSelectPathPrefix = 'CanSelectPath-';
 
@@ -29,8 +29,8 @@ function deleteLastArr(str) {
  */
 export default function VariablesSelect(props) {
   const { click, clickValue, id } = props;
-  const currColId = useSelector((/** @type {any} */ state) => state.interfaceCol.currColId);
-  const dispatch = useDispatch();
+  const currColId = useInterfaceColStore(state => state.currColId);
+  const fetchVariableParamsList = useInterfaceColStore(state => state.fetchVariableParamsList);
   const [records, setRecords] = useState(/** @type {any[]} */ ([]));
   const [expandedKeys, setExpandedKeys] = useState(/** @type {any[]} */ ([]));
   const [selectedKeys, setSelectedKeys] = useState(/** @type {any[]} */ ([]));
@@ -55,14 +55,16 @@ export default function VariablesSelect(props) {
   useEffect(() => {
     let isMounted = true;
     (async () => {
-      const result = await dispatch(fetchVariableParamsList(currColId));
+      const result = await fetchVariableParamsList(currColId);
       if (!isMounted) {
         return;
       }
-      const fetchedRecords = result.payload.data.data;
-      allRecordsRef.current = fetchedRecords.sort((/** @type {any} */ a, /** @type {any} */ b) => {
+      // 先拷贝再排序：响应数组与 store.variableParamsList 同引用，原地 sort 会绕过 set 变更 store
+      const fetchedRecords = ((result && result.data && result.data.data) || []).slice();
+      fetchedRecords.sort((/** @type {any} */ a, /** @type {any} */ b) => {
         return a.index - b.index;
       });
+      allRecordsRef.current = fetchedRecords;
       handleRecordsData(id);
 
       if (clickValue) {

@@ -71,6 +71,32 @@ dndCore.DndContext = function CapturedDndContext(props) {
 
 const axios = require('axios');
 
+// interfaceCol 切片已迁至 Zustand（批次3）：容器经 useInterfaceColStore 读写
+const useInterfaceColStore = require('../../../client/store/interfaceColStore').default;
+
+const INITIAL_INTERFACE_COL_STATE = {
+  interfaceColList: [
+    {
+      _id: 0,
+      name: '',
+      uid: 0,
+      project_id: 0,
+      desc: '',
+      add_time: 0,
+      up_time: 0,
+      caseList: [{}]
+    }
+  ],
+  isShowCol: true,
+  isRender: false,
+  currColId: 0,
+  currCaseId: 0,
+  currCase: {},
+  currCaseList: [],
+  variableParamsList: [],
+  envList: []
+};
+
 // ---- axios 打桩（按 URL 返回固定 fixture，并记录调用顺序与载荷）----
 const CALLS = [];
 function ok(data) {
@@ -95,7 +121,8 @@ axios.get = function(url, config) {
     return ok({ errcode: 0, colData: FIXTURES.colData, data: FIXTURES.caseList });
   }
   if (url.indexOf('/api/col/case_env_list') === 0) {
-    return ok({ errcode: 0, data: [] });
+    // 真实 store 会把响应写入 envList：返回与播种一致的 fixture，快照 DOM 保持不变
+    return ok({ errcode: 0, data: SEED_ENV_LIST });
   }
   return ok({ errcode: 0, data: [] });
 };
@@ -209,9 +236,24 @@ test.serial.afterEach.always(() => {
   cleanup();
   cleanupDom();
   CALLS.length = 0;
+  useInterfaceColStore.setState(INITIAL_INTERFACE_COL_STATE);
 });
 
+// 真实 store 挂载链会覆写各切片：桩与播种用同一份 fixture，保证 DOM 与基线逐字节一致
+const SEED_ENV_LIST = SEED_STATE.interfaceCol.envList;
+
 async function renderContainer() {
+  // interfaceCol 切片改经真实 Zustand store 播种（挂载链会用同名 stub 数据收敛覆盖）
+  useInterfaceColStore.setState({
+    ...INITIAL_INTERFACE_COL_STATE,
+    interfaceColList: SEED_STATE.interfaceCol.interfaceColList,
+    currColId: SEED_STATE.interfaceCol.currColId,
+    currCaseId: SEED_STATE.interfaceCol.currCaseId,
+    isShowCol: SEED_STATE.interfaceCol.isShowCol,
+    isRander: SEED_STATE.interfaceCol.isRander,
+    currCaseList: SEED_STATE.interfaceCol.currCaseList,
+    envList: SEED_ENV_LIST
+  });
   const utils = renderWithProviders(React.createElement(InterfaceColContent), {
     seedState: SEED_STATE,
     initialPath: '/project/12/interface/col/5',

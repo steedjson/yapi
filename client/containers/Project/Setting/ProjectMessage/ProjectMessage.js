@@ -26,8 +26,8 @@ import {
   getProject,
   upsetProject
 } from '../../../../reducer/modules/project';
-import { fetchGroupMsg } from '../../../../reducer/modules/group';
-import { fetchGroupList } from '../../../../reducer/modules/group.js';
+// group 切片已迁至 Zustand（批次3），user/project 模块仍未迁移
+import useGroupStore from '../../../../store/groupStore';
 import { setBreadcrumb } from '../../../../reducer/modules/user';
 import { connect } from 'react-redux';
 const { TextArea } = Input;
@@ -65,6 +65,10 @@ function ProjectMessage(props) {
   const tagRef = useRef(null);
   const protocol = 'http://';
   const [showDangerOptions, setShowDangerOptions] = useState(false);
+  const groupList = useGroupStore(state => state.groupList);
+  const currGroup = useGroupStore(state => state.currGroup);
+  const fetchGroupMsg = useGroupStore(state => state.fetchGroupMsg);
+  const fetchGroupList = useGroupStore(state => state.fetchGroupList);
 
   // 确认修改
   /**
@@ -72,7 +76,7 @@ function ProjectMessage(props) {
    */
   const handleOk = e => {
     e.preventDefault();
-    const { updateProject, projectMsg, groupList } = props;
+    const { updateProject, projectMsg } = props;
     form.validateFields().then((/** @type {any} */ values) => {
       let { tag } = tagRef.current.state;
       tag = tag.filter((/** @type {any} */ val) => {
@@ -93,7 +97,7 @@ function ProjectMessage(props) {
             message.success('修改成功! ');
 
             // 如果如果项目所在的分组位置发生改变
-            props.fetchGroupMsg(group_id);
+            fetchGroupMsg(group_id);
             // props.history.push('/group');
             let projectName = htmlFilter(assignValue.name);
             props.setBreadcrumb([
@@ -194,12 +198,12 @@ function ProjectMessage(props) {
 
   useEffect(() => {
     (async () => {
-      await props.fetchGroupList();
-      await props.fetchGroupMsg(props.projectMsg.group_id);
+      await fetchGroupList();
+      await fetchGroupMsg(props.projectMsg.group_id);
     })();
   }, []);
 
-  const { projectMsg, currGroup } = props;
+  const { projectMsg } = props;
   const mockUrl =
     location.protocol +
     '//' +
@@ -336,7 +340,7 @@ function ProjectMessage(props) {
             ]}
           >
             <Select disabled={!selectDisbaled}>
-              {props.groupList.map((/** @type {any} */ item, /** @type {number} */ index) => (
+              {groupList.map((/** @type {any} */ item, /** @type {number} */ index) => (
                 <Option value={item._id.toString()} key={index}>
                   {item.group_name}
                 </Option>
@@ -526,13 +530,9 @@ ProjectMessage.propTypes = {
   delProject: PropTypes.func,
   getProject: PropTypes.func,
   history: PropTypes.object,
-  fetchGroupMsg: PropTypes.func,
   upsetProject: PropTypes.func,
-  groupList: PropTypes.array,
   projectList: PropTypes.array,
   projectMsg: PropTypes.object,
-  fetchGroupList: PropTypes.func,
-  currGroup: PropTypes.object,
   setBreadcrumb: PropTypes.func
 };
 
@@ -540,18 +540,14 @@ export default connect(
   (/** @type {any} */ state) => {
     return {
       projectList: state.project.projectList,
-      groupList: state.group.groupList,
-      projectMsg: state.project.currProject,
-      currGroup: state.group.currGroup
+      projectMsg: state.project.currProject
     };
   },
   {
     updateProject,
     delProject,
     getProject,
-    fetchGroupMsg,
     upsetProject,
-    fetchGroupList,
     setBreadcrumb
   }
 )(withRouter(ProjectMessage));

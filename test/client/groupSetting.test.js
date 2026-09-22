@@ -12,16 +12,27 @@ const { Provider } = require('react-redux');
 
 // GroupSetting.js 引入 SCSS，经 jsdom-setup 的资源 stub 后可被 Node 端 AVA 加载
 const { default: GroupSetting } = require('../../client/containers/Group/GroupSetting/GroupSetting.js');
-const groupReducer = require('../../client/reducer/modules/group.js').default;
+// group 切片已迁至 Zustand（批次3）：组件经 useGroupStore 读写，测试直接播种真实 store
+const useGroupStore = require('../../client/store/groupStore').default;
 
 const originalAxiosGet = axios.get;
 const originalAxiosPost = axios.post;
+
+const INITIAL_GROUP_STATE = {
+  groupList: [],
+  currGroup: { group_name: '', group_desc: '', custom_field1: { name: '', enable: false } },
+  field: { name: '', enable: false },
+  member: [],
+  role: '',
+  groupRequestId: 0
+};
 
 test.serial.afterEach.always(() => {
   cleanup();
   cleanupDom();
   axios.get = originalAxiosGet;
   axios.post = originalAxiosPost;
+  useGroupStore.setState(INITIAL_GROUP_STATE);
 });
 
 const GROUP_A = {
@@ -33,23 +44,18 @@ const GROUP_A = {
   custom_field1: { name: '渠道', enable: true }
 };
 
-function seedState(userRole) {
-  return {
-    group: {
-      currGroup: GROUP_A,
-      groupList: [GROUP_A],
-      role: 'owner'
-    },
-    user: { role: userRole }
-  };
-}
-
-// group 切片走真实 reducer（SET_CURR_GROUP 等真实生效），user 切片固定
+// group 切片走真实 Zustand store（SET_CURR_GROUP 等真实生效），user 切片固定走 redux
 function renderGroupSetting(userRole) {
-  const seed = seedState(userRole);
-  const store = applyMiddleware(promiseMiddleware)(createStore)(function(state, action) {
+  useGroupStore.setState({
+    ...INITIAL_GROUP_STATE,
+    currGroup: GROUP_A,
+    groupList: [GROUP_A],
+    role: 'owner'
+  });
+  const seed = { user: { role: userRole } };
+  const store = applyMiddleware(promiseMiddleware)(createStore)(function(state) {
     if (state === undefined) state = seed;
-    return { group: groupReducer(state.group, action), user: state.user };
+    return state;
   }, seed);
   return render(
     React.createElement(

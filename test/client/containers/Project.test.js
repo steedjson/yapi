@@ -50,54 +50,91 @@ stubDefaultExport(
 
 const { default: Project } = require('../../../client/containers/Project/Project.js');
 
+// group 切片已迁至 Zustand（批次3）：Project 经 useGroupStore 读取 currGroup
+const useGroupStore = require('../../../client/store/groupStore').default;
+
 const originalAxiosGet = axios.get;
+
+const INITIAL_GROUP_STATE = {
+  groupList: [],
+  currGroup: { group_name: '', group_desc: '', custom_field1: { name: '', enable: false } },
+  field: { name: '', enable: false },
+  member: [],
+  role: '',
+  groupRequestId: 0
+};
 
 test.serial.afterEach.always(() => {
   cleanup();
   cleanupDom();
   axios.get = originalAxiosGet;
+  useGroupStore.setState(INITIAL_GROUP_STATE);
 });
 
 const CURR_PROJECT = { _id: 12, name: '演示项目', group_id: 1, basepath: '/base' };
 
-function makeSeed(currGroup) {
+function makeSeed() {
   return {
     user: {},
-    group: { currGroup },
     project: { currProject: CURR_PROJECT }
   };
 }
 
-function stubApi() {
+// currGroup 播种真实 Zustand store（group 切片不再经 redux 读取）
+function seedGroupStore(currGroup) {
+  useGroupStore.setState({
+    ...INITIAL_GROUP_STATE,
+    currGroup
+  });
+}
+
+// 记录 GET 调用（供 fetchGroupMsg 迁移后的断言使用）
+const apiCalls = [];
+
+function stubApi(groupFixture) {
+  apiCalls.length = 0;
   axios.get = (/** @type {string} */ url) => {
+    apiCalls.push(url);
     if (url.indexOf('/api/project/get') === 0) {
       return Promise.resolve({ data: { errcode: 0, data: CURR_PROJECT } });
     }
     if (url.indexOf('/api/group/get') === 0) {
-      return Promise.resolve({ data: { errcode: 0, data: { _id: 1, group_name: '分组一' } } });
+      // 真实契约：返回完整分组对象；真实 store 会写入 currGroup（旧冻结 reducer 从不消费）
+      return Promise.resolve({
+        data: {
+          errcode: 0,
+          data: Object.assign({ custom_field1: { name: '', enable: false } }, groupFixture)
+        }
+      });
     }
     return Promise.resolve({ data: { errcode: 0, data: {} } });
   };
 }
 
 test.serial('接口子路由: 子导航高亮接口且路由分发到接口桩组件', async t => {
-  stubApi();
+  const groupFixture = { _id: 1, group_name: '分组一', type: 'public', role: 'owner' };
+  stubApi(groupFixture);
+  seedGroupStore(groupFixture);
   const { container, dispatched } = renderWithProviders(React.createElement(Project), {
     routePath: '/project/:id/*',
     initialPath: '/project/12/interface/api/lists',
-    seedState: makeSeed({ _id: 1, group_name: '分组一', type: 'public', role: 'owner' })
+    seedState: makeSeed()
   });
   await flushEffects();
 
   t.truthy(container.querySelector('.m-subnav'), '应渲染子导航');
-  // getProject / fetchGroupMsg 应按序派发
+  // getProject 仍走 redux；fetchGroupMsg 已迁 Zustand，改为断言其 HTTP 请求发生
   t.truthy(
     dispatched.find(a => a.type === 'yapi/project/GET_CURR_PROJECT'),
     '挂载期应派发 getProject'
   );
   t.truthy(
-    dispatched.find(a => a.type === 'yapi/group/FETCH_GROUP_MSG'),
-    '挂载期应派发 fetchGroupMsg'
+    apiCalls.some(url => url.indexOf('/api/group/get') === 0),
+    '挂载期应经 groupStore 拉取分组信息（fetchGroupMsg）'
+  );
+  t.falsy(
+    dispatched.find(a => a.type && a.type.indexOf('yapi/group/') === 0),
+    'group 切片已迁 Zustand，不应再派发 yapi/group/* redux action'
   );
   t.truthy(
     dispatched.find(a => a.type === 'yapi/user/SET_BREADCRUMB'),
@@ -123,11 +160,13 @@ test.serial('接口子路由: 子导航高亮接口且路由分发到接口桩�
 });
 
 test.serial('动态子路由+私有分组: 高亮动态且子导航过滤成员管理', async t => {
-  stubApi();
+  const groupFixture = { _id: 1, group_name: '分组一', type: 'private', role: 'dev' };
+  stubApi(groupFixture);
+  seedGroupStore(groupFixture);
   const { container } = renderWithProviders(React.createElement(Project), {
     routePath: '/project/:id/*',
     initialPath: '/project/12/activity',
-    seedState: makeSeed({ _id: 1, group_name: '分组一', type: 'private', role: 'dev' })
+    seedState: makeSeed()
   });
   await flushEffects();
 
@@ -146,13 +185,13 @@ test.serial('动态子路由+私有分组: 高亮动态且子导航过滤成员�
 });
 
 test.serial('项目未就绪: currProject 为空时渲染全局 Loading', async t => {
-  stubApi();
+  stubApi({ _id: 1, group_name: '分组一', type: 'public' });
+  seedGroupStore({ _id: 1, group_name: '分组一', type: 'public' });
   const { container } = renderWithProviders(React.createElement(Project), {
     routePath: '/project/:id/*',
     initialPath: '/project/12/setting',
     seedState: {
       user: {},
-      group: { currGroup: { _id: 1, group_name: '分组一', type: 'public' } },
       project: { currProject: {} }
     }
   });
@@ -170,14 +209,20 @@ test.serial('项目 id 变化: 路由内导航触发重拉（对应旧 cWRP 分�
       return Promise.resolve({ data: { errcode: 0, data: CURR_PROJECT } });
     }
     if (url.indexOf('/api/group/get') === 0) {
-      return Promise.resolve({ data: { errcode: 0, data: { _id: 1, group_name: '分组一' } } });
+      return Promise.resolve({
+        data: {
+          errcode: 0,
+          data: { _id: 1, group_name: '分组一', type: 'public', role: 'owner', custom_field1: { name: '', enable: false } }
+        }
+      });
     }
     return Promise.resolve({ data: { errcode: 0, data: {} } });
   };
+  seedGroupStore({ _id: 1, group_name: '分组一', type: 'public', role: 'owner' });
   const utils = renderWithProviders(React.createElement(Project), {
     routePath: '/project/:id/*',
     initialPath: '/project/12/interface/api/lists',
-    seedState: makeSeed({ _id: 1, group_name: '分组一', type: 'public', role: 'owner' })
+    seedState: makeSeed()
   });
   await flushEffects();
   t.is(

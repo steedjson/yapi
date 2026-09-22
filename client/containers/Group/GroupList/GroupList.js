@@ -1,7 +1,7 @@
 // @ts-check
 import React, { useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { Modal, Input, message, Spin, Row, Menu, Col, Popover, Tooltip } from 'antd';
 import { FolderAddOutlined, FolderOpenOutlined, UserOutlined } from '@ant-design/icons';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -10,8 +10,9 @@ const { TextArea } = Input;
 const Search = Input.Search;
 import UsernameAutoComplete from '../../../components/UsernameAutoComplete/UsernameAutoComplete.js';
 import GuideBtns from '../../../components/GuideBtns/GuideBtns.js';
-// news 切片已迁至 Zustand（批次2），group 模块仍未迁移
+// news / group 切片均已迁至 Zustand（批次2 / 批次3），user 模块仍未迁移
 import useNewsStore from '../../../store/newsStore';
+import useGroupStore from '../../../store/groupStore';
 import {
   parseRouteGroupId,
   resolveTargetGroup,
@@ -19,11 +20,6 @@ import {
   buildGroupPath,
   filterGroups
 } from './groupSelect.js';
-import {
-  fetchGroupList,
-  setCurrGroup,
-  fetchGroupMsg
-} from '../../../reducer/modules/group.js';
 
 import './GroupList.scss';
 
@@ -47,15 +43,17 @@ const tip = (
  *   等价于旧类组件的实时 this.props 语义。
  */
 const GroupList = () => {
-  const dispatch = useDispatch();
   const navigate = useNavigate();
   const params = useParams();
   const fetchNewsData = useNewsStore(state => state.fetchNewsData);
-  const groupList = useSelector(state => state.group.groupList);
-  const currGroup = useSelector(state => state.group.currGroup);
+  const fetchGroupList = useGroupStore(state => state.fetchGroupList);
+  const setCurrGroup = useGroupStore(state => state.setCurrGroup);
+  const fetchGroupMsg = useGroupStore(state => state.fetchGroupMsg);
+  const groupList = useGroupStore(state => state.groupList);
+  const currGroup = useGroupStore(state => state.currGroup);
   // 旧 @connect 映射的 curUserRole/curUserRoleInGroup 历史遗留仅声明未消费，保留订阅避免行为差异
   useSelector(state => state.user.role);
-  useSelector(state => state.group.currGroup.role || state.group.role);
+  useGroupStore(state => state.currGroup.role || state.role);
   const studyTip = useSelector(state => state.user.studyTip);
   const study = useSelector(state => state.user.study);
 
@@ -95,7 +93,7 @@ const GroupList = () => {
     if (!target || target._id === undefined || target._id === null) {
       return null;
     }
-    dispatch(setCurrGroup(target));
+    setCurrGroup(target);
     if (routeId !== Number(target._id)) {
       navigate(buildGroupPath(target._id), { replace: true });
     }
@@ -103,12 +101,11 @@ const GroupList = () => {
   }
 
   useEffect(() => {
-    // 竞态修复：await 恢复时 redux 列表可能仍是本次 dispatch 前渲染传入的旧列表，
-    // 初始化必须使用 fetchGroupList 返回的 action payload（redux-promise 以最新响应 resolve）。
+    // 竞态修复：await 恢复时 store 列表可能仍是本次请求前渲染传入的旧列表，
+    // 初始化必须使用 fetchGroupList 返回的响应数据（store 动作以最新响应 resolve）。
     (async () => {
-      const res = await dispatch(fetchGroupList());
-      const list =
-        res && res.payload && res.payload.data ? res.payload.data.data : groupListRef.current;
+      const res = await fetchGroupList();
+      const list = res && res.data ? res.data.data : groupListRef.current;
       syncGroupSelection(list, paramsRef.current);
     })();
   }, []);
@@ -153,9 +150,9 @@ const GroupList = () => {
       setNewGroupName('');
       setOwnerUids([]);
       setAddGroupModalVisible(false);
-      await dispatch(fetchGroupList());
+      await fetchGroupList();
       setLocalGroupList(groupListRef.current);
-      dispatch(fetchGroupMsg(currGroupRef.current._id));
+      fetchGroupMsg(currGroupRef.current._id);
       fetchNewsData(currGroupRef.current._id, 'group', 1, 10);
     } else {
       message.error(res.data.errmsg);

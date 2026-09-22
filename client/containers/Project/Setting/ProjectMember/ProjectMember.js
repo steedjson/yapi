@@ -17,9 +17,9 @@ import {
 } from 'antd';
 import { useSelector, useDispatch } from 'react-redux';
 import { useParams } from 'react-router-dom';
-import { fetchGroupMsg } from '../../../../reducer/modules/group';
+// group 切片已迁至 Zustand（批次3），project 模块仍未迁移
+import useGroupStore from '../../../../store/groupStore';
 import ErrMsg from '../../../../components/ErrMsg/ErrMsg.js';
-import { fetchGroupMemberList } from '../../../../reducer/modules/group.js';
 import {
   fetchProjectList,
   getProjectMemberList,
@@ -61,6 +61,8 @@ const ProjectMember = () => {
   const projectMsg = useSelector(state => state.project.currProject);
   const uid = useSelector(state => state.user.uid);
   const projectList = useSelector(state => state.project.projectList);
+  const fetchGroupMsg = useGroupStore(state => state.fetchGroupMsg);
+  const fetchGroupMemberList = useGroupStore(state => state.fetchGroupMemberList);
 
   // 镜像最新 redux 值：事件回调里的读取等价于旧类组件的实时 this.props
   const projectMsgRef = useRef(projectMsg);
@@ -93,13 +95,13 @@ const ProjectMember = () => {
   // 旧 async UNSAFE_componentWillMount：按序拉取分组成员 / 分组信息 / 项目成员并回填
   useEffect(() => {
     (async () => {
-      const groupMemberList = await dispatch(fetchGroupMemberList(projectMsg.group_id));
-      const groupMsg = await dispatch(fetchGroupMsg(projectMsg.group_id));
+      const groupMemberList = await fetchGroupMemberList(projectMsg.group_id);
+      const groupMsg = await fetchGroupMsg(projectMsg.group_id);
       const projectMemberList = await dispatch(getProjectMemberList(id));
       setState((/** @type {any} */ prevState) => ({
         ...prevState,
-        groupMemberList: groupMemberList.payload.data.data,
-        groupName: groupMsg.payload.data.data.group_name,
+        groupMemberList: groupMemberList.data.data,
+        groupName: groupMsg.data.data.group_name,
         projectMemberList: arrayAddKey(projectMemberList.payload.data.data),
         role: projectMsg.role
       }));

@@ -5,11 +5,8 @@ import { Link, useParams } from 'react-router-dom';
 import axios from 'axios';
 import { message, Tooltip, Input } from 'antd';
 import { getEnv } from '../../../../reducer/modules/project';
-import {
-  fetchInterfaceColList,
-  setColData,
-  fetchCaseData
-} from '../../../../reducer/modules/interfaceCol';
+// interfaceCol 切片已迁至 Zustand（批次3），project/user 模块仍未迁移
+import useInterfaceColStore from '../../../../store/interfaceColStore';
 import { Postman } from '../../../../components';
 
 import './InterfaceCaseContent.scss';
@@ -44,13 +41,17 @@ function getColId(colList, currCaseId) {
  */
 const InterfaceCaseContent = () => {
   const dispatch = useDispatch();
-  const interfaceColList = useSelector(state => state.interfaceCol.interfaceColList);
+  const interfaceColList = /** @type {any[]} */ (useInterfaceColStore(state => state.interfaceColList));
   // 历史遗留仅声明未消费，保留订阅避免行为差异
-  useSelector(state => state.interfaceCol.currColId);
-  const currCaseId = useSelector(state => state.interfaceCol.currCaseId);
-  const currCase = useSelector(state => state.interfaceCol.currCase);
+  useInterfaceColStore(state => state.currColId);
+  const currCaseId = useInterfaceColStore(state => state.currCaseId);
+  // zustand 经 allowJs 的类型推断有损（初始 {}），用 JSDoc 收窄（迁移模式文档 §5.4）
+  const currCase = /** @type {any} */ (useInterfaceColStore(state => state.currCase));
   // 历史遗留仅声明未消费，保留订阅避免行为差异
-  useSelector(state => state.interfaceCol.isShowCol);
+  useInterfaceColStore(state => state.isShowCol);
+  const fetchInterfaceColList = useInterfaceColStore(state => state.fetchInterfaceColList);
+  const fetchCaseData = useInterfaceColStore(state => state.fetchCaseData);
+  const setColData = useInterfaceColStore(state => state.setColData);
   const currProject = useSelector(state => state.project.currProject);
   const projectEnv = useSelector(state => state.project.projectEnv);
   const curUid = useSelector(state => state.user.uid);
@@ -74,13 +75,13 @@ const InterfaceCaseContent = () => {
   // 对应旧 async UNSAFE_componentWillMount
   useEffect(() => {
     (async () => {
-      const result = await dispatch(fetchInterfaceColList(latestRef.current.id));
+      const result = await fetchInterfaceColList(latestRef.current.id);
       const { currCaseId: caseId, actionId: routeActionId } = latestRef.current;
       const nextCaseId =
-        +routeActionId || +caseId || result.payload.data.data[0].caseList[0]._id;
-      const currColId = getColId(result.payload.data.data, nextCaseId);
-      await dispatch(fetchCaseData(nextCaseId));
-      dispatch(setColData({ currCaseId: +nextCaseId, currColId, isShowCol: false }));
+        +routeActionId || +caseId || result.data.data[0].caseList[0]._id;
+      const currColId = getColId(result.data.data, nextCaseId);
+      await fetchCaseData(nextCaseId);
+      setColData({ currCaseId: +nextCaseId, currColId, isShowCol: false });
       // 获取当前case 下的环境变量
       await dispatch(getEnv(latestRef.current.currCase.project_id));
       patchState({ editCasename: latestRef.current.currCase.casename });
@@ -94,8 +95,8 @@ const InterfaceCaseContent = () => {
     prevActionIdRef.current = actionId;
     (async () => {
       const currColId = getColId(latestRef.current.interfaceColList, actionId);
-      await dispatch(fetchCaseData(actionId));
-      dispatch(setColData({ currCaseId: +actionId, currColId, isShowCol: false }));
+      await fetchCaseData(actionId);
+      setColData({ currCaseId: +actionId, currColId, isShowCol: false });
       await dispatch(getEnv(latestRef.current.currCase.project_id));
       patchState({ editCasename: latestRef.current.currCase.casename });
     })();
@@ -136,13 +137,13 @@ const InterfaceCaseContent = () => {
 
     const res = await axios.post('/api/col/up_case', params);
     if (latestRef.current.currCase.casename !== casename) {
-      dispatch(fetchInterfaceColList(latestRef.current.id));
+      fetchInterfaceColList(latestRef.current.id);
     }
     if (res.data.errcode) {
       message.error(res.data.errmsg);
     } else {
       message.success('更新成功');
-      dispatch(fetchCaseData(caseRecordId));
+      fetchCaseData(caseRecordId);
     }
   };
 
