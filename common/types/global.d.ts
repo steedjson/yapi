@@ -403,6 +403,17 @@ declare module 'client/components/Loading/Loading' {
 // client/components/ErrorBoundary/ErrorBoundary.js 供 exts 插件 client.js 的
 // 懒加载链兜底使用（批次2 M-1 顺手修，与 Application.js createAsyncComponent 同构）；
 // tsconfig 未配置 client/* 的 paths 映射，按最小子集声明。
+// client/components/AsyncComponent/index.js 为异步包装统一工厂（首屏性能优化批次 2
+// 登记的双源漂移项下沉，五处统一引用：Application 路由 + 三个插件 client.js）：
+declare module 'client/components/AsyncComponent' {
+  import type { ComponentType } from 'react';
+  export function createAsyncComponent(
+    loader: () => Promise<any>,
+    chunkName: string
+  ): ComponentType<any>;
+  export default createAsyncComponent;
+}
+
 declare module 'client/components/ErrorBoundary/ErrorBoundary' {
   import type { ComponentType, ReactNode } from 'react';
   const ErrorBoundary: ComponentType<{ children?: ReactNode; fallback?: ReactNode }>;

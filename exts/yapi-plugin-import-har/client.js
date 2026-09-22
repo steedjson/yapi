@@ -14,7 +14,14 @@ let utilsPromise = null;
  */
 function getUtils() {
   if (!utilsPromise) {
-    utilsPromise = import('../../common/utils.js').then(m => m.default || m);
+    utilsPromise = import('../../common/utils.js')
+      .then(m => m.default || m)
+      .catch(err => {
+        // 动态 import 失败（发版后旧 chunk 404 / 网络中断）不得缓存 rejected promise：
+        // 置空以便下次调用重试（缺陷打捞：原实现失败后需刷新页面）
+        utilsPromise = null;
+        throw err;
+      });
   }
   return utilsPromise;
 }

@@ -45,6 +45,11 @@ function makeStore(seedState, reducer) {
       dispatched.push(action);
     }
   };
+  // 已知怪癖（评估后保持现状）：普通 action 会被记录 2 次（dispatch 包装 + reducer 各一次）。
+  // 曾尝试去重但会破坏 promise 链语义：redux-promise 的解析后 action 经中间件内部 dispatch
+  // 派发（不经本包装），需依赖 reducer 侧记录才能入队；而 promise-payload 的原始 action
+  // 又需包装侧立即记录（否则 NewsList 类断言看不到原始 action）。去重收益仅“数组更干净”，
+  // 不抵语义风险，故保留。
   const store = applyMiddleware(promiseMiddleware)(createStore)(function(state, action) {
     record(action);
     if (state === undefined) return seedState;

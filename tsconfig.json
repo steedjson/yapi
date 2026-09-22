@@ -165,6 +165,7 @@
     "client/reducer/middleware/messageMiddleware.js",
     "client/components/AceEditor/AceEditor.js",
     "client/components/AceEditor/mockEditor.js",
+    "client/components/AsyncComponent/index.js",
     "client/components/AuthenticatedComponent.js",
     "client/components/BlockPrompt/BlockPrompt.js",
     "client/components/Breadcrumb/Breadcrumb.js",
