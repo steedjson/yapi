@@ -1,3 +1,4 @@
+// @ts-check
 /**
  * Created by gxl.gao on 2017/10/24.
  */

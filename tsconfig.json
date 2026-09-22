@@ -276,6 +276,27 @@
     "exts/yapi-plugin-wiki/wikiPage/index.js",
     "exts/yapi-plugin-wiki/wikiPage/Editor.js",
     "exts/yapi-plugin-wiki/wikiPage/View.js",
-    "exts/yapi-plugin-test/client.js"
+    "exts/yapi-plugin-test/client.js",
+    // TS 覆盖收口（J 批）：client 4 个未纳入文件 + exts 14 个插件入口
+    // （index.js / defaultTheme.js 清单），全部补 // @ts-check 后纳入；
+    // 至此 client/exts/common 下 JS 文件零遗漏（实测 0 错）。
+    "client/constants/variable.js",
+    "client/history.js",
+    "client/reducer/modules/reducer.js",
+    "client/utils/sanitize.js",
+    "exts/yapi-plugin-advanced-mock/index.js",
+    "exts/yapi-plugin-export-data/defaultTheme.js",
+    "exts/yapi-plugin-export-data/index.js",
+    "exts/yapi-plugin-export-swagger2-data/index.js",
+    "exts/yapi-plugin-gen-services/defaultTheme.js",
+    "exts/yapi-plugin-gen-services/index.js",
+    "exts/yapi-plugin-import-har/index.js",
+    "exts/yapi-plugin-import-postman/index.js",
+    "exts/yapi-plugin-import-swagger/index.js",
+    "exts/yapi-plugin-import-yapi-json/index.js",
+    "exts/yapi-plugin-statistics/index.js",
+    "exts/yapi-plugin-swagger-auto-sync/index.js",
+    "exts/yapi-plugin-test/index.js",
+    "exts/yapi-plugin-wiki/index.js",
   ]
 }
