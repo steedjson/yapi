@@ -7,13 +7,15 @@ import './Search.scss';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { setCurrGroup, fetchGroupMsg } from '../../../reducer/modules/group';
-import { changeMenuItem } from '../../../reducer/modules/menu';
+// menu 切片已迁至 Zustand（批次2），group/interface 模块仍未迁移
+import useMenuStore from '../../../store/menuStore';
 
 import { fetchInterfaceListMenu } from '../../../reducer/modules/interface';
 
 export default function Srch() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const changeMenuItem = useMenuStore(state => state.changeMenuItem);
   useSelector(state => state.group.groupList);
   useSelector(state => state.project.projectList);
   const [dataSource, setDataSource] = useState(/** @type {any[]} */ ([]));
@@ -29,7 +31,7 @@ export default function Srch() {
     // 不能作为 props 挂在 Option 上，否则会透传到 DOM 触发 React 警告
     const meta = searchIndexRef.current[option.key] || {};
     if (meta.type === '分组') {
-      dispatch(changeMenuItem('/group'));
+      changeMenuItem('/group');
       navigate('/group/' + meta.id);
       dispatch(setCurrGroup({ group_name: value, _id: meta.id - 0 }));
     } else if (meta.type === '项目') {

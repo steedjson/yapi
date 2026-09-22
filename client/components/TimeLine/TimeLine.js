@@ -8,7 +8,8 @@ import showDiffMsg from '../../../common/diff-view.js';
 import sanitizeHtml from '../../utils/sanitize.js';
 import variable from '../../constants/variable';
 import { Link } from 'react-router-dom';
-import { fetchNewsData, fetchMoreNews } from '../../reducer/modules/news.js';
+// news 切片已迁至 Zustand（批次2），interface 模块仍未迁移
+import useNewsStore from '../../store/newsStore';
 import { fetchInterfaceList } from '../../reducer/modules/interface.js';
 import ErrMsg from '../ErrMsg/ErrMsg.js';
 // jsondiffpatch 0.7 起移除 dist UMD 产物, 主入口为 CJS/ESM 双形态, webpack 直接打包 lib;
@@ -54,8 +55,11 @@ AddDiffView.propTypes = {
  */
 export default function TimeTree(props) {
   const dispatch = useDispatch();
-  const newsData = useSelector(state => state.news.newsData);
-  const curpage = useSelector(state => state.news.curpage);
+  // news 切片已迁至 Zustand（批次2），user 订阅保留（历史遗留仅声明未消费）
+  const newsData = /** @type {any} */ (useNewsStore(state => state.newsData));
+  const curpage = useNewsStore(state => state.curpage);
+  const fetchNewsData = useNewsStore(state => state.fetchNewsData);
+  const fetchMoreNews = useNewsStore(state => state.fetchMoreNews);
   // curUid 与旧 @connect 映射保持一致(历史遗留仅声明未消费),保留订阅避免行为差异
   useSelector(state => state.user.uid);
 
@@ -75,10 +79,7 @@ export default function TimeTree(props) {
     // 对应原 UNSAFE_componentWillMount + UNSAFE_componentWillReceiveProps:
     // 首次挂载与 typeid 变化时都重新拉取动态数据
     const current = latestRef.current;
-    // news.js 中 selectValue 形参未标可选，此处历史调用只传 4 个实参，类型上按 any 调用放行
-    current.dispatch(
-      (/** @type {any} */ (fetchNewsData))(current.typeid, current.type, 1, 10)
-    );
+    fetchNewsData(current.typeid, current.type, 1, 10);
     if (current.type === 'project') {
       getApiList();
     }
@@ -89,13 +90,15 @@ export default function TimeTree(props) {
 
     if (current.curpage <= current.newsData.total) {
       setLoading(true);
-      current
-        .dispatch(
-          fetchMoreNews(current.typeid, current.type, current.curpage + 1, 10, curSelectValueRef.current)
-        )
-        .then(function() {
-          setLoading(false);
-        });
+      fetchMoreNews(
+        current.typeid,
+        current.type,
+        current.curpage + 1,
+        10,
+        curSelectValueRef.current
+      ).then(function() {
+        setLoading(false);
+      });
     }
   }
 
@@ -126,7 +129,7 @@ export default function TimeTree(props) {
    */
   function handleSelectApi(selectValue) {
     curSelectValueRef.current = selectValue;
-    latestRef.current.dispatch(fetchNewsData(props.typeid, props.type, 1, 10, selectValue));
+    fetchNewsData(props.typeid, props.type, 1, 10, selectValue);
   }
 
   let data = newsData ? newsData.list : [];

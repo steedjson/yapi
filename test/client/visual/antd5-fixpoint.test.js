@@ -155,7 +155,7 @@ async function mountGroupList() {
   stubAxios([
     { match: '/api/group/list', respond: () => ({ errcode: 0, data: [G1, G2, G3] }) },
     { match: '/api/group/get', respond: () => ({ errcode: 0, data: G1 }) },
-    { match: '/api/log/', respond: () => ({ errcode: 0, data: { data: [], total: 0 } }) }
+    { match: '/api/log/', respond: () => ({ errcode: 0, data: { list: [], total: 0 } }) }
   ]);
   const { default: GroupList } = require('../../../client/containers/Group/GroupList/GroupList.js');
   renderWithProviders(React.createElement(GroupList), {

@@ -16,7 +16,8 @@ import {
 } from '@ant-design/icons';
 import { getV4Icon } from '../../constants/v4IconMap';
 import { logoutActions } from '../../reducer/modules/user';
-import { changeMenuItem } from '../../reducer/modules/menu';
+// menu 切片已迁至 Zustand（批次2），user 模块仍未迁移
+import useMenuStore from '../../store/menuStore';
 import { useNavigate } from 'react-router-dom';
 import Srch from './Search/Search';
 import { SKINS, getSkin, setSkin } from '../../theme';
@@ -225,6 +226,7 @@ ToolUser.propTypes = {
 export default function HeaderCom() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const changeMenuItem = useMenuStore(state => state.changeMenuItem);
   const user = useSelector(state => state.user.userName);
   const uid = useSelector(state => state.user.uid);
   const role = useSelector(state => state.user.role);
@@ -244,7 +246,7 @@ export default function HeaderCom() {
   }
 
   function relieveLink() {
-    dispatch(changeMenuItem(''));
+    changeMenuItem('');
   }
 
   /**
@@ -256,7 +258,7 @@ export default function HeaderCom() {
       .then((/** @type {any} */ res) => {
         if (res.payload.data.errcode == 0) {
           navigate('/');
-          dispatch(changeMenuItem('/'));
+          changeMenuItem('/');
           message.success('退出成功! ');
         } else {
           message.error(res.payload.data.errmsg);

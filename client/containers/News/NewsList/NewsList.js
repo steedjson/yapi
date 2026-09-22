@@ -1,9 +1,10 @@
 // @ts-check
 import React, { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
 import { Menu } from 'antd';
-import { fetchNewsData } from '../../../reducer/modules/news.js';
+// news 切片已迁至 Zustand（批次2），user 模块仍未迁移
+import useNewsStore from '../../../store/newsStore';
 
 const logList = [
   {
@@ -25,10 +26,10 @@ const logList = [
  */
 const NewsList = props => {
   const uid = useSelector(state => state.user.uid + '');
-  const dispatch = useDispatch();
+  const fetchNewsData = useNewsStore(state => state.fetchNewsData);
   const [selectedKeys, setSelectedKeys] = useState(0);
   // 旧 @connect 映射的 newsData 历史遗留仅声明未消费，保留订阅避免行为差异
-  useSelector(state => state.news.newsData);
+  useNewsStore(state => state.newsData);
 
   /**
    * @param {any} e
@@ -41,7 +42,7 @@ const NewsList = props => {
     // 语义修复需产品裁决并回归 /api/log/list 行为, 超出范围, 保持现状仅登记说明。
     setSelectedKeys(+e.key);
     props.setLoading(true);
-    dispatch((/** @type {any} */ (fetchNewsData))(+uid, 0, 5)).then(function() {
+    fetchNewsData(+uid, 0, 5).then(function() {
       props.setLoading(false);
     });
   }

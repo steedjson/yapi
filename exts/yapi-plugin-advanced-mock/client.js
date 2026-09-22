@@ -1,8 +1,10 @@
 // @ts-check
 import { createAsyncComponent } from 'client/components/AsyncComponent';
-// mockCol reducer 必须同步注册：add_reducer 钩子在 createStore 前消费，
-// reducer 不能延迟（store 形状必须在首个 dispatch 前定型），且自身轻量无重依赖。
-import mockCol from './MockCol/mockColReducer.js';
+
+// mockCol reducer 已迁至 Zustand（client/store/mockColStore.js，批次2），本插件原经
+// add_reducer 钩子注册的 mockCol 切片（./MockCol/mockColReducer.js）随之注销——
+// 全仓唯一状态读取方 MockCol/MockCol.js 已切换为 useMockColStore，注销无行为影响。
+// 旧 mockColReducer.js 文件保留在盘上（迁移批次禁止删除旧 reducer 文件）。
 
 // 批次1（首屏性能优化）：高级 Mock 页组件经 React.lazy 异步化。AdvMock 链上挂有
 // mockEditor（CodeMirror 6 全家桶），同步 import 会把整链锁进 index 入口模块图、
@@ -26,8 +28,5 @@ module.exports = function(){
       name: '高级Mock',
       component: AdvMockTab
     }
-  })
-  this.bindHook('add_reducer', function(/** @type {any} */ reducerModules){
-    reducerModules.mockCol = mockCol;
   })
 }

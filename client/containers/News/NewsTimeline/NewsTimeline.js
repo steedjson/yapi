@@ -2,16 +2,16 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Timeline, Spin } from 'antd';
 import PropTypes from 'prop-types';
-import { useDispatch, useSelector } from 'react-redux';
+// news 切片已迁至 Zustand（批次2）
+import useNewsStore from '../../../store/newsStore';
 import { formatTime } from '../../../common.js';
-import { fetchNewsData } from '../../../reducer/modules/news.js';
 import { timeago } from '../../../../common/utils';
 // timeago(new Date().getTime() - 40);
 
 const NewsTimeline = () => {
-  const dispatch = useDispatch();
-  const newsData = useSelector(state => state.news.newsData);
-  const curpage = useSelector(state => state.news.curpage);
+  const newsData = /** @type {any} */ (useNewsStore(state => state.newsData));
+  const curpage = useNewsStore(state => state.curpage);
+  const fetchNewsData = useNewsStore(state => state.fetchNewsData);
   const [bidden, setBidden] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -21,7 +21,7 @@ const NewsTimeline = () => {
 
   function getMore() {
     setLoading(true);
-    dispatch((/** @type {any} */ (fetchNewsData))(21, 'project', curpage, 8)).then(function() {
+    fetchNewsData(21, 'project', curpage, 8).then(function() {
       setLoading(false);
       const current = latestRef.current;
       if (current.newsData.total + 1 === current.curpage) {
@@ -32,7 +32,7 @@ const NewsTimeline = () => {
 
   useEffect(() => {
     // 对应原 UNSAFE_componentWillMount
-    dispatch((/** @type {any} */ (fetchNewsData))(21, 'project', curpage, 8));
+    fetchNewsData(21, 'project', curpage, 8);
   }, []);
 
   let data = newsData ? newsData.list : [];

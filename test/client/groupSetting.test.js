@@ -105,7 +105,7 @@ test.serial('GroupSetting 交互：修改名称后保存应携带新值请求 /a
       return Promise.resolve({ data: { errcode: 0, data: GROUP_A } });
     }
     if (url === '/api/log/list') {
-      return Promise.resolve({ data: { errcode: 0, data: { data: [], total: 0 } } });
+      return Promise.resolve({ data: { errcode: 0, data: { list: [], total: 0 } } });
     }
     throw new Error('unexpected GET: ' + url);
   };

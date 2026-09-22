@@ -5,7 +5,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
 import { QuestionCircleOutlined, ExclamationCircleOutlined, UpOutlined, DownOutlined } from '@ant-design/icons';
 import { Input, Button, message, Card, Alert, Modal, Switch, Row, Col, Tooltip } from 'antd';
-import { fetchNewsData } from '../../../reducer/modules/news.js';
+// news 切片已迁至 Zustand（批次2），group 模块仍未迁移
+import useNewsStore from '../../../store/newsStore';
 import {
   changeGroupMsg,
   fetchGroupList,
@@ -30,6 +31,7 @@ const confirm = Modal.confirm;
  */
 const GroupSetting = () => {
   const dispatch = useDispatch();
+  const fetchNewsData = useNewsStore(state => state.fetchNewsData);
   const groupList = useSelector(state => state.group.groupList);
   const currGroup = useSelector(state => state.group.currGroup);
   const curUserRole = useSelector(state => state.user.role);
@@ -131,7 +133,7 @@ const GroupSetting = () => {
       });
       dispatch(setCurrGroup(nextGroup));
       dispatch(fetchGroupMsg(currGroupRef.current._id));
-      dispatch((/** @type {any} */ (fetchNewsData))(currGroupRef.current._id, 'group', 1, 10));
+      fetchNewsData(currGroupRef.current._id, 'group', 1, 10);
     }
   };
 

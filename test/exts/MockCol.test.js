@@ -3,14 +3,12 @@ import './setup';
 import test from 'ava';
 import React from 'react';
 import { cleanup, fireEvent } from '@testing-library/react';
-import { render } from '@testing-library/react';
-import { Provider } from 'react-redux';
-import { MemoryRouter, Routes, Route } from 'react-router-dom';
-import { createStore, applyMiddleware } from 'redux';
-import promiseMiddleware from 'redux-promise';
 import { renderWithProviders, flushEffects, cleanupDom } from '../helpers/containers';
 
 const { axiosMock } = require('./setup');
+// 与 MockCol.js 共享同一模块实例（babel CJS 转译后命中同一 require 缓存）：
+// mockCol 切片已迁 Zustand
+const { default: useMockColStore } = require('../../client/store/mockColStore');
 
 const MOCKCOL_PATH = '../../exts/yapi-plugin-advanced-mock/MockCol/MockCol';
 
@@ -55,62 +53,27 @@ const CURDATA = {
   req_body_other: ''
 };
 
+// mockCol 切片已迁 Zustand，Redux 种子中不再包含（inter/project 仍未迁移）
 function seedState(role) {
   return {
-    mockCol: { list: MOCK_LIST_A },
     inter: { curdata: CURDATA },
     project: { currProject: { _id: 12, role: role, switch_notice: true } }
   };
 }
 
-/**
- * helpers/containers 的 makeStore 为固定 reducer（派发不改 state），这里对
- * FETCH_MOCK_COL 做真实收敛，其余分支保持种子 state，供重拉列表断言使用。
- */
-function renderMockColWithLiveStore(role) {
-  const dispatched = [];
-  const record = action => {
-    if (action && action.type && action.type.indexOf('@@') !== 0) {
-      dispatched.push(action);
-    }
-  };
-  const store = applyMiddleware(promiseMiddleware)(createStore)(function(state, action) {
-    record(action);
-    if (state === undefined) {
-      return seedState(role);
-    }
-    if (action.type === 'yapi/mockCol/FETCH_MOCK_COL') {
-      return { ...state, mockCol: { ...state.mockCol, list: action.payload.data } };
-    }
-    return state;
+test.serial.afterEach.always(() => {
+  cleanupDom();
+  // mockCol 已迁 Zustand：模块级单例，用例间复位避免状态串场
+  useMockColStore.setState({ list: [] });
+});
+
+function renderMockCol(role) {
+  const utils = renderWithProviders(React.createElement(require(MOCKCOL_PATH).default), {
+    seedState: seedState(role),
+    routePath: '/project/:id/interface/api/:actionId',
+    initialPath: '/project/12/interface/api/100'
   });
-  const originalDispatch = store.dispatch;
-  store.dispatch = action => {
-    record(action);
-    return originalDispatch(action);
-  };
-  const utils = render(
-    React.createElement(
-      Provider,
-      { store },
-      React.createElement(
-        MemoryRouter,
-        {
-          initialEntries: ['/project/12/interface/api/100'],
-          future: { v7_startTransition: true, v7_relativeSplatPath: true }
-        },
-        React.createElement(
-          Routes,
-          null,
-          React.createElement(Route, {
-            path: '/project/:id/interface/api/:actionId',
-            element: React.createElement(require(MOCKCOL_PATH).default)
-          })
-        )
-      )
-    )
-  );
-  return { ...utils, dispatched };
+  return utils;
 }
 
 function findButton(container, text) {
@@ -123,21 +86,18 @@ test.serial('MockCol guest 角色：挂载拉取期望列表，操作按钮与�
   axiosMock.setRoutes([
     { match: '/api/plugin/advmock/case/list', respond: () => ({ errcode: 0, data: MOCK_LIST_A }) }
   ]);
-  const { container, dispatched } = renderWithProviders(
-    React.createElement(require(MOCKCOL_PATH).default),
-    {
-      seedState: seedState('guest'),
-      routePath: '/project/:id/interface/api/:actionId',
-      initialPath: '/project/12/interface/api/100'
-    }
-  );
+  const { container, dispatched } = renderMockCol('guest');
   await flushEffects();
 
-  // 挂载期拉取期望列表
+  // 挂载期拉取期望列表（经 Zustand fetchMockCol）
   const listCalls = axiosMock.filter('/api/plugin/advmock/case/list');
   t.is(listCalls.length, 1);
   t.regex(listCalls[0].url, /interface_id=100$/);
-  t.true(dispatched.some(a => a.type === 'yapi/mockCol/FETCH_MOCK_COL'));
+  t.falsy(
+    dispatched.some(action => action.type === 'yapi/mockCol/FETCH_MOCK_COL'),
+    '拉取期望列表不应再经 redux 派发（已迁 Zustand）'
+  );
+  t.deepEqual(useMockColStore.getState().list, MOCK_LIST_A, '列表数据应收敛进 Zustand store');
 
   // guest：添加期望禁用，且操作列不渲染任何按钮
   const addBtn = findButton(container, '添加期望');
@@ -151,7 +111,6 @@ test.serial('MockCol guest 角色：挂载拉取期望列表，操作按钮与�
   t.regex(container.textContent, /期望二/);
 
   cleanup();
-  cleanupDom();
 });
 
 test.serial('MockCol owner 点击「已开启」：hide 请求成功后重拉列表并切换为「未开启」', async t => {
@@ -165,7 +124,7 @@ test.serial('MockCol owner 点击「已开启」：hide 请求成功后重拉列
     },
     { match: '/api/plugin/advmock/case/hide', respond: () => ({ errcode: 0, data: true }) }
   ]);
-  const { container, dispatched } = renderMockColWithLiveStore('owner');
+  const { container } = renderMockCol('owner');
   await flushEffects(60);
 
   t.truthy(findButton(container, '已开启'));
@@ -180,18 +139,18 @@ test.serial('MockCol owner 点击「已开启」：hide 请求成功后重拉列
 
   // 重拉列表后按钮切换为「未开启」（MOCK_LIST_B 中期望一 case_enable=false）
   t.regex(container.textContent, /未开启/);
-  // 挂载 + 重拉共两次 FETCH_MOCK_COL
-  t.is(dispatched.filter(a => a.type === 'yapi/mockCol/FETCH_MOCK_COL').length, 2);
+  // 挂载 + 重拉共两次 case/list 请求，store 收敛为 MOCK_LIST_B
+  t.is(axiosMock.filter('/api/plugin/advmock/case/list').length, 2);
+  t.deepEqual(useMockColStore.getState().list, MOCK_LIST_B, '重拉结果应收敛进 Zustand store');
 
   cleanup();
-  cleanupDom();
 });
 
 test.serial('MockCol owner 点击「添加期望」：CaseDesModal 按 visible 契约打开（open/visible 回归门禁）', async t => {
   axiosMock.setRoutes([
     { match: '/api/plugin/advmock/case/list', respond: () => ({ errcode: 0, data: MOCK_LIST_A }) }
   ]);
-  const { container } = renderMockColWithLiveStore('owner');
+  const { container } = renderMockCol('owner');
   await flushEffects(60);
 
   const addButton = findButton(container, '添加期望');
@@ -205,5 +164,4 @@ test.serial('MockCol owner 点击「添加期望」：CaseDesModal 按 visible �
   t.is(modal.querySelector('.ant-modal-title').textContent, '添加期望');
 
   cleanup();
-  cleanupDom();
 });

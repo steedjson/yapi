@@ -1,7 +1,8 @@
-# Zustand 迁移模式（follow 试点，供后续 14 个 reducer 模块复制）
+# Zustand 迁移模式（follow 试点 + 批次2，供后续 reducer 模块复制）
 
-状态：试点已完成（2026-09，分支 `codex/refactor-foundation`）。
+状态：follow 试点与批次2（menu/mockCol/news）均已完成（2026-09，分支 `codex/refactor-foundation`）。
 试点对象：`follow`（`client/reducer/modules/follow.js` → `client/store/followStore.js`）。
+批次2 对象：`menu`（→ `client/store/menuStore.js`）、`mockCol`（→ `client/store/mockColStore.js`）、`news`（→ `client/store/newsStore.js`）。
 
 ## 1. 背景与总体策略
 
@@ -102,3 +103,39 @@ const useFollowStore = create((set, get) => ({
 - `npx ava test/client/store/followStore.test.js test/client/containers/Follows.test.js test/client/components/ProjectCard.test.js`：19 passed；
 - `npm test` 全量冷库：976 passed，0 failed；
 - `npx tsc --noEmit`：0 错误；`npm run lint`：0/0；`npm run audit`：通过（各 severity delta 0，zustand@5.0.15 零运行时依赖）。
+
+## 10. 批次2 实例记录（menu / mockCol / news，2026-09）
+
+### 10.1 迁移内容与注册点差异
+
+| 模块 | store 文件 | 状态字段（与旧 initialState 完全一致） | 动作 | combineReducers 注销点 |
+| --- | --- | --- | --- | --- |
+| menu | `client/store/menuStore.js` | `curKey` | `changeMenuItem`（同步） | `client/reducer/modules/reducer.js` |
+| mockCol | `client/store/mockColStore.js` | `list` | `fetchMockCol` | **插件 add_reducer 钩子**（`exts/yapi-plugin-advanced-mock/client.js`）——该切片本就不在 reducer.js 内，全仓仅 `state.mockCol.list` 一个读取方（MockCol.js） |
+| news | `client/store/newsStore.js` | `newsData({list,total})` / `curpage` / `newsRequestId` | `fetchNewsData` / `fetchMoreNews` | `client/reducer/modules/reducer.js` |
+
+- 旧 reducer 模块文件全部保留在盘：`news.js` 的 `fetchUpdateLogData`/`getMockUrl`（`type: ''` 纯 promise 助手，不触达 news 状态）仍被 ProjectData 经 redux 派发；`mockCol.js`（client/reducer 侧）与 `exts/**/mockColReducer.js` 已无消费方，留待后续批次清理。
+- **tsconfig include 未补**（本批边界未含 tsconfig）：三个 store 均经消费方 import 传递纳入编译（tsc 0 错误验证通过）。后续批次建议补 include 以获得直接覆盖。
+
+### 10.2 与 follow 试点的语义差异（后续批次按需复用）
+
+1. **不新增 loading 字段**：本批要求状态形状与旧 initialState 严格一致（不新增/删除字段），故未套用 §3 的 loading 显式化模板。加载态仍由消费方本地 state 承担。
+2. **news 的竞态守卫内聚**：旧 reducer 的 `requestId < newsRequestId` 过期响应丢弃、`errcode !== 0` 不写入、`add_time` 降序、FETCH_MORE 追加且空页不推进 `curpage` 等逻辑，原样搬进 store 动作（`applyNewsResponse`）。模块级自增序列 `newsRequestSequence` 保留在 store 文件内。
+3. **messageMiddleware 通道全部静默化**：menu 同步动作无该问题；mockCol 保持旧 reducer「无 errcode 守卫」语义（HTTP 200 即写 `res.data.data`，errcode 非 0 时写入 undefined，消费方以 `Array.isArray(list)` 兜底）；news 静默失败——TimeLine/News 页有 ErrMsg 兜底，且旧链路抛错会使消费方 `.then` 中的 loading 复位永不执行（卡死），静默化同时修复该缺陷。**唯一差异**：mockCol 在 axios 网络层 reject 时保留旧列表不写入（旧版经 redux-promise error action 会写入 undefined）。
+4. **menu 初始值**：`window.location.hash` 在 store 模块加载时求值（与旧 reducer 一致）；纯 node 单测环境回退 `'/'`（旧 reducer 在 node 下无法加载）。
+5. **混合消费方普遍存在**：Search/Header/TimeLine/GroupList/GroupSetting 同时消费未迁移模块（group/user/inter/project），保留 `useDispatch` 混用；AuthenticatedComponent/MockCol/NewsList/NewsTimeline 的 dispatch 派发项全部迁移后已移除 `useDispatch`。
+
+### 10.3 测试适配要点（批次2 新踩的坑）
+
+- **真实 store 会收敛挂载期请求**：旧组件测试靠「固定 reducer」让种子数据在 fulfilled action 后存活；切到真实 store 后挂载期 fetch 会覆写种子。需要「点击时处于某状态」的用例须在 flushEffects 之后**在 act 内重新 `useXxxStore.setState` 播种**（否则订阅组件不重渲染，点击回调读到旧闭包值）。
+- **真实 store 会执行排序**：news store 按 `add_time` 降序收敛，种子数据与断言顺序须按降序对齐（旧固定 reducer 不排序）。
+- **反向断言防回迁**：`dispatched` 数组断言「不再派发 `yapi/news/*`、`yapi/menu/*`、`yapi/mockCol/*`」；lazyClientChains 钉住插件钩子 `hooks.add_reducer === undefined`。
+- **测试桩的真实契约收紧**：groupList/groupSetting/antd5 旧测试把 `/api/log/list` 响应错写成 `{data:{data:[],total:0}}`（旧固定 reducer 从不消费故未暴露），真实 store 消费 `res.data.data.list` 后即抛 `data.list is not iterable`（unhandled rejection）——已统一修正为真实契约 `{data:{list:[],total:0}}`。后续迁移遇到同类 unhandled rejection，优先怀疑历史测试桩的响应形状。
+- **exts 插件引用 store 用相对路径**：`'client/*'` 别名无 tsconfig paths 映射，旧 reducer 模块靠 global.d.ts 环境声明解析；store 文件不走该机制，MockCol.js 改用 `../../../client/store/mockColStore`（同文件 `../../../client/common` 先例）。
+
+### 10.4 批次2 验证数据
+
+- 新增 store 单测 20 条（menu 4 / mockCol 6 / news 10）全绿；
+- `npm test` 全量冷库：996 passed（976 基线 + 20 新增），0 failed，0 unhandled rejection；
+- `npx tsc --noEmit`：0 错误；`npm run lint`：0/0；`npm run audit:ci`：通过（各 severity 与 total 均不高于基线）；
+- grep 终态：全仓无 `state.news` / `state.menu` / `state.mockCol` 状态读取方；combineReducers 仅剩 user/group/project/inter/interfaceCol/addInterface。

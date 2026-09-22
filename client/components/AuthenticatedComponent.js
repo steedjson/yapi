@@ -1,9 +1,10 @@
 // @ts-check
 import React, { useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
-import { changeMenuItem } from '../reducer/modules/menu';
+// menu 切片已迁至 Zustand（批次2），user 模块仍未迁移
+import useMenuStore from '../store/menuStore';
 
 const LOGIN_PATH = '/login';
 const DEFAULT_REDIRECT = '/group';
@@ -39,7 +40,7 @@ export function resolveSafeRedirect(from, fallback = DEFAULT_REDIRECT) {
  */
 export function requireAuthentication(Component) {
   // 旧 @connect 类组件经 Hooks 现代化，渲染结构与行为保持一致：
-  // - state.user.isLogin 改为 useSelector 订阅，changeMenuItem 改为 useDispatch 派发；
+  // - state.user.isLogin 改为 useSelector 订阅，changeMenuItem 改为 Zustand store 动作直调；
   // - 旧 componentDidMount 改为挂载期 useEffect（未登录仅重置菜单高亮）；
   // - location/history 仍由 Application.js 的 withRouter 兼容层以 props 注入，
   //   本组件自身保持无路由上下文依赖，与旧实现一致。
@@ -47,14 +48,14 @@ export function requireAuthentication(Component) {
    * @param {any} props
    */
   const AuthenticatedComponent = props => {
-    const dispatch = useDispatch();
     const isAuthenticated = useSelector(state => state.user.isLogin);
+    const changeMenuItem = useMenuStore(state => state.changeMenuItem);
 
     useEffect(() => {
       // 未登录仅重置菜单高亮；页面跳转统一由 render 中的 <Navigate> 声明式完成，
       // 不再叠加命令式 history.replace，避免双重导航
       if (!isAuthenticated) {
-        dispatch(changeMenuItem('/'));
+        changeMenuItem('/');
       }
     }, []);
 

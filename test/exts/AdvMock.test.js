@@ -6,6 +6,9 @@ import { cleanup, fireEvent } from '@testing-library/react';
 import { renderWithProviders, flushEffects, cleanupDom } from '../helpers/containers';
 
 const { axiosMock, mockEditorCalls } = require('./setup');
+// 与 MockCol.js 共享同一模块实例（babel CJS 转译后命中同一 require 缓存）：
+// mockCol 切片已迁 Zustand
+const { default: useMockColStore } = require('../../client/store/mockColStore');
 
 const ADVMOCK_PATH = '../../exts/yapi-plugin-advanced-mock/AdvMock';
 
@@ -21,13 +24,19 @@ const MOCK_LIST = [
   }
 ];
 
+// mockCol 切片已迁 Zustand，Redux 种子中不再包含（经 useMockColStore 播种）
 function seedState() {
+  useMockColStore.setState({ list: MOCK_LIST });
   return {
-    mockCol: { list: MOCK_LIST },
     inter: { curdata: { _id: 100, title: '接口一', res_body: '{}', res_body_is_json_schema: false, req_body_is_json_schema: false } },
     project: { currProject: { _id: 12, role: 'owner', switch_notice: true } }
   };
 }
+
+test.serial.afterEach.always(() => {
+  // mockCol 已迁 Zustand：模块级单例，用例间复位避免状态串场
+  useMockColStore.setState({ list: [] });
+});
 
 function renderAdvMock() {
   return renderWithProviders(React.createElement(require(ADVMOCK_PATH).default), {

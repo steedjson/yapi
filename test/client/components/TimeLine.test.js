@@ -11,32 +11,35 @@ import { cleanupDom } from '../../helpers/jsdom-setup';
 
 const axios = require('axios');
 const { default: TimeTree } = require('../../../client/components/TimeLine/TimeLine.js');
+// 与 TimeLine.js 共享同一模块实例（babel CJS 转译后命中同一 require 缓存）：
+// news 切片已迁 Zustand，动态数据经 useNewsStore 播种/断言
+const { default: useNewsStore } = require('../../../client/store/newsStore');
 
-// fetchNewsData/fetchMoreNews/fetchInterfaceList 的 payload 都是 axios 请求，
-// TimeTree 挂载即会拉取动态，因此每个用例都必须先打桩（axios 为 CJS 单例，
-// 生产代码调用时才读取 .get，替换属性即可生效）
+// fetchNewsData/fetchMoreNews（Zustand）与 fetchInterfaceList（redux）都会在挂载即发请求，
+// 因此每个用例都必须先打桩（axios 为 CJS 单例，生产代码调用时才读取 .get，替换属性即可生效）
 const originalAxiosGet = axios.get;
 
 test.serial.afterEach.always(() => {
   cleanup();
   cleanupDom();
   axios.get = originalAxiosGet;
+  // news 已迁 Zustand：模块级单例，用例间复位避免状态串场
+  useNewsStore.setState({ newsData: { list: [], total: 0 }, curpage: 1, newsRequestId: 0 });
 });
 
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-// 在 act 中等待异步副作用(axios promise → 中间件 fulfilled 派发 → setState)完成
+// 在 act 中等待异步副作用(axios promise → store 写入 → setState)完成
 async function flushEffects(ms) {
   await act(async () => {
     await sleep(ms == null ? 15 : ms);
   });
 }
 
-// 动作类型常量取自 client/reducer/modules/news.js / interface.js,按线上契约硬编码断言
-const FETCH_NEWS_DATA = 'yapi/news/FETCH_NEWS_DATA';
-const FETCH_MORE_NEWS = 'yapi/news/FETCH_MORE_NEWS';
+// 动作类型常量取自 client/reducer/modules/interface.js，按线上契约硬编码断言
+// （news 已迁 Zustand，不再有 yapi/news/* redux action，仅保留反向断言）
 const FETCH_INTERFACE_LIST = 'yapi/interface/FETCH_INTERFACE_LIST';
 
 function makeNewsItem(overrides) {
@@ -54,8 +57,8 @@ function makeNewsItem(overrides) {
 }
 
 function makeStore(seedState) {
-  // 与生产一致挂 redux-promise 中间件(组件会直接 dispatch async action creator)。
-  // 入口 dispatch 包装记录原始 action,reducer 记录中间件二次派发的 fulfilled action
+  // 与生产一致挂 redux-promise 中间件(fetchInterfaceList 仍为 async action creator)。
+  // 入口 dispatch 包装记录原始 action，reducer 记录中间件二次派发的 fulfilled action
   const dispatched = [];
   const record = action => {
     if (action && action.type && action.type.indexOf('@@') !== 0) {
@@ -79,14 +82,18 @@ const DIFF_DATA = {
   old: { path: '/old/login', title: '登录', method: 'GET', catid: 1 }
 };
 
-function makeSeed(list, total, curpage) {
-  return {
-    user: { uid: 11 },
-    news: {
-      newsData: { total: total == null ? list.length : total, list },
-      curpage: curpage == null ? 1 : curpage
-    }
-  };
+// redux 种子仅保留 user 切片（TimeLine 保留的历史遗留订阅）；news 切片已迁 Zustand
+function makeSeed() {
+  return { user: { uid: 11 } };
+}
+
+// news 种子改经 Zustand store 播种（等价旧 redux seed 的 news 切片）
+function seedNews(list, total, curpage) {
+  useNewsStore.setState({
+    newsData: { total: total == null ? list.length : total, list },
+    curpage: curpage == null ? 1 : curpage,
+    newsRequestId: 0
+  });
 }
 
 function renderTimeTree(props, seedState) {
@@ -107,7 +114,8 @@ test.serial('根据 mock 数据渲染动态列表项、用户头像与动态描�
     makeNewsItem({ uid: 11, type: 'project' }),
     makeNewsItem({ uid: 22, type: 'group', content: '<span>创建了分组 电商</span>' })
   ];
-  const { container } = renderTimeTree({ typeid: 42, type: 'project' }, makeSeed(list));
+  seedNews(list);
+  const { container, dispatched } = renderTimeTree({ typeid: 42, type: 'project' }, makeSeed());
 
   const items = container.querySelectorAll(
     '.news-content .ant-timeline-item:not(.ant-timeline-item-pending)'
@@ -129,6 +137,11 @@ test.serial('根据 mock 数据渲染动态列表项、用户头像与动态描�
 
   const profileLink = container.querySelector('.ant-timeline-item-head a');
   t.is(profileLink.getAttribute('href'), '/user/profile/11', '头像应链接到用户主页');
+  t.falsy(
+    dispatched.some(action => action.type && action.type.indexOf('yapi/news/') === 0),
+    '不应派发任何 yapi/news/* redux action（已迁 Zustand）'
+  );
+  t.is(useNewsStore.getState().newsData.list.length, 2, '渲染应走 Zustand store 订阅路径');
   await flushEffects();
 });
 
@@ -138,18 +151,19 @@ test.serial('挂载即拉取第一页动态, typeid 变化时重新拉取', asyn
     getCalls.push({ url, config });
     return Promise.resolve({ data: { errcode: 0, data: { total: 0, list: [] } } });
   };
-  const seed = makeSeed([]);
-  const { rerender, dispatched, store } = renderTimeTree({ typeid: 42, type: 'project' }, seed);
+  seedNews([]);
+  const { rerender, dispatched, store } = renderTimeTree({ typeid: 42, type: 'project' }, makeSeed());
 
-  const newsCalls = dispatched.filter(a => a.type === FETCH_NEWS_DATA);
-  // act 同步刷新会连带微任务,fulfilled 二次派发可能已入账,故对首条与最新条做稳健断言
-  t.truthy(newsCalls.length >= 1, '挂载后应派发 FETCH_NEWS_DATA');
-  t.is(newsCalls[0].meta.typeid, 42, 'action 应携带目标 typeid');
-  t.is(getCalls[0].url, '/api/log/list');
+  const newsCalls = getCalls.filter(c => c.url === '/api/log/list');
+  t.truthy(newsCalls.length >= 1, '挂载后应发起 /api/log/list 请求');
   t.deepEqual(
-    getCalls[0].config.params,
+    newsCalls[0].config.params,
     { typeid: 42, type: 'project', page: 1, limit: 10, selectValue: undefined },
     '请求参数应为第一页 10 条'
+  );
+  t.falsy(
+    dispatched.some(action => action.type === 'yapi/news/FETCH_NEWS_DATA'),
+    '拉取动态不应再经 redux 派发（已迁 Zustand）'
   );
 
   // 对应旧 UNSAFE_componentWillReceiveProps: typeid 变化触发重新拉取
@@ -161,9 +175,13 @@ test.serial('挂载即拉取第一页动态, typeid 变化时重新拉取', asyn
     </Provider>
   );
 
-  const allNewsCalls = dispatched.filter(a => a.type === FETCH_NEWS_DATA);
-  t.truthy(allNewsCalls.length >= 2, 'typeid 变化应再次派发 FETCH_NEWS_DATA');
-  t.is(allNewsCalls[allNewsCalls.length - 1].meta.typeid, 43, '最新一次拉取应使用新 typeid');
+  const allNewsCalls = getCalls.filter(c => c.url === '/api/log/list');
+  t.truthy(allNewsCalls.length >= 2, 'typeid 变化应再次拉取动态');
+  t.is(
+    allNewsCalls[allNewsCalls.length - 1].config.params.typeid,
+    43,
+    '最新一次拉取应使用新 typeid'
+  );
   await flushEffects();
 });
 
@@ -178,10 +196,8 @@ test.serial('type=project 时拉取接口列表并渲染 Api 查询行', async t
     }
     return Promise.resolve({ data: { errcode: 0, data: { total: 0, list: [] } } });
   };
-  const { container, dispatched } = renderTimeTree(
-    { typeid: 42, type: 'project' },
-    makeSeed([makeNewsItem()])
-  );
+  seedNews([makeNewsItem()]);
+  const { container, dispatched } = renderTimeTree({ typeid: 42, type: 'project' }, makeSeed());
 
   t.truthy(container.textContent.indexOf('选择查询的 Api：') > -1, '应渲染 Api 查询行');
   // fetchInterfaceList 是 async 函数,dispatch 发生在微任务中,需等待后再断言
@@ -190,7 +206,8 @@ test.serial('type=project 时拉取接口列表并渲染 Api 查询行', async t
   t.is(listActions.length, 1, 'project 类型应派发 FETCH_INTERFACE_LIST');
   t.truthy(getCalls.indexOf('/api/interface/list') > -1, '应请求接口列表数据');
 
-  const groupType = renderTimeTree({ typeid: 42, type: 'group' }, makeSeed([makeNewsItem()]));
+  seedNews([makeNewsItem()]);
+  const groupType = renderTimeTree({ typeid: 42, type: 'group' }, makeSeed());
   t.is(
     groupType.container.querySelector('.news-search'),
     null,
@@ -199,42 +216,60 @@ test.serial('type=project 时拉取接口列表并渲染 Api 查询行', async t
   await flushEffects();
 });
 
-test.serial('有更多动态时展示查看更多, 点击防抖派发加载下一页', async t => {
-  axios.get = () => Promise.resolve({ data: { errcode: 0, data: { total: 0, list: [] } } });
-  const { container, dispatched } = renderTimeTree(
-    { typeid: 42, type: 'project' },
-    makeSeed([makeNewsItem()], 5, 1)
-  );
+test.serial('有更多动态时展示查看更多, 点击防抖拉取下一页', async t => {
+  const getCalls = [];
+  axios.get = (url, config) => {
+    getCalls.push({ url, config });
+    return Promise.resolve({ data: { errcode: 0, data: { total: 0, list: [] } } });
+  };
+  seedNews([makeNewsItem()], 5, 1);
+  const { container, dispatched } = renderTimeTree({ typeid: 42, type: 'project' }, makeSeed());
 
   const more = container.querySelector('.loggetMore');
   t.truthy(more, 'total > curpage 应渲染查看更多');
   t.is(more.textContent, '查看更多');
 
   fireEvent.click(more);
-  const moreActions = dispatched.filter(a => a.type === FETCH_MORE_NEWS);
-  // fulfilled 二次派发可能随 act 微任务先行入账,取首条断言原始参数
-  t.truthy(moreActions.length >= 1, '点击应派发 FETCH_MORE_NEWS');
-  t.is(moreActions[0].meta.typeid, 42);
+  // 点击同步效果：loading Spin 立即渲染、/api/log/list 请求立即发出（page = curpage+1）
+  t.truthy(container.querySelector('.ant-spin'), '点击后应立即渲染 Spin loading');
+  // 挂载期首拉 + 点击加载更多共两次 /api/log/list 请求
+  const moreCalls = getCalls.filter(c => c.url === '/api/log/list');
+  t.is(moreCalls.length, 2, '挂载首拉 + 点击应共发起两次 /api/log/list 请求');
+  t.deepEqual(
+    moreCalls[1].config.params,
+    { typeid: 42, type: 'project', page: 2, limit: 10, selectValue: '' },
+    '应拉取 curpage+1=2 页并透传筛选值'
+  );
+  t.falsy(
+    dispatched.some(action => action.type === 'yapi/news/FETCH_MORE_NEWS'),
+    '加载下一页不应再经 redux 派发（已迁 Zustand）'
+  );
+
+  await flushEffects(30);
+  t.falsy(container.querySelector('.ant-spin'), '请求完成后 loading 应复位');
   await flushEffects();
 });
 
 test.serial('已到末页时展示"以上为全部内容"且不渲染查看更多', async t => {
   axios.get = () => Promise.resolve({ data: { errcode: 0, data: { total: 0, list: [] } } });
-  const { container, dispatched } = renderTimeTree(
-    { typeid: 42, type: 'project' },
-    makeSeed([makeNewsItem()], 1, 1)
-  );
+  seedNews([makeNewsItem()], 1, 1);
+  const { container, dispatched } = renderTimeTree({ typeid: 42, type: 'project' }, makeSeed());
 
   t.is(container.querySelector('.loggetMore'), null, '无更多动态时不渲染查看更多');
   t.is(container.querySelector('.logbidden').textContent, '以上为全部内容');
-  t.is(dispatched.filter(a => a.type === FETCH_MORE_NEWS).length, 0);
+  t.is(
+    dispatched.filter(a => a.type === 'yapi/news/FETCH_MORE_NEWS').length,
+    0,
+    '末页不应有任何加载更多派发'
+  );
   await flushEffects();
 });
 
 test.serial('点击改动详情打开 diff 弹窗并展示差异内容', async t => {
   axios.get = () => Promise.resolve({ data: { errcode: 0, data: { total: 0, list: [] } } });
   const list = [makeNewsItem({ data: DIFF_DATA })];
-  const { container } = renderTimeTree({ typeid: 42, type: 'project' }, makeSeed(list));
+  seedNews(list);
+  const { container } = renderTimeTree({ typeid: 42, type: 'project' }, makeSeed());
 
   t.is(container.ownerDocument.querySelector('.ant-modal-wrap'), null, '初始不渲染弹窗');
 
@@ -257,7 +292,8 @@ test.serial('点击改动详情打开 diff 弹窗并展示差异内容', async t
 
 test.serial('无动态数据时渲染空状态提示', async t => {
   axios.get = () => Promise.resolve({ data: { errcode: 0, data: { total: 0, list: [] } } });
-  const { container } = renderTimeTree({ typeid: 42, type: 'project' }, makeSeed([]));
+  seedNews([]);
+  const { container } = renderTimeTree({ typeid: 42, type: 'project' }, makeSeed());
 
   t.is(container.querySelectorAll('.news-content').length, 0, '空数据不渲染时间线');
   t.truthy(container.querySelector('.err-msg'), '应渲染 ErrMsg 空状态');

@@ -46,7 +46,7 @@ const BASELINE = {
     follows: 'follows@3f80bd4670cf7f38.css',
     'add-project': 'add-project@80e6a5a4d705c349.css'
   },
-  initialChunks: ['manifest', 'antd', '0', 'index.js']
+  initialChunks: ['manifest', 'antd', 'a', 'index.js']
   // 批次 4：json-schema-editor-visual 的 antd.css import 已删，scoped antd3 双作用域
   // 机制退役——scopedAntd3Carrier/scopeMarker 基线随之移除（产物实测 0 处标记）。
 };

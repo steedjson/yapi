@@ -1,11 +1,14 @@
 // @ts-check
 import React, { useEffect, useRef, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import { Table, Button, message, Popconfirm, Tooltip } from 'antd';
 import { QuestionCircleOutlined } from '@ant-design/icons';
-import { fetchMockCol } from 'client/reducer/modules/mockCol';
+// mockCol 切片已迁至 Zustand（批次2），inter/project 模块仍未迁移。
+// 以相对路径引用（本文件已有 ../../../client/common 先例；'client/*' 别名无 tsconfig
+// paths 映射，旧 reducer 模块依赖 global.d.ts 环境声明解析，store 不走该机制）
+import useMockColStore from '../../../client/store/mockColStore';
 import { formatTime } from 'client/common.js';
 import constants from 'client/constants/variable.js';
 import CaseDesModal from './CaseDesModal';
@@ -13,17 +16,20 @@ import { json5_parse } from '../../../client/common';
 
 /**
  * 接口高级 Mock 期望用例列表面板。原类组件经 Hooks 现代化迁移，渲染结构与行为保持一致：
- * - 旧 @connect 改为 useSelector/useDispatch，旧 @withRouter 注入的
+ * - 旧 @connect 改为 useSelector，旧 @withRouter 注入的
  *   match.params（actionId / id）改为 useParams；
  * - 旧 constructor state 改为 useState（单对象 patch，保持浅合并语义），
  *   旧 UNSAFE_componentWillMount 改为挂载期 useEffect；
  * - 异步回调对 this.props / this.state 的实时读取改为 latestRef 镜像读取；
+ * - mockCol 列表数据源已迁至 Zustand（useMockColStore），写/删/改后重拉由
+ *   fetchMockCol 直调驱动，不再经 redux dispatch；
  * - 历史遗留：旧代码向 CaseDesModal 传入未定义的 ref（this.saveFormRef 未定义、
  *   组件亦未消费），迁移保持等价——不补 ref 定义，亦不新增该 ref 的消费。
  */
 const MockCol = () => {
-  const dispatch = useDispatch();
-  const list = useSelector((/** @type {any} */ state) => state.mockCol.list);
+  // zustand 经 JS 推断的 store 类型是有损的，显式收窄回调参数避免 TS7006
+  const list = /** @type {any[]} */ (useMockColStore((/** @type {any} */ state) => state.list));
+  const fetchMockCol = useMockColStore((/** @type {any} */ state) => state.fetchMockCol);
   const currInterface = useSelector((/** @type {any} */ state) => state.inter.curdata);
   const currProject = useSelector((/** @type {any} */ state) => state.project.currProject);
   const { id, actionId } = /** @type {any} */ (useParams());
@@ -46,7 +52,7 @@ const MockCol = () => {
 
   // 对应旧 UNSAFE_componentWillMount
   useEffect(() => {
-    dispatch(fetchMockCol(actionId));
+    fetchMockCol(actionId);
   }, []);
 
   /**
@@ -98,7 +104,7 @@ const MockCol = () => {
     await axios.post('/api/plugin/advmock/case/save', caseData).then(async (/** @type {any} */ res) => {
       if (res.data.errcode === 0) {
         message.success(latestRef.current.state.isAdd ? '添加成功' : '保存成功');
-        await dispatch(fetchMockCol(interface_id));
+        await fetchMockCol(interface_id);
         patchState({ caseDesModalVisible: false });
       } else {
         message.error(res.data.errmsg);
@@ -111,7 +117,7 @@ const MockCol = () => {
     await axios.post('/api/plugin/advmock/case/del', { id }).then(async (/** @type {any} */ res) => {
       if (res.data.errcode === 0) {
         message.success('删除成功');
-        await dispatch(fetchMockCol(interface_id));
+        await fetchMockCol(interface_id);
       } else {
         message.error(res.data.errmsg);
       }
@@ -128,7 +134,7 @@ const MockCol = () => {
     }).then(async (/** @type {any} */ res) => {
       if (res.data.errcode === 0) {
         message.success('修改成功');
-        await dispatch(fetchMockCol(interface_id));
+        await fetchMockCol(interface_id);
       } else {
         message.error(res.data.errmsg);
       }

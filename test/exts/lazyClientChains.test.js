@@ -67,8 +67,8 @@ test.serial('statistics client.js：app_route 组件为 lazy 包装且渲染真�
   cleanupDom();
 });
 
-// —— advanced-mock：interface_tab 注册懒加载组件；add_reducer 保持同步注册 ——
-test.serial('advanced-mock client.js：interface_tab 懒加载组件可渲染，add_reducer 同步注册 reducer', async t => {
+// —— advanced-mock：interface_tab 注册懒加载组件；mockCol 已迁 Zustand、不再注册 add_reducer ——
+test.serial('advanced-mock client.js：interface_tab 懒加载组件可渲染，mockCol 走 Zustand store', async t => {
   axiosMock.setRoutes([
     { match: '/api/plugin/advmock/get', respond: () => ({ errcode: 0, data: { enable: false, mock_script: '' } }) },
     { match: '/api/plugin/advmock/case/list', respond: () => ({ errcode: 0, data: [] }) }
@@ -80,15 +80,12 @@ test.serial('advanced-mock client.js：interface_tab 懒加载组件可渲染，
   t.truthy(tabs.advMock, 'interface_tab 应注册 advMock');
   t.is(tabs.advMock.name, '高级Mock');
 
-  // add_reducer 不得被异步化：reducer 表形状必须在首个 dispatch 前定型
-  const reducerModules = {};
-  hooks.add_reducer(reducerModules);
-  t.truthy(reducerModules.mockCol, 'mockCol reducer 应同步注册（异步化会破坏 store 形状）');
-  t.is(typeof reducerModules.mockCol, 'function');
+  // mockCol 切片已迁 Zustand（client/store/mockColStore.js）：插件不再绑定 add_reducer，
+  // 组件侧经 useMockColStore 读写（批次2 迁移，反向钉住防止回迁）
+  t.is(hooks.add_reducer, undefined, 'mockCol 已迁 Zustand，插件不应再注册 add_reducer 钩子');
 
   const { container } = renderWithProviders(React.createElement(tabs.advMock.component), {
     seedState: {
-      mockCol: { list: [] },
       inter: { curdata: { _id: 1, title: '接口', res_body: '{}', res_body_is_json_schema: false, req_body_is_json_schema: false } },
       project: { currProject: { _id: 1, role: 'owner', switch_notice: true } }
     },

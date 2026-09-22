@@ -6,6 +6,9 @@ import { cleanup } from '@testing-library/react';
 import { cleanupDom, renderWithProviders, flushEffects } from '../../helpers/containers';
 
 const axios = require('axios');
+// 与 NewsTimeline.js 共享同一模块实例（babel CJS 转译后命中同一 require 缓存）：
+// news 切片已迁 Zustand
+const { default: useNewsStore } = require('../../../client/store/newsStore');
 
 const { default: News } = require('../../../client/containers/News/News.js');
 
@@ -16,6 +19,8 @@ test.serial.afterEach.always(() => {
   cleanup();
   cleanupDom();
   axios.get = originalAxiosGet;
+  // news 已迁 Zustand：模块级单例，用例间复位避免状态串场
+  useNewsStore.setState({ newsData: { list: [], total: 0 }, curpage: 1, newsRequestId: 0 });
 });
 
 test.serial('挂载渲染动态页结构（Subnav/Mock地址/下载按钮/动态列表子组件）', async t => {
@@ -29,10 +34,8 @@ test.serial('挂载渲染动态页结构（Subnav/Mock地址/下载按钮/动态
   };
 
   const { container } = renderWithProviders(React.createElement(News), {
-    seedState: {
-      user: { uid: 11 },
-      news: { newsData: { list: [], total: 0 }, curpage: 1, newsRequestId: 0 }
-    }
+    // news 切片已迁 Zustand，Redux 种子中不再包含（动态数据由挂载期 fetchMock 经 store 收敛）
+    seedState: { user: { uid: 11 } }
   });
   await flushEffects();
 

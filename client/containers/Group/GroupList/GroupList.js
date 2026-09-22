@@ -10,7 +10,8 @@ const { TextArea } = Input;
 const Search = Input.Search;
 import UsernameAutoComplete from '../../../components/UsernameAutoComplete/UsernameAutoComplete.js';
 import GuideBtns from '../../../components/GuideBtns/GuideBtns.js';
-import { fetchNewsData } from '../../../reducer/modules/news.js';
+// news 切片已迁至 Zustand（批次2），group 模块仍未迁移
+import useNewsStore from '../../../store/newsStore';
 import {
   parseRouteGroupId,
   resolveTargetGroup,
@@ -49,6 +50,7 @@ const GroupList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const params = useParams();
+  const fetchNewsData = useNewsStore(state => state.fetchNewsData);
   const groupList = useSelector(state => state.group.groupList);
   const currGroup = useSelector(state => state.group.currGroup);
   // 旧 @connect 映射的 curUserRole/curUserRoleInGroup 历史遗留仅声明未消费，保留订阅避免行为差异
@@ -154,7 +156,7 @@ const GroupList = () => {
       await dispatch(fetchGroupList());
       setLocalGroupList(groupListRef.current);
       dispatch(fetchGroupMsg(currGroupRef.current._id));
-      dispatch((/** @type {any} */ (fetchNewsData))(currGroupRef.current._id, 'group', 1, 10));
+      fetchNewsData(currGroupRef.current._id, 'group', 1, 10);
     } else {
       message.error(res.data.errmsg);
     }

@@ -213,7 +213,7 @@ async function mountGroupList() {
       respond: () => ({ errcode: 0, data: [G1, G2, G3] })
     },
     { match: '/api/group/get', respond: () => ({ errcode: 0, data: G1 }) },
-    { match: '/api/log/', respond: () => ({ errcode: 0, data: { data: [], total: 0 } }) }
+    { match: '/api/log/', respond: () => ({ errcode: 0, data: { list: [], total: 0 } }) }
   ]);
   const { default: GroupList } = require('../../../client/containers/Group/GroupList/GroupList.js');
   renderWithProviders(React.createElement(GroupList), {
@@ -403,7 +403,7 @@ async function mountGroupMember() {
 async function mountGroupSetting() {
   stubAxios([
     { match: '/api/group/get', respond: () => ({ errcode: 0, data: Object.assign({ custom_field1: { name: '业务线', enable: true } }, G1, { role: 'owner' }) }) },
-    { match: '/api/log/', respond: () => ({ errcode: 0, data: { data: [], total: 0 } }) }
+    { match: '/api/log/', respond: () => ({ errcode: 0, data: { list: [], total: 0 } }) }
   ]);
   const { default: GroupSetting } = require('../../../client/containers/Group/GroupSetting/GroupSetting.js');
   renderWithProviders(React.createElement(GroupSetting), {
