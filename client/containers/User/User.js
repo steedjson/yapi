@@ -1,7 +1,6 @@
 // @ts-check
 import './index.scss';
 import React from 'react';
-import { useSelector } from 'react-redux';
 import { Routes, Route } from 'react-router-dom';
 import List from './List.js';
 import PropTypes from 'prop-types';
@@ -12,10 +11,8 @@ import withRouter from '../../withRouter';
 const ProfileWithRouter = withRouter(Profile);
 
 const User = () => {
-  // 旧 @connect 映射的 curUid/userType/role 历史遗留仅声明未消费，保留订阅避免行为差异
-  useSelector(state => state.user.uid);
-  useSelector(state => state.user.type);
-  useSelector(state => state.user.role);
+  // 旧 @connect 映射的 curUid/userType/role 历史遗留仅声明未消费，
+  // user 切片迁 Zustand（批次4）时随迁移移除
   return (
     <div>
       <div className="g-doc">

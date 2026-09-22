@@ -1,10 +1,11 @@
 // @ts-check
 import React, { useState } from 'react';
-import { useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
 import { Menu } from 'antd';
-// news 切片已迁至 Zustand（批次2），user 模块仍未迁移
+// news 切片已迁至 Zustand（批次2）、user 切片已迁至 Zustand（批次4），
+// 本组件的 redux 依赖随迁移全部移除
 import useNewsStore from '../../../store/newsStore';
+import useUserStore from '../../../store/userStore';
 
 const logList = [
   {
@@ -25,7 +26,7 @@ const logList = [
  * @param {any} props
  */
 const NewsList = props => {
-  const uid = useSelector(state => state.user.uid + '');
+  const uid = useUserStore(state => state.uid) + '';
   const fetchNewsData = useNewsStore(state => state.fetchNewsData);
   const [selectedKeys, setSelectedKeys] = useState(0);
   // 旧 @connect 映射的 newsData 历史遗留仅声明未消费，保留订阅避免行为差异

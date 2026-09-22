@@ -1,34 +1,32 @@
 // @ts-check
 import React, { useEffect, useRef, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import { Row, Col, Button, Tooltip } from 'antd';
 import { Link } from 'react-router-dom';
-import { fetchProjectList } from '../../../reducer/modules/project';
 import ProjectCard from '../../../components/ProjectCard/ProjectCard.js';
 import ErrMsg from '../../../components/ErrMsg/ErrMsg.js';
-// group 切片已迁至 Zustand（批次3），user/project 模块仍未迁移
+// group/user/project 切片均已迁至 Zustand（批次3 / 批次4），
+// 本组件的 redux 依赖随迁移全部移除
 import useGroupStore from '../../../store/groupStore';
-import { setBreadcrumb } from '../../../reducer/modules/user';
+import useUserStore from '../../../store/userStore';
+import useProjectStore from '../../../store/projectStore';
 
 import './ProjectList.scss';
 
 /**
  * 分组项目列表。原类组件经 Hooks 现代化迁移，渲染结构与行为保持一致：
- * - 旧 @connect 改为 useSelector/useDispatch（userInfo/tableLoading 历史遗留仅声明
- *   未消费，保留订阅避免行为差异；addProject/delProject 注入未被组件体调用，随迁移移除）；
+ * - 旧 @connect 改为 Zustand store 订阅（userInfo/tableLoading 历史遗留仅声明
+ *   未消费，随迁移移除；addProject/delProject 注入未被组件体调用，随迁移移除）；
  * - 旧 componentDidMount 改为挂载期 useEffect；
  * - 旧 UNSAFE_componentWillReceiveProps 改为每次渲染后运行的 useEffect + prev ref 比较
  *   （挂载期跳过，等价旧 cWRP 不随挂载触发的语义）；
  * - receiveRes 经 latestRef 镜像读取最新分组/页码，等价旧实现的实时 this.props。
  */
 const ProjectList = () => {
-  const dispatch = useDispatch();
-  const projectList = useSelector((/** @type {any} */ state) => state.project.projectList);
-  // 历史遗留仅声明未消费，保留订阅避免行为差异
-  useSelector((/** @type {any} */ state) => state.project.userInfo);
-  useSelector((/** @type {any} */ state) => state.project.tableLoading);
+  const projectList = useProjectStore((/** @type {any} */ state) => state.projectList);
+  const fetchProjectList = useProjectStore((/** @type {any} */ state) => state.fetchProjectList);
+  const setBreadcrumb = useUserStore((/** @type {any} */ state) => state.setBreadcrumb);
   const currGroup = useGroupStore((/** @type {any} */ state) => state.currGroup);
-  const currPage = useSelector((/** @type {any} */ state) => state.project.currPage);
+  const currPage = useProjectStore((/** @type {any} */ state) => state.currPage);
 
   const [state, setState] = useState(
     /** @type {any} */ ({
@@ -41,22 +39,37 @@ const ProjectList = () => {
    */
   const patchState = patch => setState((/** @type {any} */ prevState) => ({ ...prevState, ...patch }));
 
-  // 镜像最新 redux 值：异步回调中的读取等价于旧类组件的实时 this.props
+  // 镜像最新 store 值：异步回调中的读取等价于旧类组件的实时 this.props
   const latestRef = useRef({});
   latestRef.current = { currGroup, currPage };
+
+  // 拉取项目列表：store 网络错误返回 null（旧链路 dispatch promise reject），转入错误态
+  /**
+   * @param {any} groupId
+   * @param {any} page
+   */
+  const pullList = (groupId, page) => {
+    fetchProjectList(groupId, page)
+      .then((/** @type {any} */ res) => {
+        if (!res) {
+          patchState({ loadError: true });
+        }
+      })
+      .catch(() => {
+        patchState({ loadError: true });
+      });
+  };
 
   // 对应旧 componentDidMount：分组就绪时拉取项目列表
   useEffect(() => {
     if (latestRef.current.currGroup._id) {
-      dispatch(fetchProjectList(latestRef.current.currGroup._id, latestRef.current.currPage)).catch(() => {
-        patchState({ loadError: true });
-      });
+      pullList(latestRef.current.currGroup._id, latestRef.current.currPage);
     }
   }, []);
 
   // 获取 ProjectCard 组件的关注事件回调，收到后更新数据
   const receiveRes = () => {
-    dispatch(fetchProjectList(latestRef.current.currGroup._id, latestRef.current.currPage));
+    pullList(latestRef.current.currGroup._id, latestRef.current.currPage);
   };
 
   // 对应旧 UNSAFE_componentWillReceiveProps：映射 props 变化时同步面包屑 / 重新拉取 / 同步列表
@@ -70,13 +83,11 @@ const ProjectList = () => {
     }
     prevPropsRef.current = { currGroup, currPage, projectList };
 
-    dispatch(setBreadcrumb([{ name: '' + (currGroup.group_name || '') }]));
+    setBreadcrumb([{ name: '' + (currGroup.group_name || '') }]);
 
     // 切换分组（旧实现此处页码读取的是 this.props.currPage，保持一致读取 prev 快照）
     if (prev.currGroup !== currGroup && currGroup._id) {
-      dispatch(fetchProjectList(currGroup._id, prev.currPage)).catch(() => {
-        patchState({ loadError: true });
-      });
+      pullList(currGroup._id, prev.currPage);
     }
 
     // 切换项目列表

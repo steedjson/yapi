@@ -5,8 +5,8 @@ import { Row, Col, Input, Button, Select, message, Upload, Tooltip } from 'antd'
 import axios from 'axios';
 import { formatTime } from '../../common.js';
 import PropTypes from 'prop-types';
-import { setBreadcrumb, setImageUrl } from '../../reducer/modules/user';
-import { useDispatch, useSelector } from 'react-redux';
+// user 切片已迁至 Zustand（批次4），本组件的 redux 依赖随迁移全部移除
+import useUserStore from '../../store/userStore';
 import { useParams } from 'react-router-dom';
 
 /**
@@ -63,12 +63,12 @@ EditButton.propTypes = {
  *   _userinfo 旧实现无初始值，保持为 undefined）。
  */
 const Profile = () => {
-  const dispatch = useDispatch();
   // 旧 withRouter 注入的 match.params.uid 改为 v6 useParams
   const { uid } = useParams();
-  const curUid = useSelector(state => state.user.uid);
-  const userType = useSelector(state => state.user.type);
-  const curRole = useSelector(state => state.user.role);
+  const curUid = useUserStore(state => state.uid);
+  const userType = useUserStore(state => state.type);
+  const curRole = useUserStore(state => state.role);
+  const setBreadcrumb = useUserStore(state => state.setBreadcrumb);
   const [usernameEdit, setUsernameEdit] = useState(false);
   const [emailEdit, setEmailEdit] = useState(false);
   const [secureEdit, setSecureEdit] = useState(false);
@@ -99,9 +99,9 @@ const Profile = () => {
       setUserinfo(res.data.data);
       set_userinfo(res.data.data);
       if (curUid === +id) {
-        dispatch(setBreadcrumb([{ name: res.data.data.username }]));
+        setBreadcrumb([{ name: res.data.data.username }]);
       } else {
-        dispatch(setBreadcrumb([{ name: '管理: ' + res.data.data.username }]));
+        setBreadcrumb([{ name: '管理: ' + res.data.data.username }]);
       }
     });
   };
@@ -467,15 +467,15 @@ const Profile = () => {
 
 /**
  * 头像上传。原类组件经 Hooks 现代化迁移，渲染结构与行为保持一致：
- * - 旧 @connect 的 url 映射改为 useSelector，setImageUrl 改为 useDispatch；
+ * - 旧 @connect 的 url 映射与 setImageUrl 派发已随 user 切片迁移改经 useUserStore；
  * - 旧 handleChange 的 this 绑定随函数组件一并移除。
  */
 /**
  * @param {{ uid: any }} props
  */
 const AvatarUpload = ({ uid }) => {
-  const dispatch = useDispatch();
-  const url = useSelector(state => state.user.imageUrl);
+  const url = useUserStore(state => state.imageUrl);
+  const setImageUrl = useUserStore(state => state.setImageUrl);
   let imageUrl = url ? url : `/api/user/avatar?uid=${uid}`;
 
   /**
@@ -485,7 +485,7 @@ const AvatarUpload = ({ uid }) => {
     axios
       .post('/api/user/upload_avatar', { basecode: basecode })
       .then(() => {
-        dispatch(setImageUrl(basecode));
+        setImageUrl(basecode);
       })
       .catch((/** @type {any} */ e) => {
         console.log(e);

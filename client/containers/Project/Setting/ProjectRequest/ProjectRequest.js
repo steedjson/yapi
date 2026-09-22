@@ -1,17 +1,17 @@
 // @ts-check
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-import { useSelector, useDispatch } from 'react-redux';
 import { Button, message, Form } from 'antd';
 
 const FormItem = Form.Item;
 import './project-request.scss';
 import AceEditor from 'client/components/AceEditor/AceEditor';
-import { updateProjectScript, getProject } from '../../../../reducer/modules/project';
+// project 切片已迁至 Zustand（批次4），本组件的 redux 依赖随迁移全部移除
+import useProjectStore from '../../../../store/projectStore';
 
 /**
  * 请求配置面板。原类组件经 Hooks 现代化迁移，渲染结构与行为保持一致：
- * - 旧 @connect 改为 useSelector/useDispatch；
+ * - 旧 @connect 改为 Zustand store 订阅（批次4）；
  * - 旧 UNSAFE_componentWillMount 首帧前回填（pre_script / after_script）改为
  *   useState 惰性初始化，首帧渲染输出一致；旧实现不响应 projectMsg 后续变化，
  *   惰性初始化仅取一次，行为保持一致。
@@ -21,25 +21,24 @@ import { updateProjectScript, getProject } from '../../../../reducer/modules/pro
  */
 const ProjectRequest = props => {
   const { projectId } = props;
-  const dispatch = useDispatch();
-  const projectMsg = useSelector(state => state.project.currProject);
+  const projectMsg = useProjectStore(state => state.currProject);
+  const updateProjectScript = useProjectStore(state => state.updateProjectScript);
+  const getProject = useProjectStore(state => state.getProject);
 
   const [preScript, setPreScript] = useState(() => projectMsg.pre_script);
   const [afterScript, setAfterScript] = useState(() => projectMsg.after_script);
 
   const handleSubmit = async () => {
-    let result = await dispatch(
-      updateProjectScript({
-        id: projectId,
-        pre_script: preScript,
-        after_script: afterScript
-      })
-    );
-    if (result.payload.data.errcode === 0) {
+    let result = await updateProjectScript({
+      id: projectId,
+      pre_script: preScript,
+      after_script: afterScript
+    });
+    if (result && result.data.errcode === 0) {
       message.success('保存成功');
-      await dispatch(getProject(projectId));
+      await getProject(projectId);
     } else {
-      message.success('保存失败, ' + result.payload.data.errmsg);
+      message.success('保存失败, ' + ((result && result.data.errmsg) || '请稍后重试'));
     }
   };
 

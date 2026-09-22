@@ -3,14 +3,14 @@
  */
 // @ts-check
 import React, { useEffect, useState } from 'react';
-import { useDispatch } from 'react-redux';
 import axios from 'axios';
 import PropTypes from 'prop-types';
 import './index.scss';
 // import { withRouter } from 'react-router-dom';
 import { Row, Col, Tooltip } from 'antd';
 import { QuestionCircleOutlined } from '@ant-design/icons';
-import { setBreadcrumb } from 'client/reducer/modules/user';
+// user 切片已迁至 Zustand（批次4）：store 引用走相对路径（exts 下无 'client/*' 别名映射）
+import useUserStore from '../../../client/store/userStore';
 import StatisChart from './StatisChart';
 import StatisTable from './StatisTable';
 
@@ -121,13 +121,13 @@ StatusOverview.propTypes = {
 
 /**
  * 系统信息统计页。原类组件经 Hooks 现代化迁移，渲染结构与行为保持一致：
- * - 旧 @connect(null, { setBreadcrumb }) 改为 useDispatch；
+ * - 旧 @connect(null, { setBreadcrumb }) 改为 useUserStore 动作直调（批次4）；
  * - 旧 constructor state 改为 useState（单对象 patch，保持浅合并语义），
  *   旧 UNSAFE_componentWillMount 改为挂载期 useEffect；
  * - 数据拉取时序与 setState 语义不变。
  */
 const statisticsPage = () => {
-  const dispatch = useDispatch();
+  const setBreadcrumb = useUserStore(state => state.setBreadcrumb);
 
   const [state, setState] = useState({
     count: {
@@ -152,7 +152,7 @@ const statisticsPage = () => {
 
   // 对应旧 UNSAFE_componentWillMount
   useEffect(() => {
-    dispatch(setBreadcrumb([{ name: '系统信息' }]));
+    setBreadcrumb([{ name: '系统信息' }]);
     getStatisData();
     getSystemStatusData();
     getGroupData();

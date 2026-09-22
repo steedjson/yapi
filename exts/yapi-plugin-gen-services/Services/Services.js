@@ -1,25 +1,25 @@
 // @ts-check
 import React, { useEffect } from 'react';
 import PropTypes from 'prop-types';
-import { useDispatch, useSelector } from 'react-redux';
-import { getToken } from '../../../client/reducer/modules/project.js';
+// project 切片已迁至 Zustand（批次4）：store 引用走相对路径（exts 下无 'client/*' 别名映射）
+import useProjectStore from '../../../client/store/projectStore';
 
 import './Services.scss';
 
 /**
  * 生成 ts services 设置页。原类组件经 Hooks 现代化迁移，渲染结构与行为保持一致：
- * - 旧 @connect 改为 useSelector/useDispatch；
+ * - 旧 @connect 改为 Zustand store 订阅（批次4）；
  * - 旧 componentDidMount 的 getToken 拉取改为挂载期 useEffect。
  * @param {any} props
  */
 const Services = props => {
-  const dispatch = useDispatch();
-  const token = useSelector((/** @type {any} */ state) => state.project.token);
+  const token = useProjectStore(state => state.token);
+  const getToken = useProjectStore(state => state.getToken);
 
   // 对应旧 componentDidMount
   useEffect(() => {
     const id = props.projectId;
-    dispatch(getToken(id));
+    getToken(id);
   }, []);
 
   const id = props.projectId;

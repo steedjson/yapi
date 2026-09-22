@@ -15,7 +15,7 @@ import {
   Checkbox
 } from 'antd';
 import { QuestionCircleOutlined, InboxOutlined, ExclamationCircleFilled } from '@ant-design/icons';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { useParams } from 'react-router-dom';
 import './ProjectData.scss';
 import axios from 'axios';
@@ -25,7 +25,8 @@ import URL from 'url';
 const Dragger = Upload.Dragger;
 import { fetchUpdateLogData } from '../../../../reducer/modules/news.js';
 import sanitizeHtml from '../../../../utils/sanitize.js';
-import { handleSwaggerUrlData } from '../../../../reducer/modules/project';
+// project 切片已迁至 Zustand（批次4）；news.js 的 fetchUpdateLogData 仍走 redux
+import useProjectStore from '../../../../store/projectStore';
 import { formatCatTreeData, flattenCatList } from 'common/utils.js';
 const Option = Select.Option;
 const confirm = Modal.confirm;
@@ -70,8 +71,9 @@ function handleExportRouteParams(
 const ProjectData = () => {
   const dispatch = useDispatch();
   const { id } = useParams();
-  const basePath = useSelector((/** @type {any} */ state) => state.project.currProject.basepath);
-  const swaggerUrlData = useSelector((/** @type {any} */ state) => state.project.swaggerUrlData);
+  const basePath = useProjectStore((/** @type {any} */ state) => state.currProject.basepath);
+  const swaggerUrlData = useProjectStore((/** @type {any} */ state) => state.swaggerUrlData);
+  const handleSwaggerUrlData = useProjectStore((/** @type {any} */ state) => state.handleSwaggerUrlData);
 
   // 断言为 number|string：初始值保持旧 constructor 的 ''，而 setSelectCatid 写入的是
   // 分类 id（number），见 selectChange / applyCategoryMenu。
@@ -331,9 +333,8 @@ const ProjectData = () => {
       setShowLoading(true);
       try {
         // 处理swagger url 导入
-        const result = await dispatch(handleSwaggerUrlData(stateRef.current.swaggerUrl));
-        const swaggerData =
-          result && result.payload ? result.payload.data.data : swaggerUrlDataRef.current;
+        const result = await handleSwaggerUrlData(stateRef.current.swaggerUrl);
+        const swaggerData = result && result.data ? result.data.data : swaggerUrlDataRef.current;
         let res = await importDataModule[stateRef.current.curImportType].run(swaggerData);
         if (stateRef.current.dataSync === 'merge') {
           // merge

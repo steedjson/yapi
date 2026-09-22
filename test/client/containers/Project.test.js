@@ -52,6 +52,13 @@ const { default: Project } = require('../../../client/containers/Project/Project
 
 // group 切片已迁至 Zustand（批次3）：Project 经 useGroupStore 读取 currGroup
 const useGroupStore = require('../../../client/store/groupStore').default;
+// user/project 切片已迁至 Zustand（批次4）：currProject 改经 projectStore 播种，
+// getProject/setBreadcrumb 改为断言 HTTP 请求与 userStore.breadcrumb
+const {
+  seedProjectStore,
+  resetUserProjectStores,
+  useUserStore
+} = require('../../helpers/userProjectStores');
 
 const originalAxiosGet = axios.get;
 
@@ -69,15 +76,15 @@ test.serial.afterEach.always(() => {
   cleanupDom();
   axios.get = originalAxiosGet;
   useGroupStore.setState(INITIAL_GROUP_STATE);
+  resetUserProjectStores();
 });
 
 const CURR_PROJECT = { _id: 12, name: '演示项目', group_id: 1, basepath: '/base' };
 
+// project 切片已迁 Zustand：项目未就绪前组件读取的是 projectStore.currProject
 function makeSeed() {
-  return {
-    user: {},
-    project: { currProject: CURR_PROJECT }
-  };
+  seedProjectStore({ currProject: CURR_PROJECT });
+  return {};
 }
 
 // currGroup 播种真实 Zustand store（group 切片不再经 redux 读取）
@@ -115,7 +122,7 @@ test.serial('接口子路由: 子导航高亮接口且路由分发到接口桩�
   const groupFixture = { _id: 1, group_name: '分组一', type: 'public', role: 'owner' };
   stubApi(groupFixture);
   seedGroupStore(groupFixture);
-  const { container, dispatched } = renderWithProviders(React.createElement(Project), {
+  const { container } = renderWithProviders(React.createElement(Project), {
     routePath: '/project/:id/*',
     initialPath: '/project/12/interface/api/lists',
     seedState: makeSeed()
@@ -125,20 +132,17 @@ test.serial('接口子路由: 子导航高亮接口且路由分发到接口桩�
   t.truthy(container.querySelector('.m-subnav'), '应渲染子导航');
   // getProject 仍走 redux；fetchGroupMsg 已迁 Zustand，改为断言其 HTTP 请求发生
   t.truthy(
-    dispatched.find(a => a.type === 'yapi/project/GET_CURR_PROJECT'),
-    '挂载期应派发 getProject'
+    apiCalls.some(url => url.indexOf('/api/project/get') === 0),
+    '挂载期应经 projectStore 拉取项目信息（getProject）'
   );
   t.truthy(
     apiCalls.some(url => url.indexOf('/api/group/get') === 0),
     '挂载期应经 groupStore 拉取分组信息（fetchGroupMsg）'
   );
-  t.falsy(
-    dispatched.find(a => a.type && a.type.indexOf('yapi/group/') === 0),
-    'group 切片已迁 Zustand，不应再派发 yapi/group/* redux action'
-  );
-  t.truthy(
-    dispatched.find(a => a.type === 'yapi/user/SET_BREADCRUMB'),
-    '加载成功后应设置面包屑'
+  t.deepEqual(
+    useUserStore.getState().breadcrumb,
+    [{ name: '演示项目' }],
+    '加载成功后应经 userStore 设置面包屑'
   );
 
   const menuItems = Array.from(container.querySelectorAll('.m-subnav .ant-menu-item')).map(
@@ -185,15 +189,19 @@ test.serial('动态子路由+私有分组: 高亮动态且子导航过滤成员�
 });
 
 test.serial('项目未就绪: currProject 为空时渲染全局 Loading', async t => {
-  stubApi({ _id: 1, group_name: '分组一', type: 'public' });
+  // 真实 store 会把 /api/project/get 响应写入 currProject，此处令请求挂起以保持「未就绪」前提
+  axios.get = (/** @type {string} */ url) => {
+    if (url.indexOf('/api/project/get') === 0) {
+      return new Promise(() => {});
+    }
+    return Promise.resolve({ data: { errcode: 0, data: {} } });
+  };
   seedGroupStore({ _id: 1, group_name: '分组一', type: 'public' });
+  seedProjectStore({});
   const { container } = renderWithProviders(React.createElement(Project), {
     routePath: '/project/:id/*',
     initialPath: '/project/12/setting',
-    seedState: {
-      user: {},
-      project: { currProject: {} }
-    }
+    seedState: {}
   });
   await flushEffects();
 
@@ -219,14 +227,15 @@ test.serial('项目 id 变化: 路由内导航触发重拉（对应旧 cWRP 分�
     return Promise.resolve({ data: { errcode: 0, data: {} } });
   };
   seedGroupStore({ _id: 1, group_name: '分组一', type: 'public', role: 'owner' });
+  seedProjectStore({ currProject: CURR_PROJECT });
   const utils = renderWithProviders(React.createElement(Project), {
     routePath: '/project/:id/*',
     initialPath: '/project/12/interface/api/lists',
-    seedState: makeSeed()
+    seedState: {}
   });
   await flushEffects();
   t.is(
-    utils.dispatched.filter(a => a.type === 'yapi/project/GET_CURR_PROJECT').length,
+    projectCalls.filter(url => url.indexOf('/api/project/get') === 0).length,
     1,
     '挂载期拉取一次'
   );
@@ -235,7 +244,7 @@ test.serial('项目 id 变化: 路由内导航触发重拉（对应旧 cWRP 分�
   await flushEffects();
 
   t.is(
-    utils.dispatched.filter(a => a.type === 'yapi/project/GET_CURR_PROJECT').length,
+    projectCalls.filter(url => url.indexOf('/api/project/get') === 0).length,
     2,
     'id 变化后应再次拉取（旧 cWRP 分支）'
   );

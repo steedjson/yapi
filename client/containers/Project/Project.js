@@ -1,13 +1,13 @@
 // @ts-check
 import React, { useEffect, useRef, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import { Route, Routes, Navigate, matchPath, useLocation, useParams } from 'react-router-dom';
 import withRouter from '../../withRouter';
 import { Subnav } from '../../components/index';
-// group 切片已迁至 Zustand（批次3），user/project 模块仍未迁移
+// group/user/project 切片均已迁至 Zustand（批次3 / 批次4），
+// 本组件的 redux 依赖随迁移全部移除
 import useGroupStore from '../../store/groupStore';
-import { setBreadcrumb } from '../../reducer/modules/user';
-import { getProject } from '../../reducer/modules/project';
+import useUserStore from '../../store/userStore';
+import useProjectStore from '../../store/projectStore';
 import Interface from './Interface/Interface.js';
 import Activity from './Activity/Activity.js';
 import Setting from './Setting/Setting.js';
@@ -27,8 +27,9 @@ const plugin = require('client/plugin.js');
  *   useEffect（prev ref 比较，挂载期跳过）。
  */
 const Project = () => {
-  const dispatch = useDispatch();
-  const curProject = useSelector((/** @type {any} */ state) => state.project.currProject);
+  const curProject = useProjectStore((/** @type {any} */ state) => state.currProject);
+  const getProject = useProjectStore((/** @type {any} */ state) => state.getProject);
+  const setBreadcrumb = useUserStore((/** @type {any} */ state) => state.setBreadcrumb);
   const currGroup = useGroupStore((/** @type {any} */ state) => state.currGroup);
   const fetchGroupMsg = useGroupStore((/** @type {any} */ state) => state.fetchGroupMsg);
   const { id } = /** @type {any} */ (useParams());
@@ -42,12 +43,12 @@ const Project = () => {
    */
   const loadProject = async projectId => {
     try {
-      const project = await dispatch(getProject(projectId));
-      const projectData = project && project.payload && project.payload.data.data;
+      const project = await getProject(projectId);
+      const projectData = project && project.data && project.data.data;
       if (!projectData) throw new Error('project not found');
       await fetchGroupMsg(projectData.group_id);
       setLoadError(false);
-      dispatch(setBreadcrumb([{ name: projectData.name }]));
+      setBreadcrumb([{ name: projectData.name }]);
     } catch (/** @type {any} */ e) {
       console.error(e);
       setLoadError(true);

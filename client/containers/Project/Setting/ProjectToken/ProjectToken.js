@@ -2,8 +2,8 @@
 import React, { useEffect } from 'react';
 import PropTypes from 'prop-types';
 import './ProjectToken.scss';
-import { getToken, updateToken as updateTokenAction } from '../../../../reducer/modules/project';
-import { useDispatch, useSelector } from 'react-redux';
+// project 切片已迁至 Zustand（批次4），本组件的 redux 依赖随迁移全部移除
+import useProjectStore from '../../../../store/projectStore';
 import { Tooltip, message, Modal } from 'antd';
 import { CopyOutlined, ReloadOutlined } from '@ant-design/icons';
 import { copyText } from '../../../../common.js';
@@ -11,21 +11,22 @@ const confirm = Modal.confirm;
 
 /**
  * 项目 token 配置。原类组件经 Hooks 现代化迁移，渲染结构与行为保持一致：
- * - 旧 @connect 改为 useSelector/useDispatch；
+ * - 旧 @connect 改为 Zustand store 订阅（批次4）；
  * - 旧 componentDidMount 拉取 token 改为挂载期 useEffect；
  * - 旧与 redux action 同名的实例方法 updateToken（刷新确认弹窗）更名为
- *   handleUpdateToken，避免与导入的 action 混淆，行为不变。
+ *   handleUpdateToken，避免与 store 动作混淆，行为不变。
  */
 /**
  * @param {any} props
  */
 const ProjectToken = props => {
   const { projectId, curProjectRole } = props;
-  const dispatch = useDispatch();
-  const token = useSelector(state => state.project.token);
+  const token = useProjectStore(state => state.token);
+  const getToken = useProjectStore(state => state.getToken);
+  const updateToken = useProjectStore(state => state.updateToken);
 
   useEffect(() => {
-    dispatch(getToken(projectId));
+    getToken(projectId);
   }, []);
 
   const copyToken = () => {
@@ -40,7 +41,7 @@ const ProjectToken = props => {
       okText: '确认',
       cancelText: '取消',
       async onOk() {
-        await dispatch(updateTokenAction(projectId));
+        await updateToken(projectId);
         message.success('更新成功');
       },
       onCancel() {}

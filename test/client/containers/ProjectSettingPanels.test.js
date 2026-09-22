@@ -33,6 +33,13 @@ const {
   default: ProjectData
 } = require('../../../client/containers/Project/Setting/ProjectData/ProjectData.js');
 
+// user/project 切片已迁 Zustand（批次4）：改经真实 store 播种
+const {
+  seedUserStore,
+  seedProjectStore,
+  resetUserProjectStores
+} = require('../../helpers/userProjectStores');
+
 const originalAxiosGet = axios.get;
 const originalAxiosPost = axios.post;
 
@@ -41,6 +48,7 @@ test.serial.afterEach.always(() => {
   cleanupDom();
   axios.get = originalAxiosGet;
   axios.post = originalAxiosPost;
+  resetUserProjectStores();
 });
 
 const CURR_PROJECT = {
@@ -62,20 +70,20 @@ const CURR_PROJECT = {
 };
 
 function makeSeed(role) {
+  seedUserStore({ uid: 11 });
+  seedProjectStore({
+    currProject: Object.assign({}, CURR_PROJECT, { role }),
+    projectList: [
+      { _id: 5, name: '项目五', group_id: 1 },
+      { _id: 6, name: '项目六', group_id: 1 }
+    ],
+    token: 'tk_seed_9f8e7d6c',
+    swaggerUrlData: ''
+  });
   return {
-    user: { uid: 11 },
     group: {
       currGroup: { _id: 1, group_name: '分组一', group_desc: '', custom_field1: { name: '', enable: false } },
       groupList: []
-    },
-    project: {
-      currProject: Object.assign({}, CURR_PROJECT, { role }),
-      projectList: [
-        { _id: 5, name: '项目五', group_id: 1 },
-        { _id: 6, name: '项目六', group_id: 1 }
-      ],
-      token: 'tk_seed_9f8e7d6c',
-      swaggerUrlData: ''
     },
     inter: { curdata: { catid: 3 } },
     news: { updateLogList: [] }

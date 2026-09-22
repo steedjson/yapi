@@ -1,7 +1,8 @@
 // @ts-check
 import './Home.scss';
 import React from 'react';
-import { useSelector } from 'react-redux';
+// user 切片已迁至 Zustand（批次4），本组件的 redux 依赖随迁移全部移除
+import useUserStore from '../../store/userStore';
 import { Link, Navigate } from 'react-router-dom';
 import { Row, Col, Button, Card } from 'antd';
 import { AppstoreOutlined, ApiOutlined, DatabaseOutlined, TeamOutlined } from '@ant-design/icons';
@@ -331,7 +332,8 @@ HomeGuest.propTypes = {
  * - 落地页其余 JSX（HomeGuest 等）为纯展示结构，保持原样不变。
  */
 const Home = () => {
-  const login = useSelector((/** @type {any} */ state) => state.user.isLogin);
+  // user 切片已迁至 Zustand（批次4）
+  const login = useUserStore(state => state.isLogin);
   // 登录态由 /api/user/status 异步获取，到达后也应立即离开游客落地页
   if (login) {
     return <Navigate to="/group" replace />;

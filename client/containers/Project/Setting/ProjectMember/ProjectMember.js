@@ -15,19 +15,13 @@ import {
   Switch,
   Tooltip
 } from 'antd';
-import { useSelector, useDispatch } from 'react-redux';
 import { useParams } from 'react-router-dom';
-// group 切片已迁至 Zustand（批次3），project 模块仍未迁移
+// group 切片已迁至 Zustand（批次3）；user/project 切片已迁至 Zustand（批次4），
+// 本组件的 redux 依赖随迁移全部移除
 import useGroupStore from '../../../../store/groupStore';
+import useUserStore from '../../../../store/userStore';
+import useProjectStore from '../../../../store/projectStore';
 import ErrMsg from '../../../../components/ErrMsg/ErrMsg.js';
-import {
-  fetchProjectList,
-  getProjectMemberList,
-  addMember,
-  delMember,
-  changeMemberRole,
-  changeMemberEmailNotice
-} from '../../../../reducer/modules/project.js';
 import UsernameAutoComplete from '../../../../components/UsernameAutoComplete/UsernameAutoComplete.js';
 import '../Setting.scss';
 
@@ -47,8 +41,8 @@ const arrayAddKey = arr => {
 
 /**
  * 成员管理。原类组件经 Hooks 现代化迁移，渲染结构与行为保持一致：
- * - 旧 @connect 改为 useSelector/useDispatch，旧 withRouter 注入的
- *   match.params.id 改为 useParams；
+ * - 旧 @connect 改为 Zustand store 订阅（批次3 group / 批次4 user+project），
+ *   旧 withRouter 注入的 match.params.id 改为 useParams；
  * - 类 state 整体迁移为单个 useState 对象，setState 局部合并语义经
  *   setState(prev => ({ ...prev, ...patch })) 等价保留（原 constructor 中的
  *   dataSource 仅初始化从未读写，属死状态，迁移后不再保留）；
@@ -56,11 +50,16 @@ const arrayAddKey = arr => {
  *   改为挂载期 useEffect，请求结果直接取自 await 恢复值，与旧实现一致。
  */
 const ProjectMember = () => {
-  const dispatch = useDispatch();
   const { id } = /** @type {any} */ (useParams());
-  const projectMsg = useSelector(state => state.project.currProject);
-  const uid = useSelector(state => state.user.uid);
-  const projectList = useSelector(state => state.project.projectList);
+  const projectMsg = useProjectStore(state => state.currProject);
+  const uid = useUserStore(state => state.uid);
+  const projectList = useProjectStore(state => state.projectList);
+  const fetchProjectList = useProjectStore(state => state.fetchProjectList);
+  const getProjectMemberList = useProjectStore(state => state.getProjectMemberList);
+  const addMemberAction = useProjectStore(state => state.addMember);
+  const delMemberAction = useProjectStore(state => state.delMember);
+  const changeMemberRoleAction = useProjectStore(state => state.changeMemberRole);
+  const changeMemberEmailNoticeAction = useProjectStore(state => state.changeMemberEmailNotice);
   const fetchGroupMsg = useGroupStore(state => state.fetchGroupMsg);
   const fetchGroupMemberList = useGroupStore(state => state.fetchGroupMemberList);
 
@@ -82,10 +81,11 @@ const ProjectMember = () => {
 
   // 重新获取列表
   const reFetchList = () => {
-    dispatch(getProjectMemberList(id)).then((/** @type {any} */ res) => {
+    getProjectMemberList(id).then((/** @type {any} */ res) => {
+      if (!res) return; // 网络错误（store 返回 null），保留旧列表
       setState((/** @type {any} */ prevState) => ({
         ...prevState,
-        projectMemberList: arrayAddKey(res.payload.data.data),
+        projectMemberList: arrayAddKey(res.data.data),
         visible: false,
         modalVisible: false
       }));
@@ -97,12 +97,12 @@ const ProjectMember = () => {
     (async () => {
       const groupMemberList = await fetchGroupMemberList(projectMsg.group_id);
       const groupMsg = await fetchGroupMsg(projectMsg.group_id);
-      const projectMemberList = await dispatch(getProjectMemberList(id));
+      const projectMemberList = await getProjectMemberList(id);
       setState((/** @type {any} */ prevState) => ({
         ...prevState,
         groupMemberList: groupMemberList.data.data,
         groupName: groupMsg.data.data.group_name,
-        projectMemberList: arrayAddKey(projectMemberList.payload.data.data),
+        projectMemberList: arrayAddKey(projectMemberList.data.data),
         role: projectMsg.role
       }));
     })();
@@ -116,7 +116,7 @@ const ProjectMember = () => {
   };
 
   const showImportMemberModal = async () => {
-    await dispatch((/** @type {any} */ (fetchProjectList))(projectMsgRef.current.group_id));
+    await fetchProjectList(projectMsgRef.current.group_id);
     setState((/** @type {any} */ prevState) => ({
       ...prevState,
       modalVisible: true
@@ -132,15 +132,13 @@ const ProjectMember = () => {
    * @param {any} memberUids
    */
   const addMembers = memberUids => {
-    dispatch(
-      addMember({
-        id: id,
-        member_uids: memberUids,
-        role: state.inputRole
-      })
-    ).then((/** @type {any} */ res) => {
-      if (!res.payload.data.errcode) {
-        const { add_members, exist_members } = res.payload.data.data;
+    addMemberAction({
+      id: id,
+      member_uids: memberUids,
+      role: state.inputRole
+    }).then((/** @type {any} */ res) => {
+      if (res && !res.data.errcode) {
+        const { add_members, exist_members } = res.data.data;
         const addLength = add_members.length;
         const existLength = exist_members.length;
         setState((/** @type {any} */ prevState) => ({
@@ -170,9 +168,9 @@ const ProjectMember = () => {
    */
   const deleteConfirm = member_uid => {
     return () => {
-      dispatch(delMember({ id, member_uid })).then((/** @type {any} */ res) => {
-        if (!res.payload.data.errcode) {
-          message.success(res.payload.data.errmsg);
+      delMemberAction({ id, member_uid }).then((/** @type {any} */ res) => {
+        if (res && !res.data.errcode) {
+          message.success(res.data.errmsg);
           reFetchList(); // 添加成功后重新获取分组成员列表
         }
       });
@@ -186,9 +184,9 @@ const ProjectMember = () => {
   const changeUserRole = e => {
     const role = e.split('-')[0];
     const member_uid = e.split('-')[1];
-    dispatch(changeMemberRole({ id, member_uid, role })).then((/** @type {any} */ res) => {
-      if (!res.payload.data.errcode) {
-        message.success(res.payload.data.errmsg);
+    changeMemberRoleAction({ id, member_uid, role }).then((/** @type {any} */ res) => {
+      if (res && !res.data.errcode) {
+        message.success(res.data.errmsg);
         reFetchList(); // 添加成功后重新获取分组成员列表
       }
     });
@@ -200,7 +198,7 @@ const ProjectMember = () => {
    * @param {any} member_uid
    */
   const changeEmailNotice = async (notice, member_uid) => {
-    await dispatch(changeMemberEmailNotice({ id, member_uid, notice }));
+    await changeMemberEmailNoticeAction({ id, member_uid, notice });
     reFetchList(); // 添加成功后重新获取项目成员列表
   };
 
@@ -233,8 +231,9 @@ const ProjectMember = () => {
   // 确定批量导入模态框
   const handleModalOk = async () => {
     // 获取项目中的成员列表
-    const menberList = await dispatch(getProjectMemberList(state.selectProjectId));
-    const memberUidList = menberList.payload.data.data.map((/** @type {any} */ item) => {
+    const menberList = await getProjectMemberList(state.selectProjectId);
+    if (!menberList) return; // 网络错误（store 返回 null），中止导入
+    const memberUidList = menberList.data.data.map((/** @type {any} */ item) => {
       return item.uid;
     });
     addMembers(memberUidList);

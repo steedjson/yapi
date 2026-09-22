@@ -4,14 +4,16 @@ import React, { useMemo, useRef } from 'react';
 import { Card, Tooltip, Modal, Alert, Input, message } from 'antd';
 import { CopyOutlined, StarFilled, StarOutlined } from '@ant-design/icons';
 import { getV4Icon } from '../../constants/v4IconMap';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { delFollow, addFollow } from '../../reducer/modules/follow';
 import PropTypes from 'prop-types';
 import { useNavigate } from 'react-router-dom';
 import { debounce } from '../../common';
 import constants from '../../constants/variable.js';
 import { produce } from 'immer';
-import { getProject, checkProjectName, copyProjectMsg } from '../../reducer/modules/project';
+// user/project 切片已迁至 Zustand（批次4），follow 模块仍未迁移（保留 useDispatch 混用）
+import useUserStore from '../../store/userStore';
+import useProjectStore from '../../store/projectStore';
 import { trim } from '../../common.js';
 const confirm = Modal.confirm;
 
@@ -21,9 +23,10 @@ const confirm = Modal.confirm;
 export default function ProjectCard(props) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const uid = useSelector(state => state.user.uid);
-  // currPage 与旧 @connect 映射保持一致(历史遗留仅声明未消费),保留订阅避免行为差异
-  useSelector(state => state.project.currPage);
+  const uid = useUserStore(state => state.uid);
+  const getProject = useProjectStore(state => state.getProject);
+  const checkProjectName = useProjectStore(state => state.checkProjectName);
+  const copyProjectMsg = useProjectStore(state => state.copyProjectMsg);
   const { projectData, inFollowPage, isShow, callbackResult } = props;
 
   // 用 ref 始终指向最新 props,防抖回调经 useMemo 只创建一次,避免闭包读到陈旧值
@@ -37,14 +40,17 @@ export default function ProjectCard(props) {
   async function copy(projectName) {
     const id = latestRef.current.projectData._id;
 
-    let projectDataRes = await dispatch(getProject(id));
-    let data = projectDataRes.payload.data.data;
+    let projectDataRes = await getProject(id);
+    let data = projectDataRes && projectDataRes.data && projectDataRes.data.data;
+    if (!data) {
+      return;
+    }
     let newData = produce(data, draftData => {
       draftData.preName = draftData.name;
       draftData.name = projectName;
     });
 
-    await dispatch(copyProjectMsg(newData));
+    await copyProjectMsg(newData);
     message.success('项目复制成功');
     latestRef.current.callbackResult();
   }
@@ -74,9 +80,13 @@ export default function ProjectCard(props) {
           (/** @type {any} */ (document.getElementById('project_name'))).value
         );
 
-        // 查询项目名称是否重复
+        // 查询项目名称是否重复（旧 messageMiddleware throw 语义在此显式化）
         const group_id = projectData.group_id;
-        await dispatch(checkProjectName(projectName, group_id));
+        const checkRes = await checkProjectName(projectName, group_id);
+        if (checkRes && checkRes.data && checkRes.data.errcode !== 0) {
+          message.error(checkRes.data.errmsg || '项目名已存在');
+          return;
+        }
         copy(projectName);
       },
       iconType: 'copy',

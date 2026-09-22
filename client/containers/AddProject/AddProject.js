@@ -1,7 +1,6 @@
 // @ts-check
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import { connect } from 'react-redux';
 import { Button, Input, Tooltip, Select, message, Row, Col, Radio, Form } from 'antd';
 
 import {
@@ -9,10 +8,11 @@ import {
   LockOutlined,
   PlusOutlined
 } from '@ant-design/icons';
-import { addProject } from '../../reducer/modules/project.js';
-// group 切片已迁至 Zustand（批次3），user/project 模块仍未迁移
+// user/project 切片已迁至 Zustand（批次4），本组件的 redux 依赖随迁移全部移除
+import useUserStore from '../../store/userStore';
+import useProjectStore from '../../store/projectStore';
+// group 切片已迁至 Zustand（批次3）
 import useGroupStore from '../../store/groupStore';
-import { setBreadcrumb } from '../../reducer/modules/user';
 const { TextArea } = Input;
 const FormItem = Form.Item;
 const Option = Select.Option;
@@ -44,12 +44,14 @@ function ProjectList(props) {
   const currGroup = useGroupStore(state => state.currGroup);
   const storeGroupList = useGroupStore(state => state.groupList);
   const fetchGroupList = useGroupStore(state => state.fetchGroupList);
+  const setBreadcrumb = useUserStore(state => state.setBreadcrumb);
+  const addProjectAction = useProjectStore(state => state.addProject);
   const [groupList, setGroupList] = useState(/** @type {any[]} */ ([]));
   const [currGroupId, setCurrGroupId] = useState(null);
 
   useEffect(() => {
     (async () => {
-      props.setBreadcrumb([{ name: '新建项目' }]);
+      setBreadcrumb([{ name: '新建项目' }]);
       if (!currGroup._id) {
         await fetchGroupList();
       }
@@ -92,11 +94,11 @@ function ProjectList(props) {
       values.group_id = values.group;
       values.icon = constants.PROJECT_ICON[0];
       values.color = pickRandomProperty(constants.PROJECT_COLOR);
-      props.addProject(values).then((/** @type {any} */ res) => {
-        if (res.payload.data.errcode == 0) {
+      addProjectAction(values).then((/** @type {any} */ res) => {
+        if (res && res.data.errcode == 0) {
           form.resetFields();
           message.success('创建成功! ');
-          props.history.push('/project/' + res.payload.data.data._id + '/interface/api');
+          props.history.push('/project/' + res.data.data._id + '/interface/api');
         }
       });
     });
@@ -212,15 +214,7 @@ function ProjectList(props) {
 }
 
 ProjectList.propTypes = {
-  addProject: PropTypes.func,
-  history: PropTypes.object,
-  setBreadcrumb: PropTypes.func
+  history: PropTypes.object
 };
 
-export default connect(
-  null,
-  {
-    addProject,
-    setBreadcrumb
-  }
-)(withRouter(ProjectList));
+export default withRouter(ProjectList);

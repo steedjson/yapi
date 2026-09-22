@@ -67,6 +67,7 @@ test.serial.afterEach.always(() => {
   cleanupDom();
   axios.get = originalAxiosGet;
   axios.post = originalAxiosPost;
+  resetUserProjectStores();
   useGroupStore.setState({
     groupList: [],
     currGroup: { group_name: '', group_desc: '', custom_field1: { name: '', enable: false } },
@@ -89,6 +90,13 @@ const CURR_PROJECT = {
 const MENU_TREE = [
   { _id: 5, name: '分类五', list: [{ _id: 100, title: '接口一', path: '/api/a' }], children: [] }
 ];
+
+// project/user 切片已迁 Zustand（批次4）：改经 projectStore/userStore 播种
+const {
+  seedUserStore,
+  seedProjectStore,
+  resetUserProjectStores
+} = require('../../helpers/userProjectStores');
 
 const LIST_SEED = {
   inter: {
@@ -131,8 +139,6 @@ const LIST_SEED = {
     ],
     count: 1
   },
-  project: { currProject: CURR_PROJECT },
-  user: { uid: 9 }
 };
 
 const CURDATA = {
@@ -162,9 +168,14 @@ const CURDATA = {
 };
 
 const VIEW_SEED = {
-  inter: { curdata: CURDATA, list: MENU_TREE, editStatus: false },
-  project: { currProject: CURR_PROJECT }
+  inter: { curdata: CURDATA, list: MENU_TREE, editStatus: false }
 };
+
+// 渲染前播种 project/user store（与旧 redux 种子等价）
+function seedUserProjectStores() {
+  seedUserStore({ uid: 9 });
+  seedProjectStore({ currProject: CURR_PROJECT });
+}
 
 // group 切片已迁至 Zustand（批次3）：View 经 useGroupStore 读取 field
 const useGroupStore = require('../../../client/store/groupStore').default;
@@ -191,6 +202,7 @@ test.serial('InterfaceList 挂载拉取全部接口列表并渲染表格', async
     return { data: { errcode: 0, data: { count: 2, list: [] } } };
   };
 
+  seedUserProjectStores();
   const utils = renderWithProviders(React.createElement(InterfaceList), {
     seedState: LIST_SEED,
     routePath: '/project/:id/interface/api',
@@ -220,6 +232,7 @@ test.serial('InterfaceList 分类路由按 catid 拉取分类接口并回显分�
     return { data: { errcode: 0, data: { count: 1, list: [] } } };
   };
 
+  seedUserProjectStores();
   const utils = renderWithProviders(React.createElement(InterfaceList), {
     seedState: LIST_SEED,
     routePath: '/project/:id/interface/api/:actionId',
@@ -246,6 +259,7 @@ test.serial('InterfaceList 分类路由按 catid 拉取分类接口并回显分�
 test.serial('InterfaceList 点击添加接口按钮打开弹窗', async t => {
   axios.get = async () => ({ data: { errcode: 0, data: { count: 0, list: [] } } });
 
+  seedUserProjectStores();
   const utils = renderWithProviders(React.createElement(InterfaceList), {
     seedState: LIST_SEED,
     routePath: '/project/:id/interface/api',
@@ -268,6 +282,7 @@ test.serial('InterfaceList 点击添加接口按钮打开弹窗', async t => {
 
 test.serial('View 渲染接口详情完整信息', async t => {
   seedGroupStore();
+  seedUserProjectStores();
   const utils = renderWithProviders(React.createElement(View), {
     seedState: VIEW_SEED,
     initialPath: '/project/12/interface/api/100'
@@ -291,6 +306,7 @@ test.serial('View 渲染接口详情完整信息', async t => {
 
 test.serial('View 无 title 时挂载后展示暂无数据兜底', async t => {
   seedGroupStore();
+  seedUserProjectStores();
   const utils = renderWithProviders(React.createElement(View), {
     seedState: { ...VIEW_SEED, inter: { ...VIEW_SEED.inter, curdata: {} } },
     initialPath: '/project/12/interface/api/100'
@@ -311,6 +327,7 @@ test.serial('View 无请求参数时隐藏请求参数区块', async t => {
   delete emptyReqData.desc;
   delete emptyReqData.custom_field_value;
 
+  seedUserProjectStores();
   const utils = renderWithProviders(React.createElement(View), {
     seedState: { ...VIEW_SEED, inter: { ...VIEW_SEED.inter, curdata: emptyReqData } },
     initialPath: '/project/12/interface/api/100'

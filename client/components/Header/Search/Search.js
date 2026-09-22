@@ -1,12 +1,13 @@
 // @ts-check
 import React, { useRef, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { Input, AutoComplete } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import './Search.scss';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-// menu / group 切片均已迁至 Zustand（批次2 / 批次3），interface 模块仍未迁移
+// menu / group 切片已迁至 Zustand（批次2 / 批次3）；project 切片的 stale 订阅
+// （仅声明未消费）随批次4 迁移移除；interface 模块仍未迁移
 import useMenuStore from '../../../store/menuStore';
 import useGroupStore from '../../../store/groupStore';
 
@@ -19,7 +20,6 @@ export default function Srch() {
   const setCurrGroup = useGroupStore(state => state.setCurrGroup);
   const fetchGroupMsg = useGroupStore(state => state.fetchGroupMsg);
   useGroupStore(state => state.groupList);
-  useSelector(state => state.project.projectList);
   const [dataSource, setDataSource] = useState(/** @type {any[]} */ ([]));
   // 选项附带的自定义数据索引(见 handleSearch),非响应式,用 ref 承载
   const searchIndexRef = useRef({});

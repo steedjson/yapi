@@ -4,8 +4,9 @@ import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { handlePath as handlePathUtil } from '../../../../common.js';
 import { changeEditStatus } from '../../../../reducer/modules/interface.js';
-// group 切片已迁至 Zustand（批次3），inter/project 模块仍未迁移
+// group/project 切片已迁至 Zustand（批次3 / 批次4），inter 模块仍未迁移
 import useGroupStore from '../../../../store/groupStore';
+import useProjectStore from '../../../../store/projectStore';
 import json5 from 'json5';
 import { message, Affix, Form, Button } from 'antd';
 import mockEditor from 'client/components/AceEditor/mockEditor';
@@ -44,6 +45,8 @@ const FormItem = Form.Item;
 function InterfaceEditForm(/** @type {any} */ props) {
   const [form] = Form.useForm();
   const custom_field = useGroupStore(state => state.field);
+  // project 切片已迁至 Zustand（批次4）：原 connect 注入的 projectMsg 改经 useProjectStore
+  const projectMsg = useProjectStore(state => state.currProject);
   const [state, setState] = useState(() => {
     const initStateData = initState(props.curdata, props.mockUrl);
     // 原 componentDidMount 中对 req_radio_type 的初始化；缺陷打捞：method 缺失/小写时
@@ -68,10 +71,10 @@ function InterfaceEditForm(/** @type {any} */ props) {
   const resBodyType = Form.useWatch('res_body_type', form) ?? state.res_body_type;
   const reqBodyIsJsonSchema =
     Form.useWatch('req_body_is_json_schema', form) ??
-    (state.req_body_is_json_schema || !props.projectMsg.is_json5);
+    (state.req_body_is_json_schema || !projectMsg.is_json5);
   const resBodyIsJsonSchema =
     Form.useWatch('res_body_is_json_schema', form) ??
-    (state.res_body_is_json_schema || !props.projectMsg.is_json5);
+    (state.res_body_is_json_schema || !projectMsg.is_json5);
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -525,7 +528,6 @@ function InterfaceEditForm(/** @type {any} */ props) {
     }));
   };
 
-  const { projectMsg } = props;
 
   return (
     <div>
@@ -633,16 +635,11 @@ InterfaceEditForm.propTypes = {
   noticed: PropTypes.bool,
   cat: PropTypes.array,
   changeEditStatus: PropTypes.func,
-  projectMsg: PropTypes.object,
   onTagClick: PropTypes.func
 };
 
 export default connect(
-  (/** @type {any} */ state) => {
-    return {
-      projectMsg: state.project.currProject
-    };
-  },
+  null,
   {
     changeEditStatus
   }

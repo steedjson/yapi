@@ -17,10 +17,16 @@ const WIKI_DATA = {
   up_time: 1600000000
 };
 
+// project 切片已迁 Zustand（批次4）：currProject 改经 projectStore 播种
+const { seedProjectStore, resetUserProjectStores } = require('../helpers/userProjectStores');
+
+test.serial.afterEach.always(() => {
+  resetUserProjectStores();
+});
+
 function seedState() {
-  return {
-    project: { currProject: { _id: 12, role: 'admin', switch_notice: true } }
-  };
+  seedProjectStore({ currProject: { _id: 12, role: 'admin', switch_notice: true } });
+  return {};
 }
 
 function renderWikiPage() {

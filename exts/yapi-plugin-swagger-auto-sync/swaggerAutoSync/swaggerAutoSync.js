@@ -1,11 +1,11 @@
 // @ts-check
 import React, { useState, useEffect } from 'react';
-import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import { formatTime } from 'client/common.js';
 import { Switch, Button, Tooltip, message, Input, Select, Form } from 'antd';
 import { QuestionCircleOutlined, SaveOutlined } from '@ant-design/icons';
-import { handleSwaggerUrlData } from 'client/reducer/modules/project';
+// project 切片已迁至 Zustand（批次4）：store 引用走相对路径（exts 下无 'client/*' 别名映射）
+import useProjectStore from '../../../client/store/projectStore';
 const FormItem = Form.Item;
 const Option = Select.Option;
 import axios from 'axios';
@@ -39,6 +39,10 @@ const tailFormItemLayout = {
  */
 function ProjectInterfaceSync(props) {
   const [form] = Form.useForm();
+  // project 切片已迁至 Zustand（批次4）：原 connect 注入的 projectMsg/handleSwaggerUrlData
+  // 改经 store 订阅/直调
+  const projectMsg = useProjectStore(state => state.currProject);
+  const handleSwaggerUrlData = useProjectStore(state => state.handleSwaggerUrlData);
   const [sync_data, setSyncData] = useState(/** @type {any} */ ({ is_sync_open: false }));
   //默认每份钟同步一次,取一个随机数
   const [random_corn] = useState('*/2 * * * *');
@@ -48,7 +52,7 @@ function ProjectInterfaceSync(props) {
   }, []);
 
   async function getSyncData() {
-    let projectId = props.projectMsg._id;
+    let projectId = projectMsg._id;
     let result = await axios.get('/api/plugin/autoSync/get?project_id=' + projectId);
     if (result.data.errcode === 0) {
       if (result.data.data) {
@@ -70,7 +74,7 @@ function ProjectInterfaceSync(props) {
     let params = {
       project_id: props.projectId,
       is_sync_open: sync_data.is_sync_open,
-      uid: props.projectMsg.uid
+      uid: projectMsg.uid
     };
     if (sync_data._id) {
       params.id = sync_data._id;
@@ -95,7 +99,7 @@ function ProjectInterfaceSync(props) {
   const validSwaggerUrl = async (rule, value, callback) => {
     if (!value) return;
     try {
-      await props.handleSwaggerUrlData(value);
+      await handleSwaggerUrlData(value);
     } catch (e) {
       callback('swagger地址不正确');
     }
@@ -241,17 +245,7 @@ function ProjectInterfaceSync(props) {
 ProjectInterfaceSync.propTypes = {
   match: PropTypes.object,
   projectId: PropTypes.number,
-  projectMsg: PropTypes.object,
-  handleSwaggerUrlData: PropTypes.func
+  projectMsg: PropTypes.object
 };
 
-export default connect(
-  (/** @type {any} */ state) => {
-    return {
-      projectMsg: state.project.currProject
-    };
-  },
-  {
-    handleSwaggerUrlData
-  }
-)(ProjectInterfaceSync);
+export default ProjectInterfaceSync;

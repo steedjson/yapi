@@ -1,10 +1,10 @@
 // @ts-check
 import React, { useState } from 'react';
-import { connect } from 'react-redux';
 import { Button, Input, message, Form } from 'antd';
 
 import { UserOutlined, MailOutlined, LockOutlined } from '@ant-design/icons';
-import { regActions } from '../../reducer/modules/user';
+// user 切片已迁至 Zustand（批次4），本组件的 redux 依赖随迁移全部移除
+import useUserStore from '../../store/userStore';
 import withRouter from '../../withRouter';
 
 const formItemStyle = {
@@ -21,13 +21,14 @@ const changeHeight = {
 function Reg(props) {
   const [form] = Form.useForm();
   const [confirmDirty] = useState(false);
+  const regActions = useUserStore(state => state.regActions);
 
   /**
    * @param {any} values
    */
   const handleSubmit = values => {
-    props.regActions(values).then((/** @type {any} */ res) => {
-      if (res.payload.data.errcode == 0) {
+    regActions(values).then((/** @type {any} */ res) => {
+      if (res && res.data.errcode == 0) {
         props.history.replace('/group');
         message.success('注册成功! ');
       }
@@ -159,15 +160,6 @@ function Reg(props) {
   );
 }
 
-const RegForm = connect(
-  (/** @type {any} */ state) => {
-    return {
-      loginData: state.user
-    };
-  },
-  {
-    regActions
-  }
-)(withRouter(Reg));
+const RegForm = withRouter(Reg);
 
 export default RegForm;

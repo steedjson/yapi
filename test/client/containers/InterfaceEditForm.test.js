@@ -9,6 +9,8 @@ const path = require('path');
 
 // group 切片已迁至 Zustand（批次3）：InterfaceEditForm 经 useGroupStore 读取 field
 const useGroupStore = require('../../../client/store/groupStore').default;
+// project 切片已迁 Zustand（批次4）：InterfaceEditForm 的 projectMsg 改经 useProjectStore
+const { seedProjectStore } = require('../../helpers/userProjectStores');
 const INITIAL_GROUP_STATE = {
   groupList: [],
   currGroup: { group_name: '', group_desc: '', custom_field1: { name: '', enable: false } },
@@ -216,14 +218,12 @@ test('queryTpl/paramsTpl: 给定 data/index/delParams 输出确定性行结构',
 test.serial('InterfaceEditForm: 空表单渲染出基础表单骨架', async t => {
   const Comp = require('../../../client/containers/Project/Interface/InterfaceList/InterfaceEditForm.js').default;
   seedGroupStore({ enable: true, name: '自定义字段' });
-  const seedState = {
-    project: {
-      currProject: {
-        tag: [{ _id: 't1', name: 'tagA' }],
-        is_json5: true
-      }
+  seedProjectStore({
+    currProject: {
+      tag: [{ _id: 't1', name: 'tagA' }],
+      is_json5: true
     }
-  };
+  });
   const utils = renderWithProviders(
     React.createElement(Comp, {
       cat: [{ _id: '1', name: '分类A' }],
@@ -234,7 +234,7 @@ test.serial('InterfaceEditForm: 空表单渲染出基础表单骨架', async t =
       onSubmit: () => Promise.resolve({}),
       onTagClick: () => {}
     }),
-    { seedState }
+    {}
   );
   await flushEffects(30);
   t.true(utils.container.querySelector('input#title') !== null);
@@ -250,9 +250,7 @@ test.serial('InterfaceEditForm: 空表单渲染出基础表单骨架', async t =
 test.serial('InterfaceEditForm: curdata 缺 method 时不再崩溃（req_radio_type 回退 req-query）', async t => {
   const Comp = require('../../../client/containers/Project/Interface/InterfaceList/InterfaceEditForm.js').default;
   seedGroupStore({ enable: false });
-  const seedState = {
-    project: { currProject: { tag: [], is_json5: true } }
-  };
+  seedProjectStore({ currProject: { tag: [], is_json5: true } });
   const utils = renderWithProviders(
     React.createElement(Comp, {
       cat: [],
@@ -263,7 +261,7 @@ test.serial('InterfaceEditForm: curdata 缺 method 时不再崩溃（req_radio_t
       onSubmit: () => Promise.resolve({}),
       onTagClick: () => {}
     }),
-    { seedState }
+    {}
   );
   await flushEffects(30);
   t.true(
@@ -280,15 +278,13 @@ test.serial('InterfaceEditForm: curdata 缺 method 时不再崩溃（req_radio_t
 test.serial('InterfaceEditForm: json-schema 开启态渲染自研编辑器且编辑操作上抛父组件', async t => {
   const Comp = require('../../../client/containers/Project/Interface/InterfaceList/InterfaceEditForm.js').default;
   seedGroupStore({ enable: false });
-  const seedState = {
-    project: {
-      currProject: {
-        tag: [],
-        // 项目未开 json5：两个 JSON-SCHEMA 开关按初值规约（is_json_schema || !is_json5）恒为开
-        is_json5: false
-      }
+  seedProjectStore({
+    currProject: {
+      tag: [],
+      // 项目未开 json5：两个 JSON-SCHEMA 开关按初值规约（is_json_schema || !is_json5）恒为开
+      is_json5: false
     }
-  };
+  });
   const utils = renderWithProviders(
     React.createElement(Comp, {
       cat: [{ _id: '1', name: '分类A' }],
@@ -310,7 +306,7 @@ test.serial('InterfaceEditForm: json-schema 开启态渲染自研编辑器且编
       onSubmit: () => Promise.resolve({}),
       onTagClick: () => {}
     }),
-    { seedState }
+    {}
   );
   await flushEffects(30);
 

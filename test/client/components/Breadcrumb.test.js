@@ -3,29 +3,26 @@ import '../../helpers/jsdom-setup';
 import test from 'ava';
 import React from 'react';
 import { render, screen, cleanup } from '@testing-library/react';
-import { Provider } from 'react-redux';
-import { createStore } from 'redux';
 import { MemoryRouter } from 'react-router-dom';
 import { cleanupDom } from '../../helpers/jsdom-setup';
 
 const { default: BreadcrumbNavigation } = require('../../../client/components/Breadcrumb/Breadcrumb.js');
+// user 切片已迁 Zustand（批次4）：breadcrumb 改经 useUserStore 播种，无需 redux Provider
+const { seedUserStore, resetUserProjectStores } = require('../../helpers/userProjectStores');
 
 test.serial.afterEach.always(() => {
   cleanup();
   cleanupDom();
+  resetUserProjectStores();
 });
 
-// Breadcrumb 用 useSelector 取 state.user.breadcrumb，故 store 只需提供该切片
+// Breadcrumb 经 useUserStore 读取 breadcrumb，渲染前播种即可
 function renderBreadcrumb(breadcrumb) {
-  const store = createStore(function(state) {
-    return state || { user: { breadcrumb: breadcrumb } };
-  });
+  seedUserStore({ breadcrumb: breadcrumb });
   const utils = render(
-    <Provider store={store}>
-      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-        <BreadcrumbNavigation />
-      </MemoryRouter>
-    </Provider>
+    <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <BreadcrumbNavigation />
+    </MemoryRouter>
   );
   const items = utils.container.querySelectorAll('.ant-breadcrumb-item');
   return Object.assign({ items }, utils);
@@ -78,7 +75,7 @@ test.serial('空数组与未初始化 breadcrumb 均不抛错且不渲染条目'
   t.is(empty.items.length, 0, '空数组不应渲染条目, 实际 DOM: ' + empty.container.innerHTML);
   t.truthy(empty.container.querySelector('.breadcrumb-container'), '外层容器仍应存在');
 
-  // reducer 初始态 breadcrumb 为 undefined 的等价场景
+  // 旧 reducer 初始态 breadcrumb 为 undefined 的等价场景
   t.notThrows(() => {
     const uninitialized = renderBreadcrumb(undefined);
     t.is(uninitialized.items.length, 0, 'undefined 不应渲染条目');

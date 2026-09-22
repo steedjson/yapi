@@ -2,16 +2,18 @@
 import './Activity.scss';
 import React from 'react';
 import TimeTree from '../../../components/TimeLine/TimeLine';
+// project/user 切片已迁至 Zustand（批次4），inter 模块仍未迁移
 import { useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import { Button } from 'antd';
+import useProjectStore from '../../../store/projectStore';
 
 const Activity = () => {
   const params = /** @type {any} */ (useParams());
-  const currProject = useSelector(state => state.project.currProject);
-  // 旧 @connect 映射的 uid/curdata 历史遗留仅声明未消费，保留订阅避免行为差异
-  useSelector(state => state.user.uid + '');
+  const currProject = useProjectStore(state => state.currProject);
+  // 旧 @connect 映射的 uid 历史遗留仅声明未消费，user 切片迁 Zustand（批次4）时移除；
+  // curdata 属未迁移的 inter 切片，保留订阅避免行为差异
   useSelector(state => state.inter.curdata);
   return (
     <div className="g-row">

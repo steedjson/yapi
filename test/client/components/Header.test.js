@@ -4,8 +4,7 @@ import test from 'ava';
 import React from 'react';
 import { render, fireEvent, cleanup, act } from '@testing-library/react';
 import { Provider } from 'react-redux';
-import { createStore, applyMiddleware } from 'redux';
-import promiseMiddleware from 'redux-promise';
+import { legacy_createStore as createStore } from 'redux';
 import { MemoryRouter, useLocation } from 'react-router-dom';
 import { cleanupDom } from '../../helpers/jsdom-setup';
 
@@ -26,6 +25,10 @@ Module._resolveFilename = function(request, parent, isMain, options) {
 };
 
 const { default: HeaderCom } = require('../../../client/components/Header/Header.js');
+// user 切片已迁 Zustand（批次4）：Header/Breadcrumb 改经 useUserStore 读取，
+// Search 的 project.projectList stale 订阅已随迁移移除；
+// 但内嵌 Srch 仍经 useDispatch 派发 interface 动作（inter 未迁移），Provider 需保留
+const { seedUserStore, resetUserProjectStores } = require('../../helpers/userProjectStores');
 
 // 退出登录等 action 的 payload 是 axios 请求，测试统一拦截（axios 为 CJS 单例）
 const originalAxiosGet = axios.get;
@@ -39,18 +42,20 @@ test.serial.afterEach.always(() => {
   // 皮肤用例可能改动 documentElement / localStorage,统一还原
   globalThis.document.documentElement.removeAttribute('data-skin');
   globalThis.window.localStorage.removeItem('yapi-skin');
+  // userStore 为模块级单例,复位避免用例间串场
+  resetUserProjectStores();
 });
 
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-// Header 经 useSelector 读取 user 切片(userName/uid/role/isLogin/studyTip/study/imageUrl),
-// 内嵌 Breadcrumb(user.breadcrumb)与 Srch(group.groupList/project.projectList)
-// 记录经完整中间件链的 action(含 redux-promise 二次派发的 fulfilled action)
-function makeStore(userState) {
-  const seedState = {
-    user: Object.assign(
+// Header 经 useUserStore 读取 user 切片(userName/uid/role/isLogin/studyTip/study/imageUrl),
+// 内嵌 Breadcrumb(user.breadcrumb)与 Srch(group.groupList)
+function renderHeader(userState, opts) {
+  const options = opts || {};
+  seedUserStore(
+    Object.assign(
       {
         userName: 'admin',
         uid: 11,
@@ -62,31 +67,12 @@ function makeStore(userState) {
         breadcrumb: []
       },
       userState
-    ),
-    group: { groupList: [] },
-    project: { projectList: [] }
-  };
-  const dispatched = [];
-  const record = action => {
-    if (action && action.type && action.type.indexOf('@@') !== 0) {
-      dispatched.push(action);
-    }
-  };
-  const store = applyMiddleware(promiseMiddleware)(createStore)(function(state, action) {
-    record(action);
-    return state === undefined ? seedState : state;
-  }, seedState);
-  const originalDispatch = store.dispatch;
-  store.dispatch = action => {
-    record(action);
-    return originalDispatch(action);
-  };
-  return { store, dispatched };
-}
-
-function renderHeader(userState, opts) {
-  const options = opts || {};
-  const { store, dispatched } = makeStore(userState);
+    )
+  );
+  // redux store 仅服务于内嵌 Srch 的 useDispatch（inter 模块未迁移），固定空 reducer 即可
+  const store = createStore(function() {
+    return {};
+  });
   let locationRef = null;
   function LocationProbe() {
     locationRef = useLocation();
@@ -103,7 +89,7 @@ function renderHeader(userState, opts) {
       </MemoryRouter>
     </Provider>
   );
-  return Object.assign({ dispatched, getLocation: () => locationRef }, utils);
+  return Object.assign({ getLocation: () => locationRef }, utils);
 }
 
 test.serial('渲染 Logo 与面包屑容器', t => {

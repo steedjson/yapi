@@ -84,6 +84,12 @@ const axios = require('axios');
 
 // group 切片已迁至 Zustand（批次3）：GroupList/ProjectMessage 等经 useGroupStore 读取
 const useGroupStore = require('../../../client/store/groupStore').default;
+// user/project 切片已迁 Zustand（批次4）：播种/复位辅助
+const {
+  seedUserStore,
+  seedProjectStore,
+  resetUserProjectStores
+} = require('../../helpers/userProjectStores');
 const INITIAL_GROUP_STATE = {
   groupList: [],
   currGroup: { group_name: '', group_desc: '', custom_field1: { name: '', enable: false } },
@@ -130,8 +136,10 @@ function collectRuntimeStyles() {
 
 async function mountLogin() {
   const { default: LoginContainer } = require('../../../client/containers/Login/LoginContainer.js');
+  // user 切片已迁 Zustand（批次4）：改经 userStore 播种（快照 DOM 不变，仅数据源换轨）
+  seedUserStore({ loginWrapActiveKey: '1', canRegister: true });
   renderWithProviders(React.createElement(LoginContainer), {
-    seedState: { user: { loginWrapActiveKey: '1', canRegister: true } },
+    seedState: {},
     routePath: '/login',
     initialPath: '/login'
   });
@@ -145,6 +153,15 @@ const G3 = { _id: 73, group_name: '私有组', group_desc: 'd3', type: 'private'
 async function mountGlobalChrome() {
   const { default: Header } = require('../../../client/components/Header/Header.js');
   const { default: Footer } = require('../../../client/components/Footer/Footer.js');
+  // user 切片已迁 Zustand（批次4）：Header 改经 useUserStore 读取
+  seedUserStore({
+    isLogin: true,
+    uid: 9,
+    role: 'member',
+    userName: 'alice',
+    email: 'a@b.c',
+    type: 'site'
+  });
   renderWithProviders(
     React.createElement(
       React.Fragment,
@@ -155,9 +172,7 @@ async function mountGlobalChrome() {
     ),
     {
       seedState: {
-        user: { isLogin: true, uid: 9, role: 'member', userName: 'alice', email: 'a@b.c', type: 'site' },
-        group: { groupList: [G1], currGroup: G1, role: 'dev' },
-        project: { projectList: [] }
+        group: { groupList: [G1], currGroup: G1, role: 'dev' }
       },
       routePath: '/',
       initialPath: '/'
@@ -173,10 +188,11 @@ async function mountGroupList() {
     { match: '/api/log/', respond: () => ({ errcode: 0, data: { list: [], total: 0 } }) }
   ]);
   const { default: GroupList } = require('../../../client/containers/Group/GroupList/GroupList.js');
+  // user 切片已迁 Zustand（批次4）：studyTip/study 改经 userStore 播种
+  seedUserStore({ role: 'regular', studyTip: 1, study: true });
   renderWithProviders(React.createElement(GroupList), {
     seedState: {
-      group: { currGroup: G1, groupList: [G1, G2, G3], role: 'dev' },
-      user: { role: 'regular', studyTip: 1, study: true }
+      group: { currGroup: G1, groupList: [G1, G2, G3], role: 'dev' }
     },
     routePath: '/group/*',
     initialPath: '/group/71'
@@ -190,12 +206,12 @@ async function mountAddProject() {
     { match: '/', respond: () => ({ errcode: 0, data: [] }) }
   ]);
   seedGroupStore({ currGroup: G1, groupList: [G1, G2] });
+  // user 切片已迁 Zustand（批次4）；project.currPage stale 订阅已随迁移移除
+  seedUserStore({ uid: 11, role: 'member' });
   const { default: AddProject } = require('../../../client/containers/AddProject/AddProject.js');
   renderWithProviders(React.createElement(AddProject), {
     seedState: {
-      user: { uid: 11, role: 'member' },
-      group: { currGroup: G1, groupList: [G1, G2] },
-      project: { currPage: 1 }
+      group: { currGroup: G1, groupList: [G1, G2] }
     },
     routePath: '/add-project',
     initialPath: '/add-project'
@@ -223,15 +239,19 @@ const CURR_PROJECT_FULL = {
   cat: [{ _id: 5, name: '分类五', desc: '分类五描述' }]
 };
 const PROJECT_SEED = {
-  user: { uid: 11 },
   group: {
     currGroup: { _id: 1, group_name: '分组一', group_desc: '', custom_field1: { name: '', enable: false } },
     groupList: [{ _id: 1, group_name: '分组一' }]
   },
-  project: { currProject: CURR_PROJECT_FULL, projectList: [], token: 'tk_seed_9f8e7d6c', swaggerUrlData: '' },
   inter: { curdata: { catid: 3 } },
   news: { updateLogList: [] }
 };
+
+// user/project 切片已迁 Zustand（批次4）：project 域渲染前统一播种
+function seedProjectDomainUserStores() {
+  seedUserStore({ uid: 11 });
+  seedProjectStore({ currProject: CURR_PROJECT_FULL, projectList: [], token: 'tk_seed_9f8e7d6c', swaggerUrlData: '' });
+}
 
 function stubProjectApis() {
   stubAxios([
@@ -250,6 +270,7 @@ async function mountProjectSetting() {
     currGroup: { _id: 1, group_name: '分组一', group_desc: '', custom_field1: { name: '', enable: false } },
     groupList: [{ _id: 1, group_name: '分组一' }]
   });
+  seedProjectDomainUserStores();
   const { default: Setting } = require('../../../client/containers/Project/Setting/Setting.js');
   renderWithProviders(React.createElement(Setting), {
     seedState: PROJECT_SEED,
@@ -291,11 +312,12 @@ async function mountInterfaceView() {
     { match: '/', respond: () => ({ errcode: 0, data: [] }) }
   ]);
   const { default: View } = require('../../../client/containers/Project/Interface/InterfaceList/View.js');
+  seedUserStore({ uid: 11 });
+  seedProjectStore({ currProject: CURR_PROJECT_FULL });
   renderWithProviders(React.createElement(View), {
     seedState: {
       inter: { curdata: INTERFACE_CURDATA, list: INTERFACE_MENU_TREE, editStatus: false },
-      group: { field: { enable: true, name: '业务线' } },
-      project: { currProject: CURR_PROJECT_FULL }
+      group: { field: { enable: true, name: '业务线' } }
     },
     initialPath: '/project/12/interface/api/100'
   });
@@ -510,4 +532,5 @@ test.serial.afterEach.always(() => {
   axios.get = originalAxiosGet;
   axios.post = originalAxiosPost;
   useGroupStore.setState(INITIAL_GROUP_STATE);
+  resetUserProjectStores();
 });

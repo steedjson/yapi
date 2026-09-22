@@ -6,9 +6,6 @@ import { cleanup, fireEvent, render } from '@testing-library/react';
 import { cleanupDom, flushEffects } from '../helpers/containers';
 
 const axios = require('axios');
-const { createStore, applyMiddleware } = require('redux');
-const promiseMiddleware = require('redux-promise');
-const { Provider } = require('react-redux');
 
 // GroupSetting.js 引入 SCSS，经 jsdom-setup 的资源 stub 后可被 Node 端 AVA 加载
 const { default: GroupSetting } = require('../../client/containers/Group/GroupSetting/GroupSetting.js');
@@ -33,6 +30,7 @@ test.serial.afterEach.always(() => {
   axios.get = originalAxiosGet;
   axios.post = originalAxiosPost;
   useGroupStore.setState(INITIAL_GROUP_STATE);
+  resetUserProjectStores();
 });
 
 const GROUP_A = {
@@ -44,7 +42,10 @@ const GROUP_A = {
   custom_field1: { name: '渠道', enable: true }
 };
 
-// group 切片走真实 Zustand store（SET_CURR_GROUP 等真实生效），user 切片固定走 redux
+// group/user 切片均走真实 Zustand store（批次3 / 批次4）：
+// GroupSetting 经 useUserStore 读取全局角色，admin 危险操作区依赖该值
+const { seedUserStore, resetUserProjectStores } = require('../helpers/userProjectStores');
+
 function renderGroupSetting(userRole) {
   useGroupStore.setState({
     ...INITIAL_GROUP_STATE,
@@ -52,18 +53,8 @@ function renderGroupSetting(userRole) {
     groupList: [GROUP_A],
     role: 'owner'
   });
-  const seed = { user: { role: userRole } };
-  const store = applyMiddleware(promiseMiddleware)(createStore)(function(state) {
-    if (state === undefined) state = seed;
-    return state;
-  }, seed);
-  return render(
-    React.createElement(
-      Provider,
-      { store },
-      React.createElement(GroupSetting)
-    )
-  );
+  seedUserStore({ role: userRole });
+  return render(React.createElement(GroupSetting));
 }
 
 async function toggleDanger(utils) {

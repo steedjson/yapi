@@ -11,7 +11,8 @@ import {
   deleteInterfaceCatData,
   initInterface
 } from '../../../../reducer/modules/interface.js';
-import { getProject } from '../../../../reducer/modules/project.js';
+// project 切片已迁至 Zustand（批次4），inter 模块仍未迁移
+import useProjectStore from '../../../../store/projectStore';
 import { Input, Button, Modal, message, Tree, Tooltip } from 'antd';
 import {
   FolderOpenOutlined,
@@ -168,7 +169,8 @@ const InterfaceMenu = (/** @type {any} */ props) => {
   const dispatch = useDispatch();
   const list = useSelector(state => state.inter.list);
   const inter = useSelector(state => state.inter.curdata);
-  const curProject = useSelector(state => state.project.currProject);
+  const curProject = useProjectStore(state => state.currProject);
+  const getProject = useProjectStore(state => state.getProject);
   const navigate = useNavigate();
   const params = useParams();
 
@@ -270,7 +272,7 @@ const InterfaceMenu = (/** @type {any} */ props) => {
         return message.error(res.data.errmsg);
       }
       message.success('接口分类添加成功');
-      await Promise.all([getList(), dispatch(getProject(data.project_id))]);
+      await Promise.all([getList(), getProject(data.project_id)]);
       patchState({
         add_cat_modal_visible: false
       });
@@ -294,7 +296,7 @@ const InterfaceMenu = (/** @type {any} */ props) => {
         return message.error(res.data.errmsg);
       }
       message.success('接口分类更新成功');
-      await Promise.all([getList(), dispatch(getProject(data.project_id))]);
+      await Promise.all([getList(), getProject(data.project_id)]);
       patchState({
         change_cat_modal_visible: false
       });

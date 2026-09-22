@@ -5,7 +5,8 @@ import {
   fetchInterfaceListMenu,
   fetchInterfaceData
 } from '../../../../reducer/modules/interface.js';
-import { getProject } from '../../../../reducer/modules/project.js';
+// project 切片已迁至 Zustand（批次4），inter 模块仍未迁移
+import useProjectStore from '../../../../store/projectStore';
 import axios from 'axios';
 import { message, Modal } from 'antd';
 import './Edit.scss';
@@ -27,7 +28,8 @@ const InterfaceEdit = () => {
   const dispatch = useDispatch();
   const curdata = useSelector(state => state.inter.curdata);
   const catList = useSelector(state => state.inter.list);
-  const currProject = useSelector(state => state.project.currProject);
+  const currProject = useProjectStore(state => state.currProject);
+  const getProject = useProjectStore(state => state.getProject);
   const { id: projectId, actionId } = useParams();
 
   const [state, setState] = useState(
@@ -190,7 +192,7 @@ const InterfaceEdit = () => {
     const result = await axios.post('/api/project/up_tag', params);
 
     if (result.data.errcode === 0) {
-      await dispatch(getProject(id));
+      await getProject(id);
       message.success('保存成功');
     } else {
       message.error(result.data.errmsg);

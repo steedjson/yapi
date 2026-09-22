@@ -1,17 +1,18 @@
 // @ts-check
 import React, { useEffect, useRef, useState } from 'react';
 import { message } from 'antd';
-import { useSelector } from 'react-redux';
+// project 切片已迁至 Zustand（批次4），本组件的 redux 依赖随迁移全部移除
 import { Link, useParams } from 'react-router-dom';
 import axios from 'axios';
 import './index.scss';
 import { timeago } from '../../../common/utils';
 import WikiView from './View.js';
 import WikiEditor from './Editor.js';
+import useProjectStore from '../../../client/store/projectStore';
 
 /**
  * Wiki 协同编辑页。原类组件经 Hooks 现代化迁移，渲染结构与行为保持一致：
- * - 旧 @connect 改为 useSelector，旧 props.match.params.id 改为 useParams；
+ * - 旧 @connect 改为 Zustand store 订阅（批次4），旧 props.match.params.id 改为 useParams；
  * - 旧 constructor state 改为 useState（单对象 patch，保持浅合并语义）；
  * - 旧 componentDidMount / componentWillUnmount 改为挂载期 useEffect 及其清理函数；
  * - WebSocket 实例与最新 state 分别以 wsRef / latestRef 镜像，回调内读取等价
@@ -21,7 +22,8 @@ import WikiEditor from './Editor.js';
  *   TypeError，被 endWebSocket 外层 try/catch 静默吞掉（'end' 消息仍会发出）。
  */
 const WikiPage = () => {
-  const projectMsg = useSelector((/** @type {any} */ state) => state.project.currProject);
+  // store 引用走相对路径（exts 下无 'client/*' 别名映射）
+  const projectMsg = useProjectStore(state => state.currProject);
   const { id } = /** @type {any} */ (useParams());
 
   /** @type {any} */
@@ -44,7 +46,7 @@ const WikiPage = () => {
   /** @type {any} */
   const wsRef = useRef(null);
 
-  // 镜像最新 redux 值、路由参数与本地 state：WebSocket 回调等异步回调中的读取
+  // 镜像最新 store 值、路由参数与本地 state：WebSocket 回调等异步回调中的读取
   // 等价于旧类组件的实时 this.props / this.state
   const latestRef = useRef({});
   latestRef.current = { state, projectMsg, id };

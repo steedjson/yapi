@@ -37,6 +37,14 @@ const { default: App } = require('../../client/Application.js');
 // Application 内部以自己的 HistoryRouter(history 单例)接管路由，不能再包一层
 // 外部 Router（v6 禁止嵌套），这里仅提供 redux Provider，location 用 history.push 驱动
 const history = require('../../client/history').default;
+// user 切片已迁 Zustand（批次4）：loginState/role 改经 userStore 播种，
+// checkLoginState 改为断言 /api/user/status 请求发生
+const {
+  seedUserStore,
+  seedProjectStore,
+  resetUserProjectStores,
+  useUserStore
+} = require('../helpers/userProjectStores');
 
 function makeStore(seedState) {
   const dispatched = [];
@@ -55,12 +63,19 @@ function renderApp(seedState) {
   return Object.assign({ store, dispatched }, utils);
 }
 
+// user 切片已迁 Zustand（批次4）：登录态不再经 redux 种子，统一渲染前播种 userStore
+function seedAppUser(patch) {
+  seedUserStore(Object.assign({ loginState: 2, isLogin: true, role: 'member' }, patch || {}));
+}
+
 const originalAxiosGet = axios.get;
 
 test.serial.afterEach.always(() => {
   cleanup();
   cleanupDom();
   axios.get = originalAxiosGet;
+  // user/projectStore 为模块级单例,复位避免用例间串场
+  resetUserProjectStores();
 });
 
 const MEMBER_USER = {
@@ -76,26 +91,26 @@ const MEMBER_USER = {
 };
 
 test.serial('已登录成员访问项目路由: 渲染完整外壳(Header/路由出口/Footer)', async t => {
+  const statusCalls = [];
   axios.get = (/** @type {string} */ url) => {
     if (url.indexOf('/api/user/status') === 0) {
+      statusCalls.push(url);
       return Promise.resolve({ data: { errcode: 0, data: { role: 'member' } } });
     }
     return Promise.resolve({ data: { errcode: 0, data: {} } });
   };
   history.push('/project/12/interface/api');
 
-  const { container, dispatched } = renderApp({
-    user: Object.assign({}, MEMBER_USER),
-    // Header 内的 Search 组件订阅 group/project 切片，需提供空种子
-    group: { groupList: [], currGroup: {} },
-    project: { projectList: [], currProject: {} }
+  seedAppUser(Object.assign({}, MEMBER_USER));
+  // Header 内的 Search 组件订阅 group 切片（已迁 Zustand），同步播种防串场
+  seedProjectStore({});
+  const { container } = renderApp({
+    group: { groupList: [], currGroup: {} }
   });
   await flushEffects(60);
 
-  t.truthy(
-    dispatched.find(a => a.type === 'yapi/user/GET_LOGIN_STATE'),
-    '挂载期应派发 checkLoginState 拉取登录态'
-  );
+  t.is(statusCalls.length, 1, '挂载期应经 userStore.checkLoginState 拉取登录态');
+  t.is(useUserStore.getState().loginState, 2, 'errcode=0 后应进入成员态（门禁值 2）');
   t.truthy(container.querySelector('.m-header'), '已登录应渲染全局 Header');
   t.truthy(
     container.querySelector('[data-stub="PROJECT"]'),
@@ -106,11 +121,14 @@ test.serial('已登录成员访问项目路由: 渲染完整外壳(Header/路由
 });
 
 test.serial('登录态获取中: 整壳以 Loading 呈现且不渲染 Header', async t => {
-  axios.get = () => Promise.resolve({ data: { errcode: 0, data: {} } });
+  // 真实 store 会把 /api/user/status 响应写入 loginState（离开 LOADING），
+  // 此处令请求挂起以保持「获取中」前提（对应旧冻结 reducer 不消费 action 的效果）
+  axios.get = () => new Promise(() => {});
   history.push('/');
 
-  const { container } = renderApp({ user: { loginState: 0, isLogin: false, role: '' } });
-  await flushEffects();
+  seedAppUser({ loginState: 0, isLogin: false, role: '' });
+  seedProjectStore({});
+  const { container } = renderApp({});
 
   t.truthy(container.querySelector('.loading-box'), '登录态加载中应渲染全局 Loading');
   t.is(container.querySelector('.m-header'), null, '加载中不应渲染 Header');
@@ -118,13 +136,14 @@ test.serial('登录态获取中: 整壳以 Loading 呈现且不渲染 Header', a
 });
 
 test.serial('游客访问 /login: 登录页渲染且 Header 隐藏', async t => {
-  axios.get = () => Promise.resolve({ data: { errcode: 0, data: {} } });
+  // errcode=40011（未登录）在旧链路可直达 reducer 写入游客态；真实 store 同样保持
+  // loginState=1，Header 依 loginState!==1 判定继续隐藏
+  axios.get = () => Promise.resolve({ data: { errcode: 40011, errmsg: '请登录' } });
   history.push('/login');
 
-  const { container } = renderApp({
-    user: { loginState: 1, isLogin: false, role: '', userName: null, uid: null }
-  });
-  await flushEffects(60);
+  seedAppUser({ loginState: 1, isLogin: false, role: '', userName: null, uid: null });
+  seedProjectStore({});
+  const { container } = renderApp({});
 
   t.truthy(container.querySelector('.g-body.login-body'), '游客访问 /login 应渲染登录页');
   t.is(container.querySelector('.m-header'), null, '登录页不渲染 Header');

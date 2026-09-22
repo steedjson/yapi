@@ -8,6 +8,8 @@ import { cleanupDom, renderWithProviders, flushEffects } from '../../helpers/con
 const axios = require('axios');
 
 const { default: User } = require('../../../client/containers/User/User.js');
+// user 切片已迁 Zustand（批次4）：List/Profile 改经 useUserStore 读取，种子随之迁移
+const { seedUserStore, resetUserProjectStores } = require('../../helpers/userProjectStores');
 
 // List/Profile 挂载即请求接口（axios 为 CJS 单例，生产代码调用时读取 .get）
 const originalAxiosGet = axios.get;
@@ -16,10 +18,13 @@ test.serial.afterEach.always(() => {
   cleanup();
   cleanupDom();
   axios.get = originalAxiosGet;
+  // userStore 为模块级单例,复位避免用例间串场
+  resetUserProjectStores();
 });
 
 function seedState() {
-  return { user: { uid: 11, type: 'site', role: 'admin' } };
+  seedUserStore({ uid: 11, type: 'site', role: 'admin' });
+  return {};
 }
 
 test.serial('/user/list 子路由渲染用户管理表格', async t => {

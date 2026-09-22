@@ -2,17 +2,16 @@
 import React, { useEffect, useRef } from 'react';
 import './Follows.scss';
 import PropTypes from 'prop-types';
-import { useDispatch, useSelector } from 'react-redux';
 import { Row, Col } from 'antd';
-// 关注列表数据源已迁至 Zustand（试点），面包屑仍走 Redux（user 模块未迁移）
+// 关注列表（试点）与 user 切片（批次4）均已迁至 Zustand，本组件的 redux 依赖随迁移全部移除
 import useFollowStore from '../../store/followStore';
-import { setBreadcrumb } from '../../reducer/modules/user';
+import useUserStore from '../../store/userStore';
 import ProjectCard from '../../components/ProjectCard/ProjectCard.js';
 import ErrMsg from '../../components/ErrMsg/ErrMsg.js';
 
 const Follows = () => {
-  const dispatch = useDispatch();
-  const uid = useSelector(state => state.user.uid);
+  const uid = useUserStore(state => state.uid);
+  const setBreadcrumb = useUserStore(state => state.setBreadcrumb);
   // zustand 经 JS 推断的 store 类型是有损的，显式收窄 data 以保住回调的上下文类型
   const data = /** @type {any[]} */ (useFollowStore(state => state.data));
   const getFollowList = useFollowStore(state => state.getFollowList);
@@ -32,7 +31,7 @@ const Follows = () => {
 
   useEffect(() => {
     // 对应原 UNSAFE_componentWillMount
-    dispatch(setBreadcrumb([{ name: '我的关注' }]));
+    setBreadcrumb([{ name: '我的关注' }]);
     fetchList();
   }, []);
 
@@ -64,7 +63,6 @@ const Follows = () => {
 
 Follows.propTypes = {
   getFollowList: PropTypes.func,
-  setBreadcrumb: PropTypes.func,
   uid: PropTypes.number
 };
 

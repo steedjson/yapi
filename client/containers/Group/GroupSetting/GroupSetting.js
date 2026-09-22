@@ -1,13 +1,14 @@
 // @ts-check
 import React, { useEffect, useRef, useState } from 'react';
 import { SaveOutlined } from '@ant-design/icons';
-import { useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
 import { QuestionCircleOutlined, ExclamationCircleOutlined, UpOutlined, DownOutlined } from '@ant-design/icons';
 import { Input, Button, message, Card, Alert, Modal, Switch, Row, Col, Tooltip } from 'antd';
-// news / group 切片均已迁至 Zustand（批次2 / 批次3），user 模块仍未迁移
+// news / group / user 切片均已迁至 Zustand（批次2 / 批次3 / 批次4），
+// 本组件的 redux 依赖随迁移全部移除
 import useNewsStore from '../../../store/newsStore';
 import useGroupStore from '../../../store/groupStore';
+import useUserStore from '../../../store/userStore';
 const { TextArea } = Input;
 import { trim } from '../../../common.js';
 import './GroupSetting.scss';
@@ -32,7 +33,7 @@ const GroupSetting = () => {
   const deleteGroupAction = useGroupStore(state => state.deleteGroup);
   const groupList = useGroupStore(state => state.groupList);
   const currGroup = useGroupStore(state => state.currGroup);
-  const curUserRole = useSelector(state => state.user.role);
+  const curUserRole = useUserStore(state => state.role);
 
   // 旧 UNSAFE_componentWillMount 的 initState：首帧即以当前分组回填表单
   const [currGroupName, setCurrGroupName] = useState(() => currGroup.group_name);

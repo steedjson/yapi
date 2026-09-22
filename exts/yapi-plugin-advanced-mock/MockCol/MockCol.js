@@ -1,5 +1,6 @@
 // @ts-check
 import React, { useEffect, useRef, useState } from 'react';
+// project 切片已迁至 Zustand（批次4），inter 模块仍未迁移（保留 useSelector 混用）
 import { useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
@@ -9,6 +10,7 @@ import { QuestionCircleOutlined } from '@ant-design/icons';
 // 以相对路径引用（本文件已有 ../../../client/common 先例；'client/*' 别名无 tsconfig
 // paths 映射，旧 reducer 模块依赖 global.d.ts 环境声明解析，store 不走该机制）
 import useMockColStore from '../../../client/store/mockColStore';
+import useProjectStore from '../../../client/store/projectStore';
 import { formatTime } from 'client/common.js';
 import constants from 'client/constants/variable.js';
 import CaseDesModal from './CaseDesModal';
@@ -31,7 +33,8 @@ const MockCol = () => {
   const list = /** @type {any[]} */ (useMockColStore((/** @type {any} */ state) => state.list));
   const fetchMockCol = useMockColStore((/** @type {any} */ state) => state.fetchMockCol);
   const currInterface = useSelector((/** @type {any} */ state) => state.inter.curdata);
-  const currProject = useSelector((/** @type {any} */ state) => state.project.currProject);
+  // project 切片已迁至 Zustand（批次4）：store 引用走相对路径（exts 下无 'client/*' 别名映射）
+  const currProject = useProjectStore(state => state.currProject);
   const { id, actionId } = /** @type {any} */ (useParams());
 
   /** @type {any} */

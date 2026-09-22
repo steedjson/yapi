@@ -2,7 +2,6 @@
 import './Header.scss';
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { Layout, Dropdown, message, Tooltip, Popover, Tag } from 'antd';
 import {
@@ -15,9 +14,10 @@ import {
   DownOutlined
 } from '@ant-design/icons';
 import { getV4Icon } from '../../constants/v4IconMap';
-import { logoutActions } from '../../reducer/modules/user';
-// menu 切片已迁至 Zustand（批次2），user 模块仍未迁移
+// menu 切片已迁至 Zustand（批次2）、user 切片已迁至 Zustand（批次4），
+// 本组件的 redux 依赖随迁移全部移除
 import useMenuStore from '../../store/menuStore';
+import useUserStore from '../../store/userStore';
 import { useNavigate } from 'react-router-dom';
 import Srch from './Search/Search';
 import { SKINS, getSkin, setSkin } from '../../theme';
@@ -224,16 +224,16 @@ ToolUser.propTypes = {
 };
 
 export default function HeaderCom() {
-  const dispatch = useDispatch();
   const navigate = useNavigate();
   const changeMenuItem = useMenuStore(state => state.changeMenuItem);
-  const user = useSelector(state => state.user.userName);
-  const uid = useSelector(state => state.user.uid);
-  const role = useSelector(state => state.user.role);
-  const login = useSelector(state => state.user.isLogin);
-  const studyTip = useSelector(state => state.user.studyTip);
-  const study = useSelector(state => state.user.study);
-  const imageUrl = useSelector(state => state.user.imageUrl);
+  const user = useUserStore(state => state.userName);
+  const uid = useUserStore(state => state.uid);
+  const role = useUserStore(state => state.role);
+  const login = useUserStore(state => state.isLogin);
+  const studyTip = useUserStore(state => state.studyTip);
+  const study = useUserStore(state => state.study);
+  const imageUrl = useUserStore(state => state.imageUrl);
+  const logoutAction = useUserStore(state => state.logoutActions);
   const [skin, setSkinState] = useState(getSkin());
 
   /**
@@ -254,19 +254,16 @@ export default function HeaderCom() {
    */
   function logout(e) {
     e.preventDefault();
-    dispatch(logoutActions())
-      .then((/** @type {any} */ res) => {
-        if (res.payload.data.errcode == 0) {
-          navigate('/');
-          changeMenuItem('/');
-          message.success('退出成功! ');
-        } else {
-          message.error(res.payload.data.errmsg);
-        }
-      })
-      .catch((/** @type {any} */ err) => {
-        message.error(err);
-      });
+    logoutAction().then((/** @type {any} */ res) => {
+      // 网络错误时 store 动作返回 null，与旧 catch 分支同样给出失败提示
+      if (res && res.data.errcode == 0) {
+        navigate('/');
+        changeMenuItem('/');
+        message.success('退出成功! ');
+      } else {
+        message.error((res && res.data.errmsg) || '退出失败, 请稍后重试');
+      }
+    });
   }
 
   return (

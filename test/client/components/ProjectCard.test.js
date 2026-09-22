@@ -11,6 +11,9 @@ import { cleanupDom } from '../../helpers/jsdom-setup';
 
 const axios = require('axios');
 const { default: ProjectCard } = require('../../../client/components/ProjectCard/ProjectCard.js');
+// user 切片已迁 Zustand（批次4）：uid 改经 useUserStore 播种；
+// project.currPage stale 订阅已随迁移移除。follow 模块仍未迁移，Provider 保留。
+const { seedUserStore, resetUserProjectStores } = require('../../helpers/userProjectStores');
 
 // addFollow/delFollow 的 payload 是 axios 请求，测试必须拦截（axios 为 CJS 单例，
 // 生产代码调用时才读取 .post，替换属性即可生效）
@@ -22,17 +25,19 @@ test.serial.afterEach.always(() => {
   cleanupDom();
   axios.get = originalAxiosGet;
   axios.post = originalAxiosPost;
+  // userStore 为模块级单例,复位避免用例间串场
+  resetUserProjectStores();
 });
 
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-// 组件经 useSelector 读取 user.uid / project.currPage、useDispatch 派发 action,
+// 组件仍经 useDispatch 派发 follow 动作(follow 模块未迁移),
 // store 与生产保持一致挂 redux-promise 中间件(组件依赖其 fulfilled 二次派发)。
 // 记录通道有两条:入口 dispatch 包装记录原始 action;reducer 记录中间件二次派发的
 // fulfilled action(redux-promise 不会让原始 promise payload action 到达 reducer)
-function makeStore(seedState) {
+function makeStore() {
   const dispatched = [];
   const record = action => {
     if (action && action.type && action.type.indexOf('@@') !== 0) {
@@ -41,8 +46,8 @@ function makeStore(seedState) {
   };
   const store = applyMiddleware(promiseMiddleware)(createStore)(function(state, action) {
     record(action);
-    return state === undefined ? seedState : state;
-  }, seedState);
+    return state === undefined ? {} : state;
+  }, {});
   const originalDispatch = store.dispatch;
   store.dispatch = action => {
     record(action);
@@ -53,9 +58,8 @@ function makeStore(seedState) {
 
 function renderCard(projectData, options) {
   const opts = options || {};
-  const { store, dispatched } = makeStore(
-    opts.seedState || { user: { uid: 11 }, project: { currPage: 1 } }
-  );
+  const { store, dispatched } = makeStore();
+  seedUserStore({ uid: 11 });
   let locationRef = null;
   function LocationProbe() {
     locationRef = useLocation();

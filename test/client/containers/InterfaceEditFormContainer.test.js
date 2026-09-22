@@ -87,6 +87,12 @@ const axios = require('axios');
 
 // group 切片已迁至 Zustand（批次3）：InterfaceEditForm 经 useGroupStore 读取 field
 const useGroupStore = require('../../../client/store/groupStore').default;
+// user/project 切片已迁 Zustand（批次4）：currProject 改经 projectStore 播种
+const {
+  seedUserStore,
+  seedProjectStore,
+  resetUserProjectStores
+} = require('../../helpers/userProjectStores');
 const INITIAL_GROUP_STATE = {
   groupList: [],
   currGroup: { group_name: '', group_desc: '', custom_field1: { name: '', enable: false } },
@@ -100,6 +106,7 @@ const originalAxiosPost = axios.post;
 
 test.serial.afterEach.always(() => {
   useGroupStore.setState(INITIAL_GROUP_STATE);
+  resetUserProjectStores();
   cleanup();
   cleanupDom();
   axios.get = originalAxiosGet;
@@ -152,23 +159,23 @@ async function renderEditForm() {
     field: { enable: true, name: '业务线' },
     currGroup: { _id: 1, group_name: '分组一' }
   });
+  seedUserStore({ uid: 9 });
+  seedProjectStore({
+    currProject: {
+      _id: 12,
+      name: '演示项目',
+      basepath: '/base',
+      switch_notice: true,
+      is_json5: false,
+      strice: false,
+      tag: [{ name: '核心' }, { name: '网关' }],
+      env: [],
+      cat: [{ _id: 5, name: '分类五', desc: '' }]
+    }
+  });
   const utils = renderWithProviders(React.createElement(Edit), {
     seedState: {
-      inter: { curdata: CURRDATA, list: [], editStatus: false },
-      project: {
-        currProject: {
-          _id: 12,
-          name: '演示项目',
-          basepath: '/base',
-          switch_notice: true,
-          is_json5: false,
-          strice: false,
-          tag: [{ name: '核心' }, { name: '网关' }],
-          env: [],
-          cat: [{ _id: 5, name: '分类五', desc: '' }]
-        }
-      },
-      user: { uid: 9 }
+      inter: { curdata: CURRDATA, list: [], editStatus: false }
     },
     routePath: '/project/:id/interface/api/:actionId',
     initialPath: '/project/12/interface/api/100'

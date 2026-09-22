@@ -1,7 +1,6 @@
 // @ts-check
 import React, { useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
-import { useSelector } from 'react-redux';
 import { Modal, Input, message, Spin, Row, Menu, Col, Popover, Tooltip } from 'antd';
 import { FolderAddOutlined, FolderOpenOutlined, UserOutlined } from '@ant-design/icons';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -10,9 +9,11 @@ const { TextArea } = Input;
 const Search = Input.Search;
 import UsernameAutoComplete from '../../../components/UsernameAutoComplete/UsernameAutoComplete.js';
 import GuideBtns from '../../../components/GuideBtns/GuideBtns.js';
-// news / group 切片均已迁至 Zustand（批次2 / 批次3），user 模块仍未迁移
+// news / group / user 切片均已迁至 Zustand（批次2 / 批次3 / 批次4），
+// 本组件的 redux 依赖随迁移全部移除
 import useNewsStore from '../../../store/newsStore';
 import useGroupStore from '../../../store/groupStore';
+import useUserStore from '../../../store/userStore';
 import {
   parseRouteGroupId,
   resolveTargetGroup,
@@ -51,11 +52,11 @@ const GroupList = () => {
   const fetchGroupMsg = useGroupStore(state => state.fetchGroupMsg);
   const groupList = useGroupStore(state => state.groupList);
   const currGroup = useGroupStore(state => state.currGroup);
-  // 旧 @connect 映射的 curUserRole/curUserRoleInGroup 历史遗留仅声明未消费，保留订阅避免行为差异
-  useSelector(state => state.user.role);
+  // 旧 @connect 映射的 curUserRole 历史遗留仅声明未消费（批次4 随 user 迁移移除）；
+  // curUserRoleInGroup 历史遗留仅声明未消费，保留订阅避免行为差异
   useGroupStore(state => state.currGroup.role || state.role);
-  const studyTip = useSelector(state => state.user.studyTip);
-  const study = useSelector(state => state.user.study);
+  const studyTip = useUserStore(state => state.studyTip);
+  const study = useUserStore(state => state.study);
 
   const [addGroupModalVisible, setAddGroupModalVisible] = useState(false);
   const [newGroupName, setNewGroupName] = useState('');

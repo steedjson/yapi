@@ -114,8 +114,9 @@ axios.get = function(url, config) {
   if (url.indexOf('/api/col/list') === 0) {
     return ok({ errcode: 0, data: FIXTURES.interfaceColList });
   }
+  // 真实契约：服务端 data 为裸 token 字符串；真实 store（批次4）会原样写入 token
   if (url.indexOf('/api/project/token') === 0) {
-    return ok({ errcode: 0, data: { token: 'TEST_TOKEN' } });
+    return ok({ errcode: 0, data: 'TEST_TOKEN' });
   }
   if (url.indexOf('/api/col/case_list') === 0) {
     return ok({ errcode: 0, colData: FIXTURES.colData, data: FIXTURES.caseList });
@@ -232,11 +233,19 @@ const {
   default: InterfaceColContent
 } = require('../../../client/containers/Project/Interface/InterfaceCol/InterfaceColContent.js');
 
+// user/project 切片已迁 Zustand（批次4）：与 interfaceCol 同模式播种真实 store
+const {
+  seedUserStore,
+  seedProjectStore,
+  resetUserProjectStores
+} = require('../../helpers/userProjectStores');
+
 test.serial.afterEach.always(() => {
   cleanup();
   cleanupDom();
   CALLS.length = 0;
   useInterfaceColStore.setState(INITIAL_INTERFACE_COL_STATE);
+  resetUserProjectStores();
 });
 
 // 真实 store 挂载链会覆写各切片：桩与播种用同一份 fixture，保证 DOM 与基线逐字节一致
@@ -253,6 +262,12 @@ async function renderContainer() {
     isRander: SEED_STATE.interfaceCol.isRander,
     currCaseList: SEED_STATE.interfaceCol.currCaseList,
     envList: SEED_ENV_LIST
+  });
+  seedUserStore({ uid: 7 });
+  seedProjectStore({
+    currProject: SEED_STATE.project.currProject,
+    token: SEED_STATE.project.token,
+    projectEnv: SEED_STATE.project.projectEnv
   });
   const utils = renderWithProviders(React.createElement(InterfaceColContent), {
     seedState: SEED_STATE,

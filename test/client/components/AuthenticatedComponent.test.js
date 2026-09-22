@@ -4,32 +4,21 @@ import test from 'ava';
 import React from 'react';
 import { render, cleanup } from '@testing-library/react';
 import { MemoryRouter, useLocation } from 'react-router-dom';
-import { Provider } from 'react-redux';
-import { createStore, applyMiddleware } from 'redux';
-import promiseMiddleware from 'redux-promise';
 import { cleanupDom } from '../../helpers/jsdom-setup';
 
 const { requireAuthentication } = require('../../../client/components/AuthenticatedComponent');
 // 与 AuthenticatedComponent.js 共享同一模块实例（babel CJS 转译后命中同一 require 缓存）
 const { default: useMenuStore } = require('../../../client/store/menuStore');
+// user 切片已迁 Zustand（批次4）：isLogin 改经 userStore 播种，组件测试不再需要 redux Provider
+const { seedUserStore, resetUserProjectStores } = require('../../helpers/userProjectStores');
 
 test.serial.afterEach.always(() => {
   cleanup();
   cleanupDom();
-  // menu 已迁 Zustand：模块级单例，用例间复位避免状态串场
+  // menu/user 均已迁 Zustand：模块级单例，用例间复位避免状态串场
   useMenuStore.setState({ curKey: '/' });
+  resetUserProjectStores();
 });
-
-function makeStore(seedState) {
-  const dispatched = [];
-  const store = applyMiddleware(promiseMiddleware)(createStore)(function(state, action) {
-    if (action && action.type && action.type.indexOf('@@') !== 0) {
-      dispatched.push(action);
-    }
-    return state === undefined ? seedState : state;
-  }, seedState);
-  return { store, dispatched };
-}
 
 // LocationProbe 渲染当前路由 location，用于断言 <Navigate> 的跳转效果
 function LocationProbe(props) {
@@ -41,39 +30,31 @@ function LocationProbe(props) {
 test.serial('AuthenticatedComponent 未登录时重置菜单并重定向登录页携带 from', async t => {
   const InnerStub = () => React.createElement('div', { 'data-inner': 'rendered' }, 'AUTHED_CONTENT');
   const AuthenticatedComponent = requireAuthentication(InnerStub);
-  const { store, dispatched } = makeStore({ user: { isLogin: false } });
+  seedUserStore({ isLogin: false });
   useMenuStore.setState({ curKey: '/project/12' });
 
   let locations = [];
   const utils = render(
     React.createElement(
-      Provider,
-      { store },
-      React.createElement(
-        MemoryRouter,
-        {
-          initialEntries: ['/project/12?a=1#tab'],
-          future: { v7_startTransition: true, v7_relativeSplatPath: true }
-        },
-        React.createElement(LocationProbe, {
-          onLocation: l => {
-            locations = locations.concat(l);
-          }
-        }),
-        React.createElement(AuthenticatedComponent, {
-          location: { pathname: '/project/12', search: '?a=1', hash: '#tab' }
-        })
-      )
+      MemoryRouter,
+      {
+        initialEntries: ['/project/12?a=1#tab'],
+        future: { v7_startTransition: true, v7_relativeSplatPath: true }
+      },
+      React.createElement(LocationProbe, {
+        onLocation: l => {
+          locations = locations.concat(l);
+        }
+      }),
+      React.createElement(AuthenticatedComponent, {
+        location: { pathname: '/project/12', search: '?a=1', hash: '#tab' }
+      })
     )
   );
 
   // 手工传入的 location props 只用于 Navigate 的 from 计算，实际跳转由路由完成
   t.is(utils.container.innerHTML, '', '未登录不应渲染内层组件');
   t.is(useMenuStore.getState().curKey, '/', '未登录应经 Zustand changeMenuItem 重置菜单高亮');
-  t.falsy(
-    dispatched.some(action => action.type === 'yapi/menu/CHANGE_MENU_ITEM'),
-    '不应再经 redux 派发 yapi/menu/* action（已迁 Zustand）'
-  );
   t.true(locations.length >= 2, '应发生导航');
   t.is(locations[0].pathname, '/project/12', '初始路由为深链接');
   t.is(locations[locations.length - 1].pathname, '/login', '应跳转到登录页');
@@ -89,28 +70,24 @@ test.serial('AuthenticatedComponent 未登录时重置菜单并重定向登录�
 test.serial('AuthenticatedComponent 未登录且位于登录页时重定向不携带 from', async t => {
   const InnerStub = () => React.createElement('div', null, 'AUTHED_CONTENT');
   const AuthenticatedComponent = requireAuthentication(InnerStub);
-  const { store } = makeStore({ user: { isLogin: false } });
+  seedUserStore({ isLogin: false });
 
   let lastLocation = null;
   const utils = render(
     React.createElement(
-      Provider,
-      { store },
-      React.createElement(
-        MemoryRouter,
-        {
-          initialEntries: ['/login'],
-          future: { v7_startTransition: true, v7_relativeSplatPath: true }
-        },
-        React.createElement(LocationProbe, {
-          onLocation: l => {
-            lastLocation = l;
-          }
-        }),
-        React.createElement(AuthenticatedComponent, {
-          location: { pathname: '/login', search: '', hash: '' }
-        })
-      )
+      MemoryRouter,
+      {
+        initialEntries: ['/login'],
+        future: { v7_startTransition: true, v7_relativeSplatPath: true }
+      },
+      React.createElement(LocationProbe, {
+        onLocation: l => {
+          lastLocation = l;
+        }
+      }),
+      React.createElement(AuthenticatedComponent, {
+        location: { pathname: '/login', search: '', hash: '' }
+      })
     )
   );
 
@@ -128,20 +105,16 @@ test.serial('AuthenticatedComponent 已登录时透传渲染内层组件', t => 
       'AUTHED_CONTENT'
     );
   const AuthenticatedComponent = requireAuthentication(InnerStub);
-  const { store, dispatched } = makeStore({ user: { isLogin: true } });
+  seedUserStore({ isLogin: true });
   useMenuStore.setState({ curKey: '/group/7' });
 
   const utils = render(
     React.createElement(
-      Provider,
-      { store },
-      React.createElement(
-        MemoryRouter,
-        { initialEntries: ['/group/7'], future: { v7_startTransition: true, v7_relativeSplatPath: true } },
-        React.createElement(AuthenticatedComponent, {
-          location: { pathname: '/group/7', search: '', hash: '' }
-        })
-      )
+      MemoryRouter,
+      { initialEntries: ['/group/7'], future: { v7_startTransition: true, v7_relativeSplatPath: true } },
+      React.createElement(AuthenticatedComponent, {
+        location: { pathname: '/group/7', search: '', hash: '' }
+      })
     )
   );
 
@@ -153,6 +126,5 @@ test.serial('AuthenticatedComponent 已登录时透传渲染内层组件', t => 
     'location 应透传给内层组件'
   );
   t.is(useMenuStore.getState().curKey, '/group/7', '已登录不应重置菜单高亮');
-  t.is(dispatched.length, 0, '已登录不应派发任何 redux action');
   utils.unmount();
 });

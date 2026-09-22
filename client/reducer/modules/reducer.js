@@ -1,7 +1,5 @@
 // @ts-check
 import { combineReducers } from 'redux';
-import user from './user.js';
-import project from './project.js';
 import inter from './interface.js';
 // follow 已迁至 Zustand（client/store/followStore.js，试点），不再注册进 combineReducers。
 // 旧模块文件 ./follow.js 保留：ProjectCard 仍以其 addFollow/delFollow action creators 经
@@ -16,13 +14,16 @@ import inter from './interface.js';
 // addInterfaceStore.js / groupStore.js，批次3），不再注册进 combineReducers。三个旧模块
 // 文件保留在盘上（迁移边界禁止删除）：全仓已无 state.interfaceCol / state.addInterface /
 // state.group 状态读取方，注销注册无行为影响；groupReducer.test.js 仍直接覆盖 group.js。
+// user / project 已迁至 Zustand（client/store/userStore.js / projectStore.js，批次4），
+// 不再注册进 combineReducers。两个旧模块文件保留在盘上（迁移边界禁止删除）：全仓已无
+// state.user / state.project 状态读取方与派发方，注销注册无行为影响；
+// userReducer/projectReducer 尚无独立测试文件直接覆盖，待后续批次清理。
+// interface（inter）为 combineReducers 最后一个注册项，属批次 5 可选迁移对象。
 
 import { emitHook } from 'client/plugin.js';
 
 const reducerModules = {
-  user,
-  inter,
-  project
+  inter
 };
 emitHook('add_reducer', reducerModules);
 

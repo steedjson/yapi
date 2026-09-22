@@ -6,6 +6,8 @@ import variable from '../../../../constants/variable';
 import { useDispatch, useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
 const Option = Select.Option;
+// project 切片已迁至 Zustand（批次4），interface 模块仍未迁移
+import useProjectStore from '../../../../store/projectStore';
 import { fetchInterfaceListMenu } from '../../../../reducer/modules/interface.js';
 
 /** 导入列表按扁平顺序展示所有层级，但仍保留每个分类的直接接口。 */
@@ -37,8 +39,9 @@ function flattenCategories(/** @type {any} */ list) {
  */
 const ImportInterface = (/** @type {any} */ props) => {
   const { selectInterface, currProjectId } = props;
+  // project 切片已迁至 Zustand（批次4），inter 模块仍未迁移（保留 useSelector 混用）
   const list = useSelector(state => state.inter.list);
-  const projectList = useSelector(state => state.project.projectList);
+  const projectList = useProjectStore(state => state.projectList);
   const dispatch = useDispatch();
 
   const [state, setState] = useState(/** @type {any} */ ({

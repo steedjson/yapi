@@ -2,9 +2,9 @@
 import React, { useEffect, useState } from 'react';
 import { formatTime } from '../../common.js';
 import { Link } from 'react-router-dom';
-import { setBreadcrumb } from '../../reducer/modules/user';
+// user 切片已迁至 Zustand（批次4），本组件的 redux 依赖随迁移全部移除
+import useUserStore from '../../store/userStore';
 //import PropTypes from 'prop-types'
-import { useDispatch, useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
 import { Table, Popconfirm, message, Input, Button, Modal, Select, Tag, Divider, Space } from 'antd';
 import axios from 'axios';
@@ -14,9 +14,9 @@ const limit = 20;
 const emailReg = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{1,})+$/;
 
 const List = () => {
-  const dispatch = useDispatch();
-  const curUserRole = useSelector(state => state.user.role);
-  const curUid = useSelector(state => state.user.uid);
+  const curUserRole = useUserStore(state => state.role);
+  const curUid = useUserStore(state => state.uid);
+  const setBreadcrumb = useUserStore(state => state.setBreadcrumb);
   const [data, setData] = useState(/** @type {any[]} */ ([]));
   const [total, setTotal] = useState(null);
   const [current, setCurrent] = useState(1);
@@ -92,7 +92,7 @@ const List = () => {
 
   useEffect(() => {
     // 对应原 UNSAFE_componentWillMount + componentDidMount
-    dispatch(setBreadcrumb([{ name: '用户管理' }]));
+    setBreadcrumb([{ name: '用户管理' }]);
     getUserList();
   }, []);
 
@@ -584,7 +584,6 @@ const List = () => {
 };
 
 List.propTypes = {
-  setBreadcrumb: PropTypes.func,
   curUserRole: PropTypes.string,
   curUid: PropTypes.oneOfType([PropTypes.number, PropTypes.string])
 };

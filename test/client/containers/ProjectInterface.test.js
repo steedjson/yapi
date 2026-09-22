@@ -87,6 +87,12 @@ const originalAxiosPost = axios.post;
 
 // interfaceCol 切片已迁至 Zustand（批次3）：组件经 useInterfaceColStore 读写
 const useInterfaceColStore = require('../../../client/store/interfaceColStore').default;
+// user/project 切片已迁 Zustand（批次4）：改经真实 store 播种（挂载链会以同名桩数据收敛）
+const {
+  seedUserStore,
+  seedProjectStore,
+  resetUserProjectStores
+} = require('../../helpers/userProjectStores');
 
 const INITIAL_INTERFACE_COL_STATE = {
   interfaceColList: [
@@ -112,6 +118,7 @@ const INITIAL_INTERFACE_COL_STATE = {
 };
 
 test.serial.afterEach.always(() => {
+  resetUserProjectStores();
   cleanup();
   cleanupDom();
   axios.get = originalAxiosGet;
@@ -160,6 +167,10 @@ function stubColApis(getCalls, postCalls) {
         data: { errcode: 0, data: { _id: 100, casename: '用例一', project_id: 12, interface_id: 88 } }
       });
     }
+    // 真实契约：get_env 的 data 为 { env: [...] }；真实 store（批次4）会以响应收敛覆盖种子
+    if (url.indexOf('/api/project/get_env') === 0) {
+      return Promise.resolve({ data: { errcode: 0, data: { env: [{ name: 'local', domain: 'http://localhost' }] } } });
+    }
     return Promise.resolve({ data: { errcode: 0, data: [] } });
   };
   axios.post = (url, body) => {
@@ -174,10 +185,11 @@ function runSeed() {
     ...INITIAL_INTERFACE_COL_STATE,
     interfaceColList: COL_LIST
   });
+  // project/user 切片已迁 Zustand（批次4）
+  seedUserStore({ uid: 11 });
+  seedProjectStore({ currProject: CURR_PROJECT });
   return {
-    user: { uid: 11 },
-    inter: { curdata: CURR_INTERFACE, list: [], editStatus: false },
-    project: { currProject: CURR_PROJECT }
+    inter: { curdata: CURR_INTERFACE, list: [], editStatus: false }
   };
 }
 
@@ -352,6 +364,12 @@ test.serial('AddColModal 父级 props 变化时默认选中首集合并回填用
 test.serial('ImportInterface 渲染扁平分类列表与项目下拉，跳过带 projectname 的项目', async t => {
   const selectInterfaceCalls = [];
   stubColApis([], []);
+  seedProjectStore({
+    projectList: [
+      { _id: 1, name: '项目一' },
+      { _id: 2, projectname: '跳过', name: '项目二' }
+    ]
+  });
   const { container } = renderWithProviders(
     React.createElement(ImportInterface, {
       currProjectId: '12',
@@ -359,12 +377,6 @@ test.serial('ImportInterface 渲染扁平分类列表与项目下拉，跳过带
     }),
     {
       seedState: {
-        project: {
-          projectList: [
-            { _id: 1, name: '项目一' },
-            { _id: 2, projectname: '跳过', name: '项目二' }
-          ]
-        },
         inter: {
           list: [
             { _id: 1, name: '分类A', list: [{ _id: 11, path: '/api/a', method: 'GET', status: 'done' }] },
@@ -399,6 +411,12 @@ test.serial('ImportInterface 渲染扁平分类列表与项目下拉，跳过带
 test.serial('ImportInterface 全选/取消全选经 selectInterface 回调过滤后的接口 id', async t => {
   const selectInterfaceCalls = [];
   stubColApis([], []);
+  seedProjectStore({
+    projectList: [
+      { _id: 1, name: '项目一' },
+      { _id: 2, projectname: '跳过', name: '项目二' }
+    ]
+  });
   const { container } = renderWithProviders(
     React.createElement(ImportInterface, {
       currProjectId: '12',
@@ -406,7 +424,6 @@ test.serial('ImportInterface 全选/取消全选经 selectInterface 回调过滤
     }),
     {
       seedState: {
-        project: { projectList: [{ _id: 1, name: '项目一' }] },
         inter: {
           list: [
             { _id: 1, name: '分类A', list: [{ _id: 11, path: '/api/a', method: 'GET', status: 'done' }] },
@@ -441,14 +458,13 @@ test.serial('InterfaceCaseContent 挂载拉取用例数据并渲染用例标题�
     currCaseId: 100,
     currCase: { _id: 100, casename: '用例一', project_id: 12, interface_id: 88 }
   });
+  seedUserStore({ uid: 11 });
+  seedProjectStore({
+    currProject: { _id: 12, basepath: '/base', pre_script: 'p1', after_script: 'a1' },
+    projectEnv: { env: [{ name: 'local', domain: 'http://localhost' }] }
+  });
   const { container } = renderWithProviders(React.createElement(InterfaceCaseContent), {
-    seedState: {
-      user: { uid: 11 },
-      project: {
-        currProject: { _id: 12, basepath: '/base', pre_script: 'p1', after_script: 'a1' },
-        projectEnv: { env: [{ name: 'local', domain: 'http://localhost' }] }
-      }
-    },
+    seedState: {},
     routePath: '/project/:id/interface/case/:actionId',
     initialPath: '/project/12/interface/case/100'
   });
@@ -493,14 +509,13 @@ test.serial('InterfaceCaseContent 更新用例提交 Postman state，用例名�
     currCaseId: 100,
     currCase: { _id: 100, casename: '用例一', project_id: 12, interface_id: 88 }
   });
+  seedUserStore({ uid: 11 });
+  seedProjectStore({
+    currProject: { _id: 12, basepath: '/base', pre_script: 'p1', after_script: 'a1' },
+    projectEnv: { env: [] }
+  });
   const { container } = renderWithProviders(React.createElement(InterfaceCaseContent), {
-    seedState: {
-      user: { uid: 11 },
-      project: {
-        currProject: { _id: 12, basepath: '/base', pre_script: 'p1', after_script: 'a1' },
-        projectEnv: { env: [] }
-      }
-    },
+    seedState: {},
     routePath: '/project/:id/interface/case/:actionId',
     initialPath: '/project/12/interface/case/100'
   });

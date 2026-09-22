@@ -20,16 +20,11 @@ import {
 import { QuestionCircleOutlined, LockOutlined, UnlockOutlined, ExclamationCircleOutlined, UpOutlined, DownOutlined, SaveOutlined, DeleteOutlined } from '@ant-design/icons';
 import { getV4Icon } from '../../../../constants/v4IconMap';
 import PropTypes from 'prop-types';
-import {
-  updateProject,
-  delProject,
-  getProject,
-  upsetProject
-} from '../../../../reducer/modules/project';
-// group 切片已迁至 Zustand（批次3），user/project 模块仍未迁移
+// group 切片已迁至 Zustand（批次3）；user/project 切片已迁至 Zustand（批次4），
+// 本组件的 redux 依赖随迁移全部移除
 import useGroupStore from '../../../../store/groupStore';
-import { setBreadcrumb } from '../../../../reducer/modules/user';
-import { connect } from 'react-redux';
+import useUserStore from '../../../../store/userStore';
+import useProjectStore from '../../../../store/projectStore';
 const { TextArea } = Input;
 import withRouter from '../../../../withRouter';
 const FormItem = Form.Item;
@@ -69,6 +64,14 @@ function ProjectMessage(props) {
   const currGroup = useGroupStore(state => state.currGroup);
   const fetchGroupMsg = useGroupStore(state => state.fetchGroupMsg);
   const fetchGroupList = useGroupStore(state => state.fetchGroupList);
+  // project/user 切片已迁至 Zustand（批次4）：原 connect 注入的 projectMsg 与动作
+  // 改经 store 订阅/直调
+  const projectMsg = useProjectStore(state => state.currProject);
+  const updateProject = useProjectStore(state => state.updateProject);
+  const getProject = useProjectStore(state => state.getProject);
+  const delProject = useProjectStore(state => state.delProject);
+  const upsetProject = useProjectStore(state => state.upsetProject);
+  const setBreadcrumb = useUserStore(state => state.setBreadcrumb);
 
   // 确认修改
   /**
@@ -76,7 +79,6 @@ function ProjectMessage(props) {
    */
   const handleOk = e => {
     e.preventDefault();
-    const { updateProject, projectMsg } = props;
     form.validateFields().then((/** @type {any} */ values) => {
       let { tag } = tagRef.current.state;
       tag = tag.filter((/** @type {any} */ val) => {
@@ -92,15 +94,15 @@ function ProjectMessage(props) {
 
       updateProject(assignValue)
         .then((/** @type {any} */ res) => {
-          if (res.payload.data.errcode == 0) {
-            props.getProject(props.projectId);
+          if (res && res.data.errcode == 0) {
+            getProject(props.projectId);
             message.success('修改成功! ');
 
             // 如果如果项目所在的分组位置发生改变
             fetchGroupMsg(group_id);
             // props.history.push('/group');
             let projectName = htmlFilter(assignValue.name);
-            props.setBreadcrumb([
+            setBreadcrumb([
               {
                 name: selectGroup.group_name,
                 href: '/group/' + group_id
@@ -125,7 +127,7 @@ function ProjectMessage(props) {
 
   const showConfirm = () => {
     confirm({
-      title: '确认删除 ' + props.projectMsg.name + ' 项目吗？',
+      title: '确认删除 ' + projectMsg.name + ' 项目吗？',
       content: (
         <div style={{ marginTop: '10px', fontSize: '13px', lineHeight: '25px' }}>
           <Alert
@@ -143,16 +145,16 @@ function ProjectMessage(props) {
       ),
       onOk() {
         let groupName = trim((/** @type {any} */ (document.getElementById('project_name'))).value);
-        if (props.projectMsg.name !== groupName) {
+        if (projectMsg.name !== groupName) {
           message.error('项目名称有误');
           return new Promise((resolve, reject) => {
             reject('error');
           });
         } else {
-          props.delProject(props.projectId).then((/** @type {any} */ res) => {
-            if (res.payload.data.errcode == 0) {
+          delProject(props.projectId).then((/** @type {any} */ res) => {
+            if (res && res.data.errcode == 0) {
               message.success('删除成功!');
-              props.history.push('/group/' + props.projectMsg.group_id);
+              props.history.push('/group/' + projectMsg.group_id);
             }
           });
         }
@@ -167,28 +169,28 @@ function ProjectMessage(props) {
    * @param {any} e
    */
   const changeProjectColor = e => {
-    const { _id, color, icon } = props.projectMsg;
-    props
-      .upsetProject({ id: _id, color: e.target.value || color, icon })
-      .then((/** @type {any} */ res) => {
-      if (res.payload.data.errcode === 0) {
-        props.getProject(props.projectId);
+    const { _id, color, icon } = projectMsg;
+    upsetProject({ id: _id, color: e.target.value || color, icon }).then(
+      (/** @type {any} */ res) => {
+        if (res && res.data.errcode === 0) {
+          getProject(props.projectId);
+        }
       }
-    });
+    );
   };
   // 修改项目头像的图标
   /**
    * @param {any} e
    */
   const changeProjectIcon = e => {
-    const { _id, color, icon } = props.projectMsg;
-    props
-      .upsetProject({ id: _id, color, icon: e.target.value || icon })
-      .then((/** @type {any} */ res) => {
-      if (res.payload.data.errcode === 0) {
-        props.getProject(props.projectId);
+    const { _id, color, icon } = projectMsg;
+    upsetProject({ id: _id, color, icon: e.target.value || icon }).then(
+      (/** @type {any} */ res) => {
+        if (res && res.data.errcode === 0) {
+          getProject(props.projectId);
+        }
       }
-    });
+    );
   };
 
   // 点击“查看危险操作”按钮
@@ -199,11 +201,10 @@ function ProjectMessage(props) {
   useEffect(() => {
     (async () => {
       await fetchGroupList();
-      await fetchGroupMsg(props.projectMsg.group_id);
+      await fetchGroupMsg(projectMsg.group_id);
     })();
   }, []);
 
-  const { projectMsg } = props;
   const mockUrl =
     location.protocol +
     '//' +
@@ -316,7 +317,7 @@ function ProjectMessage(props) {
         <hr className="breakline" />
         <Form form={form}>
           <FormItem {...formItemLayout} label="项目ID">
-            <span>{props.projectMsg._id}</span>
+            <span>{projectMsg._id}</span>
           </FormItem>
           <FormItem
             {...formItemLayout}
@@ -526,28 +527,7 @@ function ProjectMessage(props) {
 
 ProjectMessage.propTypes = {
   projectId: PropTypes.number,
-  updateProject: PropTypes.func,
-  delProject: PropTypes.func,
-  getProject: PropTypes.func,
-  history: PropTypes.object,
-  upsetProject: PropTypes.func,
-  projectList: PropTypes.array,
-  projectMsg: PropTypes.object,
-  setBreadcrumb: PropTypes.func
+  history: PropTypes.object
 };
 
-export default connect(
-  (/** @type {any} */ state) => {
-    return {
-      projectList: state.project.projectList,
-      projectMsg: state.project.currProject
-    };
-  },
-  {
-    updateProject,
-    delProject,
-    getProject,
-    upsetProject,
-    setBreadcrumb
-  }
-)(withRouter(ProjectMessage));
+export default withRouter(ProjectMessage);

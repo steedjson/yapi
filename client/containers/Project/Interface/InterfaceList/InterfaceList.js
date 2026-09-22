@@ -11,7 +11,8 @@ import {
   fetchInterfaceList,
   fetchInterfaceCatList
 } from '../../../../reducer/modules/interface.js';
-import { getProject } from '../../../../reducer/modules/project.js';
+// project 切片已迁至 Zustand（批次4），inter 模块仍未迁移
+import useProjectStore from '../../../../store/projectStore';
 import { Link } from 'react-router-dom';
 import variable from '../../../../constants/variable';
 import './Edit.scss';
@@ -36,7 +37,8 @@ const InterfaceList = () => {
   const dispatch = useDispatch();
   // 历史遗留仅声明未消费，保留订阅避免行为差异
   useSelector(state => state.inter.curdata);
-  const curProject = useSelector(state => state.project.currProject);
+  const curProject = useProjectStore(state => state.currProject);
+  const getProject = useProjectStore(state => state.getProject);
   const catList = useSelector(state => state.inter.list);
   const totalTableList = useSelector(state => state.inter.totalTableList);
   const catTableList = useSelector(state => state.inter.catTableList);
@@ -116,7 +118,7 @@ const InterfaceList = () => {
         return message.error(res.data.errmsg);
       }
       const projectId = latestRef.current.id;
-      await Promise.all([dispatch(getProject(projectId)), dispatch(fetchInterfaceListMenu(projectId))]);
+      await Promise.all([getProject(projectId), dispatch(fetchInterfaceListMenu(projectId))]);
       message.success('接口集合简介更新成功');
     } catch (/** @type {any} */ err) {
       message.error('接口集合简介更新失败：' + err.message);

@@ -1,9 +1,10 @@
-# Zustand 迁移模式（follow 试点 + 批次2 + 批次3，供后续 reducer 模块复制）
+# Zustand 迁移模式（follow 试点 + 批次2 + 批次3 + 批次4，供后续 reducer 模块复制）
 
-状态：follow 试点、批次2（menu/mockCol/news）与批次3（interfaceCol/addInterface/group）均已完成（2026-09，分支 `codex/refactor-foundation`）。
+状态：follow 试点、批次2（menu/mockCol/news）、批次3（interfaceCol/addInterface/group）与批次4（user/project）均已完成（2026-09，分支 `codex/refactor-foundation`）。
 试点对象：`follow`（`client/reducer/modules/follow.js` → `client/store/followStore.js`）。
 批次2 对象：`menu`（→ `client/store/menuStore.js`）、`mockCol`（→ `client/store/mockColStore.js`）、`news`（→ `client/store/newsStore.js`）。
 批次3 对象：`interfaceCol`（→ `client/store/interfaceColStore.js`）、`addInterface`（→ `client/store/addInterfaceStore.js`）、`group`（→ `client/store/groupStore.js`）。
+批次4 对象：`user`（→ `client/store/userStore.js`）、`project`（→ `client/store/projectStore.js`）。combineReducers 仅剩 `inter`（批次 5 可选）。
 
 ## 1. 背景与总体策略
 
@@ -182,3 +183,57 @@ const useFollowStore = create((set, get) => ({
 - `npm test` 全量冷库：见交付报告（预期 996 基线 + 26 新增，既有测试适配无净减）；
 - `npx tsc --noEmit`：0 错误（消费方 3 文件按 §5.4 逐点 JSDoc 收窄）；`npm run lint`：0/0；`npm run audit:ci`：通过；
 - grep 终态：全仓无 `state.interfaceCol` / `state.addInterface` / `state.group` 状态读取方；combineReducers 仅剩 user/project/inter。
+
+## 12. 批次4 实例记录（user / project，2026-09）
+
+### 12.1 迁移内容
+
+| 模块 | store 文件 | 状态字段（与旧 initialState 完全一致） | 动作 | combineReducers 注销点 |
+| --- | --- | --- | --- | --- |
+| user | `client/store/userStore.js` | `isLogin` / `canRegister` / `isLDAP` / `userName` / `uid` / `email` / `loginState` / `loginWrapActiveKey` / `role` / `type` / `breadcrumb` / `studyTip` / `study` / `imageUrl` | `checkLoginState` / `loginActions` / `loginLdapActions` / `regActions` / `logoutActions` / `loginTypeAction`（同步）/ `setBreadcrumb`（同步）/ `setImageUrl`（同步）/ `changeStudyTip`（同步）/ `finishStudy` | `client/reducer/modules/reducer.js` |
+| project | `client/store/projectStore.js` | `isUpdateModalShow` / `handleUpdateIndex` / `projectList` / `projectMsg` / `userInfo` / `tableLoading` / `total` / `currPage` / `token` / `currProject` / `projectEnv` / `swaggerUrlData` | `fetchProjectList` / `getProject` / `getToken` / `updateToken` / `getEnv` / `handleSwaggerUrlData` + 10 个纯请求动作（`addProject` / `updateProject` / `updateProjectScript` / `updateProjectMock` / `updateEnv` / `upsetProject` / `delProject` / `copyProjectMsg` / `addMember` / `delMember` / `changeMemberRole` / `changeMemberEmailNotice` / `getProjectMemberList` / `checkProjectName`） | 同上 |
+
+- 动作名与旧 action creator 逐个同名映射，消费方仅换 import 与响应解包层级，diff 最小化。
+- **任务书 vs 实际代码的差异**：任务书提及的 `setCurrProject` / `envList` / `schemaMap` 在实际 `project.js` 中不存在——`envList` 属 interfaceCol（批次 3 已迁）、消费方的 `projectMsg` 即 `currProject` 的别名映射、`schemaMap` 全仓无匹配。以实际 reducer 为准。
+- 三态门禁语义保持：`loginState` 的 LOADING(0)/GUEST(1)/MEMBER(2) 常量内聚在 store；Application.js `route(status)` 依赖不变。`checkLoginState` 仅 errcode ∈ {0, 40011} 写入（旧链路其余 errcode 被 messageMiddleware 拦截、reducer 从未收到），40011 → GUEST，0 → MEMBER。
+- **GET_LOGIN_STATE 的 `ladp` 历史拼写原样保留**（读响应体 `ladp` 字段写入 `isLDAP`）。
+- `logoutActions` / `finishStudy` 保持旧 LOGIN_OUT/FINISH_STUDY「不读 payload、请求落地即写」语义：网络错误同样复位/写入并返回 null。
+- `addProject` / `updateProject` 保留旧实现的 `htmlFilter(name)` 过滤与参数重组；`updateProjectScript` / `updateProjectMock` 沿旧版原样 POST（不过滤）。
+- 两个旧 reducer 模块文件保留在盘上（迁移边界禁止删除）；全仓已无 `state.user` / `state.project` 读取方与 `yapi/user/*`、`yapi/project/*` 派发方。旧模块的 action creators 已无任何导入方。
+- tsconfig include 未补（本批边界未含 tsconfig），两个 store 均经消费方 import 传递纳入编译（tsc 0 错误验证）。
+
+### 12.2 网络错误语义（与批次 2/3 的一致决策）
+
+- 全部动作沿用 groupStore 同款：网络层 reject → `return null` 且不写状态（Login/Reg 的 `.catch` 分支随之成为兜底死代码，正常路径 errcode 非 0 由消费方 `.then` 分支提示——旧链路 messageMiddleware 会在 errcode 非 0 时 throw，`.then` 的 else 分支实际不可达，迁移后该分支首次生效，属已知轻微 UX 差异：一次 toast 而非两次）。
+- `logout` / `finishStudy` 是例外：网络错误「仍写状态」+ 返回 null（等价旧 error action 依旧进 reducer 的行为），消费方对 null 需判空（Header logout 已按此适配）。
+- 消费方判空约定：凡 `res.payload.data...` → `res && res.data...`，删除 `dispatch` 包装后直接调用 store 动作。
+
+### 12.3 消费方迁移要点（批次4 新增语义）
+
+1. **消费方规模**：user 25 个消费文件（含 exts statistics 插件），project 23 个消费文件（含 exts advanced-mock / wiki / gen-services / swagger-auto-sync 四插件）。混合消费方（inter 未迁移）保留 react-redux 混用：Activity / View / Run / InterfaceList / InterfaceMenu / Edit / ImportInterface / MockCol；纯消费方彻底移除 react-redux：Application / Login / Reg / LoginWrap / AuthenticatedComponent / Breadcrumb / GuideBtns / Header / Follows / News / NewsList / User / Home / Group / GroupList / GroupSetting / List / Profile / Setting / Project / ProjectToken / ProjectEnv / ProjectMock / ProjectRequest / ProjectMessage / ProjectMember / InterfaceColContent / InterfaceCaseContent / statistics 页。
+2. **ProjectCard 是唯一保留旧 redux 动作的文件**：仍经 redux-promise 派发 `addFollow` / `delFollow`（follow 模块未迁移），`getProject` / `copyProjectMsg` / `checkProjectName` 已改 store 直调，Provider 与 `dispatch` 保留。
+3. **exts 插件引用 store 用相对路径**（批次 2 规则）：statistics 页 `../../../client/store/userStore`、wiki/swagger-auto-sync/gen-services/advanced-mock 均改为相对路径（`'client/*'` 别名无 tsconfig paths 映射）。
+4. **connect 组件的收编**：Login/Reg（`loginData` 历史映射无人消费，直接删 connect）、AddProject、ProjectMessage、swaggerAutoSync（`connect(mapStateToProps, actions)` → 全部 store 直调后 `export default withRouter(...)`）；InterfaceEditForm 的 connect 仅剩 `changeEditStatus`（inter 未迁移）→ `connect(null, { changeEditStatus })`，`projectMsg` 改 hook。**同名遮蔽陷阱再现**：Login 的 `const { isLDAP } = props`、ProjectMessage 的 `const { projectMsg } = props`、ProjectMember 的同名解构都必须随 hook 化一并删除。
+5. **删除的 stale 订阅**（历史遗留仅声明未消费，随迁移移除并注释）：TimeLine `user.uid`、News `user.uid`、User 容器 `uid/type/role`、Search `project.projectList`、InterfaceColContent `project.projectEnv`、ProjectCard `project.currPage`、ProjectList(Group) `userInfo/tableLoading`、InterfaceCaseContent 保留（`projectEnv` 有消费）。
+6. **stale 订阅与组件时序差异**：移除 stale redux 订阅会让「挂载期请求收敛覆写」在同帧生效，不影响断言 DOM（已逐点验证），但快照/差分配方的种子必须同步搬到 store 播种（§12.4）。
+
+### 12.4 测试适配要点（批次4 新坑）
+
+- **共享播种辅助**：新增 `test/helpers/userProjectStores.js`（`seedUserStore` / `seedProjectStore` / `resetUserProjectStores` + 完整初始态常量）。约 25 个测试文件以 `seedState: { user: {...}, project: {...} }` 播种 redux 的写法整体失效，统一改为渲染前 `seedXxxStore({...})` + `afterEach` 复位。**用户态种子必须带完整字段合并**（helper 内部以完整初始态打底），避免上一用例残留 `loginState: 2` 串场。
+- **「冻结 reducer 掩盖的收敛」第三批集中出现**：旧测试靠固定 reducer 让种子值存活，切真实 store 后挂载期请求会覆写种子——
+  1. Project.test「项目未就绪渲染 Loading」：真实 store 会把 /api/project/get 响应写入 currProject，改为**挂起型桩**（`new Promise(() => {})`）保持「未就绪」前提（同 Application「登录态获取中」用例）；
+  2. Application「游客访问 /login」：errcode=40011 桩让 loginState 稳定在 GUEST（errcode=0 桩会把 Header 拉出来）；
+  3. ProjectToken 的 token 断言值从种子 `tk_seed_9f8e7d6c` 改为桩响应 `tk_fetched_abcd`；
+  4. **桩契约修正两处**：/api/project/token 与 /api/project/get_env 的 data 形状（旧桩 `{token:'T'}` / `[]` 是被冻结 reducer 掩盖的错误契约，真实服务端为裸字符串 / `{env:[...]}`）。
+- **断言迁移**：`dispatched.find(a => a.type === 'yapi/user/SET_BREADCRUMB')` → `useUserStore.getState().breadcrumb` deepEqual；`yapi/project/GET_CURR_PROJECT` / `FETCH_PROJECT_LIST` 计数断言 → HTTP 请求计数；GuideBtns 从「记录 redux 动作序列」改为断言 `studyTip` / `study` 状态 + axios 调用序列（注意 finishStudy 是异步动作，断言前需宏任务等待）。
+- **ProjectList「有数据」用例**：旧版用 `EQ_SET_STATE` 动态注入 redux projectList，改为 act 内 `useProjectStore.setState({ projectList })`（引用变化驱动 cWRP 等价 effect）；渲染改走 `renderWithProviders`（子组件 ProjectCard 仍需 redux Provider）。
+- **Provider 去留判定**：只有当被测组件树内仍有未迁移 slice 的 `useDispatch`/`useSelector`（如 Header 内嵌 Srch、ProjectCard 的 follow 动作、ImportInterface 的 inter）时才保留 Provider（空 reducer 即可）。
+- **自建 seed 对象绕过 seedState 的漏网文件**：`groupSetting.test.js` / `groupList.test.js`（批次 3 遗留）以局部变量构造 `{ user: { role: ... } }` 种子，`rg "seedState"` 摸底会漏掉——迁移收尾必须按「组件新读取的 store 字段」反向 grep 测试目录（GroupSetting 的 `curUserRole === 'admin'` 危险操作区、GroupList 的 studyTip/study 引导按钮均依赖 userStore）。
+- 既有 `renderWithProviders` / `makeStore` 帮手无需改动：redux 树仍需存在（inter + 插件钩子），只是 user/project 种子失效。
+
+### 12.5 批次4 验证数据
+
+- 新增 store 单测 20 条（userStore 10 / projectStore 10）全绿；
+- `npm test` 全量冷库：见交付报告（1022 基线 + 20 新增，既有测试适配无净减）；
+- `npx tsc --noEmit`：0 错误；`npm run lint`：0/0；`npm run audit:ci`：通过（各 severity 与 total 均不高于基线）；
+- grep 终态：全仓无 `state.user` / `state.project` 状态读取方（剩余匹配均为注释或组件本地 state）；combineReducers 仅剩 inter。

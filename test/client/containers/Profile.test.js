@@ -9,6 +9,13 @@ const axios = require('axios');
 
 const { default: Profile } = require('../../../client/containers/User/Profile.js');
 const { formatTime } = require('../../../client/common.js');
+// user 切片已迁 Zustand（批次4）：curUid/userType/curRole 改经 useUserStore 播种；
+// setBreadcrumb 改为断言 userStore.breadcrumb（不再派发 yapi/user/* redux action）
+const {
+  seedUserStore,
+  resetUserProjectStores,
+  useUserStore
+} = require('../../helpers/userProjectStores');
 
 // Profile 挂载即请求 /api/user/find（axios 为 CJS 单例，生产代码调用时读取 .get）
 const originalAxiosGet = axios.get;
@@ -19,9 +26,9 @@ test.serial.afterEach.always(() => {
   cleanupDom();
   axios.get = originalAxiosGet;
   axios.post = originalAxiosPost;
+  // userStore 为模块级单例,复位避免用例间串场
+  resetUserProjectStores();
 });
-
-const SET_BREADCRUMB = 'yapi/user/SET_BREADCRUMB';
 
 const ALICE = {
   uid: 9,
@@ -44,8 +51,8 @@ function mockFind(expectedId) {
 }
 
 function renderProfile(uid, seedUser) {
+  seedUserStore(seedUser);
   return renderWithProviders(React.createElement(Profile), {
-    seedState: { user: seedUser },
     routePath: '/user/profile/:uid',
     initialPath: '/user/profile/' + uid
   });
@@ -59,7 +66,7 @@ function findRow(container, label) {
 
 test.serial('本人访问渲染个人设置（头像上传、资料行、密码修改入口）', async t => {
   mockFind(9);
-  const { container, dispatched } = renderProfile(9, { uid: 9, type: 'site', role: 'member' });
+  const { container } = renderProfile(9, { uid: 9, type: 'site', role: 'member' });
   await flushEffects();
 
   t.is(container.querySelector('.user-profile h3').textContent, '个人设置', '本人访问应渲染个人设置标题');
@@ -118,14 +125,16 @@ test.serial('本人访问渲染个人设置（头像上传、资料行、密码�
   );
   t.is(editButtons.length, 3, '用户名/Email/密码三处均应有修改按钮');
 
-  const breadcrumb = dispatched.find(action => action.type === SET_BREADCRUMB);
-  t.truthy(breadcrumb, '拉取用户信息后应派发 setBreadcrumb');
-  t.deepEqual(breadcrumb.data, [{ name: 'alice' }], '本人访问面包屑不应带管理前缀');
+  t.deepEqual(
+    useUserStore.getState().breadcrumb,
+    [{ name: 'alice' }],
+    '本人访问面包屑不应带管理前缀（经 userStore 写入）'
+  );
 });
 
 test.serial('管理员查看他人渲染资料设置（管理前缀面包屑、角色行可见）', async t => {
   mockFind(9);
-  const { container, dispatched } = renderProfile(9, { uid: 11, type: 'site', role: 'admin' });
+  const { container } = renderProfile(9, { uid: 11, type: 'site', role: 'admin' });
   await flushEffects();
 
   t.is(
@@ -148,8 +157,11 @@ test.serial('管理员查看他人渲染资料设置（管理前缀面包屑、�
   );
   t.is(editButtons.length, 3, 'admin 访问他人时仍应有三处修改按钮');
 
-  const breadcrumb = dispatched.find(action => action.type === SET_BREADCRUMB);
-  t.deepEqual(breadcrumb.data, [{ name: '管理: alice' }], '管理员查看他人面包屑应带管理前缀');
+  t.deepEqual(
+    useUserStore.getState().breadcrumb,
+    [{ name: '管理: alice' }],
+    '管理员查看他人面包屑应带管理前缀（经 userStore 写入）'
+  );
 });
 
 test.serial('用户名编辑链路：进入编辑态、受控输入、取消还原', async t => {

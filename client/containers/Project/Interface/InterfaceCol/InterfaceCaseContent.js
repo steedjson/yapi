@@ -1,12 +1,12 @@
 // @ts-check
 import React, { useEffect, useRef, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import { Link, useParams } from 'react-router-dom';
 import axios from 'axios';
 import { message, Tooltip, Input } from 'antd';
-import { getEnv } from '../../../../reducer/modules/project';
-// interfaceCol 切片已迁至 Zustand（批次3），project/user 模块仍未迁移
+// interfaceCol 切片已迁至 Zustand（批次3）；project/user 切片已迁至 Zustand（批次4）
 import useInterfaceColStore from '../../../../store/interfaceColStore';
+import useUserStore from '../../../../store/userStore';
+import useProjectStore from '../../../../store/projectStore';
 import { Postman } from '../../../../components';
 
 import './InterfaceCaseContent.scss';
@@ -40,7 +40,6 @@ function getColId(colList, currCaseId) {
  * - await 恢复后对 this.props 的实时读取统一改为 latestRef 镜像读取，语义一致。
  */
 const InterfaceCaseContent = () => {
-  const dispatch = useDispatch();
   const interfaceColList = /** @type {any[]} */ (useInterfaceColStore(state => state.interfaceColList));
   // 历史遗留仅声明未消费，保留订阅避免行为差异
   useInterfaceColStore(state => state.currColId);
@@ -52,9 +51,10 @@ const InterfaceCaseContent = () => {
   const fetchInterfaceColList = useInterfaceColStore(state => state.fetchInterfaceColList);
   const fetchCaseData = useInterfaceColStore(state => state.fetchCaseData);
   const setColData = useInterfaceColStore(state => state.setColData);
-  const currProject = useSelector(state => state.project.currProject);
-  const projectEnv = useSelector(state => state.project.projectEnv);
-  const curUid = useSelector(state => state.user.uid);
+  const currProject = useProjectStore(state => state.currProject);
+  const projectEnv = useProjectStore(state => state.projectEnv);
+  const getEnv = useProjectStore(state => state.getEnv);
+  const curUid = useUserStore(state => state.uid);
   const { id, actionId } = /** @type {any} */ (useParams());
 
   const [state, setState] = useState({
@@ -83,7 +83,7 @@ const InterfaceCaseContent = () => {
       await fetchCaseData(nextCaseId);
       setColData({ currCaseId: +nextCaseId, currColId, isShowCol: false });
       // 获取当前case 下的环境变量
-      await dispatch(getEnv(latestRef.current.currCase.project_id));
+      await getEnv(latestRef.current.currCase.project_id);
       patchState({ editCasename: latestRef.current.currCase.casename });
     })();
   }, []);
@@ -97,7 +97,7 @@ const InterfaceCaseContent = () => {
       const currColId = getColId(latestRef.current.interfaceColList, actionId);
       await fetchCaseData(actionId);
       setColData({ currCaseId: +actionId, currColId, isShowCol: false });
-      await dispatch(getEnv(latestRef.current.currCase.project_id));
+      await getEnv(latestRef.current.currCase.project_id);
       patchState({ editCasename: latestRef.current.currCase.casename });
     })();
   }, [actionId]);

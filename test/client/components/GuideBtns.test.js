@@ -3,8 +3,6 @@ import '../../helpers/jsdom-setup';
 import test from 'ava';
 import React from 'react';
 import { render, screen, fireEvent, cleanup } from '@testing-library/react';
-import { Provider } from 'react-redux';
-import { createStore } from 'redux';
 import { cleanupDom } from '../../helpers/jsdom-setup';
 
 // finishStudy() 的 payload 是 axios.get('/api/user/up_study')，测试中必须拦截，
@@ -14,9 +12,10 @@ const axios = require('axios');
 const originalAxiosGet = axios.get;
 const axiosGetCalls = [];
 
-// 动作类型常量取自 client/reducer/modules/user.js，按线上契约硬编码断言
-const CHANGE_STUDY_TIP = 'yapi/user/CHANGE_STUDY_TIP';
-const FINISH_STUDY = 'yapi/user/FINISH_STUDY';
+// user 切片已迁 Zustand（批次4）：点击行为改断言 userStore 状态变化，
+// 不再经 redux dispatch（组件测试无需 redux Provider）
+const { default: useUserStore } = require('../../../client/store/userStore');
+const { resetUserProjectStores } = require('../../helpers/userProjectStores');
 
 const { default: GuideBtns } = require('../../../client/components/GuideBtns/GuideBtns.js');
 
@@ -35,70 +34,66 @@ test.serial.afterEach.always(() => {
   cleanup();
   cleanupDom();
   axiosGetCalls.length = 0;
+  resetUserProjectStores();
 });
 
-// reducer 只记录动作类型序列，用于断言点击产生的 dispatch 契约
-function createRecordingStore() {
-  return createStore(function(state, action) {
-    if (state === undefined) {
-      return [];
-    }
-    return state.concat(action.type);
-  });
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms || 0));
 }
 
 function renderGuideBtns(isLast) {
-  const store = createRecordingStore();
-  const utils = render(
-    <Provider store={store}>
-      <GuideBtns isLast={isLast} />
-    </Provider>
-  );
-  return Object.assign({ store }, utils);
+  return render(<GuideBtns isLast={isLast} />);
 }
 
-test.serial('isLast 为假时点「下一步」只派发 changeStudyTip', t => {
-  const { store } = renderGuideBtns(false);
+test.serial('isLast 为假时点「下一步」只推进 studyTip', t => {
+  resetUserProjectStores();
+  const { unmount } = renderGuideBtns(false);
 
   t.truthy(screen.getByRole('button', { name: '下一步' }), '非末步按钮文案应为「下一步」');
   t.is(screen.queryByRole('button', { name: '完 成' }), null);
 
   fireEvent.click(screen.getByRole('button', { name: '下一步' }));
 
-  // 负向断言放在精确序列断言之前，保证它本身也是首道防线而非被前序断言遮蔽的死代码
-  t.false(
-    store.getState().includes(FINISH_STUDY),
-    '非末步点击「下一步」不得派发 FINISH_STUDY, 实际动作序列: ' + JSON.stringify(store.getState())
-  );
+  const state = useUserStore.getState();
+  t.is(state.studyTip, 1, '非末步点击「下一步」studyTip 应 +1');
+  t.false(state.study, '非末步不得完成引导（study 仍为 false）');
   t.is(
     axiosGetCalls.length,
     0,
     '非末步不得发起 up_study 请求（证明确实未触网）, 实际: ' + JSON.stringify(axiosGetCalls)
   );
-  t.deepEqual(store.getState(), [CHANGE_STUDY_TIP], '非末步动作序列应恰好为 changeStudyTip');
+  unmount();
 });
 
-test.serial('isLast 为真时点「完 成」依次派发 changeStudyTip 与 finishStudy', t => {
-  const { store } = renderGuideBtns(true);
+test.serial('isLast 为真时点「完 成」先推进 studyTip 并触发 finishStudy', async t => {
+  resetUserProjectStores();
+  const { unmount } = renderGuideBtns(true);
 
   t.truthy(screen.getByRole('button', { name: '完 成' }), '末步按钮文案应为「完 成」');
   t.is(screen.queryByRole('button', { name: '下一步' }), null);
 
   fireEvent.click(screen.getByRole('button', { name: '完 成' }));
-
-  t.deepEqual(store.getState(), [CHANGE_STUDY_TIP, FINISH_STUDY], '末步应追加 finishStudy 且顺序在前者之后');
+  // finishStudy 为异步动作：等 promise 链落地后再断言 store 状态
+  await sleep(5);
+  const state = useUserStore.getState();
+  t.true(state.study, '末步完成后 study 应置 true');
+  t.is(state.studyTip, 0, '完成后 studyTip 应归零');
   t.deepEqual(axiosGetCalls, ['/api/user/up_study'], 'finishStudy 应上报 up_study');
+  unmount();
 });
 
-test.serial('点「退出指引」只派发 finishStudy', t => {
-  const { store } = renderGuideBtns(false);
+test.serial('点「退出指引」只触发 finishStudy', async t => {
+  resetUserProjectStores();
+  const { unmount } = renderGuideBtns(false);
 
   fireEvent.click(screen.getByRole('button', { name: '退出指引' }));
-
-  t.deepEqual(store.getState(), [FINISH_STUDY], '退出指引不应派发 changeStudyTip');
+  await sleep(5);
   t.deepEqual(axiosGetCalls, ['/api/user/up_study']);
+  t.true(useUserStore.getState().study, '退出指引应完成引导');
 
-  // 再次点击应继续派发，验证按钮未被禁用
+  // 再次点击应继续触发，验证按钮未被禁用
   fireEvent.click(screen.getByRole('button', { name: '退出指引' }));
-  t.deepEqual(store.getState(), [FINISH_STUDY, FINISH_STUDY]);
+  await sleep(5);
+  t.deepEqual(axiosGetCalls, ['/api/user/up_study', '/api/user/up_study']);
+  unmount();
 });

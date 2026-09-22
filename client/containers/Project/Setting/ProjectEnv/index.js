@@ -6,13 +6,13 @@ import { Layout, Tooltip, message, Row, Popconfirm } from 'antd';
 import { DeleteOutlined, PlusOutlined, QuestionCircleOutlined } from '@ant-design/icons';
 const { Content, Sider } = Layout;
 import ProjectEnvContent from './ProjectEnvContent.js';
-import { useDispatch, useSelector } from 'react-redux';
-import { updateEnv, getProject, getEnv } from '../../../../reducer/modules/project';
+// project 切片已迁至 Zustand（批次4），本组件的 redux 依赖随迁移全部移除
+import useProjectStore from '../../../../store/projectStore';
 import EasyDragSort from '../../../../components/EasyDragSort/EasyDragSort.js';
 
 /**
  * 环境配置面板。原类组件经 Hooks 现代化迁移，渲染结构与行为保持一致：
- * - 旧 @connect 改为 useSelector/useDispatch；
+ * - 旧 @connect 改为 Zustand store 订阅（批次4）；
  * - 类 state 整体迁移为单个 useState 对象，setState 局部合并语义经
  *   setState(prev => ({ ...prev, ...patch })) 等价保留；
  * - 旧 async UNSAFE_componentWillMount（拉取项目 → 读取最新 projectMsg → 回填 env
@@ -26,8 +26,10 @@ import EasyDragSort from '../../../../components/EasyDragSort/EasyDragSort.js';
  */
 const ProjectEnv = props => {
   const { projectId, onOk } = props;
-  const dispatch = useDispatch();
-  const projectMsg = useSelector(state => state.project.currProject);
+  const projectMsg = useProjectStore(state => state.currProject);
+  const updateEnv = useProjectStore(state => state.updateEnv);
+  const getProject = useProjectStore(state => state.getProject);
+  const getEnv = useProjectStore(state => state.getEnv);
 
   const [state, setState] = useState(/** @type {any} */ ({
     env: [],
@@ -37,7 +39,7 @@ const ProjectEnv = props => {
     currentKey: -2
   }));
 
-  // 镜像最新 redux 值：挂载期 await getProject 恢复后的读取等价于旧 this.props.projectMsg
+  // 镜像最新 store 值：挂载期 await getProject 恢复后的读取等价于旧 this.props.projectMsg
   const projectMsgRef = useRef(projectMsg);
   projectMsgRef.current = projectMsg;
 
@@ -117,11 +119,11 @@ const ProjectEnv = props => {
    * @param {any} assignValue
    */
   async function onSave(assignValue) {
-    await dispatch(updateEnv(assignValue))
+    await updateEnv(assignValue)
       .then((/** @type {any} */ res) => {
-        if (res.payload.data.errcode == 0) {
-          dispatch(getProject(projectId));
-          dispatch(getEnv(projectId));
+        if (res && res.data.errcode == 0) {
+          getProject(projectId);
+          getEnv(projectId);
           message.success('修改成功! ');
           if (isMountedRef.current) {
             setState((/** @type {any} */ prevState) => ({ ...prevState, ...assignValue }));
@@ -180,7 +182,7 @@ const ProjectEnv = props => {
   // 旧 async UNSAFE_componentWillMount：拉取项目后回填 env 列表并选中第一项
   useEffect(() => {
     (async () => {
-      await dispatch(getProject(projectId));
+      await getProject(projectId);
       const { env, _id } = projectMsgRef.current;
       setState((/** @type {any} */ prevState) => ({
         ...prevState,

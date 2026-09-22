@@ -9,6 +9,8 @@ const axios = require('axios');
 // 与 NewsList.js 共享同一模块实例（babel CJS 转译后命中同一 require 缓存）：
 // news 切片已迁 Zustand
 const { default: useNewsStore } = require('../../../client/store/newsStore');
+// user 切片已迁 Zustand（批次4）：NewsList 的 uid 改经 useUserStore 读取
+const { seedUserStore, resetUserProjectStores } = require('../../helpers/userProjectStores');
 
 const { default: NewsList } = require('../../../client/containers/News/NewsList/NewsList.js');
 
@@ -18,17 +20,14 @@ test.serial.afterEach.always(() => {
   cleanup();
   cleanupDom();
   axios.get = originalAxiosGet;
-  // news 已迁 Zustand：模块级单例，用例间复位避免状态串场
+  // news/user 已迁 Zustand：模块级单例，用例间复位避免状态串场
   useNewsStore.setState({ newsData: { list: [], total: 0 }, curpage: 1, newsRequestId: 0 });
+  resetUserProjectStores();
 });
 
-function seedState() {
-  // uid 故意用数字 23：容器内 useSelector 做过 `uid + ''`，点击时再 `+uid` 转回数字。
-  // news 切片已迁 Zustand，Redux 种子中不再包含
-  return { user: { uid: 23 } };
-}
-
 function renderNewsList() {
+  // uid 故意用数字 23：容器内做过 `uid + ''`，点击时再 `+uid` 转回数字
+  seedUserStore({ uid: 23 });
   const logRequests = [];
   axios.get = (url, config) => {
     logRequests.push({ url, params: config && config.params });
@@ -37,7 +36,7 @@ function renderNewsList() {
   const setLoadingCalls = [];
   const utils = renderWithProviders(
     React.createElement(NewsList, { setLoading: value => setLoadingCalls.push(value) }),
-    { seedState: seedState() }
+    {}
   );
   return Object.assign(utils, { logRequests, setLoadingCalls });
 }

@@ -29,16 +29,20 @@ const { default: Activity } = require('../../../client/containers/Project/Activi
 const withRouter = require('../../../client/withRouter.jsx').default;
 const ActivityWithRouter = withRouter(Activity);
 
+// project 切片已迁 Zustand（批次4）：currProject 改经 projectStore 播种；
+// inter 仍在 redux，user.uid stale 订阅已随迁移移除
+const { seedProjectStore, resetUserProjectStores } = require('../../helpers/userProjectStores');
+
 test.serial.afterEach.always(() => {
   cleanup();
   cleanupDom();
+  resetUserProjectStores();
 });
 
 function seedState() {
+  seedProjectStore({ currProject: { _id: 12, basepath: '/mock-path' } });
   return {
-    user: { uid: 11 },
-    inter: { curdata: { _id: 1 } },
-    project: { currProject: { _id: 12, basepath: '/mock-path' } }
+    inter: { curdata: { _id: 1 } }
   };
 }
 

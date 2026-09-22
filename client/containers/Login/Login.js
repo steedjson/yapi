@@ -1,10 +1,10 @@
 // @ts-check
 import React, { useState } from 'react';
-import { connect } from 'react-redux';
 import { Button, Input, message, Radio, Form } from 'antd';
 
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
-import { loginActions, loginLdapActions } from '../../reducer/modules/user';
+// user 切片已迁至 Zustand（批次4），本组件的 redux 依赖随迁移全部移除
+import useUserStore from '../../store/userStore';
 import { resolveSafeRedirect } from '../../components/AuthenticatedComponent';
 import withRouter from '../../withRouter';
 
@@ -24,6 +24,9 @@ const changeHeight = {
 function Login(props) {
   const [loginType, setLoginType] = useState('ldap');
   const [submitting, setSubmitting] = useState(false);
+  const isLDAP = useUserStore(state => state.isLDAP);
+  const loginActions = useUserStore(state => state.loginActions);
+  const loginLdapActions = useUserStore(state => state.loginLdapActions);
 
   /**
    * @param {any} values
@@ -34,11 +37,11 @@ function Login(props) {
       return;
     }
     setSubmitting(true);
-    const useLdap = props.isLDAP && loginType === 'ldap';
-    const login = useLdap ? props.loginLdapActions : props.loginActions;
+    const useLdap = isLDAP && loginType === 'ldap';
+    const login = useLdap ? loginLdapActions : loginActions;
     login(values)
       .then((/** @type {any} */ res) => {
-        const data = res.payload && res.payload.data;
+        const data = res && res.data;
         if (data && data.errcode == 0) {
           // 优先回到认证守卫记录的站内来源（深链接恢复），否则回落 /group
           const from = props.location && props.location.state && props.location.state.from;
@@ -61,8 +64,6 @@ function Login(props) {
   const handleFormLayoutChange = e => {
     setLoginType(e.target.value);
   };
-
-  const { isLDAP } = props;
 
   const emailRule =
     loginType === 'ldap'
@@ -122,17 +123,6 @@ function Login(props) {
   );
 }
 
-const LoginForm = connect(
-  (/** @type {any} */ state) => {
-    return {
-      loginData: state.user,
-      isLDAP: state.user.isLDAP
-    };
-  },
-  {
-    loginActions,
-    loginLdapActions
-  }
-)(withRouter(Login));
+const LoginForm = withRouter(Login);
 
 export default LoginForm;

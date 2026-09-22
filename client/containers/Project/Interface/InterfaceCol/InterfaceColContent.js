@@ -1,12 +1,12 @@
 // @ts-check
 import React, { useEffect, useRef, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 //import constants from '../../../../constants/variable.js'
 import { message } from 'antd';
-// interfaceCol 切片已迁至 Zustand（批次3），project/user 模块仍未迁移
+// interfaceCol 切片已迁至 Zustand（批次3）；project/user 切片已迁至 Zustand（批次4）
 import useInterfaceColStore from '../../../../store/interfaceColStore';
-import { getToken } from '../../../../reducer/modules/project';
+import useUserStore from '../../../../store/userStore';
+import useProjectStore from '../../../../store/projectStore';
 import { arrayMove } from '@dnd-kit/sortable';
 import axios from 'axios';
 import { initCrossRequest } from 'client/components/Postman/CheckCrossInstall.js';
@@ -60,9 +60,9 @@ function handleReport(json) {
  * 不引入状态、不引入包装 DOM 元素；抽取前后 DOM 逐字节等价（见交付报告验证记录）。
  *
  * 历史迁移说明（原类组件经 Hooks 现代化，渲染结构与行为保持一致）：
- * - 旧 @connect 改为 useSelector/useDispatch（isShowCol / projectEnv 为历史遗留仅声明
- *   未消费，保留订阅避免行为差异；getEnv 映射仅声明未消费，随迁移移除），旧 @withRouter
- *   注入的 match 改为 useParams；
+ * - 旧 @connect 改为 Zustand store 订阅（批次3 interfaceCol / 批次4 project+user；
+ *   isShowCol 为历史遗留仅声明未消费保留订阅；projectEnv/getEnv 映射仅声明未消费，
+ *   随批次4 迁移移除）；
  * - 旧实例字段 this.reports / this.records / this.currColId / this._crossRequestInterval
  *   改为对应 ref（this.aceEditor 随通用规则配置弹窗下放为该子组件的内部 ref）；
  * - 旧 async UNSAFE_componentWillMount（拉取集合/Token → 推导集合 id → 加载用例 →
@@ -75,7 +75,6 @@ function handleReport(json) {
  * - await 恢复后对 this.props 的实时读取统一改为 latestRef 镜像读取。
  */
 const InterfaceColContent = () => {
-  const dispatch = useDispatch();
   const interfaceColList = useInterfaceColStore(state => state.interfaceColList);
   const currColId = useInterfaceColStore(state => state.currColId);
   const currCaseId = useInterfaceColStore(state => state.currCaseId);
@@ -92,12 +91,12 @@ const InterfaceColContent = () => {
   const fetchCaseList = useInterfaceColStore(state => state.fetchCaseList);
   const fetchCaseEnvList = useInterfaceColStore(state => state.fetchCaseEnvList);
   const setColData = useInterfaceColStore(state => state.setColData);
-  const currProject = useSelector(state => state.project.currProject);
-  const token = useSelector(state => state.project.token);
-  const curProjectRole = useSelector(state => state.project.currProject.role);
-  // 历史遗留仅声明未消费，保留订阅避免行为差异
-  useSelector(state => state.project.projectEnv);
-  const curUid = useSelector(state => state.user.uid);
+  const currProject = useProjectStore(state => state.currProject);
+  const token = useProjectStore(state => state.token);
+  const curProjectRole = useProjectStore(state => state.currProject.role);
+  // 原历史遗留的 project.projectEnv 订阅（仅声明未消费）随批次4 迁移移除
+  const curUid = useUserStore(state => state.uid);
+  const getToken = useProjectStore(state => state.getToken);
   const { id, actionId } = /** @type {any} */ (useParams());
 
   const [state, setState] = useState(/** @type {any} */ ({
@@ -269,7 +268,7 @@ const InterfaceColContent = () => {
     (async () => {
       const currentParamsId = latestRef.current.id;
       const result = await fetchInterfaceColList(currentParamsId);
-      await dispatch(getToken(currentParamsId));
+      await getToken(currentParamsId);
       const routeActionId = latestRef.current.actionId;
       const colList = result && result.data && result.data.data;
       const firstCol = Array.isArray(colList) && colList.length > 0 ? colList[0] : null;

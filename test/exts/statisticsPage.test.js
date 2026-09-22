@@ -6,6 +6,8 @@ import { cleanup } from '@testing-library/react';
 import { renderWithProviders, flushEffects, cleanupDom } from '../helpers/containers';
 
 const { axiosMock } = require('./setup');
+// user 切片已迁 Zustand（批次4）：setBreadcrumb 改为断言 userStore.breadcrumb
+const { resetUserProjectStores, useUserStore } = require('../helpers/userProjectStores');
 
 const STAT_PATH = '../../exts/yapi-plugin-statistics/statisticsClientPage';
 
@@ -16,6 +18,10 @@ function renderStatistics() {
     initialPath: '/statistic'
   });
 }
+
+test.serial.afterEach.always(() => {
+  resetUserProjectStores();
+});
 
 test.serial('statistics 挂载：派发系统信息面包屑并回填三类统计数据', async t => {
   axiosMock.setRoutes([
@@ -36,13 +42,11 @@ test.serial('statistics 挂载：派发系统信息面包屑并回填三类统�
       respond: () => ({ errcode: 0, data: { mockCount: 12345, mockDateList: [] } })
     }
   ]);
-  const { container, dispatched } = renderStatistics();
+  const { container } = renderStatistics();
   await flushEffects(100);
 
-  // 面包屑 action：setBreadcrumb([{ name: '系统信息' }])
-  const breadcrumb = dispatched.find(a => a.type === 'yapi/user/SET_BREADCRUMB');
-  t.truthy(breadcrumb);
-  t.deepEqual(breadcrumb.data, [{ name: '系统信息' }]);
+  // 面包屑 action：setBreadcrumb([{ name: '系统信息' }])（批次4 起写入 userStore）
+  t.deepEqual(useUserStore.getState().breadcrumb, [{ name: '系统信息' }]);
 
   // 四个统计接口均已请求（get 用精确匹配避免误算 get_system_status）
   t.is(axiosMock.filter('/api/plugin/statismock/count').length, 1);
@@ -62,17 +66,17 @@ test.serial('statistics 挂载：派发系统信息面包屑并回填三类统�
   cleanupDom();
 });
 
-test.serial('statistics 接口 errcode 非 0：保持初始零值且仍派发面包屑', async t => {
+test.serial('statistics 接口 errcode 非 0：保持初始零值且仍写入面包屑', async t => {
   axiosMock.setRoutes([
     { match: '/api/plugin/statismock/count', respond: () => ({ errcode: 400, errmsg: 'no perm' }) },
     { match: '/api/plugin/statismock/get_system_status', respond: () => ({ errcode: 400, errmsg: 'no perm' }) },
     { match: '/api/plugin/statismock/group_data_statis', respond: () => ({ errcode: 400, errmsg: 'no perm' }) },
     { match: '/api/plugin/statismock/get', respond: () => ({ errcode: 400, errmsg: 'no perm' }) }
   ]);
-  const { container, dispatched } = renderStatistics();
+  const { container } = renderStatistics();
   await flushEffects(100);
 
-  t.truthy(dispatched.find(a => a.type === 'yapi/user/SET_BREADCRUMB'));
+  t.deepEqual(useUserStore.getState().breadcrumb, [{ name: '系统信息' }]);
 
   const boxes = Array.from(container.querySelectorAll('h2.gutter-box')).map(h => h.textContent);
   // 数据统计保持初始零值；系统信息保持空串占位。

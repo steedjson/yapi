@@ -1,10 +1,9 @@
 // @ts-check
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
-// interfaceCol 切片已迁至 Zustand（批次3），project 模块仍未迁移
+// interfaceCol 切片已迁至 Zustand（批次3）；project 切片已迁至 Zustand（批次4）
 import useInterfaceColStore from '../../../../store/interfaceColStore';
-import { fetchProjectList } from '../../../../reducer/modules/project';
+import useProjectStore from '../../../../store/projectStore';
 import axios from 'axios';
 import ImportInterface from './ImportInterface';
 import { Input, Button, Modal, message, Tooltip, Tree, Form } from 'antd';
@@ -87,7 +86,6 @@ const ColModalForm = props => {
  */
 export default function InterfaceColMenu(props) {
   const { router } = props;
-  const dispatch = useDispatch();
   // zustand 经 allowJs 的类型推断有损（初始占位形状有限），用 JSDoc 收窄（迁移模式文档 §5.4）
   const interfaceColList = /** @type {any[]} */ (useInterfaceColStore(state => state.interfaceColList));
   const currCase = /** @type {any} */ (useInterfaceColStore(state => state.currCase));
@@ -98,7 +96,8 @@ export default function InterfaceColMenu(props) {
   const fetchCaseData = useInterfaceColStore(state => state.fetchCaseData);
   const setColData = useInterfaceColStore(state => state.setColData);
   // 当前项目的信息
-  const curProject = useSelector(state => state.project.currProject);
+  const curProject = useProjectStore(state => state.currProject);
+  const fetchProjectList = useProjectStore(state => state.fetchProjectList);
   const navigate = useNavigate();
   const { id } = useParams();
 
@@ -361,7 +360,7 @@ export default function InterfaceColMenu(props) {
     // const projectId = this.props.match.params.id;
     // console.log('project', this.props.curProject)
     const groupId = curProject.group_id;
-    await dispatch((/** @type {any} */ (fetchProjectList))(groupId));
+    await fetchProjectList(groupId);
     // await dispatch(fetchInterfaceListMenu(projectId))
     patchState({ importInterVisible: true, importColId: colId });
   };

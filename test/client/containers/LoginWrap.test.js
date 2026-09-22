@@ -6,16 +6,18 @@ import { cleanup } from '@testing-library/react';
 import { cleanupDom, renderWithProviders } from '../../helpers/containers';
 
 const { default: LoginWrap } = require('../../../client/containers/Login/LoginWrap.js');
+// user 切片已迁 Zustand（批次4）：loginWrapActiveKey/canRegister 改经 useUserStore 播种
+const { seedUserStore, resetUserProjectStores } = require('../../helpers/userProjectStores');
 
 test.serial.afterEach.always(() => {
   cleanup();
   cleanupDom();
+  resetUserProjectStores();
 });
 
 test.serial('渲染登录/注册 Tabs 外壳: 默认激活 key 与登录表单', t => {
-  const { container } = renderWithProviders(React.createElement(LoginWrap), {
-    seedState: { user: { loginWrapActiveKey: '1', canRegister: true } }
-  });
+  seedUserStore({ loginWrapActiveKey: '1', canRegister: true });
+  const { container } = renderWithProviders(React.createElement(LoginWrap), {});
 
   const tabs = container.querySelectorAll('.ant-tabs-tab');
   t.is(tabs.length, 2, '应渲染 登录/注册 两个 Tab');
@@ -34,9 +36,8 @@ test.serial('渲染登录/注册 Tabs 外壳: 默认激活 key 与登录表单',
 });
 
 test.serial('canRegister=false 时注册 Tab 展示禁用注册提示而非注册表单', t => {
-  const { container } = renderWithProviders(React.createElement(LoginWrap), {
-    seedState: { user: { loginWrapActiveKey: '2', canRegister: false } }
-  });
+  seedUserStore({ loginWrapActiveKey: '2', canRegister: false });
+  const { container } = renderWithProviders(React.createElement(LoginWrap), {});
 
   t.is(
     container.querySelector('.ant-tabs-tab-active .ant-tabs-tab-btn').textContent,
@@ -53,9 +54,8 @@ test.serial('canRegister=false 时注册 Tab 展示禁用注册提示而非注�
 });
 
 test.serial('canRegister=true 时注册 Tab 渲染注册表单', t => {
-  const { container } = renderWithProviders(React.createElement(LoginWrap), {
-    seedState: { user: { loginWrapActiveKey: '2', canRegister: true } }
-  });
+  seedUserStore({ loginWrapActiveKey: '2', canRegister: true });
+  const { container } = renderWithProviders(React.createElement(LoginWrap), {});
 
   const activePanel = container.querySelector('.ant-tabs-tabpane-active');
   t.truthy(activePanel.querySelector('form'), '允许注册时应渲染注册表单');

@@ -1,6 +1,6 @@
 // @ts-check
 import React, { useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+// user 切片已迁至 Zustand（批次4），react-redux 依赖随迁移全部移除
 // v6：unstable_HistoryRouter 接管自定义 history 实例（供 BlockPrompt 拦截导航用）
 import { Route, Routes, unstable_HistoryRouter as HistoryRouter } from 'react-router-dom';
 import Home from './containers/Home/Home.js';
@@ -10,7 +10,7 @@ import Header from './components/Header/Header';
 import Footer from './components/Footer/Footer';
 import Loading from './components/Loading/Loading';
 import { createAsyncComponent } from './components/AsyncComponent';
-import { checkLoginState } from './reducer/modules/user';
+import useUserStore from './store/userStore';
 import { requireAuthentication } from './components/AuthenticatedComponent';
 import Notify from './components/Notify/Notify';
 import withRouter from './withRouter';
@@ -129,13 +129,14 @@ const AppHeader = withRouter((/** @type {any} */ props) => {
  *   HistoryRouter 与 React.lazy 分包结构保持不变。
  */
 const App = () => {
-  const dispatch = useDispatch();
-  const loginState = useSelector((/** @type {any} */ state) => state.user.loginState);
-  const curUserRole = useSelector((/** @type {any} */ state) => state.user.role);
+  // user 切片已迁至 Zustand（批次4）：loginState/role 改经 useUserStore 订阅，
+  // checkLoginState 改为 store 动作直调
+  const loginState = useUserStore(state => state.loginState);
+  const curUserRole = useUserStore(state => state.role);
 
   // 对应旧 componentDidMount
   useEffect(() => {
-    dispatch(checkLoginState());
+    useUserStore.getState().checkLoginState();
   }, []);
 
   /**

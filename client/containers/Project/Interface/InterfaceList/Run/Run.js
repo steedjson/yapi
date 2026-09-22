@@ -2,8 +2,11 @@
 import React, { useRef, useState } from 'react';
 import axios from 'axios';
 import { message } from 'antd';
+// user/project 切片已迁至 Zustand（批次4），inter 模块仍未迁移（保留 useSelector 混用）
 import { useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
+import useUserStore from '../../../../../store/userStore';
+import useProjectStore from '../../../../../store/projectStore';
 import { Postman } from '../../../../../components';
 import AddColModal from './AddColModal';
 
@@ -23,8 +26,8 @@ import './Run.scss';
  */
 const Run = () => {
   const currInterface = useSelector(state => state.inter.curdata);
-  const currProject = useSelector(state => state.project.currProject);
-  const curUid = useSelector(state => state.user.uid);
+  const currProject = useProjectStore(state => state.currProject);
+  const curUid = useUserStore(state => state.uid);
   const { id } = /** @type {any} */ (useParams());
 
   const [saveCaseModalVisible, setSaveCaseModalVisible] = useState(false);

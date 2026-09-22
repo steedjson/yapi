@@ -15,6 +15,11 @@ const { MemoryRouter, Routes, Route, useLocation } = require('react-router-dom')
 const { default: GroupList } = require('../../client/containers/Group/GroupList/GroupList.js');
 // group 切片已迁至 Zustand（批次3）：组件经 useGroupStore 读写，测试直接播种真实 store
 const useGroupStore = require('../../client/store/groupStore').default;
+// user 切片已迁 Zustand（批次4）：studyTip/study 改经 userStore 播种
+const {
+  seedUserStore,
+  resetUserProjectStores
+} = require('../helpers/userProjectStores');
 
 const originalAxiosGet = axios.get;
 const originalAxiosPost = axios.post;
@@ -29,6 +34,7 @@ const INITIAL_GROUP_STATE = {
 };
 
 test.serial.afterEach.always(() => {
+  resetUserProjectStores();
   cleanup();
   cleanupDom();
   axios.get = originalAxiosGet;
@@ -64,16 +70,16 @@ function mockGroupApis(log) {
 }
 
 function renderGroupList(initialPath) {
-  // user 切片仍走 redux 固定 reducer；group 切片经真实 Zustand store 播种
+  // group/user 切片均走真实 Zustand store（批次3 / 批次4）：
+  // GroupList 经 useUserStore 读取 studyTip/study 驱动新手引导按钮显隐
   useGroupStore.setState({
     ...INITIAL_GROUP_STATE,
     currGroup: G1,
     groupList: LIST,
     role: 'dev'
   });
-  const seed = {
-    user: { role: 'regular', studyTip: 1, study: true }
-  };
+  seedUserStore({ role: 'regular', studyTip: 1, study: true });
+  const seed = {};
   const store = applyMiddleware(promiseMiddleware)(createStore)(function(state) {
     if (state === undefined) state = seed;
     return state;

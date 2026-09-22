@@ -17,6 +17,13 @@ import { renderWithProviders, flushEffects, cleanupDom } from '../helpers/contai
 
 const { axiosMock, FakeWebSocket } = require('./setup');
 
+// user/project 切片已迁 Zustand（批次4）：projectStore 播种/复位辅助
+const { seedProjectStore, resetUserProjectStores } = require('../helpers/userProjectStores');
+
+test.serial.afterEach.always(() => {
+  resetUserProjectStores();
+});
+
 // 复位 WebSocket 桩（跨用例防串扰，与 WikiPage.test.js 同款）
 function FakeWebSocketReset() {
   FakeWebSocket.reset();
@@ -84,10 +91,11 @@ test.serial('advanced-mock client.js：interface_tab 懒加载组件可渲染，
   // 组件侧经 useMockColStore 读写（批次2 迁移，反向钉住防止回迁）
   t.is(hooks.add_reducer, undefined, 'mockCol 已迁 Zustand，插件不应再注册 add_reducer 钩子');
 
+  // project 切片已迁 Zustand（批次4）：currProject 改经 projectStore 播种
+  seedProjectStore({ currProject: { _id: 1, role: 'owner', switch_notice: true } });
   const { container } = renderWithProviders(React.createElement(tabs.advMock.component), {
     seedState: {
-      inter: { curdata: { _id: 1, title: '接口', res_body: '{}', res_body_is_json_schema: false, req_body_is_json_schema: false } },
-      project: { currProject: { _id: 1, role: 'owner', switch_notice: true } }
+      inter: { curdata: { _id: 1, title: '接口', res_body: '{}', res_body_is_json_schema: false, req_body_is_json_schema: false } }
     },
     routePath: '/project/:id/interface/api/:actionId',
     initialPath: '/project/1/interface/api/1'
@@ -118,8 +126,9 @@ test.serial('wiki client.js：sub_nav 组件为 lazy 包装且渲染真实 Wiki 
   axiosMock.setRoutes([
     { match: '/api/plugin/wiki_desc/get', respond: () => ({ errcode: 0, data: { desc: '<p>wiki正文</p>', markdown: 'wiki正文', username: 'carol', uid: 7, up_time: 1600000000 } }) }
   ]);
+  seedProjectStore({ currProject: { _id: 12, role: 'admin', switch_notice: true } });
   const { container } = renderWithProviders(React.createElement(Comp), {
-    seedState: { project: { currProject: { _id: 12, role: 'admin', switch_notice: true } } },
+    seedState: {},
     routePath: '/project/:id/wiki',
     initialPath: '/project/12/wiki'
   });

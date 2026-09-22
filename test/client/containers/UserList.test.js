@@ -9,6 +9,13 @@ const axios = require('axios');
 const dayjs = require('dayjs');
 
 const { default: List } = require('../../../client/containers/User/List.js');
+// user 切片已迁 Zustand（批次4）：role/uid 改经 useUserStore 播种；
+// SET_BREADCRUMB 改为断言 userStore.breadcrumb
+const {
+  seedUserStore,
+  resetUserProjectStores,
+  useUserStore
+} = require('../../helpers/userProjectStores');
 
 const originalAxiosGet = axios.get;
 
@@ -21,10 +28,13 @@ test.serial.afterEach.always(() => {
   cleanup();
   cleanupDom();
   axios.get = originalAxiosGet;
+  // userStore 为模块级单例,复位避免用例间串场
+  resetUserProjectStores();
 });
 
 function seedState(userRole, uid) {
-  return { user: { role: userRole, uid: uid == null ? 999 : uid } };
+  seedUserStore({ role: userRole, uid: uid == null ? 999 : uid });
+  return {};
 }
 
 function mockUserList(logRequests) {
@@ -42,7 +52,7 @@ function mockUserList(logRequests) {
 test.serial('admin 视角渲染用户表格（用户名/邮箱/角色/状态/更新日期）与分页', async t => {
   const logRequests = [];
   mockUserList(logRequests);
-  const { container, dispatched } = renderWithProviders(React.createElement(List), {
+  const { container } = renderWithProviders(React.createElement(List), {
     seedState: seedState('admin', 1)
   });
   await flushEffects();
@@ -52,9 +62,10 @@ test.serial('admin 视角渲染用户表格（用户名/邮箱/角色/状态/更
   t.is(logRequests[0].params.page, 1, '首页请求 page 应为 1');
   t.is(logRequests[0].params.limit, 20, 'limit 固定为 20');
   t.is(logRequests[0].params.keyword, undefined, '无关键词时不应传 keyword');
-  t.truthy(
-    dispatched.find(action => action.type === 'yapi/user/SET_BREADCRUMB'),
-    '挂载时应派发 SET_BREADCRUMB（用户管理）'
+  t.deepEqual(
+    useUserStore.getState().breadcrumb,
+    [{ name: '用户管理' }],
+    '挂载时应经 userStore 设置面包屑（用户管理）'
   );
 
   const headers = Array.from(container.querySelectorAll('.ant-table-thead th')).map(

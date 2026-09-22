@@ -2,7 +2,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Timeline, Spin, Row, Col, Tag, Avatar, Button, Modal, AutoComplete } from 'antd';
 import PropTypes from 'prop-types';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { formatTime } from '../../common.js';
 import showDiffMsg from '../../../common/diff-view.js';
 import sanitizeHtml from '../../utils/sanitize.js';
@@ -55,13 +55,12 @@ AddDiffView.propTypes = {
  */
 export default function TimeTree(props) {
   const dispatch = useDispatch();
-  // news 切片已迁至 Zustand（批次2），user 订阅保留（历史遗留仅声明未消费）
+  // news 切片已迁至 Zustand（批次2）；user 切片已迁至 Zustand（批次4），
+  // 原历史遗留的 user.uid 订阅（仅声明未消费）随迁移移除
   const newsData = /** @type {any} */ (useNewsStore(state => state.newsData));
   const curpage = useNewsStore(state => state.curpage);
   const fetchNewsData = useNewsStore(state => state.fetchNewsData);
   const fetchMoreNews = useNewsStore(state => state.fetchMoreNews);
-  // curUid 与旧 @connect 映射保持一致(历史遗留仅声明未消费),保留订阅避免行为差异
-  useSelector(state => state.user.uid);
 
   // 旧版 state.bidden 仅被写入从未被读取(死状态),迁移时一并移除
   const [loading, setLoading] = useState(false);

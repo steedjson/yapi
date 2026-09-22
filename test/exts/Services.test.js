@@ -9,14 +9,21 @@ const { axiosMock } = require('./setup');
 
 const SERVICES_PATH = '../../exts/yapi-plugin-gen-services/Services/Services';
 
+// project 切片已迁 Zustand（批次4）：token 改经 projectStore 播种/收敛
+const { seedProjectStore, resetUserProjectStores } = require('../helpers/userProjectStores');
+
 function seedState(token) {
+  seedProjectStore({ token: token || '' });
   return {
-    project: { token: token || '' },
     user: {},
     inter: {},
     mockCol: {}
   };
 }
+
+test.serial.afterEach.always(() => {
+  resetUserProjectStores();
+});
 
 test.serial('Services 挂载：按 projectId 拉取项目 token', async t => {
   axiosMock.setRoutes([

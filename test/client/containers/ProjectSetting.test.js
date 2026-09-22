@@ -40,6 +40,7 @@ const originalAxiosGet = axios.get;
 const originalAxiosPost = axios.post;
 
 test.serial.afterEach.always(() => {
+  resetUserProjectStores();
   cleanup();
   cleanupDom();
   axios.get = originalAxiosGet;
@@ -67,6 +68,13 @@ const CURR_PROJECT = {
 
 // group 切片已迁至 Zustand（批次3）：ProjectMessage 等面板经 useGroupStore 读取
 const useGroupStore = require('../../../client/store/groupStore').default;
+// user/project 切片已迁 Zustand（批次4）：改经真实 store 播种（挂载链会以同名桩数据收敛）
+const {
+  seedUserStore,
+  seedProjectStore,
+  resetUserProjectStores
+} = require('../../helpers/userProjectStores');
+
 const INITIAL_GROUP_STATE = {
   groupList: [],
   currGroup: { group_name: '', group_desc: '', custom_field1: { name: '', enable: false } },
@@ -85,14 +93,14 @@ function seedGroupStore() {
 }
 
 function makeSeed(role) {
+  seedUserStore({ uid: 11 });
+  seedProjectStore({
+    currProject: Object.assign({}, CURR_PROJECT, { role }),
+    projectList: [],
+    token: 'tk_seed_9f8e7d6c',
+    swaggerUrlData: ''
+  });
   return {
-    user: { uid: 11 },
-    project: {
-      currProject: Object.assign({}, CURR_PROJECT, { role }),
-      projectList: [],
-      token: 'tk_seed_9f8e7d6c',
-      swaggerUrlData: ''
-    },
     inter: { curdata: { catid: 3 } },
     news: { updateLogList: [] }
   };
@@ -207,8 +215,8 @@ test.serial('ProjectToken 展示 store 中 token，admin 角色可见刷新入�
 
   t.is(
     container.querySelector('.token-message').textContent,
-    'tk_seed_9f8e7d6c',
-    '应展示 store 中的项目 token'
+    'tk_fetched_abcd',
+    '应展示 store 中的项目 token（真实 store 挂载期会以桩响应收敛覆盖种子值）'
   );
   t.is(container.querySelectorAll('.token-btn').length, 2, 'admin 角色应渲染复制与刷新两个入口');
   t.truthy(
