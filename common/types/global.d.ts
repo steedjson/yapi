@@ -475,12 +475,6 @@ declare module 'extend' {
   export = extend;
 }
 
-// core-decorators 0.17 未内置类型且无对应 @types 包，
-// 按运行时实际导出形态声明使用到的最小子集（Group/ProjectList.js 的 @autobind 使用）。
-declare module 'core-decorators' {
-  export const autobind: any;
-}
-
 declare module 'ldapjs' {
   const ldap: any;
   export = ldap;

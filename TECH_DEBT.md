@@ -97,7 +97,7 @@
 ### 2. 剩余 Class 组件 → Hooks → **已完成**（client/ + exts/ 双收官，见「一、第四阶段」表）
 
 - 全仓类组件清零：`client/` 仅存 `ErrorBoundary.js`（React 18 规范要求保持类组件）；`client/containers/` 38 个与 `exts/` 7 个类组件全部迁移完毕（收官批含 Home 等最后 5 个 client 类组件）。
-- 累计消灭全部 UNSAFE_ 生命周期、`ReactDOM.findDOMNode`/字符串 ref 废弃 API 与 `@connect`/`@autobind` 装饰器；`core-decorators` 已无实际 import（仅剩 1 处注释 + `global.d.ts` 声明），待随依赖批移除。
+- 累计消灭全部 UNSAFE_ 生命周期、`ReactDOM.findDOMNode`/字符串 ref 废弃 API 与 `@connect`/`@autobind` 装饰器；`core-decorators` 依赖已移除（含 `global.d.ts` 声明与 ProjectList.js 注释，2026-09 依赖治理批）。
 - containers 测试基建（`test/helpers/containers.js`）与迁移范式（useSelector/useDispatch、useParams 兼容层、函数属性 propTypes）继续适用于后续组件改造。
 
 ### 3. TypeScript 健全化（持续进行；存量欠账已清零）
@@ -195,7 +195,7 @@
 
 ### 7. 其他遗留依赖与待审查项
 
-- 停更/弃用：`url@0.11.0`（官方弃用）、`webpack-node-externals@1.6.0`、`rewire@2.5.2`、`core-decorators@0.17.0`（已无实际 import，仅 1 处注释 + `global.d.ts` 声明，待随依赖批移除）、`mockjs 1.0.1-beta3`、`easy-json-schema 0.0.2-beta`、`mime@2`、`compare-versions@3`；`prop-types` 仍被 75 个文件使用（React 18 已非必需）。
+- 停更/弃用：`url@0.11.0`（官方弃用）、`webpack-node-externals@1.6.0`、`rewire@2.5.2`、`mockjs 1.0.1-beta3`、`easy-json-schema 0.0.2-beta`、`mime@2`、`compare-versions@3`；`prop-types` 仍被 75 个文件使用（React 18 已非必需）。
 - 7 处 `dangerouslySetInnerHTML`（markdown/HTML 备注渲染链路）建议做一次 XSS 专项审查。
 
 ### 建议优先级（供裁决）
@@ -247,6 +247,7 @@
 
 | antd5 视觉巡检批次 2a+3：六覆盖点修复 + hover 提级 + 计算样式快照收尾（commit 本次） | 批 1/2 层 B 实测 confirmed-override 8 条（F-1 border-radius / N-1 header 行高 / N-2 搜索框宽 / N-3N-4 表单行距 / N-5 删除图标 / N-6N-7 用例表头）+ M-1 hover 反输 | 六覆盖点全修（specificity 提升优先，N-5 为规则迁移特例）；M-1 hover/focus 提级 0,9,0（`:not([disabled])` 镜像，压过 antd hover 0,8,0——浏览器动态态实测纯白）；**批次 3 快照门禁入库**（antd5-fixpoint.test.js 6 用例：候选存在+声明值逐字+!important 标记+dev/prod 双口径 self-wins）；指纹 BASELINE 更新（含 N-5 迁移二次重建）；层 B confirmed 8→1（仅 N-2 待层 C 裁决） | **N-5 迁移特例（方法论产出）**：层 C 实测证伪层 B「self-wins」判定——`.dynamic-delete-button` 规则原在 ProjectList.scss（group chunk）而使用点全在 project chunk 覆盖域（环境配置/标签/接口编辑），规则从未生效。**引擎结构性盲区已三处登记**（findings §4/Cascade 头注/plan §0）：引擎不建模「chunk CSS 是否在该页面域加载」，跨 chunk 候选的 self-wins 判定可能是空真，须层 C 或加载关系核对后采信；同 chunk 判定可靠。文档收尾含评审两轮复审（一轮 FAIL 指出段落落位/引用悬空/措辞残留，二轮 PASS）。遗留层 C 项：四皮肤全覆盖抽查、N-2 裁决、2+1 条 ambiguous 复核。门禁（三方独立复跑 + UI 实测）：typecheck 0、lint 0/0、**npm test 827** 全绿冷库、audit:ci 通过 |
 | antd5 视觉巡检层 C 收尾：测试链保真修正 + N-2 删除 + N-6 修正（commit 本次） | 批次 2a+3 的层 B 判定基于两条失真的模型假设：① 测试挂载链缺 StyleProvider（jsdom 下 antd 按 `:where()` 计零，生产 `hashPriority="high"` 下 hash 类计 1）；② 静态/运行时注入序建模错误（cssinjs prepend 实际先于全部静态 CSS） | 层 C 浏览器走查（主 Agent 专属）：4 皮肤 × 5 页面矩阵 + dev 链路抽查；对全部修复位逐一实测 computed 值；测试链修正：`renderWithProviders` 补 `StyleProvider(hashPriority=high)`、引擎 `specProd` 改为 hash 计数、两测试共用 `prdRules.js` 装载器（initial → runtime → 异步 chunk 注入序） | 实测结论：F-1/N-1/N-3/N-4/N-5/N-7/F-2/M-1 全部自保（平局由静态源序后发获胜）；**N-6 实测不敌**（antd 0,3,2 > 批次 2a 写法 0,3,1）→ 补 `.ant-table-container` 提至 0,4,1；**N-2 删除死声明**（antd width:100% 稳定获胜且 2rem=200px 宽于搜索框 190/198px）；ambiguous 3 条复核无视觉差异。真实口径层 B confirmed 2→0；层 C prod **92/0** + dev **23/0**；门禁：typecheck 0、lint 0/0、**npm test 933** 全绿冷库、指纹 BASELINE 更新（index/project 哈希变化） |
+| dev 依赖治理批：4 项 high 清零 + core-decorators 移除（commit 本次） | audit 基线 high 4（brace-expansion ≤1.1.17 ReDoS、glob 10.2.0–10.4.5 CLI 注入、ini <1.3.6 原型污染、semver 5/6/7 ReDoS，全部 dev/构建链）；core-decorators@0.17.0 已无实际 import（仅 1 处注释 + global.d.ts 声明） | package.json overrides 按大版本锁定：brace-expansion@1→1.1.21、glob@10→10.5.0、ini@1→1.3.8、semver@5→5.7.2、semver@6→6.3.1、semver@7→7.8.5；移除 core-decorators 依赖 + global.d.ts 声明 + ProjectList.js 注释 | 验证：npm audit（官方 registry）high **4→0**、total 9→5（剩余 5 项 moderate：react-router/-dom 待 v7 升级、conventional-changelog-cli 停更链 tempfile/uuid）；基线下调 scripts/audit-baseline.json 至 0/0/5/0/5 且 audit:ci delta 全 0；门禁：typecheck 0、lint 0/0、**npm test 933** 全绿冷库、build-client 成功（产物重建）、npm ci 干跑通过 |
 
 | JSON Schema 编辑器自研立项（2026-09-22，docs/json-schema-editor-plan.md） | json-schema-editor-visual@1.0.23 内嵌 antd3 全量样式 + rc-editor-mention→draft-js/immutable/fbjs 停更链（audit 7 项 NO-FIX high 源头），且其双作用域样式机制（json-schema-css-scope-loader + antd.css import 顺序不变量）是 D-1 类构建事故的持续根源 | 四批次计划：①组件骨架（antd5 Table 树形 + 数据契约单测）②mock 下拉与新旧往返等价测试 ③消费方切换（schemaEditors.js 两单例）④清理（删依赖/loader/顺序不变量，audit 预期 18→11）| 契约核查完成：消费点仅 client 侧 schemaEditors.js 两单例（进/出均为 JSON Schema 字符串，mock 下拉复用 MOCK_SOURCE）；exts 无使用。验收=功能对等清单 + 新旧往返等价 + 四皮肤 UI 走查；状态：已立项未开工 |
 

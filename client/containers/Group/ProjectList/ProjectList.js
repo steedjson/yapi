@@ -14,8 +14,6 @@ import './ProjectList.scss';
  * 分组项目列表。原类组件经 Hooks 现代化迁移，渲染结构与行为保持一致：
  * - 旧 @connect 改为 useSelector/useDispatch（userInfo/tableLoading 历史遗留仅声明
  *   未消费，保留订阅避免行为差异；addProject/delProject 注入未被组件体调用，随迁移移除）；
- * - 旧 core-decorators @autobind 修饰的 protocolChange 与 visible/protocol state 同属
- *   已移除的旧添加项目弹窗，无任何 UI 触发点，随迁移移除；
  * - 旧 componentDidMount 改为挂载期 useEffect；
  * - 旧 UNSAFE_componentWillReceiveProps 改为每次渲染后运行的 useEffect + prev ref 比较
  *   （挂载期跳过，等价旧 cWRP 不随挂载触发的语义）；
