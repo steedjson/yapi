@@ -215,12 +215,41 @@ export default {
     // 保留性能默认值（printFileSize 产物报告）。
   },
   // Rsbuild 2.x 顶层 splitChunks（2.2.8 中 performance.chunkSplit 已 deprecated，该键为
-  // 其接替 API，阶段三起分包交还构建工具）：preset 'default' 即工具默认规则——
-  // rspack splitChunks 缺省语义（node_modules 自动 vendor 分包，minSize 20KB，
-  // maxInitial/AsyncRequests 上限内按共享度合并）+ chunks 'all'，路由级动态 import()
-  // 的异步 chunk 共享模块同样被抽取复用。策略选型依据见 docs/rsbuild-migration-plan.md
-  // 阶段三与交付报告：首屏请求数/传输体积对比不回退（实测数据见交付报告）。
-  splitChunks: { preset: 'default' },
+  // 其接替 API）。批次1（docs/first-paint-perf-plan.md）起从 preset 'default' 升级为
+  // 自定义分组：
+  // - 保留 rspack 默认规则为底座（minSize 20KB / maxInitialRequests 30 / defaultVendors
+  //   与 default 组）：初始 chunk 集合由 entrypoint 决定的语义不变；
+  // - antd5 生态（antd + @ant-design/* + rc-* + @rc-component/*）经 cacheGroup 'antd'
+  //   独立分包：它是首屏真必需（Login/Home/Header 同步引用）且为 vendor 最大头，独立
+  //   chunk 让应用代码迭代不再打穿其缓存；enforce+高 priority 保证不被 defaultVendors
+  //   合并回 '5'。enforce 组对初始/异步引用都生效，仅异步引用的 rc-*（如 rc-queue-anim）
+  //   也会归入 'antd'，待页面按需加载，不回灌首屏（defaultVendors 的 chunks:'all' 只
+  //   决定共享模块进哪个 vendor，初始清单仍由 entrypoint 决定）；
+  // - CodeMirror/markdown-it/recharts 等仅异步域使用的库不再需要显式分组：其唯一同步
+  //   引用链（插件 client.js / client/common.js）已异步化，defaultVendors 会把纯异步
+  //   共享模块抽为异步 vendor chunk（对应既有 r/t/u 形态），首屏 vendor 仅剩真初始依赖。
+  splitChunks: {
+    cacheGroups: {
+      // rc-scroll-anim/rc-tween-one/rc-queue-anim 仅被 Intro.js（barrel 链，只被异步
+      // 路由消费）引用：以更高 priority + chunks:'async' 抢在 antd 组之前，强制它们
+      // 落入异步专用 chunk，避免被 antd 组的 enforce+chunks:'all' 裹挟进初始 chunk。
+      'rc-anim': {
+        test: /[\\/]node_modules[\\/]rc-(scroll-anim|tween-one|queue-anim)[\\/]/,
+        name: 'rc-anim',
+        chunks: 'async',
+        priority: 20,
+        enforce: true
+      },
+      antd: {
+        test: /[\\/]node_modules[\\/](antd|@ant-design[\\/][^\\/]+|rc-[a-z-]+|@rc-component[\\/][^\\/]+)[\\/]/,
+        name: 'antd',
+        chunks: 'all',
+        priority: 10,
+        enforce: true,
+        reuseExistingChunk: true
+      }
+    }
+  },
   plugins: [
     // Rsbuild 2.x 将 Sass 支持拆分为独立插件（复用项目 devDependencies 的 sass 包）。
     pluginSass(),

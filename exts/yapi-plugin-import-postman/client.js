@@ -1,8 +1,23 @@
 // @ts-check
 import { message } from 'antd';
 import URL from 'url';
-const GenerateSchema = require('generate-schema/src/schemas/json.js');
-import { json_parse } from '../../common/utils.js';
+
+// 批次1（首屏性能优化，docs/first-paint-perf-plan.md）：common/utils.js 顶层挂有
+// ajv(+draft-04/i18n/fast-uri，合计 ~400KB 源码)，顶层 import 会把它锁进 index 入口
+// 首屏 vendor。本插件仅导入 run 流程消费 json_parse，改为运行时动态 import() 并做
+// 单例缓存（babel 生产分支 exclude proposal-dynamic-import，import() 保留为原生分包点；
+// common/utils.js 为 client/server 共享 CJS，此处以 default interop 取导出）。
+/** @type {Promise<any> | null} */
+let utilsPromise = null;
+/**
+ * @returns {Promise<any>} common/utils.js 导出（json_parse 等），单例缓存
+ */
+function getUtils() {
+  if (!utilsPromise) {
+    utilsPromise = import('../../common/utils.js').then(m => m.default || m);
+  }
+  return utilsPromise;
+}
 
 /**
  * Postman 数据导入插件（import_data 钩子实现）。
@@ -116,7 +131,13 @@ function postman(importDataModule) {
    * @this {any}
    * @param {any} res
    */
-  function run(res) {
+  /**
+   * 导入入口。utils/generate-schema 经动态 import 获取（见文件头注释），故 run
+   * async 化：import_data 钩子的 run 本就以 `await run(res)` 调用（异步契约不变）。
+   * @this {any}
+   * @param {any} res
+   */
+  async function run(res) {
     try {
       res = JSON.parse(res);
       let interData = res.requests;
@@ -139,7 +160,7 @@ function postman(importDataModule) {
 
       if (interData && interData.length) {
         for (let item in interData) {
-          let data = importPostman.bind(this)(interData[item]);
+          let data = await importPostman.bind(this)(interData[item]);
           interfaceData.apis.push(data);
         }
       }
@@ -155,7 +176,7 @@ function postman(importDataModule) {
    * @param {any} data
    * @param {any} [key]
    */
-  function importPostman(data, key) {
+  async function importPostman(data, key) {
     /** @type {Record<string, any>} */
     let reflect = {
       //数据字段映射关系
@@ -210,7 +231,7 @@ function postman(importDataModule) {
         } else if (item === 'req_body_other') {
           if (typeof data.headers === 'string' && data.headers.indexOf('application/json') > -1) {
             res.req_body_is_json_schema = true;
-            res[item] = transformJsonToSchema(data[reflect[item]]);
+            res[item] = await transformJsonToSchema(data[reflect[item]]);
           } else {
             res[item] = data[reflect[item]];
           }
@@ -244,7 +265,7 @@ function postman(importDataModule) {
           });
           res[item] = found && Array.isArray(found) && found.length > 0 ? found[0].name : null;
         } else if (item === 'res') {
-          let response = handleResponses(data['responses']);
+          let response = await handleResponses(data['responses']);
           if (response) {
             (res['res_body'] = response['res_body']),
               (res['res_body_type'] = response['res_body_type']);
@@ -263,7 +284,7 @@ function postman(importDataModule) {
   /**
    * @param {any} data
    */
-  const handleResponses = data => {
+  const handleResponses = async data => {
     if (data && data.length) {
       let res = data[0];
       /** @type {Record<string, any>} */
@@ -272,7 +293,7 @@ function postman(importDataModule) {
       // response['res_body'] = res.language === 'json' ? transformJsonToSchema(res.text): res.text;
       if (res.language === 'json') {
         response['res_body_is_json_schema'] = true;
-        response['res_body'] = transformJsonToSchema(res.text);
+        response['res_body'] = await transformJsonToSchema(res.text);
       } else {
         response['res_body'] = res.text;
       }
@@ -283,17 +304,23 @@ function postman(importDataModule) {
   };
 
   /**
+   * JSON -> JSON Schema 转换（generate-schema 与 common/utils 均运行时动态获取，
+   * 见文件头注释）。async 化后仅在导入 run 流程内 await，调用方（importPostman）已 async。
    * @param {any} json
    */
-  const transformJsonToSchema = json => {
+  async function transformJsonToSchema(json) {
+    const [{ default: GenerateSchema }, utils] = await Promise.all([
+      import('generate-schema/src/schemas/json.js'),
+      getUtils()
+    ]);
     json = json || {};
-    let jsonData = json_parse(json);
+    let jsonData = utils.json_parse(json);
 
     jsonData = GenerateSchema(jsonData);
 
     let schemaData = JSON.stringify(jsonData);
     return schemaData;
-  };
+  }
 
   if (!importDataModule || typeof importDataModule !== 'object') {
     console.error('obj参数必需是一个对象');

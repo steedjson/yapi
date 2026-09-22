@@ -1,9 +1,13 @@
 // @ts-check
 const dayjs = require('dayjs');
 const constants = require('./constants/variable');
-const Mock = require('mockjs');
 const json5 = require('json5');
-const MockExtra = require('common/mock-extra.js');
+// mockjs（2MB 源码树）与 mock-extra（顶层 require mockjs）不做顶层引用：
+// 本文件经 project reducer(htmlFilter) 处于 index 入口的首屏模块闭包，任何形态的
+// 同步 require（含函数体内 require——babel modules:commonjs 下仍被注册为同步依赖）
+// 都会把它们锁进首屏 vendor。消费点仅 getMockText（mock 模板预览，当前无调用方），
+// 改用原生动态 import()（babel 生产分支 exclude proposal-dynamic-import，保留为
+// 原生分包点），随异步域按需加载（docs/first-paint-perf-plan.md 批次1）。
 
 /** @type {Record<string, string>} */
 const Roles = {
@@ -314,14 +318,20 @@ exports.copyText = text => {
 
 /**
  * @param {string} mockTpl mock 模板（json5 文本）
- * @returns {string} 美化后的 mock 数据，失败返回空串
+ * @returns {Promise<string>} 美化后的 mock 数据，失败 resolve 空串
  */
 exports.getMockText = mockTpl => {
-  try {
-    return JSON.stringify(Mock.mock(MockExtra(json5.parse(mockTpl), {})), null, '  ');
-  } catch (err) {
-    return '';
-  }
+  // 动态 import()（见文件头注释）：mockjs/mock-extra 仅本函数消费，须以原生分包点
+  // 引用而非 require（babel commonjs 转译会把 require 登记为同步依赖拉进首屏 vendor）。
+  // 返回 Promise<string>；该导出当前无调用方，签名 async 化无存量语义破坏。
+  return Promise.all([
+    import('mockjs'),
+    import('common/mock-extra.js')
+  ])
+    .then(([{ default: Mock }, { default: MockExtra }]) =>
+      JSON.stringify(Mock.mock(MockExtra(json5.parse(mockTpl), {})), null, '  ')
+    )
+    .catch(() => '');
 };
 /**
  * 合并后新的对象属性与 Obj 一致，nextObj 有对应属性则取 nextObj 属性值，否则取 Obj 属性值

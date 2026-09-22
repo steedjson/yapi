@@ -153,6 +153,10 @@ declare module 'react' {
   export type ReactNode = any;
   export type ReactElement = any;
   export type CSSProperties = any;
+  // lazy/Suspense 供插件 client.js 的组件级异步分包使用（批次1 首屏性能优化）：
+  // 与 createAsyncComponent 同一异步形态，类型按本文件「最小子集 + any」策略声明。
+  export function lazy(factory: () => Promise<{ default: any }>): any;
+  export function Suspense(props: { fallback?: any; children?: any }): any;
   const React: any;
   export default React;
 }
@@ -387,6 +391,13 @@ declare module 'client/reducer/modules/user' {
 
 declare module 'client/reducer/modules/project' {
   export function handleSwaggerUrlData(url: any): any;
+}
+
+// client/components/Loading/Loading.js 供 exts 插件 client.js 的 Suspense fallback
+// 使用（批次1 组件级异步分包）；tsconfig 未配置 client/* 的 paths 映射，按最小子集声明。
+declare module 'client/components/Loading/Loading' {
+  function Loading(props: { visible?: boolean }): any;
+  export default Loading;
 }
 
 // node-schedule 未内置类型且无对应 @types 包；swagger-auto-sync 插件（P8b）以

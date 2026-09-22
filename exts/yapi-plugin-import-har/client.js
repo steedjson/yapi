@@ -1,22 +1,53 @@
 // @ts-check
 import { message } from 'antd';
 import URL from 'url';
-const GenerateSchema = require('generate-schema/src/schemas/json.js');
-import { json_parse, unbase64 } from '../../common/utils.js';
+
+// 批次1（首屏性能优化，docs/first-paint-perf-plan.md）：common/utils.js 顶层挂有
+// ajv(+draft-04/i18n/fast-uri，合计 ~400KB 源码)，顶层 import 会把它锁进 index 入口
+// 首屏 vendor。本插件仅导入 run 流程消费 json_parse/unbase64，改为运行时动态 import()
+// 并做单例缓存（babel 生产分支 exclude proposal-dynamic-import，import() 保留为原生
+// 分包点；common/utils.js 为 client/server 共享 CJS，此处以 default interop 取导出）。
+/** @type {Promise<any> | null} */
+let utilsPromise = null;
+/**
+ * @returns {Promise<any>} common/utils.js 导出（json_parse/unbase64 等），单例缓存
+ */
+function getUtils() {
+  if (!utilsPromise) {
+    utilsPromise = import('../../common/utils.js').then(m => m.default || m);
+  }
+  return utilsPromise;
+}
 
 /**
+ * unbase64 运行时获取（common/utils 动态加载后的调用包装）。
+ * @param {string} text
+ * @returns {Promise<string>}
+ */
+async function utilsUnbase64(text) {
+  const utils = await getUtils();
+  return utils.unbase64(text);
+}
+
+/**
+ * JSON -> JSON Schema 转换（generate-schema 与 common/utils 均运行时动态获取，
+ * 见文件头注释）。async 化后仅在导入 run 流程内 await，调用方（importHar）已 async。
  * @param {any} json
  */
-const transformJsonToSchema = json => {
+async function transformJsonToSchema(json) {
+  const [{ default: GenerateSchema }, utils] = await Promise.all([
+    import('generate-schema/src/schemas/json.js'),
+    getUtils()
+  ]);
   json = json || {};
-  let jsonData = json_parse(json);
+  let jsonData = utils.json_parse(json);
 
   jsonData = GenerateSchema(jsonData);
 
   let schemaData = JSON.stringify(jsonData);
 
   return schemaData;
-};
+}
 
 /**
  * HAR 数据导入插件（import_data 钩子实现）。
@@ -114,10 +145,12 @@ function postman(importDataModule) {
   }
 
   /**
+   * 导入入口。utils/generate-schema 经动态 import 获取（见文件头注释），故 run
+   * async 化：import_data 钩子的 run 本就以 `await run(res)` 调用（异步契约不变）。
    * @this {any}
    * @param {any} res
    */
-  function run(res) {
+  async function run(res) {
     try {
       res = JSON.parse(res);
       res = res.log.entries;
@@ -132,7 +165,7 @@ function postman(importDataModule) {
       res = checkInterRepeat.bind(this)(res);
       if (res && res.length) {
         for (let item in res) {
-          let data = importHar.bind(this)(res[item]);
+          let data = await importHar.bind(this)(res[item]);
           interfaceData.apis.push(data);
         }
       }
@@ -149,7 +182,7 @@ function postman(importDataModule) {
    * @param {any} data
    * @param {any} [key]
    */
-  function importHar(data, key) {
+  async function importHar(data, key) {
     /** @type {Record<string, any>} */
     let reflect = {
       //数据字段映射关系
@@ -211,7 +244,7 @@ function postman(importDataModule) {
         }
       } else if (item === 'req_body_other' && reqType === 'json' && data.request.postData) {
         res.req_body_is_json_schema = true;
-        res[item] = transformJsonToSchema(data.request.postData.text);
+        res[item] = await transformJsonToSchema(data.request.postData.text);
       } else if (item === 'req_headers') {
         res[item] = [
           {
@@ -239,9 +272,9 @@ function postman(importDataModule) {
         res.res_body_is_json_schema = true;
         if (data.response.content.encoding && data.response.content.encoding == 'base64') {
             //base64
-            res[item] = transformJsonToSchema(unbase64(data.response.content.text));
+            res[item] = await transformJsonToSchema(await utilsUnbase64(data.response.content.text));
         } else {
-            res[item] = transformJsonToSchema(data.response.content.text);
+            res[item] = await transformJsonToSchema(data.response.content.text);
         }
       } else {
         res[item] = data.request[reflect[item]];

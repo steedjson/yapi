@@ -25,23 +25,25 @@ const REPO_ROOT = path.resolve(__dirname, '..', '..');
 const PRD_DIR = path.join(REPO_ROOT, 'static', 'prd');
 
 // ---- 登记基线（与 static/prd 提交态一致；更新须按文件头说明走重扫流程）----
-// 批次 3（消费方切换）+ 批次 4（机制退役）后全量重建：schemaEditors.js 不再 require
-// json-schema-editor-visual 且 antd.css import 已删——旧编辑器 JS 链（antd3 组件 /
-// rc-editor-mention / moox）
-// 从依赖图消失——接口路由 chunk 由 i@…js(3.3MB) 缩为 d@…js(539KB)，chunk 序号重排：
-// 接口路由 i→d、vendor p→v；project/d 两 CSS 哈希随之更新，其余 CSS 内容不变。
-// scoped antd3（InterfaceEditForm.js 保留的 antd.css import，批次 4 才删）仍由
-// 接口路由 chunk（现名 d）承载。层 A/层 B 已按新产物重扫（候选/判定无漂移）。
+// 首屏性能优化批次1（docs/first-paint-perf-plan.md）全量重建：插件组件异步化
+// （statistics/wiki/adv-mock client.js 改 React.lazy，swagger 导入改运行时动态
+// import()，client/common.js 与 import-har/import-postman 的 common/utils 改动态
+// 获取）后 mockjs/ajv 系/CodeMirror/markdown-it/recharts 从首屏 vendor 消失；
+// splitChunks 新增 antd 独立初始 chunk 与 rc-anim 异步 chunk（仅 Intro 引用的
+// rc-scroll-anim/tween-one/queue-anim 强制异步），vendor 5 重排为 0。CSS 哈希变化：
+// index（内容随分包重排）、project（同）；group/user/follows/add-project 内容不变。
+// 初始 chunk 顺序变为 manifest -> antd -> 0 -> index.js。层 A/层 B 已按新产物重扫
+// （candidates 1194，confirmed-override 1 为登录页既有锚点，判定无漂移）。
 const BASELINE = {
   cssChunks: {
-    'index.js': 'index@39ef29962cd900dd.css',
+    'index.js': 'index@5f0ed3672c1fad56.css',
     group: 'group@426f689219580b35.css',
-    project: 'project@8ac0e409123e607c.css',
+    project: 'project@a301d24a566740de.css',
     user: 'user@57802eb279f54184.css',
     follows: 'follows@3f80bd4670cf7f38.css',
     'add-project': 'add-project@80e6a5a4d705c349.css'
   },
-  initialChunks: ['manifest', '5', 'index.js']
+  initialChunks: ['manifest', 'antd', '0', 'index.js']
   // 批次 4：json-schema-editor-visual 的 antd.css import 已删，scoped antd3 双作用域
   // 机制退役——scopedAntd3Carrier/scopeMarker 基线随之移除（产物实测 0 处标记）。
 };
