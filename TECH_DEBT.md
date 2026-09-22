@@ -127,39 +127,36 @@
 - `mockEditor.js` 模块级 wordList 多实例累积重复项 —— 忠实移植的既有瑕疵。
 - 历史接口无 `markdown` 字段时，编辑页备注以 HTML 原文形态呈现，重新保存后完成迁移（设计取舍）。
 - 动画库 `rc-queue-anim`/`rc-scroll-anim`/`rc-tween-one`（停更）—— 未列入本轮范围，建议随组件 Hooks 化顺带替换为 CSS/Framer Motion。
-- `json-schema-editor-visual@1.0.23`（内嵌 antd3 样式 + brace 传递依赖）—— 替换需自定义 JSON Schema 编辑器，工作量单独评估。
+- ~~`json-schema-editor-visual@1.0.23`（内嵌 antd3 样式 + brace 传递依赖）~~ → **已解决（自研编辑器四批次专项收官）**：依赖/loader/antd.css import 全删，audit 消失 9 项 high，见「一、第四阶段」JSON Schema 编辑器批次 1–4。
 - 登录路径 scryptSync 同步阻塞约几十毫秒；`verifyPassword` 尊重 storedHash 自述参数但受 Node maxmem 兜底 —— 观察即可。
 - old 兼容：`add`/`resetPassword` 生成 legacy 密码格式（首次登录自动升级）—— 如后续可改既有测试，可一并 scrypt 化。
 - 沙箱进程池边界收窄观察项：常驻 Worker 下恶意脚本可篡改注入的 assert/Random 模块对象（影响同 Worker 后续任务直至 1000 次轮换）；任务队列无背压上限；context 不可序列化时误判为崩溃换 Worker —— 均为低风险设计取舍，知悉即可。
 - ~~**NewsList 既有缺陷**~~ → **已修复（commit 本次）**：扩展属性收敛至 meta，遵循标准 FSA，dispatch 返回真实 Promise，loading 状态正常经历 [true, false] 复位，对应单测断言已更新。
-- **containers 迁移批次的跟踪项（来自 commit 4b810d53 评审）**：① 本批 5 个迁移文件中 4 个（GroupLog/Activity/NewsList/User）不在 tsconfig 白名单，不受 typecheck 覆盖（白名单策略现状，风险低）；② `test/helpers/containers.js` 的 `makeStore` 对非 FSA action 会重复记录 2 次（当前断言不受影响）；③ `flushEffects` 的 15ms 固定等待在当前用例下确定，但对接真实定时器桩时会脆弱；④ helper 暂不支持 `navigate` 跳转辅助与活 store 更新驱动断言。
-- **本机环境备注**：`config.json` 指向 27018，但用户的 `yapi-mongodb-8`（mongo:8.0 @27018）容器已停止（仅 `yapi-mongodb` mongo:4.4 @27017 在运行）——本地直跑 `npm test` 会有 5 个连库测试（dbReady×3、startupTasks×2）因 mongoose 选主 30s > AVA 超时而 pending；CI 自带 mongo service 不受影响。另：本地全量测试需要 DB（本批前端改动也如此）。
+- **containers 迁移批次的跟踪项（来自 commit 4b810d53 评审）**：① 本批 5 个迁移文件中 4 个（GroupLog/Activity/NewsList/User）原不在 tsconfig 白名单——**GroupLog/User 已随 P7b 纳入，Activity/NewsList 仍不在**（白名单策略现状，风险低）；② `test/helpers/containers.js` 的 `makeStore` 对非 FSA action 会重复记录 2 次（当前断言不受影响）；③ `flushEffects` 的 15ms 固定等待在当前用例下确定，但对接真实定时器桩时会脆弱；④ helper 暂不支持 `navigate` 跳转辅助与活 store 更新驱动断言。
+- **本机环境备注**：`config.json` 指向 27018（mongo:8.0 容器，2026-09-22 实测运行中）；本地全量测试需要 DB——若容器未启动，5 个连库测试（dbReady×3、startupTasks×2）会因 mongoose 选主 30s > AVA 超时而 pending；CI 自带 mongo service 不受影响。
 - ~~`npm test` 偶发 unhandled rejection（teardown 与在途 DB 操作竞态）~~ → **已根治（commit 0d3944c1）**：`connect()` 就绪语义现覆盖全部启动期 DB 工作（核心索引 + 插件索引 + 计数器索引与初始化，串行），冷库 17 次启动零复现。**残余观察项（不阻塞，多进程形态才可命中）**：① 多 worker 共享冷库时，计数器初始化竞争败者进程的插件闭包 `ready` 保持 false，其后续对该模型的 save 会进入 5ms 重试循环（旧实现同位置同样如此，且旧实现还伴随数据损坏 + 索引坏死）；② 脏库若已被旧缺陷写入重复计数器文档，唯一索引任务每次启动会失败日志一次（不阻塞、不加重损坏），需一次性清洗脚本；③ `drainStartupTasks` 无单任务超时保护（依赖驱动 socket 超时兜底）；④ `dbReady.test.js` 的"索引缺失"断言在热库上效力弱化（CI 冷库形态不受影响）。
 
-## 四、新发现技术债（2026-09-18 全仓扫描，待评估排期）
+## 四、新发现技术债（2026-09-18 全仓扫描；2026-09 各批已消化大部分，逐条标注状态）
 
 > 来源：对依赖安全、CI、目录结构、同步 I/O 的补充扫描；均未纳入此前各批次范围。优先级建议见本节末。
 
-### 1. 依赖安全（npm audit；首批已修复，见「一、第四阶段」）
+### 1. 依赖安全（npm audit）→ **已降至 5 项 moderate（2026-09-22 依赖治理批）**
 
 - **扫描方法**：`npm audit --registry=https://registry.npmjs.org`（已固化为 `npm run audit`）。默认 npmmirror 源未实现 audit 接口（`NOT_IMPLEMENTED`），此前安全扫描实际处于盲区。
-- **进展**：非 major 依赖安全治理持续推进，漏洞从 45 → 35 → **34 项**（critical 9→3→**2**、high 26→24、moderate 8→8、low 2→0）；通过升级 `handlebars@4.7.9` 消除了 1 项 critical。
-- **仍保留的 2 个 critical（均需后续批次）**：
-  - `jsrsasign@8.0.12`：根直接依赖，advisory 覆盖 `<=11.1.0`、**无可用修复版本**，且同时是沙箱公开 API（`utils.jsrsasign`）——需专项评估替换方案；
-  - `loader-utils`：`style-loader@0.18.2` 嵌套 1.1.0（critical）+ babel-loader 下 2.0.4（已是修复版）；修复需 style-loader major，随构建迁移处理。
-  - ~~`handlebars@4.7.7`~~ → **已修复（4.7.9，commit 本次）**。
-- **其余待处理**：`jsonpath@1.1.1` 自带嵌套 `underscore@1.12.1`（high，来自 `json-schema-faker 0.5.0-rc16`，需升级该包才能消除）；`markdown-it@8`→15、`jsondiffpatch@0.3.11`→0.7.6、`koa-websocket@4`→7、`react-router@6.30.6`（moderate 开放重定向）、`style-loader` 构建链等 major 项，随对应模块改造排期。
-- **新增观察项**：`@scarf/scarf@1.4.0` 随 swagger-client 3.38.2 进入依赖树（默认在 install 时上报安装遥测，可用 `SCARF_ANALYTICS=false` 关闭）——建议在 CI/构建环境评估禁用。
-- **门禁建议（评审提出）**：当前 35 项未清零，`npm run audit` 有漏洞时退出码为 1；接入 CI 前应改为**基线差分门禁**（仅对新增漏洞失败，如 audit-ci allowlist 或入库基线文件）或仅作报告用途，避免误报"构建损坏"。
-- **无修复路径 / 需结构性替换**：`json-schema-editor-visual@1.0.23` 内嵌 antd3→rc-editor-mention→draft-js/immutable/fbjs（与遗留观察项「需自研 JSON Schema 编辑器」同一项）。
-- **dev/build 链**：`style-loader@0.18.2`→loader-utils@1.1.0→json5@0.5.1（critical/high，随构建迁移处理）；conventional-changelog-cli→handlebars（见上）；ava→@vercel/nft→node-fetch（dev-only）。
-- 推进路径：非 major 批已做完；剩余项按「可低成本修复（handlebars）→ 需升级依赖树（jsonpath/json-schema-faker）→ 需 major 改造（markdown-it/jsondiffpatch/koa-websocket/style-loader/jsrsasign）」三档排期。
+- **进展**：45 → 35 → 34 → 23 → 18 → 9 → **5 项**（critical 0、high 0、moderate 5、low 0）。
+- **已消除的关键项（历史口径留档）**：`handlebars@4.7.9`（critical）；`jsrsasign 8→11.1.5`（critical，沙箱仅透传零 API 调用）；`loader-utils`（随 Rsbuild 阶段四删 style-loader 链清零）；`markdown-it 8→15`/`anchor 4→10`/`toc`、`koa-websocket 4→7`、`jsondiffpatch 0.3.11→0.7.6`、`json-schema-faker rc16→0.5.9`；`json-schema-editor-visual` 链（自研编辑器批次 4，消失 9 项 high）；brace-expansion/glob/ini/semver 4 项 high（依赖治理批 overrides）。
+- **剩余 5 项 moderate**：
+  - `react-router`/`react-router-dom@6.30.6`：开放重定向（advisory）——v7 升级不做（32 文件依赖 v6 API 面，单独立项），基线受控；
+  - `conventional-changelog-cli@2.1.1` 停更链（`tempfile`→`uuid`；其 `semver` 已由 overrides 修复）：dev 工具，升级需 major（5.0.0）。
+- **观察项**：`@scarf/scarf@1.4.0` 随 swagger-client 进入依赖树（install 时上报遥测，可用 `SCARF_ANALYTICS=false` 关闭）——建议在 CI/构建环境禁用；`json-schema-faker 0.6` 升级被 ESM-only 阻塞（前置：服务端 ESM 化或全链路动态 import，与 jsondiffpatch 0.7 require(esm) 同类）。
+- **门禁（已完成）**：`npm run audit:ci` 基线差分（`scripts/audit-check.js`，仅对新增漏洞失败，退出码 0/1/2/3 有离线回归测试）；基线 `scripts/audit-baseline.json` 现为 0/0/5/0/5。
+- 推进路径：剩余 moderate 按「react-router v7 专项（含 API 迁移）」与「conventional-changelog-cli major 升级」两项独立评估；新漏洞由 audit:ci 门禁拦截。
 
 ### 2. 无 CI（门禁仅本地生效）→ 已完成（commit ff37aebe）
 
 - 原现状：`.github/` 仅 ISSUE_TEMPLATE.md，无任何 workflow；`lint`/`typecheck`/`test`/`build-client` 四道门禁只挂在本地 pre-commit 与人工执行，push/PR 无强制。
 - 已落地：`.github/workflows/ci.yml`（push + pull_request，单 job，ubuntu-latest，30min 超时，mongo:7 service 含 mongosh 健康检查）；CI 中现场写 config.json（该文件被 gitignore，测试依赖它连库）。
-- audit 门禁：按评审建议改为**基线差分**（`npm run audit:ci` → `scripts/audit-check.js`，仅对新增漏洞失败，退出码 0/1/2/3 有离线回归测试）；基线 `scripts/audit-baseline.json` 记录当前 35 项。
+- audit 门禁：按评审建议改为**基线差分**（`npm run audit:ci` → `scripts/audit-check.js`，仅对新增漏洞失败，退出码 0/1/2/3 有离线回归测试）；基线 `scripts/audit-baseline.json` 现为 0/0/5/0/5（当时记录 35 项，后随各批主动下调）。
 - **后续跟踪项（非阻塞，来自评审）**：
   1. ~~server 测试 teardown flake 会让 CI 的 Test 步骤偶发变红~~ → **已根治（commit 0d3944c1）**，残余观察项见「三、遗留观察项」；
   2. ~~CI config 的 `mail:{enable:false}` 形态导致 Typecheck 必红~~ → **已修（commit 253d29ab）**；
@@ -171,20 +168,20 @@
   8. ~~真实 CI runner 尚未实跑~~ → **已实跑且全绿（run 35341995159）**；
   9. **CI 平台告警（新增，来自首次真跑 annotations）**：① `actions/checkout@v4` / `actions/setup-node@v4` 面向 Node 20 已被 GitHub 弃用（runner 强制用 Node 24 运行），后续可升到新版本 action；② `ubuntu-latest` 将于 2026-10-19 迁移到 Ubuntu 26，届时需复核构建与 mongo service 行为。
 
-### 3. 结构债（god files）
+### 3. 结构债（god files）→ **已完成**
 
-- `server/controllers/interface.js` 1533 行、`client/containers/Project/Interface/InterfaceList/InterfaceEditForm.js` 1458、`server/controllers/project.js` 1272、`client/containers/Project/Interface/InterfaceCol/InterfaceColContent.js` 1224、`server/controllers/user.js` 1143、`client/components/Postman/Postman.js` 1082、`server/controllers/interfaceCol.js` 1027。
-- 推进路径：随对应模块的功能改造/Hooks 化渐进拆分（如 controller 按导入导出、用例、CRUD 拆 service），不做大爆炸重构。
+- 原 7 个 god files（server 4 + client 3）全部拆分：server 侧随功能批次拆 service（见「一、第四阶段」）；client 侧三批次 render 子组件化收官——InterfaceColContent 1304→824、Postman 1222→748、InterfaceEditForm 1121→657，全部脱离 God file 区间。
+- 剩余为容器本质（hooks/事件/Form 装配），进一步拆分须以容器级快照门禁为前置（InterfaceEditForm 永久门禁仍在册，见「三、遗留观察项」）。
 
-### 4. 测试盲区：containers 零覆盖
+### 4. 测试盲区：containers 零覆盖 → **已完成**
 
-- 现状：66 个测试文件中 **0 个覆盖 `client/containers/`**，而剩余 44 个类组件中的 39 个与 1183 处类型错误正集中于此。
-- 推进路径：类组件迁移时同步补首批 containers 测试（沿用 jsdom + @testing-library/react 基建）。
+- 原状：66 个测试文件中 0 个覆盖 `client/containers/`。现 containers 测试已成体系（容器级 DOM 快照门禁 + 组件用例，见「一、第四阶段」render 子组件化批次 1–3 与 Hooks 迁移各批）。
+- 剩余覆盖缺口（见「三、遗留观察项」）：Project id 变化重拉、ProjectList/MemberList 切组重拉、3 个弹窗契约（AutoTestModal 优先）。
 
-### 5. exts/ 插件完全未现代化
+### 5. exts/ 插件完全未现代化 → **已完成**
 
-- 现状：11 个插件 63 个 JS 文件，0 个 `@ts-check`、7 个类组件、16 个文件直接引 antd；既不在类型门禁也不在 Hooks 迁移范围。
-- 推进路径：单独批次评估（插件可能被外部用户以源码/构建方式引用，需先确认兼容边界）。
+- 原状：11 个插件 63 个 JS 文件，0 个 `@ts-check`、7 个类组件。现已类型化（49/63 文件 `@ts-check`，其余为插件入口清单）且类组件清零（7 个全部 Hooks 化，见「一、第四阶段」exts 批）。
+- 剩余：14 个插件入口（`index.js`/`defaultTheme.js` 清单）未纳入类型门禁（见「二、3」推进路径）。
 
 ### 6. 请求路径同步 I/O（部分已优化，见第四阶段）
 
@@ -195,25 +192,25 @@
 
 ### 7. 其他遗留依赖与待审查项
 
-- 停更/弃用：`url@0.11.0`（官方弃用）、`webpack-node-externals@1.6.0`、`rewire@2.5.2`、`mockjs 1.0.1-beta3`、`easy-json-schema 0.0.2-beta`、`mime@2`、`compare-versions@3`；`prop-types` 仍被 75 个文件使用（React 18 已非必需）。
-- 7 处 `dangerouslySetInnerHTML`（markdown/HTML 备注渲染链路）建议做一次 XSS 专项审查。
+- 停更/弃用：`url@0.11.0`（官方弃用）、`rewire@2.5.2`、`mockjs 1.0.1-beta3`、`easy-json-schema 0.0.2-beta`、`compare-versions@3`、`rc-queue-anim`/`rc-scroll-anim`/`rc-tween-one`（动画三件套）、`generate-schema`（已显性化）；`prop-types` 仍被 75 个文件使用（React 18 已非必需）。（`webpack-node-externals`、`mime`、`style-loader` 已随 Rsbuild 阶段四移除。）
+- ~~7 处 `dangerouslySetInnerHTML` 建议做一次 XSS 专项审查~~ → **已由 P9a 专项覆盖**：5 处复核均接 DOMPurify、reportHtml 全转义、Postman iframe 加 sandbox；豁免面遗留（邮件 HTML 注入、下载件内容注入）另册登记。
 
 ### 建议优先级（供裁决）
 
 1. ~~非 major 依赖安全批（swagger-client / qs / sha.js / underscore / @babel/core）+ audit 纳入门禁~~ → **已完成（commit 84cc30a5）**；audit 门禁接入方式待定（见第 1 节门禁建议）；
 2. ~~最小 CI 四步门禁~~ → **已完成（commit ff37aebe）**，含 audit 基线差分门禁；后续跟踪项见第 2 节；
-3. 类组件迁移优先 containers 并同步补 containers 测试；
-4. 同步 I/O 收口与 god file 拆分随改造进行；
-5. major 升级（markdown-it / jsondiffpatch / koa-websocket / react-router / antd6 / react19）单独排期。
+3. ~~类组件迁移优先 containers 并同步补 containers 测试~~ → **已完成**（client/exts 类组件清零，containers 测试成体系）；
+4. ~~同步 I/O 收口与 god file 拆分随改造进行~~ → **已完成**（同步 I/O 仅剩 interface.js:580 边缘读取；god file 全部拆分）；
+5. major 升级：markdown-it/jsondiffpatch/koa-websocket 已完成；**剩余 react-router v7、antd6、react19 单独排期**。
 
 ## 五、验证基线
 
-- Node：`.nvmrc` 24.21.0（engines `>=18 <25`）。
-- 门禁：`npm run lint`（覆盖全仓含 test/，0 error 0 warning，pre-commit 卡点）、`npm test`（**579**）、`npm run typecheck`（0 错）、`npm run build-client`（0 error）、`npm run audit`（官方 registry 安全扫描，当前 34 项）、`npm run audit:ci`（基线差分门禁，仅对新增漏洞失败）。
+- Node：`.nvmrc` 24.21.0（engines `>=20.11`，npm `>=8`）。
+- 门禁：`npm run lint`（覆盖全仓含 test/，0 error 0 warning，pre-commit 卡点）、`npm test`（**933**）、`npm run typecheck`（0 错）、`npm run build-client`（0 error）、`npm run audit`（官方 registry 安全扫描，当前 5 项 moderate）、`npm run audit:ci`（基线差分门禁 0/0/5/0/5，仅对新增漏洞失败）。
 - CI：`.github/workflows/ci.yml`（push/PR 触发；mongo:7 service + 上述门禁全跑）。**首次真跑全绿：run 35341995159（3m44s）**，可用 `gh run list --repo steedjson/yapi` 查看（注意本仓库有两个 remote，`gh` 需显式 `--repo steedjson/yapi`，否则会解析到 upstream）。本地等价验证方式：`docker run -d --rm -p <空闲端口>:27017 mongo:7` + 按 workflow heredoc 写 config.json（改端口）+ `npm test`。
 - **测试验证必须用冷库**（每轮前 drop `yapi_test`）：温库会掩盖启动期 DB 工作的时序问题（冷库 teardown flake 曾在温库下"通过"、在冷库必现）。
 - **临时替换 config.json 的纪律**：先 `cp config.json /tmp/<name>.bak` 并记录 sha256（原始值 `6dc9b4c27137702233d03a4d1cdb619a622dd4180ab4044b16316114ed4864a9`），结束前恢复并校验；用户容器 27017（mongo:4.4）/27018（mongo:8.0）禁止触碰。
-- 浏览器冒烟（本轮）：注册/登录（scrypt + legacy 自动升级）、接口编辑页编辑器、用例表格拖拽持久化、Markdown 双写、Wiki 编辑器、面包屑、路由分包按需加载，全部通过。
+- 浏览器冒烟（历史轮次）：注册/登录（scrypt + legacy 自动升级）、接口编辑页编辑器、用例表格拖拽持久化、Markdown 双写、Wiki 编辑器、面包屑、路由分包按需加载，全部通过。**最近一轮（antd5 层 C）：4 皮肤 × 5 页面矩阵 92/0 + dev 抽查 23/0（commit a0fd2e41）。**
 
 | 类组件 Hooks 化收官（commit 本次） | client/ 最后 5 个类组件：Home 409、ProjectList 233（全仓最后 1 处 @autobind）、Project 197、LoginWrap 52、Application 214（全仓最后 1 处 @connect） | 5 个全部迁移为函数组件 + Hooks（新增 4 测试文件 12 用例）；**client/ 全仓类组件清零**（仅 ErrorBoundary 按 React 18 规范保留），@connect/@autobind/UNSAFE_ 装饰器与废弃生命周期全仓归零 | 独立验证 13/13 场景渲染逐字节等价（Application 全外壳含真实 lazy chunk 3 场景）；checkLoginState cDM→useEffect 时序逐帧推演成立（首帧全 LOADING、route(0) 提前 return 无旧值消费者）；ProjectList 页码怪癖实证保留；5 处死代码 HEAD 零调用点核实。**主 Agent 浏览器 UI 验证（UI_VERIFIED，dev:4000 真实环境）**：游客/登录态首页、分组页（585 接口真实项目）、项目子导航、接口列表分页、接口详情 View、退出→登录→注册→自动登录→重登全链路正常。已知时序面：隔离挂载下 cWM→useEffect 请求顺序可观察差异（最终渲染等价、无数据竞争，声明内语义）。测试缺口备忘：Project id 变化重拉与 ProjectList 切组重拉两个分支待补路由内导航用例。门禁（三方独立复跑 + UI 实测）：lint 0/0、typecheck 0 错、**npm test 689** 全绿冷库 |
 
