@@ -132,8 +132,9 @@ function runNpmAudit() {
   for (const severity of SEVERITIES) {
     current[severity] = Number(metadata[severity]) || 0;
   }
-  current.total = Number(metadata.total);
+  current.total = metadata.total == null ? NaN : Number(metadata.total);
   if (!Number.isInteger(current.total)) {
+    // total 缺失/null 时按 severity 求和回退（Number(null) === 0，不能直接 Number 后判整数）
     current.total = SEVERITIES.reduce((sum, severity) => sum + current[severity], 0);
   }
   return { audit, current };

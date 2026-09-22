@@ -162,11 +162,11 @@
   2. ~~CI config 的 `mail:{enable:false}` 形态导致 Typecheck 必红~~ → **已修（commit 253d29ab）**；
   3. ~~`npm run build-client` 的 CI 首次真跑未验证~~ → **已验证**：run 35341995159 的 Build client 步骤通过（35 warnings / 0 error）；
   4. ~~CI 拉包走 npmmirror 的 runner 侧可达性未验证~~ → **已验证**：run 35341995159 的 `npm ci` 通过（npmmirror 在 GitHub runner 可达）；如后续出现不稳定再改 `npm ci --registry=https://registry.npmjs.org --replace-registry-host=always`；
-  5. `scripts/` 未纳入 `npm run lint` 范围（新脚本目前只被手工 lint）；
-  6. `audit-check.js:135` 在 `metadata.total` 为 null 时按 0 处理（severity 仍各自比对，不漏报新增）；
-  7. 官方 action 目前用主版本 tag（`@v4`），如需供应链加固可改 SHA 固定；
+  5. ~~`scripts/` 未纳入 `npm run lint` 范围~~ → **已纳入（CI 平台批：lint 脚本追加 scripts/，0 error）**；
+  6. ~~`audit-check.js:135` 在 `metadata.total` 为 null 时按 0 处理~~ → **已修（CI 平台批：null 时按 severity 求和回退，新增回归用例）**；
+  7. 官方 action 已升 `@v7`（checkout/setup-node）；如需供应链加固可改 SHA 固定（低优先开放项）；
   8. ~~真实 CI runner 尚未实跑~~ → **已实跑且全绿（run 35341995159）**；
-  9. **CI 平台告警（新增，来自首次真跑 annotations）**：① `actions/checkout@v4` / `actions/setup-node@v4` 面向 Node 20 已被 GitHub 弃用（runner 强制用 Node 24 运行），后续可升到新版本 action；② `ubuntu-latest` 将于 2026-10-19 迁移到 Ubuntu 26，届时需复核构建与 mongo service 行为。
+  9. ~~**CI 平台告警（新增，来自首次真跑 annotations）**：① `actions/checkout@v4` / `actions/setup-node@v4` 面向 Node 20 已被 GitHub 弃用（runner 强制用 Node 24 运行），后续可升到新版本 action；② `ubuntu-latest` 将于 2026-10-19 迁移到 Ubuntu 26，届时需复核构建与 mongo service 行为。~~ → **已处置（CI 平台批）**：① checkout/setup-node 升至 `@v7`；② `runs-on` 显式钉版 `ubuntu-24.04`，规避被动迁移，届时应先验证构建与 mongo service 再升级。
 
 ### 3. 结构债（god files）→ **已完成**
 
@@ -264,3 +264,4 @@
 | 首屏优化批次 3：antd5 引入面实测与收缩（commit 90f4b8d0，**结论：不立项**） | 批 1/2 后剩余理论优化空间为 antd chunk 内 svg/icons 体积 | 产物特征统计（antd@*.js 的 svg path/包名频次）+ 引入面 grep 全量核查 | **不立项（无引入浪费）**：v4IconMap 具名导入仅 54 个；chunk 内 1325 个 svg path（~556KB 源码 / gz ~100KB）为「54 + antd 组件内部 ~150 个」的合理构成；45 处 antd import 全部具名、无 barrel 全量引用；rc-* 49 种均为组件本体依赖（tree-shaking 生效）；唯一理论空间 v4IconMap 按需化 gz 收益 <100KB，成本收益比不成立。详见 [docs/first-paint-perf-plan.md](docs/first-paint-perf-plan.md) §3 |
 | 缺陷打捞批：可达缺陷修复 + 回归测试（commit 本次） | 台账在册缺陷中「可达且有明确正确行为」的一组：① patchState(fn) 空操作致集合通用配置永不合并（弹窗恒显默认值，点确定会用默认值覆盖服务端配置）；② 脚本开关切换丢失 checkScript.content；③ antd5 升级批把 MockCol→CaseDesModal 外部 prop 误改 open=（组件读 visible，弹窗永不显示）；④ InterfaceEditForm 缺 method 时 initState/渲染多处 HTTP_METHOD[...].request_body 崩溃（含 formDefaults 小写兜底键不存在 + 默认 method 'get' 与常量表大写键不一致） | patchState 支持函数式更新（对象片段语义不变）；CommonSettingModal 开关展开全片段 + checkScript/checkResponseField 结构缺失兜底；MockCol 回改 visible=；formDefaults 方法名归一化 + 默认 'GET' + 组件侧守卫；清理 InterfaceColContent 遗留 console.log | 新增 4 测试（容器级 colData 合并回显、开关保 content、结构缺失兜底、缺 method 渲染、MockCol 弹窗打开）；门禁：lint 0/0、typecheck 0、**npm test 937** 全绿冷库、build-client 成功（adv-mock/project 产物重建）。仍在册（需产品决策/低价值）：拖拽 index 竞态、CaseScriptModal 不可达、taskId 时序、Postman aceEditorRef、wiki endWebSocket 静默吞、statistics 拼写、MockCol saveFormRef |
 | 测试缺口批：路由重拉/分组切换/弹窗契约/导入异常/编辑器交互（commit 本次） | 台账在册测试缺口：HandleImportData 3 处 axios 异常 + dataSync 分支 + BasePath 分支；Project id 变化重拉与 ProjectList/MemberList 切组重拉（缺路由内导航与活 store 驱动）；AutoTestModal 契约（3 弹窗优先项）；mockEditor wordList/F9/fullScreen | 测试基建：renderWithProviders 新增 `utils.navigate(to)`（NavigationCapture 捕获 useNavigate）与 `opts.reducer`（活 store 更新驱动），makeStore 支持自定义 reducer；新增 16 用例：HandleImportData ×5、AutoTestModal 契约 ×5、mockEditor F9/wordList ×3、Project id 变化 ×1、ProjectList 切组 ×1、MemberList 切组 ×1 | 门禁：lint 0/0、typecheck 0、**npm test 953** 全绿冷库；无生产代码改动（纯测试/基建）。仍在册：wiki Editor value prop 同步（需浏览器验证后决定）、CaseReportModal/CaseScriptModal 契约（后者入口不可达） |
+| CI 平台批：actions 升级 + Ubuntu 钉版 + lint/审计脚本收口（commit 本次） | CI 首次真跑 annotations：actions @v4 面向 Node 20 弃用、ubuntu-latest 将于 2026-10-19 迁移 Ubuntu 26；scripts/ 未纳入 lint；audit-check 的 metadata.total 为 null 时被 Number(null)=0 误判 | checkout/setup-node 升 @v7；runs-on 显式钉 ubuntu-24.04（迁移延后单独验证）；lint 追加 scripts/（0 error）；audit-check null 回退按 severity 求和 + 回归用例 | 门禁：npm run lint 0/0（含 scripts/）、audit-check 8 用例全过、audit:ci delta 全 0、工作流 YAML 解析校验通过。未做：action SHA 固定（低优先开放项） |

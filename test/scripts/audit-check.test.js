@@ -100,3 +100,24 @@ test.serial('计数不高于基线 → 退出码 0', t => {
   t.is(res.status, 0);
   t.true(res.stdout.includes('通过'));
 });
+
+test.serial('metadata.total 缺失 → total 按 severity 求和回退（不误判为 0）', t => {
+  const auditJson = JSON.stringify({
+    metadata: { vulnerabilities: { critical: 0, high: 0, moderate: 1, low: 0 } },
+    vulnerabilities: {
+      foo: {
+        name: 'foo',
+        severity: 'moderate',
+        via: [{ title: '测试漏洞' }],
+        effects: [],
+        range: '*',
+        nodes: []
+      }
+    }
+  });
+  const env = makeNpmShim(auditJson);
+  const file = writeBaseline('{"critical":0,"high":0,"moderate":0,"low":0,"total":0}');
+  const res = runScript(['--baseline', file], env);
+  t.is(res.status, 1, 'moderate 高于基线应失败');
+  t.regex(res.stdout, /total\s+0\s+1\s+1/, 'current total 应为 severity 求和（1）而非 Number(null)=0');
+});
