@@ -68,6 +68,7 @@ test.serial.afterEach.always(() => {
   axios.get = originalAxiosGet;
   axios.post = originalAxiosPost;
   resetUserProjectStores();
+  resetInterfaceStore();
   useGroupStore.setState({
     groupList: [],
     currGroup: { group_name: '', group_desc: '', custom_field1: { name: '', enable: false } },
@@ -97,48 +98,52 @@ const {
   seedProjectStore,
   resetUserProjectStores
 } = require('../../helpers/userProjectStores');
+// interface 切片已迁 Zustand（批次5）：改经 interfaceStore 播种
+const {
+  seedInterfaceStore,
+  resetInterfaceStore
+} = require('../../helpers/interfaceStores');
 
-const LIST_SEED = {
-  inter: {
-    curdata: {},
-    list: MENU_TREE,
-    editStatus: false,
-    totalTableList: [
-      {
-        _id: 100,
-        title: '接口一',
-        path: '/a',
-        method: 'GET',
-        project_id: 12,
-        catid: 5,
-        status: 'done',
-        tag: ['核心']
-      },
-      {
-        _id: 101,
-        title: '接口二',
-        path: '/b',
-        method: 'POST',
-        project_id: 12,
-        catid: 5,
-        status: 'undone',
-        tag: []
-      }
-    ],
-    totalCount: 2,
-    catTableList: [
-      {
-        _id: 100,
-        title: '接口一',
-        path: '/a',
-        method: 'GET',
-        project_id: 12,
-        status: 'done',
-        tag: ['核心']
-      }
-    ],
-    count: 1
-  },
+// interface 切片已迁 Zustand（批次5）：原 redux 种子改为渲染前播种 interfaceStore
+const LIST_INTER_SEED = {
+  curdata: {},
+  list: MENU_TREE,
+  editStatus: false,
+  totalTableList: [
+    {
+      _id: 100,
+      title: '接口一',
+      path: '/a',
+      method: 'GET',
+      project_id: 12,
+      catid: 5,
+      status: 'done',
+      tag: ['核心']
+    },
+    {
+      _id: 101,
+      title: '接口二',
+      path: '/b',
+      method: 'POST',
+      project_id: 12,
+      catid: 5,
+      status: 'undone',
+      tag: []
+    }
+  ],
+  totalCount: 2,
+  catTableList: [
+    {
+      _id: 100,
+      title: '接口一',
+      path: '/a',
+      method: 'GET',
+      project_id: 12,
+      status: 'done',
+      tag: ['核心']
+    }
+  ],
+  count: 1
 };
 
 const CURDATA = {
@@ -167,9 +172,7 @@ const CURDATA = {
   custom_field_value: '自定义'
 };
 
-const VIEW_SEED = {
-  inter: { curdata: CURDATA, list: MENU_TREE, editStatus: false }
-};
+const VIEW_INTER_SEED = { curdata: CURDATA, list: MENU_TREE, editStatus: false };
 
 // 渲染前播种 project/user store（与旧 redux 种子等价）
 function seedUserProjectStores() {
@@ -197,24 +200,37 @@ function seedGroupStore() {
 
 test.serial('InterfaceList 挂载拉取全部接口列表并渲染表格', async t => {
   const getCalls = [];
+  // interface 切片已迁真实 store（批次5）：stub 响应会被真实写入，需返回渲染所需行数据
   axios.get = async url => {
     getCalls.push(url);
-    return { data: { errcode: 0, data: { count: 2, list: [] } } };
+    return {
+      data: {
+        errcode: 0,
+        data: {
+          count: 2,
+          list: [
+            { _id: 100, title: '接口一', path: '/a', method: 'GET', project_id: 12, catid: 5, status: 'done', tag: ['核心'] },
+            { _id: 101, title: '接口二', path: '/b', method: 'POST', project_id: 12, catid: 5, status: 'undone', tag: [] }
+          ]
+        }
+      }
+    };
   };
 
   seedUserProjectStores();
+  seedInterfaceStore(LIST_INTER_SEED);
   const utils = renderWithProviders(React.createElement(InterfaceList), {
-    seedState: LIST_SEED,
     routePath: '/project/:id/interface/api',
     initialPath: '/project/12/interface/api'
   });
   await flushEffects();
 
-  // 挂载时按路由（无 actionId）拉取全量接口列表
-  const fetchListAction = utils.dispatched.find(
-    action => action.type === 'yapi/interface/FETCH_INTERFACE_LIST'
+  // 挂载时按路由（无 actionId）拉取全量接口列表；interface 切片已迁 store（批次5），
+  // 不再派发 yapi/interface/* redux action（反向断言防回迁）
+  t.true(
+    utils.dispatched.every(action => String(action.type).indexOf('yapi/interface/') !== 0),
+    '不应再派发 yapi/interface/* redux action'
   );
-  t.truthy(fetchListAction, '应派发 FETCH_INTERFACE_LIST action');
   t.true(getCalls.some(url => url.indexOf('/api/interface/list') === 0), '应请求接口列表接口');
   t.true(getCalls.every(url => url.indexOf('/api/interface/list_cat') !== 0), '不应请求分类列表');
 
@@ -233,17 +249,17 @@ test.serial('InterfaceList 分类路由按 catid 拉取分类接口并回显分�
   };
 
   seedUserProjectStores();
+  seedInterfaceStore(LIST_INTER_SEED);
   const utils = renderWithProviders(React.createElement(InterfaceList), {
-    seedState: LIST_SEED,
     routePath: '/project/:id/interface/api/:actionId',
     initialPath: '/project/12/interface/api/cat_5'
   });
   await flushEffects();
 
-  const fetchCatListAction = utils.dispatched.find(
-    action => action.type === 'yapi/interface/FETCH_INTERFACE_CAT_LIST'
+  t.true(
+    utils.dispatched.every(action => String(action.type).indexOf('yapi/interface/') !== 0),
+    '不应再派发 yapi/interface/* redux action'
   );
-  t.truthy(fetchCatListAction, '应派发 FETCH_INTERFACE_CAT_LIST action');
   const catCall = getCalls.find(call => call.url.indexOf('/api/interface/list_cat') === 0);
   t.truthy(catCall, '应请求分类下接口列表');
   t.is(String(catCall.config.params.catid), '5', '请求应携带 catid=5');
@@ -260,8 +276,8 @@ test.serial('InterfaceList 点击添加接口按钮打开弹窗', async t => {
   axios.get = async () => ({ data: { errcode: 0, data: { count: 0, list: [] } } });
 
   seedUserProjectStores();
+  seedInterfaceStore(LIST_INTER_SEED);
   const utils = renderWithProviders(React.createElement(InterfaceList), {
-    seedState: LIST_SEED,
     routePath: '/project/:id/interface/api',
     initialPath: '/project/12/interface/api'
   });
@@ -283,8 +299,8 @@ test.serial('InterfaceList 点击添加接口按钮打开弹窗', async t => {
 test.serial('View 渲染接口详情完整信息', async t => {
   seedGroupStore();
   seedUserProjectStores();
+  seedInterfaceStore(VIEW_INTER_SEED);
   const utils = renderWithProviders(React.createElement(View), {
-    seedState: VIEW_SEED,
     initialPath: '/project/12/interface/api/100'
   });
   await flushEffects();
@@ -307,8 +323,8 @@ test.serial('View 渲染接口详情完整信息', async t => {
 test.serial('View 无 title 时挂载后展示暂无数据兜底', async t => {
   seedGroupStore();
   seedUserProjectStores();
+  seedInterfaceStore({ ...VIEW_INTER_SEED, curdata: {} });
   const utils = renderWithProviders(React.createElement(View), {
-    seedState: { ...VIEW_SEED, inter: { ...VIEW_SEED.inter, curdata: {} } },
     initialPath: '/project/12/interface/api/100'
   });
   await flushEffects();
@@ -328,8 +344,8 @@ test.serial('View 无请求参数时隐藏请求参数区块', async t => {
   delete emptyReqData.custom_field_value;
 
   seedUserProjectStores();
+  seedInterfaceStore({ ...VIEW_INTER_SEED, curdata: emptyReqData });
   const utils = renderWithProviders(React.createElement(View), {
-    seedState: { ...VIEW_SEED, inter: { ...VIEW_SEED.inter, curdata: emptyReqData } },
     initialPath: '/project/12/interface/api/100'
   });
   await flushEffects();

@@ -82,6 +82,11 @@ const {
   seedProjectStore,
   resetUserProjectStores
 } = require('../../helpers/userProjectStores');
+// interface 切片已迁 Zustand（批次5）：播种/复位辅助
+const {
+  seedInterfaceStore,
+  resetInterfaceStore
+} = require('../../helpers/interfaceStores');
 const INITIAL_GROUP_STATE = {
   groupList: [],
   currGroup: { group_name: '', group_desc: '', custom_field1: { name: '', enable: false } },
@@ -560,7 +565,6 @@ async function mountProjectActivity() {
   const withRouter = require('../../../client/withRouter.jsx').default;
   seedProjectStore({ currProject: { _id: 12, basepath: '/mock-path' } });
   renderWithProviders(React.createElement(withRouter(Activity)), {
-    seedState: { inter: { curdata: { _id: 1 } } },
     routePath: '/project/:id/*',
     initialPath: '/project/12/activity'
   });
@@ -568,36 +572,34 @@ async function mountProjectActivity() {
 }
 
 // ---- interface 列表页（InterfaceList 配方，容器测试同源 fixtures）----
+// interface 切片已迁 Zustand（批次5）：改经 interfaceStore 播种；stub 响应会真实写入 store，
+// 需返回渲染所需行数据（与容器测试同口径）
 const INTERFACE_MENU_TREE = [
   { _id: 5, name: '分类五', list: [{ _id: 100, title: '接口一', path: '/api/a' }], children: [] }
 ];
-const INTERFACE_LIST_SEED = {
-  inter: {
-    curdata: {},
-    list: INTERFACE_MENU_TREE,
-    editStatus: false,
-    totalTableList: [
-      { _id: 100, title: '接口一', path: '/a', method: 'GET', project_id: 12, catid: 5, status: 'done', tag: ['核心'] },
-      { _id: 101, title: '接口二', path: '/b', method: 'POST', project_id: 12, catid: 5, status: 'undone', tag: [] }
-    ],
-    totalCount: 2,
-    catTableList: [
-      { _id: 100, title: '接口一', path: '/a', method: 'GET', project_id: 12, status: 'done', tag: ['核心'] }
-    ],
-    count: 1
-  },
-};
+const INTERFACE_LIST_ROWS = [
+  { _id: 100, title: '接口一', path: '/a', method: 'GET', project_id: 12, catid: 5, status: 'done', tag: ['核心'] },
+  { _id: 101, title: '接口二', path: '/b', method: 'POST', project_id: 12, catid: 5, status: 'undone', tag: [] }
+];
 
 async function mountInterfaceList() {
   stubAxios([
-    { match: '/api/interface/', respond: () => ({ errcode: 0, data: { count: 1, list: [] } }) },
+    { match: '/api/interface/', respond: () => ({ errcode: 0, data: { count: 2, list: INTERFACE_LIST_ROWS } }) },
     { match: '/', respond: () => ({ errcode: 0, data: [] }) }
   ]);
   seedUserStore({ uid: 9 });
   seedProjectStore({ currProject: CURR_PROJECT_FULL });
+  seedInterfaceStore({
+    curdata: {},
+    list: INTERFACE_MENU_TREE,
+    editStatus: false,
+    totalTableList: INTERFACE_LIST_ROWS,
+    totalCount: 2,
+    catTableList: [INTERFACE_LIST_ROWS[0]],
+    count: 1
+  });
   const { default: InterfaceList } = require('../../../client/containers/Project/Interface/InterfaceList/InterfaceList.js');
   renderWithProviders(React.createElement(InterfaceList), {
-    seedState: INTERFACE_LIST_SEED,
     routePath: '/project/:id/interface/api',
     initialPath: '/project/12/interface/api'
   });
@@ -634,12 +636,9 @@ async function mountInterfaceView() {
     { match: '/', respond: () => ({ errcode: 0, data: [] }) }
   ]);
   const { default: View } = require('../../../client/containers/Project/Interface/InterfaceList/View.js');
+  // interface 切片已迁 Zustand（批次5）：curdata/list 改经 interfaceStore 播种
+  seedInterfaceStore({ curdata: INTERFACE_CURDATA, list: INTERFACE_MENU_TREE, editStatus: false });
   renderWithProviders(React.createElement(View), {
-    seedState: {
-      inter: { curdata: INTERFACE_CURDATA, list: INTERFACE_MENU_TREE, editStatus: false },
-      group: { field: { enable: true, name: '业务线' } },
-      project: { currProject: CURR_PROJECT_FULL }
-    },
     initialPath: '/project/12/interface/api/100'
   });
   await flushEffects(200);
@@ -663,14 +662,12 @@ async function mountInterfaceEdit() {
     { match: '/', respond: () => ({ errcode: 0, data: [] }) }
   ]);
   const { default: Edit } = require('../../../client/containers/Project/Interface/InterfaceList/Edit.js');
-  // project/user 切片已迁 Zustand（批次4）：改经 store 播种
+  // project/user 切片已迁 Zustand（批次4）：改经 store 播种；
+  // interface 切片已迁 Zustand（批次5）：curdata 改经 interfaceStore 播种
   seedUserStore({ uid: 9 });
   seedProjectStore({ currProject: CURR_PROJECT_FULL });
+  seedInterfaceStore({ curdata: INTERFACE_CURDATA, list: [], editStatus: false });
   renderWithProviders(React.createElement(Edit), {
-    seedState: {
-      inter: { curdata: INTERFACE_CURDATA, list: [], editStatus: false },
-      group: { field: { enable: true, name: '业务线' }, currGroup: G1 }
-    },
     routePath: '/project/:id/interface/api/:actionId',
     initialPath: '/project/12/interface/api/100'
   });
@@ -1313,6 +1310,7 @@ test.serial.afterEach.always(() => {
   cleanupDom();
   useGroupStore.setState(INITIAL_GROUP_STATE);
   resetUserProjectStores();
+  resetInterfaceStore();
   axios.get = originalAxiosGet;
   axios.post = originalAxiosPost;
   delete window.crossRequest;

@@ -3,12 +3,11 @@ import React, { useEffect, useState } from 'react';
 import { Table, Select, Tooltip } from 'antd';
 import { QuestionCircleOutlined } from '@ant-design/icons';
 import variable from '../../../../constants/variable';
-import { useDispatch, useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
 const Option = Select.Option;
-// project 切片已迁至 Zustand（批次4），interface 模块仍未迁移
+// project 切片已迁至 Zustand（批次4）；interface 切片已迁至 Zustand（批次5）
 import useProjectStore from '../../../../store/projectStore';
-import { fetchInterfaceListMenu } from '../../../../reducer/modules/interface.js';
+import useInterfaceStore from '../../../../store/interfaceStore';
 
 /** 导入列表按扁平顺序展示所有层级，但仍保留每个分类的直接接口。 */
 function flattenCategories(/** @type {any} */ list) {
@@ -32,17 +31,16 @@ function flattenCategories(/** @type {any} */ list) {
 
 /**
  * 接口导入选择面板。原类组件经 Hooks 现代化迁移，渲染结构与行为保持一致：
- * - 旧 @connect 改为 useSelector/useDispatch；
+ * - 旧 @connect 改为 store 订阅（interface 切片批次5 迁 Zustand）；
  * - 旧 componentDidMount 拉取接口菜单改为挂载期 useEffect；
  * - 旧实例方法 flattenCategories 为纯函数，提升为模块级函数；
  * - 行选择回调同步读取渲染闭包中的 state（等价旧类组件实时 this.state）。
  */
 const ImportInterface = (/** @type {any} */ props) => {
   const { selectInterface, currProjectId } = props;
-  // project 切片已迁至 Zustand（批次4），inter 模块仍未迁移（保留 useSelector 混用）
-  const list = useSelector(state => state.inter.list);
+  const list = useInterfaceStore(state => state.list);
+  const fetchInterfaceListMenu = useInterfaceStore(state => state.fetchInterfaceListMenu);
   const projectList = useProjectStore(state => state.projectList);
-  const dispatch = useDispatch();
 
   const [state, setState] = useState(/** @type {any} */ ({
     selectedRowKeys: [],
@@ -53,7 +51,7 @@ const ImportInterface = (/** @type {any} */ props) => {
     setState((/** @type {any} */ prevState) => ({ ...prevState, ...patch }));
 
   useEffect(() => {
-    dispatch(fetchInterfaceListMenu(currProjectId));
+    fetchInterfaceListMenu(currProjectId);
   }, []);
 
   // 切换项目
@@ -63,7 +61,7 @@ const ImportInterface = (/** @type {any} */ props) => {
       selectedRowKeys: [],
       categoryCount: {}
     });
-    await dispatch(fetchInterfaceListMenu(val));
+    await fetchInterfaceListMenu(val);
   };
 
   const data = flattenCategories(list).map((/** @type {any} */ category) => {

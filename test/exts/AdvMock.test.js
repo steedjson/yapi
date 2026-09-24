@@ -24,18 +24,28 @@ const MOCK_LIST = [
   }
 ];
 
-// mockCol 切片已迁 Zustand，Redux 种子中不再包含（经 useMockColStore 播种）
+// mockCol 切片已迁 Zustand，Redux 种子中不再包含（经 useMockColStore 播种）；
+// interface 切片已迁 Zustand（批次5）：curdata 改经 interfaceStore 播种
+const { seedInterfaceStore, resetInterfaceStore } = require('../helpers/interfaceStores');
+
 function seedState() {
   useMockColStore.setState({ list: MOCK_LIST });
-  return {
-    inter: { curdata: { _id: 100, title: '接口一', res_body: '{}', res_body_is_json_schema: false, req_body_is_json_schema: false } },
-    project: { currProject: { _id: 12, role: 'owner', switch_notice: true } }
-  };
+  seedInterfaceStore({
+    curdata: {
+      _id: 100,
+      title: '接口一',
+      res_body: '{}',
+      res_body_is_json_schema: false,
+      req_body_is_json_schema: false
+    }
+  });
+  return {};
 }
 
 test.serial.afterEach.always(() => {
   // mockCol 已迁 Zustand：模块级单例，用例间复位避免状态串场
   useMockColStore.setState({ list: [] });
+  resetInterfaceStore();
 });
 
 function renderAdvMock() {

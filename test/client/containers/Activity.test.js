@@ -30,7 +30,7 @@ const withRouter = require('../../../client/withRouter.jsx').default;
 const ActivityWithRouter = withRouter(Activity);
 
 // project 切片已迁 Zustand（批次4）：currProject 改经 projectStore 播种；
-// inter 仍在 redux，user.uid stale 订阅已随迁移移除
+// interface 切片历史遗留订阅（仅声明未消费）随批次5 迁移移除，种子里不再包含
 const { seedProjectStore, resetUserProjectStores } = require('../../helpers/userProjectStores');
 
 test.serial.afterEach.always(() => {
@@ -41,9 +41,7 @@ test.serial.afterEach.always(() => {
 
 function seedState() {
   seedProjectStore({ currProject: { _id: 12, basepath: '/mock-path' } });
-  return {
-    inter: { curdata: { _id: 1 } }
-  };
+  return {};
 }
 
 test.serial('渲染项目动态面板: mock 地址/下载链接/TimeLine 参数均来自路由与 store', t => {

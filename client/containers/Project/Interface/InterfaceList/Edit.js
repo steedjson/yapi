@@ -1,23 +1,19 @@
 // @ts-check
 import React, { useEffect, useRef, useState } from 'react';
 import InterfaceEditForm from './InterfaceEditForm.js';
-import {
-  fetchInterfaceListMenu,
-  fetchInterfaceData
-} from '../../../../reducer/modules/interface.js';
-// project 切片已迁至 Zustand（批次4），inter 模块仍未迁移
+// interface 切片已迁至 Zustand（批次5）
+import useInterfaceStore from '../../../../store/interfaceStore';
 import useProjectStore from '../../../../store/projectStore';
 import axios from 'axios';
 import { message, Modal } from 'antd';
 import './Edit.scss';
 import { Link, useParams } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
 import ProjectTag from '../../Setting/ProjectMessage/ProjectTag.js';
 
 /**
  * 接口编辑 Tab。原类组件经 Hooks 现代化迁移，渲染结构与行为保持一致：
- * - 旧 @connect 改为 useSelector/useDispatch，旧 withRouter 注入的
- *   match.params 改为 useParams（父级传入的 switchToView 历史上即未消费）；
+ * - 旧 @connect 改为 store 订阅（interface 切片批次5 迁 Zustand），旧 withRouter
+ *   注入的 match.params 改为 useParams（父级传入的 switchToView 历史上即未消费）；
  * - mockUrl 与旧构造函数一致，仅在首次渲染时基于当时的 props 计算一次；
  * - 旧 componentDidMount 的编辑冲突 WebSocket 与 3s 初始化兜底定时器改为
  *   挂载期 useEffect，卸载时关闭连接并清理定时器（对应旧 componentWillUnmount）；
@@ -25,9 +21,10 @@ import ProjectTag from '../../Setting/ProjectMessage/ProjectTag.js';
  *   镜像读取，语义一致。
  */
 const InterfaceEdit = () => {
-  const dispatch = useDispatch();
-  const curdata = useSelector(state => state.inter.curdata);
-  const catList = useSelector(state => state.inter.list);
+  const curdata = useInterfaceStore(state => state.curdata);
+  const catList = useInterfaceStore(state => state.list);
+  const fetchInterfaceListMenu = useInterfaceStore(state => state.fetchInterfaceListMenu);
+  const fetchInterfaceData = useInterfaceStore(state => state.fetchInterfaceData);
   const currProject = useProjectStore(state => state.currProject);
   const getProject = useProjectStore(state => state.getProject);
   const { id: projectId, actionId } = useParams();
@@ -64,9 +61,9 @@ const InterfaceEdit = () => {
   // 清理逻辑对应旧 componentWillUnmount
   useEffect(() => {
     mountedRef.current = true;
-    // Redux 中尚无分类树时主动加载，保证编辑表单能拿到带 children 的多级分类。
+    // store 中尚无分类树时主动加载，保证编辑表单能拿到带 children 的多级分类。
     if (!latestRef.current.catList || latestRef.current.catList.length === 0) {
-      dispatch(fetchInterfaceListMenu(projectId));
+      fetchInterfaceListMenu(projectId);
     }
     const domain = location.hostname + (location.port !== '' ? ':' + location.port : '');
     let s;
@@ -159,10 +156,9 @@ const InterfaceEdit = () => {
       }
 
       // 只有保存成功后才刷新分类和接口数据，避免失败响应覆盖当前编辑内容。
-      await Promise.all([
-        dispatch(fetchInterfaceListMenu(currProject._id)),
-        dispatch(fetchInterfaceData(data.id))
-      ]);
+      // 已知语义差异（批次5）：重拉失败（网络错误 null / errcode 非0）不再使
+      // Promise.all 抛错进入 "保存失败" 分支——保存本身已成功，旧版提示为误报。
+      await Promise.all([fetchInterfaceListMenu(currProject._id), fetchInterfaceData(data.id)]);
       // 刷新接口详情后直接使用服务端数据，避免用不完整的提交参数覆盖详情字段。
       message.success('保存成功');
       return true;

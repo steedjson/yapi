@@ -1,16 +1,17 @@
 // @ts-check
 import React, { useEffect, useRef, useState } from 'react';
-// project 切片已迁至 Zustand（批次4），inter 模块仍未迁移（保留 useSelector 混用）
-import { useSelector } from 'react-redux';
+// project 切片已迁至 Zustand（批次4）；interface 切片已迁至 Zustand（批次5）
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import { Table, Button, message, Popconfirm, Tooltip } from 'antd';
 import { QuestionCircleOutlined } from '@ant-design/icons';
-// mockCol 切片已迁至 Zustand（批次2），inter/project 模块仍未迁移。
+// mockCol 切片已迁至 Zustand（批次2）；project 切片已迁至 Zustand（批次4）；
+// interface 切片已迁至 Zustand（批次5）。
 // 以相对路径引用（本文件已有 ../../../client/common 先例；'client/*' 别名无 tsconfig
 // paths 映射，旧 reducer 模块依赖 global.d.ts 环境声明解析，store 不走该机制）
 import useMockColStore from '../../../client/store/mockColStore';
 import useProjectStore from '../../../client/store/projectStore';
+import useInterfaceStore from '../../../client/store/interfaceStore';
 import { formatTime } from 'client/common.js';
 import constants from 'client/constants/variable.js';
 import CaseDesModal from './CaseDesModal';
@@ -18,8 +19,8 @@ import { json5_parse } from '../../../client/common';
 
 /**
  * 接口高级 Mock 期望用例列表面板。原类组件经 Hooks 现代化迁移，渲染结构与行为保持一致：
- * - 旧 @connect 改为 useSelector，旧 @withRouter 注入的
- *   match.params（actionId / id）改为 useParams；
+ * - 旧 @connect 改为 store 订阅（interface 切片批次5 迁 Zustand），旧 @withRouter
+ *   注入的 match.params（actionId / id）改为 useParams；
  * - 旧 constructor state 改为 useState（单对象 patch，保持浅合并语义），
  *   旧 UNSAFE_componentWillMount 改为挂载期 useEffect；
  * - 异步回调对 this.props / this.state 的实时读取改为 latestRef 镜像读取；
@@ -32,7 +33,7 @@ const MockCol = () => {
   // zustand 经 JS 推断的 store 类型是有损的，显式收窄回调参数避免 TS7006
   const list = /** @type {any[]} */ (useMockColStore((/** @type {any} */ state) => state.list));
   const fetchMockCol = useMockColStore((/** @type {any} */ state) => state.fetchMockCol);
-  const currInterface = useSelector((/** @type {any} */ state) => state.inter.curdata);
+  const currInterface = useInterfaceStore(state => state.curdata);
   // project 切片已迁至 Zustand（批次4）：store 引用走相对路径（exts 下无 'client/*' 别名映射）
   const currProject = useProjectStore(state => state.currProject);
   const { id, actionId } = /** @type {any} */ (useParams());

@@ -237,3 +237,50 @@ const useFollowStore = create((set, get) => ({
 - `npm test` 全量冷库：见交付报告（1022 基线 + 20 新增，既有测试适配无净减）；
 - `npx tsc --noEmit`：0 错误；`npm run lint`：0/0；`npm run audit:ci`：通过（各 severity 与 total 均不高于基线）；
 - grep 终态：全仓无 `state.user` / `state.project` 状态读取方（剩余匹配均为注释或组件本地 state）；combineReducers 仅剩 inter。
+
+## 13. 批次5 实例记录（inter，2026-09，收官批）
+
+### 13.1 迁移内容
+
+| 模块 | store 文件 | 状态字段（与旧 initialState 完全一致） | 动作 | combineReducers 终态 |
+| --- | --- | --- | --- | --- |
+| interface（inter） | `client/store/interfaceStore.js` | `curdata` / `list` / `editStatus` / `totalTableList` / `catTableList` / `count` / `totalCount` / `interfaceRequestId` | `fetchInterfaceData` / `fetchInterfaceListMenu` / `fetchInterfaceList` / `fetchInterfaceCatList` / `changeEditStatus`（同步）/ `initInterface`（同步）/ `updateInterfaceData`（同步）/ `deleteInterfaceData` / `deleteInterfaceCatData` / `saveImportData` | **Redux 状态树清零**（reducerModules 为空，见下） |
+
+- **combineReducers 清零与空对象陷阱**：删除最后一个注册项后 `combineReducers({})` 在 redux 4.2.1 下不抛异常、但会输出 "Store does not have a valid reducer" console.error（dev 校验，实测取证），reducer.js 改为按 `Object.keys(reducerModules).length` 分支，空模块 fallback 为占位 reducer（`(state = {}) => state || {}`），保留 `emitHook('add_reducer', reducerModules)` 插件注入机制。redux/react-redux/redux-promise 的卸载属后续收尾批次（Provider 仍挂、旧模块文件仍保留）。
+- **requestId 竞态守卫内聚**：`fetchInterfaceData` 使用模块级 `interfaceRequestSequence`（旧同名变量）+ 守卫（requestId < 已入账 interfaceRequestId 丢弃、errcode!==0/响应异常不写），与旧 FETCH_INTERFACE_DATA 分支同款。
+- **网络错误语义分流（本批新迹象）**：`fetch*` 四动作沿 groupStore 同款 reject → null 不写；**`deleteInterfaceData` / `deleteInterfaceCatData` / `saveImportData` 三个纯请求动作网络错误原样 reject 透传**——InterfaceMenu 删除确认的 catch 分支依赖 reject 走「接口删除失败」提示，吞成 null 会静默失败（与批次 2/3/4 的「全 return null」决策不同，属对消费方既有 catch 依赖的保真）。
+- **messageMiddleware 静默化 + 守卫补强（批次4 ProjectCard 教训复现）**：
+  - fetchInterfaceListMenu 等改「errcode === 0 才写入」（旧链路 errcode 非 0 且非 40011 时被中间件 throw 拦截，reducer 不可达；40011 特例旧版不 throw 会写入空数据属缺陷行为，新版一律保留旧状态，tester 对照实验已取证）；
+  - `getList`（InterfaceMenu）补 `r.data.errcode === 0` 守卫，防止 `patchState({ list: undefined })` 覆盖分类树；
+  - `copyInterface` 补 errcode 守卫：详情拉取失败时 message.error 并中止，禁止用 undefined 继续 POST（等价旧 messageMiddleware throw 进 catch 的行为）；
+  - 删除确认两处：`result.data.errcode !== 0` → message.error（旧版读 `result.payload.data`，含 messageMiddleware 前置 toast；新版单 toast）。
+- **未消费订阅清理（批次4 先例）**：Activity 的 `state.inter.curdata`（仅声明未消费）、InterfaceContent 的 `state.inter.list`、InterfaceList 的 `state.inter.curdata` 三处 stale 订阅随迁移删除。
+- **connect 组件收编**：InterfaceEditForm 最后一个 connect 消费（`changeEditStatus`）改 store 直调，组件彻底脱离 react-redux；CaseDesModal 删 connect 包裹（currInterface 改 store 订阅）。全仓 react-redux 剩余消费方（grep 实测）：`client/index.js`（Provider）、`ProjectCard.js`（follow 动作 useDispatch）、`ProjectData.js`（news fetchUpdateLogData dispatch），待收尾批次统一评估。
+- **接口完整性**：`updateInterfaceData` / `saveImportData` 当前无消费方，按「接口完整性」保留（与批次 4 对无消费方动作的处理一致）。
+- 旧模块文件 `client/reducer/modules/interface.js` 保留在盘上（interfaceReducer.test.js 仍直接覆盖）；全仓已无 `state.inter` 读取方与 `reducer/modules/interface` 导入方（Search.js 的 `fetchInterfaceListMenu` 已迁）。
+
+### 13.2 消费方迁移要点（批次5 新增语义）
+
+1. **重拉失败语义变化（Edit.js onSubmit）**：旧版 `Promise.all([dispatch(fetchInterfaceListMenu), dispatch(fetchInterfaceData)])` 中 errcode 非 0 会经中间件 throw 进 catch 走「保存失败」提示；新版 store 静默失败仍走「保存成功」提示——保存本身已成功，旧提示为误报，属预期修正。
+2. **TimeLine 的 null 防御**：`getApiList` 无 try/catch，store 网络错误返回 null，改为 `result && result.data && result.data.data ? result.data.data.list : []`。
+3. **未消费订阅删除不改变渲染时序**：三处 stale 订阅删除后，挂载期请求收敛（真实 store 写入）与渲染仍同帧完成；快照/差分配方的种子须同步搬到 store 播种（§13.3）。
+4. **消费方判空约定**：与批次 4 相同（`res.payload.data...` → `res && res.data...`）。
+5. **失败文案变化登记（非功能差异）**：网络错误被 store 归一为 null 后，InterfaceContent 的 toast 从 `Network Error` 变为兜底文案 `接口不存在`（仍有 loadError 面板兜底）；InterfaceMenu.copyInterface 详情拉取失败的 message 从 `Network Error` 变为兜底 `获取接口详情失败`。均为提示文案级差异，无功能影响，源码注释已同步登记。
+
+### 13.3 测试适配要点（批次5 新坑）
+
+- **共享播种辅助**：新增 `test/helpers/interfaceStores.js`（`seedInterfaceStore` / `resetInterfaceStore` / `INITIAL_INTERFACE_STATE`）。11 个测试文件适配（10 个改用 `seedInterfaceStore({...})` + afterEach `resetInterfaceStore()`，Activity.test 仅删死种子），从 `seedState: { inter: {...} }` 迁移。
+- **「冻结 reducer 掩盖的收敛」第四批集中出现**：真实 store 会写入 axios 桩响应并覆盖种子——
+  1. InterfaceList 挂载拉取用例：桩响应从 `list: []` 改为真实行数据（渲染断言依赖写入后的 store）；
+  2. antd5-runtime-diff / fixpoint 的 interface 域挂载：种子搬到 `seedInterfaceStore`，桩同步给足行数据；
+  3. 反向断言防回迁：`dispatched.every(a => !String(a.type).startsWith('yapi/interface/'))` 替代原「应派发 FETCH_INTERFACE_LIST」正向断言（TimeLine / InterfaceList）。
+- **断言迁移**：InterfaceEditForm.test 的 `dispatched.some(a.type === 'yapi/interface/CHANGE_EDIT_STATUS')` → `useInterfaceStore.getState().editStatus === true`（用例前 resetInterfaceStore 清除挂载期初始写入）。
+- **保留死种子不强制清理**：ProjectSetting*.test / Services.test / antd5 两文件内的 `inter: { curdata: { catid: 3 } }` / `inter: {}` 为 redux 种子中的残留死数据（组件已不消费，无行为影响）——与批次 2 迁移后 `news:` 残留种子同处置（保留，避免无意义 diff）。
+- **interfaceReducer.test.js 原样保留**：旧文件保留在盘上，该测试仍直接覆盖旧 reducer（待 redux 收尾批次随文件删除）。
+
+### 13.4 批次5 验证数据
+
+- 新增 store 单测 18 条（初始值 / 竞态丢弃 / errcode 非 0 不写 / reject → null（fetch×4）/ 列表写入形状 / qs 序列化 / 同步动作 / delete 与 saveImportData 透传）全绿；
+- `npm test` 全量：**1061 passed**（1043 基线 + 18 新增，既有测试适配无净减，0 failed）；
+- `npx tsc --noEmit`：0 错误（interfaceStore 补入 tsconfig include）；`npm run lint`：0/0；`npm run build-client`：成功；
+- grep 终态：全仓无 `state.inter` 读取方与 `reducer/modules/interface` 导入方；combineReducers 状态树清零（reducerModules 空）。

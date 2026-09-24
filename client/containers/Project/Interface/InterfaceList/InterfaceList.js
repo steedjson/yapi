@@ -1,17 +1,12 @@
 // @ts-check
 import React, { useEffect, useRef, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import { Table, Button, Modal, message, Tooltip, Select, TreeSelect } from 'antd';
 import { EyeOutlined } from '@ant-design/icons';
 import AddInterfaceForm from './AddInterfaceForm';
-import {
-  fetchInterfaceListMenu,
-  fetchInterfaceList,
-  fetchInterfaceCatList
-} from '../../../../reducer/modules/interface.js';
-// project 切片已迁至 Zustand（批次4），inter 模块仍未迁移
+// interface 切片已迁至 Zustand（批次5）：动作全部直调
+import useInterfaceStore from '../../../../store/interfaceStore';
 import useProjectStore from '../../../../store/projectStore';
 import { Link } from 'react-router-dom';
 import variable from '../../../../constants/variable';
@@ -24,8 +19,8 @@ const limit = 20;
 
 /**
  * 接口列表页。原类组件经 Hooks 现代化迁移，渲染结构与行为保持一致：
- * - 旧 @connect 改为 useSelector/useDispatch（curData 为历史遗留仅声明未消费，
- *   保留订阅避免行为差异），旧 props.match.params / history.push 改为
+ * - 旧 @connect 改为 store 订阅（interface 切片批次5 迁 Zustand；curData 为历史
+ *   遗留仅声明未消费，随迁移删除），旧 props.match.params / history.push 改为
  *   useParams / useNavigate；
  * - 旧 UNSAFE_componentWillMount / UNSAFE_componentWillReceiveProps 分别改为
  *   挂载期 useEffect 与 actionId 变化 useEffect（prev ref 比较）；
@@ -34,16 +29,16 @@ const limit = 20;
  * - 异步回调对 this.state / this.props 的实时读取改为 latestRef 镜像读取。
  */
 const InterfaceList = () => {
-  const dispatch = useDispatch();
-  // 历史遗留仅声明未消费，保留订阅避免行为差异
-  useSelector(state => state.inter.curdata);
   const curProject = useProjectStore(state => state.currProject);
   const getProject = useProjectStore(state => state.getProject);
-  const catList = useSelector(state => state.inter.list);
-  const totalTableList = useSelector(state => state.inter.totalTableList);
-  const catTableList = useSelector(state => state.inter.catTableList);
-  const totalCount = useSelector(state => state.inter.totalCount);
-  const count = useSelector(state => state.inter.count);
+  const catList = useInterfaceStore(state => state.list);
+  const totalTableList = useInterfaceStore(state => state.totalTableList);
+  const catTableList = useInterfaceStore(state => state.catTableList);
+  const totalCount = useInterfaceStore(state => state.totalCount);
+  const count = useInterfaceStore(state => state.count);
+  const fetchInterfaceListMenu = useInterfaceStore(state => state.fetchInterfaceListMenu);
+  const fetchInterfaceList = useInterfaceStore(state => state.fetchInterfaceList);
+  const fetchInterfaceCatList = useInterfaceStore(state => state.fetchInterfaceCatList);
   const { id, actionId } = /** @type {any} */ (useParams());
   const navigate = useNavigate();
 
@@ -85,7 +80,7 @@ const InterfaceList = () => {
         status: snapshot.filteredInfo.status,
         tag: snapshot.filteredInfo.tag
       };
-      await dispatch(fetchInterfaceList(option));
+      await fetchInterfaceList(option);
     } else if (isNaN(routeActionId)) {
       const catid = routeActionId.substr(4);
       patchState({ catid: +catid });
@@ -96,7 +91,7 @@ const InterfaceList = () => {
         status: snapshot.filteredInfo.status,
         tag: snapshot.filteredInfo.tag
       };
-      await dispatch(fetchInterfaceCatList(option));
+      await fetchInterfaceCatList(option);
     }
   };
 
@@ -118,7 +113,7 @@ const InterfaceList = () => {
         return message.error(res.data.errmsg);
       }
       const projectId = latestRef.current.id;
-      await Promise.all([getProject(projectId), dispatch(fetchInterfaceListMenu(projectId))]);
+      await Promise.all([getProject(projectId), fetchInterfaceListMenu(projectId)]);
       message.success('接口集合简介更新成功');
     } catch (/** @type {any} */ err) {
       message.error('接口集合简介更新失败：' + err.message);
@@ -172,7 +167,7 @@ const InterfaceList = () => {
       message.success('接口添加成功');
       const interfaceId = res.data.data._id;
       navigate('/project/' + data.project_id + '/interface/api/' + interfaceId);
-      await dispatch(fetchInterfaceListMenu(data.project_id));
+      await fetchInterfaceListMenu(data.project_id);
     } catch (/** @type {any} */ err) {
       message.error('接口添加失败：' + err.message);
     }
@@ -193,7 +188,7 @@ const InterfaceList = () => {
         return message.error(result.data.errmsg);
       }
       message.success('修改成功');
-      await Promise.all([handleRequest(), dispatch(fetchInterfaceListMenu(curProject._id))]);
+      await Promise.all([handleRequest(), fetchInterfaceListMenu(curProject._id)]);
     } catch (/** @type {any} */ err) {
       message.error('修改分类失败：' + err.message);
     }

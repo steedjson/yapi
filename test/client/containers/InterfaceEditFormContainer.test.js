@@ -93,6 +93,8 @@ const {
   seedProjectStore,
   resetUserProjectStores
 } = require('../../helpers/userProjectStores');
+// interface 切片已迁 Zustand（批次5）：curdata 改经 interfaceStore 播种
+const { seedInterfaceStore, resetInterfaceStore } = require('../../helpers/interfaceStores');
 const INITIAL_GROUP_STATE = {
   groupList: [],
   currGroup: { group_name: '', group_desc: '', custom_field1: { name: '', enable: false } },
@@ -107,6 +109,7 @@ const originalAxiosPost = axios.post;
 test.serial.afterEach.always(() => {
   useGroupStore.setState(INITIAL_GROUP_STATE);
   resetUserProjectStores();
+  resetInterfaceStore();
   cleanup();
   cleanupDom();
   axios.get = originalAxiosGet;
@@ -173,10 +176,9 @@ async function renderEditForm() {
       cat: [{ _id: 5, name: '分类五', desc: '' }]
     }
   });
+  // interface 切片已迁 Zustand（批次5）：curdata 改经真实 store 播种
+  seedInterfaceStore({ curdata: CURRDATA, list: [], editStatus: false });
   const utils = renderWithProviders(React.createElement(Edit), {
-    seedState: {
-      inter: { curdata: CURRDATA, list: [], editStatus: false }
-    },
     routePath: '/project/:id/interface/api/:actionId',
     initialPath: '/project/12/interface/api/100'
   });

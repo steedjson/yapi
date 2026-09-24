@@ -17,11 +17,14 @@ import { renderWithProviders, flushEffects, cleanupDom } from '../helpers/contai
 
 const { axiosMock, FakeWebSocket } = require('./setup');
 
-// user/project 切片已迁 Zustand（批次4）：projectStore 播种/复位辅助
+// user/project 切片已迁 Zustand（批次4）：projectStore 播种/复位辅助；
+// interface 切片已迁 Zustand（批次5）：interfaceStore 播种/复位
 const { seedProjectStore, resetUserProjectStores } = require('../helpers/userProjectStores');
+const { seedInterfaceStore, resetInterfaceStore } = require('../helpers/interfaceStores');
 
 test.serial.afterEach.always(() => {
   resetUserProjectStores();
+  resetInterfaceStore();
 });
 
 // 复位 WebSocket 桩（跨用例防串扰，与 WikiPage.test.js 同款）
@@ -91,12 +94,19 @@ test.serial('advanced-mock client.js：interface_tab 懒加载组件可渲染，
   // 组件侧经 useMockColStore 读写（批次2 迁移，反向钉住防止回迁）
   t.is(hooks.add_reducer, undefined, 'mockCol 已迁 Zustand，插件不应再注册 add_reducer 钩子');
 
-  // project 切片已迁 Zustand（批次4）：currProject 改经 projectStore 播种
+  // project 切片已迁 Zustand（批次4）：currProject 改经 projectStore 播种；
+  // interface 切片已迁 Zustand（批次5）：curdata 改经 interfaceStore 播种
   seedProjectStore({ currProject: { _id: 1, role: 'owner', switch_notice: true } });
+  seedInterfaceStore({
+    curdata: {
+      _id: 1,
+      title: '接口',
+      res_body: '{}',
+      res_body_is_json_schema: false,
+      req_body_is_json_schema: false
+    }
+  });
   const { container } = renderWithProviders(React.createElement(tabs.advMock.component), {
-    seedState: {
-      inter: { curdata: { _id: 1, title: '接口', res_body: '{}', res_body_is_json_schema: false, req_body_is_json_schema: false } }
-    },
     routePath: '/project/:id/interface/api/:actionId',
     initialPath: '/project/1/interface/api/1'
   });

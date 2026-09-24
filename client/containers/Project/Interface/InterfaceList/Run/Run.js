@@ -2,11 +2,11 @@
 import React, { useRef, useState } from 'react';
 import axios from 'axios';
 import { message } from 'antd';
-// user/project 切片已迁至 Zustand（批次4），inter 模块仍未迁移（保留 useSelector 混用）
-import { useSelector } from 'react-redux';
+// user/project 切片已迁至 Zustand（批次4）；interface 切片已迁至 Zustand（批次5）
 import { useParams } from 'react-router-dom';
 import useUserStore from '../../../../../store/userStore';
 import useProjectStore from '../../../../../store/projectStore';
+import useInterfaceStore from '../../../../../store/interfaceStore';
 import { Postman } from '../../../../../components';
 import AddColModal from './AddColModal';
 
@@ -17,7 +17,8 @@ import './Run.scss';
 
 /**
  * 接口运行 Tab。原类组件经 Hooks 现代化迁移，渲染结构与行为保持一致：
- * - 旧 @connect 改为 useSelector，旧 @withRouter 注入的 match.params.id 改为 useParams；
+ * - 旧 @connect 改为 store 订阅（interface 切片批次5 迁 Zustand），旧 @withRouter
+ *   注入的 match.params.id 改为 useParams；
  * - 实例引用 this.postman 改为 useRef；异步回调 saveCase 经 latestRef 镜像
  *   读取最新 redux 值与路由参数，与旧类组件实时 this.props 语义一致；
  * - 空实现的 UNSAFE_componentWillMount / UNSAFE_componentWillReceiveProps 随迁移移除。
@@ -25,7 +26,7 @@ import './Run.scss';
  *   prop 名错位导致「保存到集合」弹窗在旧版永远无法打开；迁移改为 visible={...} 修复该缺陷。
  */
 const Run = () => {
-  const currInterface = useSelector(state => state.inter.curdata);
+  const currInterface = useInterfaceStore(state => state.curdata);
   const currProject = useProjectStore(state => state.currProject);
   const curUid = useUserStore(state => state.uid);
   const { id } = /** @type {any} */ (useParams());

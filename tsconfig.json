@@ -284,6 +284,9 @@
     "client/history.js",
     "client/reducer/modules/reducer.js",
     "client/utils/sanitize.js",
+    // 状态管理迁移批次5：interfaceStore 纳入白名单（其它 store 经消费方 import 链传递
+    // 纳入 tsc program；显式条目更稳，不依赖消费方）
+    "client/store/interfaceStore.js",
     "exts/yapi-plugin-advanced-mock/index.js",
     "exts/yapi-plugin-export-data/defaultTheme.js",
     "exts/yapi-plugin-export-data/index.js",

@@ -1,30 +1,28 @@
 // @ts-check
 import { combineReducers } from 'redux';
-import inter from './interface.js';
-// follow 已迁至 Zustand（client/store/followStore.js，试点），不再注册进 combineReducers。
-// 旧模块文件 ./follow.js 保留：ProjectCard 仍以其 addFollow/delFollow action creators 经
-// redux-promise 派发（全仓无 state.follow 读取方，注销注册无行为影响）。
-// menu / news 已迁至 Zustand（client/store/menuStore.js / newsStore.js，批次2）。
-// 旧模块文件 ./menu.js / ./news.js 保留：news.js 的 fetchUpdateLogData/getMockUrl 仍被
-// ProjectData 等经 redux-promise 派发（type 为 '' 不触达 news 状态），menu 的同步
-// action creator 已无消费方（全仓无 state.menu 读取方，注销注册无行为影响）。
-// mockCol 同批迁出：其注册点为插件 add_reducer 钩子
-// （exts/yapi-plugin-advanced-mock/client.js → client/store/mockColStore.js）。
-// interfaceCol / addInterface / group 已迁至 Zustand（client/store/interfaceColStore.js /
-// addInterfaceStore.js / groupStore.js，批次3），不再注册进 combineReducers。三个旧模块
-// 文件保留在盘上（迁移边界禁止删除）：全仓已无 state.interfaceCol / state.addInterface /
-// state.group 状态读取方，注销注册无行为影响；groupReducer.test.js 仍直接覆盖 group.js。
-// user / project 已迁至 Zustand（client/store/userStore.js / projectStore.js，批次4），
-// 不再注册进 combineReducers。两个旧模块文件保留在盘上（迁移边界禁止删除）：全仓已无
-// state.user / state.project 状态读取方与派发方，注销注册无行为影响；
-// userReducer/projectReducer 尚无独立测试文件直接覆盖，待后续批次清理。
-// interface（inter）为 combineReducers 最后一个注册项，属批次 5 可选迁移对象。
+// follow / menu / news / mockCol / interfaceCol / addInterface / group / user / project /
+// interface（inter）均已迁至 Zustand（client/store/），不再注册进 combineReducers。
+// 迁移过程与语义差异见 docs/zustand-migration-pattern.md。
+// 旧模块文件全部保留在盘上（迁移边界禁止删除）：
+// - follow.js：ProjectCard 仍以其 addFollow/delFollow action creators 经 redux-promise 派发；
+// - news.js：ProjectData 的 fetchUpdateLogData（type 为 '' 的纯 promise 助手）仍经 redux 派发；
+// - interface.js：Search.js 的 fetchInterfaceListMenu 已迁 store（批次5），interfaceReducer.test.js
+//   仍直接覆盖旧 reducer 文件；
+// - group.js / news.js / interface.js 分别有 groupReducer/newsReducer/interfaceReducer 测试；
+// - 其余模块文件已无消费方，待 redux 三件套收尾批次统一清理。
+// Redux 状态树至此清零：redux/react-redux/redux-promise 的卸载属后续收尾批次。
 
 import { emitHook } from 'client/plugin.js';
 
-const reducerModules = {
-  inter
-};
+const reducerModules = {};
 emitHook('add_reducer', reducerModules);
 
-export default combineReducers(reducerModules);
+// 空模块 fallback：combineReducers({}) 在 dev 下会输出 "Store does not have a valid reducer"
+// 警告（redux 4.2.1 实测不抛异常，仅 console.error；prod 构建跳过该校验），无插件注入时
+// 退化为空状态占位 reducer 以消除警告（Redux 状态树已清零，仅维持 store 可用；
+// 单参形态即可满足 redux reducer 契约，action 参数隐式丢弃）。
+const combinedReducer = Object.keys(reducerModules).length
+  ? combineReducers(reducerModules)
+  : (/** @type {any} */ state = {}) => state || {};
+
+export default combinedReducer;

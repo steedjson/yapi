@@ -1,17 +1,8 @@
 // @ts-check
 import React, { useEffect, useRef, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
-import {
-  fetchInterfaceListMenu,
-  fetchInterfaceList,
-  fetchInterfaceCatList,
-  fetchInterfaceData,
-  deleteInterfaceData,
-  deleteInterfaceCatData,
-  initInterface
-} from '../../../../reducer/modules/interface.js';
-// project 切片已迁至 Zustand（批次4），inter 模块仍未迁移
+// interface 切片已迁至 Zustand（批次5）：动作全部直调，不再经 redux dispatch
+import useInterfaceStore from '../../../../store/interfaceStore';
 import useProjectStore from '../../../../store/projectStore';
 import { Input, Button, Modal, message, Tree, Tooltip } from 'antd';
 import {
@@ -154,9 +145,9 @@ function collectCatKeys(cat, arr) {
 
 /**
  * 接口左侧目录树。原类组件经 Hooks 现代化迁移，渲染结构与行为保持一致：
- * - 旧 @connect 改为 useSelector/useDispatch（旧 expands: [] 映射仅声明未消费，
- *   随迁移移除），旧 withRouter 注入的 match/history 改为 useParams/useNavigate，
- *   父级传入的 projectId / router props 保持不变；
+ * - 旧 @connect 改为 store 订阅（interface 切片批次5 迁 Zustand；旧 expands: []
+ *   映射仅声明未消费，随迁移移除），旧 withRouter 注入的 match/history 改为
+ *   useParams/useNavigate，父级传入的 projectId / router props 保持不变；
  * - 旧 UNSAFE_componentWillMount / UNSAFE_componentWillReceiveProps 分别改为
  *   挂载期 useEffect 与 redux list 变化 useEffect（prev ref 比较）；
  * - 纯函数实例方法（findCatXxx / flattenCategories / collectCatKeys）提升为
@@ -166,9 +157,15 @@ function collectCatKeys(cat, arr) {
  */
 const InterfaceMenu = (/** @type {any} */ props) => {
   const { projectId, router } = props;
-  const dispatch = useDispatch();
-  const list = useSelector(state => state.inter.list);
-  const inter = useSelector(state => state.inter.curdata);
+  const list = useInterfaceStore(state => state.list);
+  const inter = useInterfaceStore(state => state.curdata);
+  const fetchInterfaceListMenu = useInterfaceStore(state => state.fetchInterfaceListMenu);
+  const fetchInterfaceList = useInterfaceStore(state => state.fetchInterfaceList);
+  const fetchInterfaceCatList = useInterfaceStore(state => state.fetchInterfaceCatList);
+  const fetchInterfaceData = useInterfaceStore(state => state.fetchInterfaceData);
+  const deleteInterfaceData = useInterfaceStore(state => state.deleteInterfaceData);
+  const deleteInterfaceCatData = useInterfaceStore(state => state.deleteInterfaceCatData);
+  const initInterface = useInterfaceStore(state => state.initInterface);
   const curProject = useProjectStore(state => state.currProject);
   const getProject = useProjectStore(state => state.getProject);
   const navigate = useNavigate();
@@ -202,14 +199,18 @@ const InterfaceMenu = (/** @type {any} */ props) => {
   };
 
   const getList = async () => {
-    const r = await dispatch(fetchInterfaceListMenu(latestRef.current.projectId));
-    patchState({
-      list: r.payload.data.data
-    });
+    const r = await fetchInterfaceListMenu(latestRef.current.projectId);
+    // errcode 守卫（批次5 补强，对齐旧 messageMiddleware throw 语义）：失败不写入，
+    // 避免 undefined 覆盖现有分类树
+    if (r && r.data && r.data.errcode === 0) {
+      patchState({
+        list: r.data.data
+      });
+    }
   };
 
   const handleRequest = () => {
-    dispatch(initInterface());
+    initInterface();
     getList();
   };
 
@@ -315,15 +316,13 @@ const InterfaceMenu = (/** @type {any} */ props) => {
       cancelText: '取消',
       async onOk() {
         try {
-          const { projectId: currentProjectId, params: currentParams } = latestRef.current;
-          const result = await dispatch(
-            /** @type {any} */ (deleteInterfaceData)(delId, currentProjectId)
-          );
-          if (result && result.payload && result.payload.data.errcode !== 0) {
-            return message.error(result.payload.data.errmsg);
+          const { params: currentParams } = latestRef.current;
+          const result = await deleteInterfaceData(delId);
+          if (result && result.data && result.data.errcode !== 0) {
+            return message.error(result.data.errmsg);
           }
           await getList();
-          await dispatch(fetchInterfaceCatList({ catid }));
+          await fetchInterfaceCatList({ catid });
           navigate('/project/' + currentParams.id + '/interface/api/cat_' + catid);
         } catch (/** @type {any} */ err) {
           message.error('接口删除失败：' + err.message);
@@ -346,14 +345,12 @@ const InterfaceMenu = (/** @type {any} */ props) => {
       async onOk() {
         try {
           const { projectId: currentProjectId, params: currentParams } = latestRef.current;
-          const result = await dispatch(
-            /** @type {any} */ (deleteInterfaceCatData)(catid, currentProjectId)
-          );
-          if (result && result.payload && result.payload.data.errcode !== 0) {
-            return message.error(result.payload.data.errmsg);
+          const result = await deleteInterfaceCatData(catid);
+          if (result && result.data && result.data.errcode !== 0) {
+            return message.error(result.data.errmsg);
           }
           await getList();
-          await dispatch(fetchInterfaceList({ project_id: currentProjectId }));
+          await fetchInterfaceList({ project_id: currentProjectId });
           navigate('/project/' + currentParams.id + '/interface/api');
         } catch (/** @type {any} */ err) {
           message.error('接口分类删除失败：' + err.message);
@@ -367,8 +364,14 @@ const InterfaceMenu = (/** @type {any} */ props) => {
 
   const copyInterface = async (/** @type {any} */ copyId) => {
     try {
-      const interfaceData = await dispatch(fetchInterfaceData(copyId));
-      const data = interfaceData.payload.data.data;
+      const interfaceData = await fetchInterfaceData(copyId);
+      // errcode 守卫（批次5 补强）：详情拉取失败时中止复制，避免用 undefined 继续 POST
+      if (!interfaceData || !interfaceData.data || interfaceData.data.errcode !== 0) {
+        return message.error(
+          (interfaceData && interfaceData.data && interfaceData.data.errmsg) || '获取接口详情失败'
+        );
+      }
+      const data = interfaceData.data.data;
       const newData = produce(data, draftData => {
         draftData.title = draftData.title + '_copy';
         draftData.path = draftData.path + '_' + Date.now();
@@ -472,12 +475,12 @@ const InterfaceMenu = (/** @type {any} */ props) => {
         }
 
         const requests = [
-          dispatch(fetchInterfaceListMenu(projectId)),
-          dispatch(fetchInterfaceList({ project_id: projectId }))
+          fetchInterfaceListMenu(projectId),
+          fetchInterfaceList({ project_id: projectId })
         ];
         if (router && isNaN(router.params.actionId)) {
           const catid = router.params.actionId.substr(4);
-          requests.push(dispatch(fetchInterfaceCatList({ catid })));
+          requests.push(fetchInterfaceCatList({ catid }));
         }
         await Promise.all(requests);
       } else {
@@ -500,7 +503,7 @@ const InterfaceMenu = (/** @type {any} */ props) => {
           const siblingList = dragCatInfo.list;
           const changes = arrayChangeIndex(siblingList, dragCatInfo.index, dropCatInfo.index);
           await axios.post('/api/interface/up_cat_index', changes);
-          await dispatch(fetchInterfaceListMenu(projectId));
+          await fetchInterfaceListMenu(projectId);
         }
       }
     } catch (/** @type {any} */ err) {

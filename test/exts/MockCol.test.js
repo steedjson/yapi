@@ -11,6 +11,8 @@ const { axiosMock } = require('./setup');
 const { default: useMockColStore } = require('../../client/store/mockColStore');
 // project 切片已迁 Zustand（批次4）：currProject 改经 projectStore 播种
 const { seedProjectStore, resetUserProjectStores } = require('../helpers/userProjectStores');
+// interface 切片已迁 Zustand（批次5）：curdata 改经 interfaceStore 播种
+const { seedInterfaceStore, resetInterfaceStore } = require('../helpers/interfaceStores');
 
 const MOCKCOL_PATH = '../../exts/yapi-plugin-advanced-mock/MockCol/MockCol';
 
@@ -55,19 +57,19 @@ const CURDATA = {
   req_body_other: ''
 };
 
-// mockCol/project 切片均已迁 Zustand，Redux 种子中不再包含（inter 仍未迁移）
+// mockCol/project/interface 切片均已迁 Zustand，Redux 种子中不再包含
 function seedState(role) {
   seedProjectStore({ currProject: { _id: 12, role: role, switch_notice: true } });
-  return {
-    inter: { curdata: CURDATA }
-  };
+  seedInterfaceStore({ curdata: CURDATA });
+  return {};
 }
 
 test.serial.afterEach.always(() => {
   cleanupDom();
-  // mockCol/project 已迁 Zustand：模块级单例，用例间复位避免状态串场
+  // mockCol/project/interface 已迁 Zustand：模块级单例，用例间复位避免状态串场
   useMockColStore.setState({ list: [] });
   resetUserProjectStores();
+  resetInterfaceStore();
 });
 
 function renderMockCol(role) {

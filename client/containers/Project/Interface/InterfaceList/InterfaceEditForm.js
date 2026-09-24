@@ -1,12 +1,11 @@
 // @ts-check
 import React, { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
-import { connect } from 'react-redux';
 import { handlePath as handlePathUtil } from '../../../../common.js';
-import { changeEditStatus } from '../../../../reducer/modules/interface.js';
-// group/project 切片已迁至 Zustand（批次3 / 批次4），inter 模块仍未迁移
 import useGroupStore from '../../../../store/groupStore';
 import useProjectStore from '../../../../store/projectStore';
+// interface 切片已迁至 Zustand（批次5）：changeEditStatus 由 connect 注入改为 store 直调
+import useInterfaceStore from '../../../../store/interfaceStore';
 import json5 from 'json5';
 import { message, Affix, Form, Button } from 'antd';
 import mockEditor from 'client/components/AceEditor/mockEditor';
@@ -47,6 +46,8 @@ function InterfaceEditForm(/** @type {any} */ props) {
   const custom_field = useGroupStore(state => state.field);
   // project 切片已迁至 Zustand（批次4）：原 connect 注入的 projectMsg 改经 useProjectStore
   const projectMsg = useProjectStore(state => state.currProject);
+  // interface 切片已迁至 Zustand（批次5）：原 connect 注入的 changeEditStatus 改 store 直调
+  const changeEditStatus = useInterfaceStore(state => state.changeEditStatus);
   const [state, setState] = useState(() => {
     const initStateData = initState(props.curdata, props.mockUrl);
     // 原 componentDidMount 中对 req_radio_type 的初始化；缺陷打捞：method 缺失/小写时
@@ -86,7 +87,7 @@ function InterfaceEditForm(/** @type {any} */ props) {
     });
 
     return () => {
-      props.changeEditStatus(false);
+      changeEditStatus(false);
       isMountedRef.current = false;
     };
   }, []);
@@ -210,7 +211,7 @@ function InterfaceEditForm(/** @type {any} */ props) {
     const saved = await props.onSubmit(values);
     // 只有保存成功才清除未保存状态，失败时保留离开页面提示。
     if (saved !== false) {
-      props.changeEditStatus(false);
+      changeEditStatus(false);
     }
   };
 
@@ -410,7 +411,7 @@ function InterfaceEditForm(/** @type {any} */ props) {
       ...prev,
       res_body: d.text
     }));
-    props.changeEditStatus(initResBody !== d.text);
+    changeEditStatus(initResBody !== d.text);
   };
 
   // 处理 res_body 的 json-schema 编辑器（原 JSX 内联 onChange 上移到父组件）
@@ -424,7 +425,7 @@ function InterfaceEditForm(/** @type {any} */ props) {
       res_body: text
     }));
     if (new Date().getTime() - startTimeRef.current > 1000) {
-      props.changeEditStatus(true);
+      changeEditStatus(true);
     }
   };
 
@@ -439,7 +440,7 @@ function InterfaceEditForm(/** @type {any} */ props) {
       ...prev,
       req_body_other: d.text
     }));
-    props.changeEditStatus(initReqBody !== d.text);
+    changeEditStatus(initReqBody !== d.text);
   };
 
   // 处理 req_body_other 的 json-schema 编辑器（原 JSX 内联 onChange 上移到父组件）
@@ -453,7 +454,7 @@ function InterfaceEditForm(/** @type {any} */ props) {
       req_body_other: text
     }));
     if (new Date().getTime() - startTimeRef.current > 1000) {
-      props.changeEditStatus(true);
+      changeEditStatus(true);
     }
   };
 
@@ -538,7 +539,7 @@ function InterfaceEditForm(/** @type {any} */ props) {
         onOk={handleBulkOk}
         onCancel={handleBulkCancel}
       />
-      <Form form={form} onFinish={handleFinish} onFinishFailed={handleFinishFailed} onValuesChange={() => props.changeEditStatus(true)} preserve={false}>
+      <Form form={form} onFinish={handleFinish} onFinishFailed={handleFinishFailed} onValuesChange={() => changeEditStatus(true)} preserve={false}>
         <BasicSettingPanel
           basepath={props.basepath}
           cat={props.cat}
@@ -634,13 +635,7 @@ InterfaceEditForm.propTypes = {
   basepath: PropTypes.string,
   noticed: PropTypes.bool,
   cat: PropTypes.array,
-  changeEditStatus: PropTypes.func,
   onTagClick: PropTypes.func
 };
 
-export default connect(
-  null,
-  {
-    changeEditStatus
-  }
-)(InterfaceEditForm);
+export default InterfaceEditForm;

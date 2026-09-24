@@ -93,6 +93,11 @@ const {
   seedProjectStore,
   resetUserProjectStores
 } = require('../../helpers/userProjectStores');
+// interface 切片已迁 Zustand（批次5）：curdata/list 改经真实 store 播种
+const {
+  seedInterfaceStore,
+  resetInterfaceStore
+} = require('../../helpers/interfaceStores');
 
 const INITIAL_INTERFACE_COL_STATE = {
   interfaceColList: [
@@ -119,6 +124,7 @@ const INITIAL_INTERFACE_COL_STATE = {
 
 test.serial.afterEach.always(() => {
   resetUserProjectStores();
+  resetInterfaceStore();
   cleanup();
   cleanupDom();
   axios.get = originalAxiosGet;
@@ -188,9 +194,9 @@ function runSeed() {
   // project/user 切片已迁 Zustand（批次4）
   seedUserStore({ uid: 11 });
   seedProjectStore({ currProject: CURR_PROJECT });
-  return {
-    inter: { curdata: CURR_INTERFACE, list: [], editStatus: false }
-  };
+  // interface 切片已迁 Zustand（批次5）
+  seedInterfaceStore({ curdata: CURR_INTERFACE, list: [], editStatus: false });
+  return {};
 }
 
 test.serial('Run 渲染 Postman 并透传合并项目环境后的接口数据', async t => {
@@ -370,21 +376,19 @@ test.serial('ImportInterface 渲染扁平分类列表与项目下拉，跳过带
       { _id: 2, projectname: '跳过', name: '项目二' }
     ]
   });
+  // interface 切片已迁 Zustand（批次5）：list 改经真实 store 播种（必须在渲染前）
+  seedInterfaceStore({
+    list: [
+      { _id: 1, name: '分类A', list: [{ _id: 11, path: '/api/a', method: 'GET', status: 'done' }] },
+      { _id: 2, name: '分类B', list: [{ _id: 12, path: '/api/b', method: 'POST', status: 'undone' }] }
+    ]
+  });
   const { container } = renderWithProviders(
     React.createElement(ImportInterface, {
       currProjectId: '12',
       selectInterface: (ids, projectId) => selectInterfaceCalls.push([ids, projectId])
     }),
-    {
-      seedState: {
-        inter: {
-          list: [
-            { _id: 1, name: '分类A', list: [{ _id: 11, path: '/api/a', method: 'GET', status: 'done' }] },
-            { _id: 2, name: '分类B', list: [{ _id: 12, path: '/api/b', method: 'POST', status: 'undone' }] }
-          ]
-        }
-      }
-    }
+    {}
   );
 
   const rows = Array.from(container.querySelectorAll('.ant-table-tbody tr[data-row-key]'));
@@ -417,21 +421,19 @@ test.serial('ImportInterface 全选/取消全选经 selectInterface 回调过滤
       { _id: 2, projectname: '跳过', name: '项目二' }
     ]
   });
+  // interface 切片已迁 Zustand（批次5）：list 改经真实 store 播种（必须在渲染前）
+  seedInterfaceStore({
+    list: [
+      { _id: 1, name: '分类A', list: [{ _id: 11, path: '/api/a', method: 'GET', status: 'done' }] },
+      { _id: 2, name: '分类B', list: [{ _id: 12, path: '/api/b', method: 'POST', status: 'undone' }] }
+    ]
+  });
   const { container } = renderWithProviders(
     React.createElement(ImportInterface, {
       currProjectId: '12',
       selectInterface: (ids, projectId) => selectInterfaceCalls.push([ids, projectId])
     }),
-    {
-      seedState: {
-        inter: {
-          list: [
-            { _id: 1, name: '分类A', list: [{ _id: 11, path: '/api/a', method: 'GET', status: 'done' }] },
-            { _id: 2, name: '分类B', list: [{ _id: 12, path: '/api/b', method: 'POST', status: 'undone' }] }
-          ]
-        }
-      }
-    }
+    {}
   );
 
   const selectAll = container.querySelector('input[aria-label="Select all"]');

@@ -22,7 +22,8 @@ import AceEditor from 'client/components/AceEditor/AceEditor';
 import constants from 'client/constants/variable.js';
 import { httpCodes } from '../index.js';
 import './CaseDesModal.scss';
-import { connect } from 'react-redux';
+// interface 切片已迁至 Zustand（批次5）：原 connect 注入的 currInterface 改 store 订阅
+import useInterfaceStore from '../../../client/store/interfaceStore';
 import json5 from 'json5';
 
 const formItemLayout = {
@@ -85,6 +86,8 @@ function preProcess(caseData) {
  */
 function CaseDesForm(props) {
   const [form] = Form.useForm();
+  // interface 切片已迁至 Zustand（批次5）：原 connect 映射的 currInterface 改 store 订阅
+  const currInterface = useInterfaceStore(state => state.curdata);
   const [state, setState] = useState(preProcess(props.caseData));
   // antd3 在渲染时读取 getFieldValue('ip_enable') 控制显隐与条件规则;
   // antd4 需通过 useWatch 订阅字段变化,初值回退到本地 state
@@ -125,7 +128,7 @@ function CaseDesForm(props) {
       req_body_other,
       req_body_is_json_schema,
       req_params
-    } = props.currInterface;
+    } = currInterface;
     /** @type {any[]} */
     let keys = [];
     req_query &&
@@ -476,7 +479,7 @@ function CaseDesForm(props) {
             <AceEditor
               className="pretty-editor"
               data={res_body}
-              mode={props.currInterface.res_body_type === 'json' ? null : 'text'}
+              mode={currInterface.res_body_type === 'json' ? null : 'text'}
               onChange={handleRequestBody}
             />
           </FormItem>
@@ -488,16 +491,10 @@ function CaseDesForm(props) {
 
 CaseDesForm.propTypes = {
   caseData: PropTypes.object,
-  currInterface: PropTypes.object,
   onOk: PropTypes.func,
   onCancel: PropTypes.func,
   isAdd: PropTypes.bool,
   visible: PropTypes.bool
 };
 
-const CaseDesModal = connect((/** @type {any} */ state) => {
-  return {
-    currInterface: state.inter.curdata
-  };
-})(CaseDesForm);
-export default CaseDesModal;
+export default CaseDesForm;

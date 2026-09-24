@@ -1,25 +1,24 @@
 // @ts-check
 import React, { useRef, useState } from 'react';
-import { useDispatch } from 'react-redux';
 import { Input, AutoComplete } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import './Search.scss';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 // menu / group 切片已迁至 Zustand（批次2 / 批次3）；project 切片的 stale 订阅
-// （仅声明未消费）随批次4 迁移移除；interface 模块仍未迁移
+// （仅声明未消费）随批次4 迁移移除；interface 切片已迁至 Zustand（批次5）
 import useMenuStore from '../../../store/menuStore';
 import useGroupStore from '../../../store/groupStore';
-
-import { fetchInterfaceListMenu } from '../../../reducer/modules/interface';
+import useInterfaceStore from '../../../store/interfaceStore';
 
 export default function Srch() {
-  const dispatch = useDispatch();
   const navigate = useNavigate();
   const changeMenuItem = useMenuStore(state => state.changeMenuItem);
   const setCurrGroup = useGroupStore(state => state.setCurrGroup);
   const fetchGroupMsg = useGroupStore(state => state.fetchGroupMsg);
   useGroupStore(state => state.groupList);
+  // interface 切片已迁至 Zustand（批次5）：fetchInterfaceListMenu 动作直调
+  const fetchInterfaceListMenu = useInterfaceStore(state => state.fetchInterfaceListMenu);
   const [dataSource, setDataSource] = useState(/** @type {any[]} */ ([]));
   // 选项附带的自定义数据索引(见 handleSearch),非响应式,用 ref 承载
   const searchIndexRef = useRef({});
@@ -40,7 +39,7 @@ export default function Srch() {
       await fetchGroupMsg(meta.groupId);
       navigate('/project/' + meta.id);
     } else if (meta.type === '接口') {
-      await dispatch(fetchInterfaceListMenu(meta.projectId));
+      await fetchInterfaceListMenu(meta.projectId);
       navigate('/project/' + meta.projectId + '/interface/api/' + meta.id);
     }
   }

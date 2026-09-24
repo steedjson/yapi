@@ -107,9 +107,10 @@
 - 推进路径：每次触碰未纳入文件时顺手加 `// @ts-check` + 纳入 include 并清零错误。~~**当前未纳入清单**：client/ 4 个（`constants/variable.js`、`history.js`、`reducer/modules/reducer.js`、`utils/sanitize.js`）、exts/ 14 个插件入口 `index.js`/`defaultTheme.js`（清单/主题数据文件）。~~ → **已全部纳入（J 批）**：18 个文件补 `// @ts-check` 后入白名单，实测 0 错；至此 client/exts/common 下 JS 文件零遗漏。
 - 遗留技术细节：① `json5@2` 自带类型只导出 `{parse, stringify}` 无 default，而项目内 CJS/ESM 两种用法并存，故仍保留等价声明——若统一改命名导入即可删除；② `mockjs` 无自带类型，仍需声明（`json-schema-editor-visual` 已随自研编辑器批次 4 删除，其声明已无消费方）；③ ~~`common/lib.js` 的 `Compare*` 三个函数 `@param {*} flag` 尚可收紧为 `boolean`~~ → **已收紧（K 批：CompareArray/CompareObj 的 flag 改 boolean，调用点均传字面量 true）**。
 
-### 4. 状态管理 Redux+redux-promise → 轻量方案（暂缓）
+### 4. 状态管理 Redux+redux-promise → Zustand（已完成主体，剩收尾批）
 
-- 建议：迭代到对应 reducer 模块时以 Zustand（或 RTK）重写该模块，不整体大爆炸迁移。`redux-promise` 停更，但当前 15 个 reducer 模块均为薄封装，风险可控。
+- ~~建议：迭代到对应 reducer 模块时以 Zustand（或 RTK）重写该模块，不整体大爆炸迁移。`redux-promise` 停更，但当前 15 个 reducer 模块均为薄封装，风险可控。~~ → **已实施完成（试点 + 批次 1–5）**：全部业务 reducer 模块迁至 Zustand，`combineReducers` 状态树清零（最后注册项 inter 于批次 5 注销，空模块走占位 reducer fallback）。
+- **待收尾批次**：卸载 redux/react-redux/redux-promise（现仅剩 `client/index.js` Provider 挂载、ProjectCard 的 follow useDispatch、ProjectData 的 news dispatch 三处残留消费）；删除旧 reducer 模块文件（`client/reducer/modules/*.js` 及对应 `interfaceReducer.test.js` 护栏、reducer create/middleware）；`client/plugin.js` 的 add_reducer 钩子机制随卸载一并评估移除。
 
 ### 5. 文档系统 ydoc → VitePress（暂缓，低优先）
 
@@ -278,3 +279,4 @@
 | 状态管理迁移批次 4：user/project→Zustand（commit 本次，专项收官） | user.js 248 行（25 消费方）+ project.js 425 行（23 消费方）+ combineReducers 最后两个大模块 | 两个 Zustand store（userStore 14 字段含 loginState 三态门禁/projectStore 12 字段）；50 个消费方迁移（grep 零残留）；combineReducers 仅剩 inter（批次 5 可选）；新增 20 个 store 单测 + tester 补 loginLdapActions；32 个测试适配；docs §12 记录 | **Redux combineReducers 仅剩 inter——状态管理迁移实质完成**（inter 为 InterfaceColContent/InterfaceCaseContent 共用的深层路由状态，批次 5 可选）。**评审发现并修复 1 个 Blocker**：ProjectCard 复制流程 `checkProjectName` 的 messageMiddleware throw 旧语义充当重名门禁，Zustand 切换后门禁丢失致重名项目可创建——补 errcode 检查恢复。2 Major（Reg/AddProject 失败静默）+ 2 Minor 已落实。语义差异已在 docs §12 登记：Login/Reg 失败提示从双 toast 变单 toast；stale 订阅清理。ladp 历史拼写保留。门禁（三方独立复跑 + UI 实测）：typecheck 0、lint 0/0、**npm test 1043** 全绿冷库、audit:ci 通过 |
 
 | react-router v7 迁移可行性评估（2026-09-23，docs/react-router-v7-evaluation.md） | react-router 6.30.6，audit 2 项 moderate（CVE-2025-68470 开放重定向 + SSR 构造器注入） | 评估结论：**建议暂缓，等 React 19 升级时一并跳 v8**。v7 可行（React 18.3.1 满足 peer）但收益低（moderate 实际风险低——内网工具无 SSR/无用户可控外部 URL）；v8 需 React 19（当前 18.3.1）；工作量 1-2 天（32 文件适配+回归） | moderate 已由 audit:ci 基线差分门禁覆盖；前置条件：React 19 升级 + withRouter shim 适配 + 32 文件桩适配；启动时机与 React 19 升级合并，避免两次 breaking migration |
+| 状态管理迁移批次 5：inter→Zustand（commit 本次，Redux 局收官） | interface.js 218 行 reducer（8 字段 10 动作，13 消费方）+ `combineReducers` 最后一块注册项 | interfaceStore（竞态守卫内聚/errcode===0 守卫/delete* reject 透传）；13 消费方迁移（含 InterfaceEditForm 删 connect、Activity 删死订阅、CaseDesModal 删 connect）；combineReducers 注销后空模块 fallback 占位 reducer；18 个新增 store 单测 + 11 个测试文件适配；docs §13 记录 | **Redux 状态树清零：combineReducers 最后注册项撤销，Redux 仅存 Provider 挂载与 follow/ProjectData 残留派发（收尾批次处理）**。守卫补强 3 处（getList 防 undefined 覆盖/copyInterface 中止防 undefined POST/删除确认 errcode 守卫）。语义差异登记：双 toast→单 toast、Edit.js 保存失败误报修正（重拉失败仍走保存成功）、40011 统一保留旧状态（修正旧版 `list: null` 缺陷）。评审 PASS + 7 Nitpick（文档口径 4/测试补 4 条错误路径/冗余变量/static-prd 策略）全部落实。门禁（三方独立复跑 + UI 实测）：typecheck 0、lint 0/0、**npm test 1061** 全绿冷库、build-client 成功、UI_VERIFIED（接口列表 585 个/详情/编辑保存/运行/高级Mock/搜索跳转/动态页/分类增删/Wiki，console 零 JS 错误） |

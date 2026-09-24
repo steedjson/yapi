@@ -14,9 +14,13 @@ const { default: TimeTree } = require('../../../client/components/TimeLine/TimeL
 // 与 TimeLine.js 共享同一模块实例（babel CJS 转译后命中同一 require 缓存）：
 // news 切片已迁 Zustand，动态数据经 useNewsStore 播种/断言
 const { default: useNewsStore } = require('../../../client/store/newsStore');
+// interface 切片已迁 Zustand（批次5）：fetchInterfaceList 不再经 redux 派发，
+// 断言改为反向断言（不再有 yapi/interface/* action）+ 渲染结果断言
+const { resetInterfaceStore } = require('../../helpers/interfaceStores');
 
-// fetchNewsData/fetchMoreNews（Zustand）与 fetchInterfaceList（redux）都会在挂载即发请求，
-// 因此每个用例都必须先打桩（axios 为 CJS 单例，生产代码调用时才读取 .get，替换属性即可生效）
+// fetchNewsData/fetchMoreNews（Zustand）与 fetchInterfaceList（Zustand，批次5）都会在
+// 挂载即发请求，因此每个用例都必须先打桩（axios 为 CJS 单例，生产代码调用时才读取
+// .get，替换属性即可生效）
 const originalAxiosGet = axios.get;
 
 test.serial.afterEach.always(() => {
@@ -25,6 +29,8 @@ test.serial.afterEach.always(() => {
   axios.get = originalAxiosGet;
   // news 已迁 Zustand：模块级单例，用例间复位避免状态串场
   useNewsStore.setState({ newsData: { list: [], total: 0 }, curpage: 1, newsRequestId: 0 });
+  // interface 已迁 Zustand（批次5）：同样复位
+  resetInterfaceStore();
 });
 
 function sleep(ms) {
@@ -37,10 +43,6 @@ async function flushEffects(ms) {
     await sleep(ms == null ? 15 : ms);
   });
 }
-
-// 动作类型常量取自 client/reducer/modules/interface.js，按线上契约硬编码断言
-// （news 已迁 Zustand，不再有 yapi/news/* redux action，仅保留反向断言）
-const FETCH_INTERFACE_LIST = 'yapi/interface/FETCH_INTERFACE_LIST';
 
 function makeNewsItem(overrides) {
   return Object.assign(
@@ -200,11 +202,18 @@ test.serial('type=project 时拉取接口列表并渲染 Api 查询行', async t
   const { container, dispatched } = renderTimeTree({ typeid: 42, type: 'project' }, makeSeed());
 
   t.truthy(container.textContent.indexOf('选择查询的 Api：') > -1, '应渲染 Api 查询行');
-  // fetchInterfaceList 是 async 函数,dispatch 发生在微任务中,需等待后再断言
+  // fetchInterfaceList 已迁 Zustand（批次5），不再经 redux 派发
   await flushEffects();
-  const listActions = dispatched.filter(a => a.type === FETCH_INTERFACE_LIST);
-  t.is(listActions.length, 1, 'project 类型应派发 FETCH_INTERFACE_LIST');
+  t.falsy(
+    dispatched.some(action => String(action.type).indexOf('yapi/interface/') === 0),
+    '拉取接口列表不应再经 redux 派发（已迁 Zustand）'
+  );
   t.truthy(getCalls.indexOf('/api/interface/list') > -1, '应请求接口列表数据');
+  // fetchInterfaceList 已迁 Zustand（批次5）：数据写入 store（渲染进 AutoComplete 需下拉展开，
+  // 此处断言 store 状态与组件消费链已接上）
+  const { default: useInterfaceStore } = require('../../../client/store/interfaceStore');
+  t.is(useInterfaceStore.getState().totalTableList.length, 1, '接口列表数据应写入 interfaceStore');
+  t.is(useInterfaceStore.getState().totalTableList[0].title, '登录');
 
   seedNews([makeNewsItem()]);
   const groupType = renderTimeTree({ typeid: 42, type: 'group' }, makeSeed());

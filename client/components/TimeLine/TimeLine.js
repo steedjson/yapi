@@ -2,15 +2,14 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Timeline, Spin, Row, Col, Tag, Avatar, Button, Modal, AutoComplete } from 'antd';
 import PropTypes from 'prop-types';
-import { useDispatch } from 'react-redux';
 import { formatTime } from '../../common.js';
 import showDiffMsg from '../../../common/diff-view.js';
 import sanitizeHtml from '../../utils/sanitize.js';
 import variable from '../../constants/variable';
 import { Link } from 'react-router-dom';
-// news 切片已迁至 Zustand（批次2），interface 模块仍未迁移
+// news 切片已迁至 Zustand（批次2），interface 切片已迁至 Zustand（批次5）
 import useNewsStore from '../../store/newsStore';
-import { fetchInterfaceList } from '../../reducer/modules/interface.js';
+import useInterfaceStore from '../../store/interfaceStore';
 import ErrMsg from '../ErrMsg/ErrMsg.js';
 // jsondiffpatch 0.7 起移除 dist UMD 产物, 主入口为 CJS/ESM 双形态, webpack 直接打包 lib;
 // formatters 亦从主入口移除, 改为子路径导出 jsondiffpatch/formatters/html
@@ -54,13 +53,14 @@ AddDiffView.propTypes = {
  * @param {any} props
  */
 export default function TimeTree(props) {
-  const dispatch = useDispatch();
   // news 切片已迁至 Zustand（批次2）；user 切片已迁至 Zustand（批次4），
   // 原历史遗留的 user.uid 订阅（仅声明未消费）随迁移移除
   const newsData = /** @type {any} */ (useNewsStore(state => state.newsData));
   const curpage = useNewsStore(state => state.curpage);
   const fetchNewsData = useNewsStore(state => state.fetchNewsData);
   const fetchMoreNews = useNewsStore(state => state.fetchMoreNews);
+  // interface 切片已迁至 Zustand（批次5）：fetchInterfaceList 动作直调，不再经 redux dispatch
+  const fetchInterfaceList = useInterfaceStore(state => state.fetchInterfaceList);
 
   // 旧版 state.bidden 仅被写入从未被读取(死状态),迁移时一并移除
   const [loading, setLoading] = useState(false);
@@ -72,7 +72,7 @@ export default function TimeTree(props) {
 
   // 用 ref 始终指向最新 props/state,异步回调(getMore)中读取时不会拿到陈旧值
   const latestRef = useRef({});
-  latestRef.current = { typeid: props.typeid, type: props.type, newsData, curpage, dispatch };
+  latestRef.current = { typeid: props.typeid, type: props.type, newsData, curpage, fetchInterfaceList };
 
   useEffect(() => {
     // 对应原 UNSAFE_componentWillMount + UNSAFE_componentWillReceiveProps:
@@ -114,13 +114,12 @@ export default function TimeTree(props) {
   }
 
   async function getApiList() {
-    let result = await latestRef.current.dispatch(
-      fetchInterfaceList({
-        project_id: latestRef.current.typeid,
-        limit: 'all'
-      })
-    );
-    setApiList(result.payload.data.data.list);
+    // interface store 动作直调（批次5）：网络错误返回 null，渲染层做兜底空数组
+    let result = await latestRef.current.fetchInterfaceList({
+      project_id: latestRef.current.typeid,
+      limit: 'all'
+    });
+    setApiList(result && result.data && result.data.data ? result.data.data.list : []);
   }
 
   /**

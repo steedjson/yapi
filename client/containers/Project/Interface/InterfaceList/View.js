@@ -1,11 +1,10 @@
 // @ts-check
 import './View.scss';
 import React, { useEffect, useState } from 'react';
-// project 切片已迁至 Zustand（批次4），inter 模块仍未迁移（保留 useSelector 混用）
-import { useSelector } from 'react-redux';
-// group 切片已迁至 Zustand（批次3）
+// group/project 切片已迁至 Zustand（批次3 / 批次4）；interface 切片已迁至 Zustand（批次5）
 import useGroupStore from '../../../../store/groupStore';
 import useProjectStore from '../../../../store/projectStore';
+import useInterfaceStore from '../../../../store/interfaceStore';
 import { FileOutlined, CopyOutlined } from '@ant-design/icons';
 import { Table, Row, Col, Tooltip, message } from 'antd';
 import { Link } from 'react-router-dom';
@@ -22,13 +21,13 @@ const HTTP_METHOD = constants.HTTP_METHOD;
 
 /**
  * 接口详情预览 Tab。原类组件经 Hooks 现代化迁移，渲染结构与行为保持一致：
- * - 旧 @connect 改为 useSelector；
+ * - 旧 @connect 改为 store 订阅（interface 切片批次5 迁 Zustand）；
  * - 旧 componentDidMount（curData 无 title 时把 init 置为 false，切换为
  *   ErrMsg 兜底展示）改为仅挂载期执行一次的 useEffect；
  * - 原实例渲染辅助方法改为组件内普通函数，行为不变。
  */
 const View = () => {
-  const curData = useSelector(state => state.inter.curdata);
+  const curData = useInterfaceStore(state => state.curdata);
   const custom_field = useGroupStore(state => state.field);
   const currProject = useProjectStore(state => state.currProject);
 

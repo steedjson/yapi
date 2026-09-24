@@ -1,12 +1,12 @@
 // @ts-check
 import React, { useEffect, useRef, useState } from 'react';
 import { Tabs, Modal, Button, Spin, message } from 'antd';
-import { useDispatch, useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 import Edit from './Edit.js';
 import View from './View.js';
 import BlockPrompt from '../../../../components/BlockPrompt/BlockPrompt';
-import { fetchInterfaceData, changeEditStatus } from '../../../../reducer/modules/interface.js';
+// interface 切片已迁至 Zustand（批次5）
+import useInterfaceStore from '../../../../store/interfaceStore';
 import Run from './Run/Run.js';
 const plugin = require('client/plugin.js');
 
@@ -15,8 +15,8 @@ const TITLE = 'YApi-高效、易用、功能强大的可视化接口管理平台
 /**
  * 接口详情内容区（预览/编辑/运行 Tabs）。原类组件经 Hooks 现代化迁移，
  * 渲染结构与行为保持一致：
- * - 旧 @connect 改为 useSelector/useDispatch（list 为历史遗留仅声明未消费，
- *   保留订阅避免行为差异）；
+ * - 旧 @connect 改为 store 订阅（interface 切片批次5 迁 Zustand；
+ *   list 为历史遗留仅声明未消费，随迁移删除）；
  * - 旧 withRouter 注入的 match.params.actionId 改为 useParams，实例字段
  *   this.actionId 改为渲染期同步镜像的 ref（异步回调据此丢弃过期响应）；
  * - 旧 UNSAFE_componentWillMount / UNSAFE_componentWillReceiveProps /
@@ -24,11 +24,10 @@ const TITLE = 'YApi-高效、易用、功能强大的可视化接口管理平台
  *   （prev ref 比较）与卸载清理。
  */
 const Content = () => {
-  const dispatch = useDispatch();
-  const curdata = useSelector(state => state.inter.curdata);
-  // 历史遗留仅声明未消费，保留订阅避免行为差异
-  useSelector(state => state.inter.list);
-  const editStatus = useSelector(state => state.inter.editStatus);
+  const curdata = useInterfaceStore(state => state.curdata);
+  const editStatus = useInterfaceStore(state => state.editStatus);
+  const fetchInterfaceData = useInterfaceStore(state => state.fetchInterfaceData);
+  const changeEditStatus = useInterfaceStore(state => state.changeEditStatus);
   const { actionId } = /** @type {any} */ (useParams());
 
   // 镜像旧实例字段 this.actionId：渲染期同步更新，等价旧 cWM/cWRP 中 render 前赋值，
@@ -58,10 +57,11 @@ const Content = () => {
       loadError: ''
     });
     try {
-      const result = await dispatch(fetchInterfaceData(requestActionId));
-      const response = result && result.payload;
-      if (!response || !response.data || response.data.errcode !== 0 || !response.data.data) {
-        throw new Error((response && response.data && response.data.errmsg) || '接口不存在');
+      // 批次5：store 直调返回 axios 响应（网络错误已归一为 null）
+      const result = await fetchInterfaceData(requestActionId);
+      // 失败兜底文案：网络错误时旧链路为 `Network Error`，现为兜底 `接口不存在`（有 loadError 面板兜底，无功能影响，§13.2 登记）
+      if (!result || !result.data || result.data.errcode !== 0 || !result.data.data) {
+        throw new Error((result && result.data && result.data.errmsg) || '接口不存在');
       }
       if (actionIdRef.current === requestActionId) {
         patchState({ loading: false });
@@ -77,7 +77,7 @@ const Content = () => {
   useEffect(() => {
     handleRequest(actionIdRef.current);
     return () => {
-      dispatch(changeEditStatus(false));
+      changeEditStatus(false);
       document.getElementsByTagName('title')[0].innerText = TITLE;
     };
   }, []);
@@ -88,7 +88,7 @@ const Content = () => {
   useEffect(() => {
     if (prevActionIdRef.current === actionId) return;
     prevActionIdRef.current = actionId;
-    dispatch(changeEditStatus(false));
+    changeEditStatus(false);
     handleRequest(actionId);
   }, [actionId]);
 

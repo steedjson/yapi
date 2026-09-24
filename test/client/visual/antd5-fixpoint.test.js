@@ -90,6 +90,8 @@ const {
   seedProjectStore,
   resetUserProjectStores
 } = require('../../helpers/userProjectStores');
+// interface 切片已迁 Zustand（批次5）：播种/复位辅助
+const { seedInterfaceStore, resetInterfaceStore } = require('../../helpers/interfaceStores');
 const INITIAL_GROUP_STATE = {
   groupList: [],
   currGroup: { group_name: '', group_desc: '', custom_field1: { name: '', enable: false } },
@@ -314,11 +316,9 @@ async function mountInterfaceView() {
   const { default: View } = require('../../../client/containers/Project/Interface/InterfaceList/View.js');
   seedUserStore({ uid: 11 });
   seedProjectStore({ currProject: CURR_PROJECT_FULL });
+  // interface 切片已迁 Zustand（批次5）：curdata/list 改经 interfaceStore 播种
+  seedInterfaceStore({ curdata: INTERFACE_CURDATA, list: INTERFACE_MENU_TREE, editStatus: false });
   renderWithProviders(React.createElement(View), {
-    seedState: {
-      inter: { curdata: INTERFACE_CURDATA, list: INTERFACE_MENU_TREE, editStatus: false },
-      group: { field: { enable: true, name: '业务线' } }
-    },
     initialPath: '/project/12/interface/api/100'
   });
   await flushEffects(200);
@@ -533,4 +533,5 @@ test.serial.afterEach.always(() => {
   axios.post = originalAxiosPost;
   useGroupStore.setState(INITIAL_GROUP_STATE);
   resetUserProjectStores();
+  resetInterfaceStore();
 });

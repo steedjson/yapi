@@ -11,6 +11,9 @@ const path = require('path');
 const useGroupStore = require('../../../client/store/groupStore').default;
 // project 切片已迁 Zustand（批次4）：InterfaceEditForm 的 projectMsg 改经 useProjectStore
 const { seedProjectStore } = require('../../helpers/userProjectStores');
+// interface 切片已迁 Zustand（批次5）：changeEditStatus 断言改 store 状态
+const { default: useInterfaceStore } = require('../../../client/store/interfaceStore');
+const { resetInterfaceStore } = require('../../helpers/interfaceStores');
 const INITIAL_GROUP_STATE = {
   groupList: [],
   currGroup: { group_name: '', group_desc: '', custom_field1: { name: '', enable: false } },
@@ -325,10 +328,11 @@ test.serial('InterfaceEditForm: json-schema 开启态渲染自研编辑器且编
   t.truthy(userNameInput, 'BODY 编辑器应按 req_body_other 的 schema 渲染出 user 行');
 
   // 编辑上抛：点「添加属性」→ 编辑器新增一行，且 onChange 经父组件 handler 链
-  //（handleReqBodySchemaChange → changeEditStatus）派发 redux action。
-  // 父 handler 的 changeEditStatus 调度带 1 秒静默窗，先等窗口过去再编辑。
+  //（handleReqBodySchemaChange → changeEditStatus）写入 interfaceStore（批次5 前为
+  // redux action）。父 handler 的 changeEditStatus 调度带 1 秒静默窗，先等窗口过去再编辑。
   // 注意：此 1100ms 硬编码等待与生产 1 秒静默窗耦合（静默窗时长变化须同步调整），
   // 批次后续清理静默窗时一并处理（登记项，暂不改变行为）。
+  resetInterfaceStore();
   const rowCountBefore = bodyEditor.querySelectorAll('.jse-row').length;
   await new Promise(resolve => setTimeout(resolve, 1100));
   await act(async () => {
@@ -340,9 +344,10 @@ test.serial('InterfaceEditForm: json-schema 开启态渲染自研编辑器且编
     rowCountBefore + 1,
     '「添加属性」后编辑器应新增一行'
   );
-  t.true(
-    utils.dispatched.some(a => a.type === 'yapi/interface/CHANGE_EDIT_STATUS' && a.status === true),
-    '编辑器 onChange 应上抛父组件并派发 changeEditStatus(true)'
+  t.is(
+    useInterfaceStore.getState().editStatus,
+    true,
+    '编辑器 onChange 应上抛父组件并写入 interfaceStore（changeEditStatus(true)）'
   );
 
   cleanup();
