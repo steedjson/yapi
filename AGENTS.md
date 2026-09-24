@@ -82,3 +82,18 @@ Consult `config_example.json` and `docs/devops/` for setup. Never commit credent
 ### 回收与合并
 
 子 Agent 只返回 diff、测试报告、审查意见或交付结论。主 Agent 审阅 PASS 结论与 VERIFIED 测试报告（或 csl-orchestrator 的交付结论），确认无越界与遗留风险后，执行最终提交并推进下一阶段。
+
+## BUGLOG — 已知坑与修法(跨 agent 共享)
+
+- 位置:`docs/BUGLOG/<当前分支>.md`(按分支一文件;分支名 `/`→`-`;无 git 用 `default.md`)
+- **读的时机**:修改函数签名/对外行为前;审查 diff 前;fix 类提交前。通读最近 30 条及命中模块条目
+- **写的时机**:修复缺陷并确认根因后,立即追加一条(最新在上):
+
+  ```md
+  ## [YYYY-MM-DD][模块] 简述
+  - 现象: / - 根因: / - 修法: / - 关联: commit 或 文件:行号
+  - 复发: N 次 · 最近 日期(可选) / - 教训: 一句话
+  ```
+
+- **脱敏红线**:禁止客户名/真实姓名/内网地址/凭证,用 `<占位符>` 替代
+- 文件不存在则先创建标准头;条目只追加不删改

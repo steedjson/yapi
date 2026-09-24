@@ -46,7 +46,6 @@ client/plugin-module.js
 
 .claude
 .codegraph
-.wolf
 CLAUDE.md
 AGENT.md
 config.json
