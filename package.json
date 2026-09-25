@@ -1,6 +1,6 @@
 {
   "name": "yapi-vendor",
-  "version": "1.11.0",
+  "version": "2.0.0",
   "description": "YAPI",
   "main": "server/app.js",
   "scripts": {
@@ -146,7 +146,7 @@
     "ydoc-plugin-img-view": "^1.0.1"
   },
   "engines": {
-    "node": ">=20.11",
+    "node": ">=22.12",
     "npm": ">=8"
   },
   "overrides": {

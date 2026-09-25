@@ -207,7 +207,7 @@
 
 ## 五、验证基线
 
-- Node：`.nvmrc` 24.21.0（engines `>=20.11`，npm `>=8`）。
+- Node：`.nvmrc` 24.21.0（engines `>=22.12`——jsondiffpatch 0.7 require(esm) 的硬性下限，npm `>=8`；生产部署按 engines 强制检查）。版本锚点：**v2.0.0**（2026-09-26 打标，技术债治理收官基线）。
 - 门禁：`npm run lint`（覆盖全仓含 test/，0 error 0 warning，pre-commit 卡点）、`npm test`（**1057**）、`npm run typecheck`（0 错）、`npm run build-client`（0 error）、`npm run audit`（官方 registry 安全扫描，当前 2 项 moderate）、`npm run audit:ci`（基线差分门禁 0/0/2/0/2，仅对新增漏洞失败）。
 - CI：`.github/workflows/ci.yml`（push/PR 触发；mongo:7 service + 上述门禁全跑）。**首次真跑全绿：run 35341995159（3m44s）**，可用 `gh run list --repo steedjson/yapi` 查看（注意本仓库有两个 remote，`gh` 需显式 `--repo steedjson/yapi`，否则会解析到 upstream）。本地等价验证方式：`docker run -d --rm -p <空闲端口>:27017 mongo:7` + 按 workflow heredoc 写 config.json（改端口）+ `npm test`。
 - **测试验证必须用冷库**（每轮前 drop `yapi_test`）：温库会掩盖启动期 DB 工作的时序问题（冷库 teardown flake 曾在温库下"通过"、在冷库必现）。

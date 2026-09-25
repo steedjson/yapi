@@ -10,7 +10,7 @@ proxy_set_header Connection "upgrade";
 ```
 
 ## 环境要求
-* Node.js（本项目默认开发环境使用 24.21.0 LTS，历史回滚环境保留 10.24.1）
+* Node.js（**生产部署硬性要求 ≥ 22.12**：jsondiffpatch 0.7 为 ESM-only，经 require(esm) 加载，低于 22.12 启动即 ERR_REQUIRE_ESM；本项目默认开发环境使用 24.21.0 LTS，历史回滚环境保留 10.24.1）
 * npm（随 Node.js 24.21.0 LTS 安装，使用与 Node.js 兼容的 npm 版本）
 * MongoDB（2.6+；本地开发可使用 Docker 启动 MongoDB 4.4）
 
