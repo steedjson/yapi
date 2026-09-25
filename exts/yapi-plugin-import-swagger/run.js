@@ -1,5 +1,8 @@
 // @ts-check
-const swagger = require('swagger-client');
+// swagger-client 双入口互操作：Node require 走 main(CJS 函数本体)，浏览器构建走
+// module(ES 命名空间，函数在 .default)——浏览器 bundle 下直接调用会报 not a function。
+const swaggerModule = /** @type {any} */ (require('swagger-client'));
+const swagger = swaggerModule.default || swaggerModule;
 const compareVersions = require('compare-versions');
 
   /** @type {any} */
