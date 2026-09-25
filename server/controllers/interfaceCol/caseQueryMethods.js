@@ -172,7 +172,7 @@ const yapi = requireAny('../../yapi.js');
         body = yapi.commons.json_parse(data.res_body);
         body = typeof body === 'object' ? body : {};
         if (data.res_body_is_json_schema) {
-          body = yapi.commons.schemaToJson(body, {
+          body = await yapi.commons.schemaToJson(body, {
             alwaysFakeOptionals: true
           });
         }
@@ -184,7 +184,7 @@ const yapi = requireAny('../../yapi.js');
         } else {
           bodyParams = yapi.commons.json_parse(data.req_body_other);
           if (data.req_body_is_json_schema) {
-            bodyParams = yapi.commons.schemaToJson(bodyParams, {
+            bodyParams = await yapi.commons.schemaToJson(bodyParams, {
               alwaysFakeOptionals: true
             });
           }

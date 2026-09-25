@@ -747,7 +747,7 @@ class interfaceController extends baseController {
     let schema = ctx.request.body.schema;
     let required = ctx.request.body.required;
 
-    let res = yapi.commons.schemaToJson(schema, {
+    let res = await yapi.commons.schemaToJson(schema, {
       alwaysFakeOptionals: required === undefined ? true : required
     });
     // console.log('res',res)

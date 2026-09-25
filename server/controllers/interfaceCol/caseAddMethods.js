@@ -178,7 +178,7 @@ const yapi = requireAny('../../yapi.js');
           interfaceData.req_body_is_json_schema
         ) {
           let req_body_other = yapi.commons.json_parse(interfaceData.req_body_other);
-          req_body_other = yapi.commons.schemaToJson(req_body_other, {
+          req_body_other = await yapi.commons.schemaToJson(req_body_other, {
             alwaysFakeOptionals: true
           });
 

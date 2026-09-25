@@ -316,7 +316,7 @@ module.exports = async (ctx, next) => {
         if (interfaceData.res_body_is_json_schema === true) {
           //json-schema
           const schema = yapi.commons.json_parse(interfaceData.res_body);
-          res = yapi.commons.schemaToJson(schema, {
+          res = await yapi.commons.schemaToJson(schema, {
             alwaysFakeOptionals: true
           });
         } else {

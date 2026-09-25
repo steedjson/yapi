@@ -20,17 +20,62 @@ const sandboxFn = require('./sandbox')
 
 const ejs = require('easy-json-schema');
 
-const jsf = require('json-schema-faker');
 const { schemaValidator } = require('../../common/utils');
 const http = require('http');
 
-jsf.extend('mock', function () {
-  return {
-    mock: function (/** @type {any} */ xx) {
-      return Mock.mock(xx);
-    }
-  };
-});
+/** @type {Promise<any> | null} */
+let jsfPromise = null;
+// babel-register（test/ava 管线）会把源码中的字面量 import() 转译为 require 形态，
+// 而 0.6 exports 无 require 条件 → 测试环境断链（生产纯 node 无碍,实测确认）。
+// 经 Function 构造器调用可避开 babel 对 import() 语法的静态转译,生产/测试均走原生动态 import。
+const dynamicImport = /** @type {(specifier: string) => Promise<any>} */ (
+  new Function('specifier', 'return import(specifier);')
+);
+/**
+ * 惰性加载 json-schema-faker（模块级缓存 Promise）。
+ *
+ * 动机：json-schema-faker 0.6 起 ESM-only（exports 仅含 import 条件，无
+ * require/default 条件），顶层同步 require 在 0.6 上直接断链（生产与测试
+ * 同挂，见 TECH_DEBT.md「四」区 2026-09-20 回退登记）。改由首次调用
+ * schemaToJson 时动态 import（5 个调用点均处于 async 上下文），加载成功
+ * 后复用同一 Promise（后续调用零额外成本）；失败不缓存，允许下次重试。
+ * Node require(esm) 无法作为兜底：其 exports 解析不含 import 条件，对本包
+ * 报 ERR_PACKAGE_PATH_NOT_EXPORTED（0.6.3 实测）。裁决出处：
+ * docs/server-esm-evaluation.md「四 B1」。
+ *
+ * mock 扩展按 0.5/0.6 双 API 注册（YApi schema 的 mock 属性 → mockjs）：
+ * - 0.5 extend(name, factory)：factory 返回对象按属性子键调用，收到内层 spec；
+ * - 0.6 define(name, callback)：按 schema 节点 key 匹配扩展，callback 收到
+ *   完整属性值（如 {mock: '@cname'}），需解包后再交给 Mock.mock。
+ *
+ * @returns {Promise<any>} json-schema-faker 实例（已应用 mock 扩展）
+ */
+const loadJsf = () => {
+  if (!jsfPromise) {
+    jsfPromise = dynamicImport('json-schema-faker').then(
+      /** @param {any} jsfModule */ jsfModule => {
+        const jsf = jsfModule.default || jsfModule;
+        if (typeof jsf.define === 'function') {
+          jsf.define('mock', (/** @type {any} */ value) => {
+            const spec =
+              value && typeof value === 'object' && 'mock' in value ? value.mock : value;
+            return Mock.mock(spec);
+          });
+        } else {
+          jsf.extend('mock', () => ({
+            mock: /** @param {any} xx */ xx => Mock.mock(xx)
+          }));
+        }
+        return jsf;
+      }
+    );
+    jsfPromise.catch(() => {
+      // 失败不缓存（如临时安装损坏），下次调用重试
+      jsfPromise = null;
+    });
+  }
+  return jsfPromise;
+};
 
 const defaultOptions = {
   failOnInvalidTypes: false,
@@ -55,19 +100,40 @@ const defaultOptions = {
  * 按 JSON Schema 生成 mock 数据
  * @param {any} schema JSON Schema
  * @param {object} [options] json-schema-faker 选项
- * @returns {any} mock 结果, 生成失败时返回错误信息
+ * @returns {Promise<any>} mock 结果, 生成失败时返回错误信息（错误契约保持字符串返回,
+ *   调用方 await 后即得结果或错误文案, 不会 reject）
  */
-exports.schemaToJson = function (schema, options = {}) {
+exports.schemaToJson = async function (schema, options = {}) {
   Object.assign(options, defaultOptions);
 
-  jsf.option(options);
   let result;
+  let jsf = null;
   try {
-    result = jsf(schema);
+    jsf = await loadJsf();
+    if (typeof jsf.generateSync === 'function') {
+      // 0.6: 选项随调用传入（无全局注册表, 无需复位）。requiredOnly 由 0.6 兼容
+      // shim 处理（requiredOnly:true 且未显式给 optionalsProbability 时强制
+      // optionalsProbability:0/alwaysFakeOptionals:false, 与 0.5.9 优先级语义一致）。
+      // seed 缺省固定为 1（同一 schema 每次输出相同）, 为保持 0.5 每次调用随机化
+      // 的行为, 显式注入随机 seed（不回写调用方 options 对象）。
+      result = jsf.generateSync(schema, {
+        ...options,
+        seed: Math.floor(Math.random() * 0x7fffffff)
+      });
+    } else {
+      // 0.5 升级窗口兼容: 全局 option + 可调用函数体（jsf(schema) 已废弃, 走 .generate()）
+      jsf.option(options);
+      result =
+        typeof jsf.generate === 'function' ? jsf.generate(schema) : jsf(schema);
+    }
   } catch (/** @type {any} */ err) {
     result = err.message;
+  } finally {
+    // 对齐原同步版复位语义: 仅 0.5 全局注册表需要复位; 0.6 无全局状态, 无需复位
+    if (jsf && typeof jsf.option === 'function') {
+      jsf.option(defaultOptions);
+    }
   }
-  jsf.option(defaultOptions);
   return result;
 };
 

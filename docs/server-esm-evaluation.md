@@ -43,12 +43,12 @@
 
 ## 四、推荐方案（B）的实施要点
 
-### B1：schemaToJson 惰性化，解锁 json-schema-faker 0.6（推荐，半天小批）
+### B1：schemaToJson 惰性化，解锁 json-schema-faker 0.6（推荐，半天小批）→ **已实施（2026-09-25，commit 由主 Agent 填）**
 
-1. `commons.js:23` 顶层 require 改为模块级缓存的惰性加载（启动期或首次调用时 `await import('json-schema-faker')`，缓存 Promise，5 个调用点全在 async 上下文，首次后零额外成本）；`schemaToJson` 签名改 async，5 个调用点加 await（机械改写）。
-2. 升级 0.5.9 → 0.6 最新，写 **API 适配层**（0.6 API 面与 0.5 的 `jsf.option()/jsf(schema)` 不同，且 0.6 `generate` 可能异步化——以实测为准）。
-3. **等价性探针**：沿用 0.5.9 升级批的方法——多形态 schema 探针（含 requiredOnly、faker 引用、嵌套、oneOf 等 7+ 形态）对比 0.5.9 与 0.6 输出语义；mock 响应全链路 UI 验证。
-4. 验收：冷库全量 + audit 复跑 + mock 生成 UI 实测。
+1. ~~`commons.js:23` 顶层 require 改为模块级缓存的惰性加载~~ **已落地**：模块级缓存 Promise 的 `import()`（失败不缓存可重试）；`schemaToJson` 签名改 async，5 个调用点加 await（机械改写）。**实施新增发现**：babel-register（test/ava 管线）会把字面量 `import()` 转译为 require 形态，0.6 无 require 条件即断——经 `new Function('s','return import(s)')` 逃逸 babel 静态转译，生产/测试均走原生动态 import（见 BUGLOG codex-refactor-foundation 条目）。
+2. ~~升级 0.5.9 → 0.6 最新，写 API 适配层~~ **已落地（0.6.3）**：`jsf.option()+jsf(schema)` → `generateSync(schema, options)`（选项随调用传入，无全局注册表/复位步骤）；`requiredOnly:true` 由 0.6 兼容 shim 处理，与 0.5.9 的 requiredOnly>alwaysFakeOptionals 优先级语义等价；`failOnInvalidFormat` 在 0.6 无对应物（未知 format 实测不抛，等价）；`extend('mock')` → `define('mock', cb)`（cb 收完整属性值需解包）；**seed 差异**：0.6 缺省 seed=1 输出确定，适配层显式注入随机 seed 保持每调用随机化（探针 ⑩ 守护）。
+3. ~~等价性探针~~ **已落地**：`test/server/schemaToJson-equivalence.test.js` 14 用例，0.5.9 基线 12 用例先行全绿，升级终态 14/14×3 轮稳定。登记差异（均为非法/边缘 schema 容错路径）：裸非法 type undefined→null、嵌套 {x:undefined}→{x:null}、无 type schema（42/{}）恒报错字符串/恒 {} → 按 seed 随机选型；调用点影响面已核对（Object.assign/typeof 守卫消化）。
+4. 验收：mock 响应全链路 UI 验证由主 Agent 执行；冷库全量测试与 audit 复跑由 csl-tester 承接（本批 audit:ci 0/0/2/0/2 持平，jsonpath-plus 随 0.6 无依赖树彻底出树）。
 
 ### B2（可选）：插件加载卫生批
 
