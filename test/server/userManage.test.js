@@ -140,8 +140,11 @@ test.serial('add admin 成功: save 入参为 generatePassword 加密格式且�
   t.is(saved.role, 'admin');
   t.is(saved.type, 'site');
   t.true(typeof saved.passsalt === 'string' && saved.passsalt.length > 0);
-  // password 必须是 generatePassword(明文, 随机盐) 的加密结果
-  t.is(saved.password, yapi.commons.generatePassword('pw123456', saved.passsalt));
+  // password 必须是 generatePassword 生成的 scrypt 自描述格式，且能被 verifyPassword 往返校验
+  t.regex(saved.password, /^scrypt\$16384\$8\$1\$/);
+  const addVerify = yapi.commons.verifyPassword('pw123456', saved.passsalt, saved.password);
+  t.true(addVerify.valid);
+  t.false(addVerify.legacy);
   t.true(typeof saved.add_time === 'number');
   t.true(typeof saved.up_time === 'number');
   // 会为新建用户建立私人分组
@@ -274,7 +277,11 @@ test.serial('resetPassword 成功: update 入参为新盐加密的 password 与 
   t.true(typeof updateData.passsalt === 'string' && updateData.passsalt.length > 0);
   // 盐必须重新生成, 使原密码与旧登录态失效
   t.not(updateData.passsalt, 'oldsalt');
-  t.is(updateData.password, yapi.commons.generatePassword('newpw888', updateData.passsalt));
+  // password 必须是 scrypt 自描述格式且能被 verifyPassword 往返校验
+  t.regex(updateData.password, /^scrypt\$16384\$8\$1\$/);
+  const resetVerify = yapi.commons.verifyPassword('newpw888', updateData.passsalt, updateData.password);
+  t.true(resetVerify.valid);
+  t.false(resetVerify.legacy);
   t.true(typeof updateData.up_time === 'number');
   t.deepEqual(Object.keys(updateData).sort(), ['passsalt', 'password', 'up_time']);
   t.deepEqual(ctx.body.data, { _id: 22, ok: 1 });

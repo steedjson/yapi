@@ -212,7 +212,6 @@ async function mountLogin() {
   // user 切片已迁 Zustand（批次4）：改经 userStore 播种（快照 DOM 不变，仅数据源换轨）
   seedUserStore({ loginWrapActiveKey: '1', canRegister: true });
   renderWithProviders(React.createElement(LoginContainer), {
-    seedState: {},
     routePath: '/login',
     initialPath: '/login'
   });
@@ -224,7 +223,6 @@ async function mountHome() {
   const { default: Home } = require('../../../client/containers/Home/Home.js');
   seedUserStore({ isLogin: false, loginState: 1 });
   renderWithProviders(React.createElement(Home), {
-    seedState: {},
     routePath: '/',
     initialPath: '/'
   });
@@ -247,9 +245,6 @@ async function mountGroupList() {
   const { default: GroupList } = require('../../../client/containers/Group/GroupList/GroupList.js');
   seedUserStore({ role: 'regular', studyTip: 1, study: true });
   renderWithProviders(React.createElement(GroupList), {
-    seedState: {
-      group: { currGroup: G1, groupList: [G1, G2, G3], role: 'dev' }
-    },
     routePath: '/group/*',
     initialPath: '/group/71'
   });
@@ -301,17 +296,6 @@ async function mountInterfaceCol() {
     projectEnv: []
   });
   renderWithProviders(React.createElement(InterfaceColContent), {
-    seedState: {
-      interfaceCol: {
-        interfaceColList: [{ _id: 5, name: '集合A', desc: 'x' }],
-        currColId: 5,
-        currCaseId: null,
-        isShowCol: false,
-        isRander: false,
-        currCaseList: [],
-        envList: [{ _id: 'p1', name: '演示项目', env: [{ _id: 'e1', name: 'dev', domain: 'http://d.example.com', header: [] }] }]
-      },
-    },
     initialPath: '/project/12/interface/col/5',
     routePath: '/project/:id/interface/col/:actionId'
   });
@@ -348,11 +332,7 @@ async function mountPostman() {
   ]);
   window.crossRequest = function() {};
   const { default: Postman } = require('../../../client/components/Postman/Postman.js');
-  renderWithProviders(React.createElement(Postman, { curUid: 9, interfaceId: 100, projectId: 12, save: () => {}, data: POSTMAN_INTER, type: 'inter' }), {
-    seedState: {
-      group: { field: { enable: false, name: '' } }
-    }
-  });
+  renderWithProviders(React.createElement(Postman, { curUid: 9, interfaceId: 100, projectId: 12, save: () => {}, data: POSTMAN_INTER, type: 'inter' }));
   await flushEffects(400);
 }
 
@@ -366,7 +346,6 @@ async function mountStatistics() {
   ]);
   const statisticsPage = require('../../../exts/yapi-plugin-statistics/statisticsClientPage');
   renderWithProviders(React.createElement(statisticsPage.default), {
-    seedState: {},
     routePath: '/statistic',
     initialPath: '/statistic'
   });
@@ -380,7 +359,6 @@ async function mountRegister() {
   const { default: LoginContainer } = require('../../../client/containers/Login/LoginContainer.js');
   seedUserStore({ loginWrapActiveKey: '2', canRegister: true });
   renderWithProviders(React.createElement(LoginContainer), {
-    seedState: {},
     routePath: '/login',
     initialPath: '/login'
   });
@@ -411,9 +389,6 @@ async function mountGlobalChrome() {
       React.createElement(Footer)
     ),
     {
-      seedState: {
-        group: { groupList: [G1], currGroup: G1, role: 'dev' }
-      },
       routePath: '/',
       initialPath: '/'
     }
@@ -434,9 +409,7 @@ async function mountGroupMember() {
     { match: '/api/group/get', respond: () => ({ errcode: 0, data: Object.assign({}, G1, { role: 'owner', custom_field1: { name: '', enable: false } }) }) }
   ]);
   const { default: MemberList } = require('../../../client/containers/Group/MemberList/MemberList.js');
-  renderWithProviders(React.createElement(MemberList), {
-    seedState: { group: { currGroup: G1, role: 'owner' } }
-  });
+  renderWithProviders(React.createElement(MemberList));
   await flushEffects(120);
 }
 
@@ -453,12 +426,7 @@ async function mountGroupSetting() {
   });
   const { default: GroupSetting } = require('../../../client/containers/Group/GroupSetting/GroupSetting.js');
   seedUserStore({ uid: 11 });
-  renderWithProviders(React.createElement(GroupSetting), {
-    seedState: {
-      group: { currGroup: Object.assign({ custom_field1: { name: '业务线', enable: true } }, G1), role: 'owner' },
-      news: { newsData: { notRead: {} } }
-    }
-  });
+  renderWithProviders(React.createElement(GroupSetting));
   await flushEffects(120);
 }
 
@@ -466,9 +434,7 @@ async function mountGroupSetting() {
 async function mountGroupLog() {
   seedGroupStore({ currGroup: G1 });
   const { default: GroupLog } = require('../../../client/containers/Group/GroupLog/GroupLog.js');
-  renderWithProviders(React.createElement(GroupLog), {
-    seedState: { group: { currGroup: G1 } }
-  });
+  renderWithProviders(React.createElement(GroupLog));
   await flushEffects(60);
 }
 
@@ -491,14 +457,6 @@ const CURR_PROJECT_FULL = {
   after_script: 'console.log(2);',
   env: [],
   cat: [{ _id: 5, name: '分类五', desc: '分类五描述' }]
-};
-const PROJECT_SEED = {
-  group: {
-    currGroup: { _id: 1, group_name: '分组一', group_desc: '', custom_field1: { name: '', enable: false } },
-    groupList: [{ _id: 1, group_name: '分组一' }]
-  },
-  inter: { curdata: { catid: 3 } },
-  news: { updateLogList: [] }
 };
 
 // user/project 切片已迁 Zustand（批次4）：project 域渲染前统一播种
@@ -528,7 +486,6 @@ async function mountProjectSetting() {
   const { default: Setting } = require('../../../client/containers/Project/Setting/Setting.js');
   seedProjectDomainStores();
   renderWithProviders(React.createElement(Setting), {
-    seedState: PROJECT_SEED,
     routePath: '/project/:id/setting',
     initialPath: '/project/12/setting'
   });
@@ -540,9 +497,7 @@ async function mountProjectToken() {
   stubProjectApis();
   const { default: ProjectToken } = require('../../../client/containers/Project/Setting/ProjectToken/ProjectToken.js');
   seedProjectDomainStores();
-  renderWithProviders(React.createElement(ProjectToken, { projectId: 12, curProjectRole: 'admin' }), {
-    seedState: PROJECT_SEED
-  });
+  renderWithProviders(React.createElement(ProjectToken, { projectId: 12, curProjectRole: 'admin' }));
   await flushEffects(120);
 }
 
@@ -552,7 +507,6 @@ async function mountProjectData() {
   const { default: ProjectData } = require('../../../client/containers/Project/Setting/ProjectData/ProjectData.js');
   seedProjectDomainStores();
   renderWithProviders(React.createElement(ProjectData), {
-    seedState: PROJECT_SEED,
     routePath: '/project/:id/data',
     initialPath: '/project/12/data'
   });
@@ -707,7 +661,6 @@ async function mountUserList() {
   seedUserStore({ role: 'admin', uid: 1 });
   const { default: User } = require('../../../client/containers/User/User.js');
   renderWithProviders(React.createElement(User), {
-    seedState: {},
     routePath: '/user/*',
     initialPath: '/user/list'
   });
@@ -719,7 +672,6 @@ async function mountUserProfile() {
   seedUserStore({ uid: 9, type: 'site', role: 'member' });
   const { default: User } = require('../../../client/containers/User/User.js');
   renderWithProviders(React.createElement(User), {
-    seedState: {},
     routePath: '/user/*',
     initialPath: '/user/profile/9'
   });
@@ -744,9 +696,7 @@ async function mountFollows() {
   ]);
   const { default: Follows } = require('../../../client/containers/Follows/Follows.js');
   seedUserStore({ uid: 11 });
-  renderWithProviders(React.createElement(Follows), {
-    seedState: {}
-  });
+  renderWithProviders(React.createElement(Follows));
   await flushEffects(150);
 }
 
@@ -760,9 +710,6 @@ async function mountAddProject() {
   seedUserStore({ uid: 11, role: 'member' });
   const { default: AddProject } = require('../../../client/containers/AddProject/AddProject.js');
   renderWithProviders(React.createElement(AddProject), {
-    seedState: {
-      group: { currGroup: G1, groupList: [G1, G2] }
-    },
     routePath: '/add-project',
     initialPath: '/add-project'
   });

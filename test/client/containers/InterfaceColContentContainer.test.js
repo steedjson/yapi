@@ -141,26 +141,30 @@ const REPORT_URL = 'http://dev.example.com/api/base/two';
  * @param {string} _id
  * @param {string} casename
  * @param {string} p
+ * @param {any} [extra] 追加/覆盖字段（供 openScript 回填用例定制 test_script/enable_script）
  */
-function makeCase(_id, casename, p) {
-  return {
-    _id: _id,
-    id: _id,
-    casename: casename,
-    path: p,
-    method: 'GET',
-    project_id: 'proj-1',
-    interface_id: 'if-' + _id,
-    case_env: 'dev',
-    test_status: '',
-    test_script: 'assert.equal(status, 200)',
-    req_headers: [],
-    req_params: [],
-    req_query: [],
-    req_body_form: [],
-    req_body_type: 'json',
-    req_body_other: ''
-  };
+function makeCase(_id, casename, p, extra) {
+  return Object.assign(
+    {
+      _id: _id,
+      id: _id,
+      casename: casename,
+      path: p,
+      method: 'GET',
+      project_id: 'proj-1',
+      interface_id: 'if-' + _id,
+      case_env: 'dev',
+      test_status: '',
+      test_script: 'assert.equal(status, 200)',
+      req_headers: [],
+      req_params: [],
+      req_query: [],
+      req_body_form: [],
+      req_body_type: 'json',
+      req_body_other: ''
+    },
+    extra
+  );
 }
 
 const FIXTURES = {
@@ -191,8 +195,9 @@ const FIXTURES = {
   },
   caseList: [
     makeCase('case-1', LONG_CASENAME, LONG_PATH),
-    makeCase('case-2', '用例二', '/api/base/two'),
-    makeCase('case-3', '用例三', '/api/base/three')
+    // case-2 刻意不含 test_script/enable_script 字段：覆盖 openScript 对缺省行数据的回填防御
+    makeCase('case-2', '用例二', '/api/base/two', { test_script: undefined }),
+    makeCase('case-3', '用例三', '/api/base/three', { enable_script: true })
   ]
 };
 
@@ -369,6 +374,7 @@ const EXPECTED_INITIAL_SNAPSHOT = `<div>
                     <col>
                     <col>
                     <col>
+                    <col>
                   <thead class="ant-table-thead">
                     <tr>
                       <th class="ant-table-cell" scope="col">
@@ -380,6 +386,8 @@ const EXPECTED_INITIAL_SNAPSHOT = `<div>
                         "状态"
                       <th class="ant-table-cell" scope="col">
                         "接口路径"
+                      <th class="ant-table-cell" scope="col">
+                        "自定义脚本"
                       <th class="ant-table-cell" scope="col">
                         "测试报告"
                   <tbody class="ant-table-tbody">
@@ -398,6 +406,10 @@ const EXPECTED_INITIAL_SNAPSHOT = `<div>
                         <a aria-describedby="test-id" href="/project/proj-1/interface/api/if-case-1">
                           "/api/base/very/long/..."
                       <td class="ant-table-cell">
+                        <span aria-describedby="test-id" aria-label="code" class="anticon.anticon-code" role="img" tabindex="-1">
+                          <svg aria-hidden="true" data-icon="code" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
+                            <path d="SVG_PATH">
+                      <td class="ant-table-cell">
                         <div class="interface-col-table-action">
                     <tr aria-describedby="DndDescribedBy-N" aria-disabled="false" aria-roledescription="sortable" class="ant-table-row.ant-table-row-level-0" data-row-key="case-2" role="button" tabindex="0">
                       <td class="ant-table-cell">
@@ -413,6 +425,10 @@ const EXPECTED_INITIAL_SNAPSHOT = `<div>
                       <td class="ant-table-cell">
                         <a aria-describedby="test-id" href="/project/proj-1/interface/api/if-case-2">
                           "/api/base/two"
+                      <td class="ant-table-cell">
+                        <span aria-describedby="test-id" aria-label="code" class="anticon.anticon-code" role="img" tabindex="-1">
+                          <svg aria-hidden="true" data-icon="code" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
+                            <path d="SVG_PATH">
                       <td class="ant-table-cell">
                         <div class="interface-col-table-action">
                           <button class="ant-btn.CSSHASH.ant-btn-default.ant-btn-color-default.ant-btn-variant-outlined" type="button">
@@ -432,6 +448,10 @@ const EXPECTED_INITIAL_SNAPSHOT = `<div>
                       <td class="ant-table-cell">
                         <a aria-describedby="test-id" href="/project/proj-1/interface/api/if-case-3">
                           "/api/base/three"
+                      <td class="ant-table-cell">
+                        <span aria-describedby="test-id" aria-label="code" class="anticon.anticon-code" role="img" tabindex="-1">
+                          <svg aria-hidden="true" data-icon="code" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
+                            <path d="SVG_PATH">
                       <td class="ant-table-cell">
                         <div class="interface-col-table-action">
                           <button class="ant-btn.CSSHASH.ant-btn-default.ant-btn-color-default.ant-btn-variant-outlined" type="button">
@@ -581,6 +601,71 @@ test.serial('openReport → CaseReportModal：点击测试报告打开弹窗并�
   const modalText = modal.textContent;
   t.true(modalText.indexOf(REPORT_URL) !== -1, '弹窗应展示所点用例的报告内容（Url）');
   t.truthy(modal.querySelector('.case-report'), '弹窗正文应复用 CaseReport 组件');
+});
+
+// ④b openScript → CaseScriptModal：点击「自定义脚本」图标打开弹窗并按行数据回填
+test.serial('openScript → CaseScriptModal：点击自定义脚本图标打开弹窗并回填脚本内容', async t => {
+  const utils = await renderContainer();
+
+  t.falsy(document.body.querySelector('.ant-modal'), '前置条件：初始不应有弹窗');
+
+  await act(async () => {
+    fireEvent.click(rowsOf(utils.container)[0].querySelector('.anticon-code'));
+    await new Promise(resolve => setTimeout(resolve, 60));
+  });
+
+  const modal = document.body.querySelector('.ant-modal');
+  t.truthy(modal, '点击自定义脚本图标后应在 body 中渲染弹窗（portal）');
+  t.is(
+    modal.querySelector('.ant-modal-title').textContent,
+    '自定义测试脚本',
+    '弹窗标题应为「自定义测试脚本」'
+  );
+  t.is(
+    modal.querySelector('.ant-switch').getAttribute('aria-checked'),
+    'false',
+    'case-1 无 enable_script 字段，开关应回填为关'
+  );
+  t.is(
+    modal.querySelector('.cm-content').textContent,
+    'assert.equal(status, 200)',
+    '编辑器应回填用例的 test_script'
+  );
+});
+
+test.serial('openScript → CaseScriptModal：enable_script=true 的用例回填开关为开', async t => {
+  const utils = await renderContainer();
+
+  await act(async () => {
+    fireEvent.click(rowsOf(utils.container)[2].querySelector('.anticon-code'));
+    await new Promise(resolve => setTimeout(resolve, 60));
+  });
+
+  const modal = document.body.querySelector('.ant-modal');
+  t.truthy(modal, '点击自定义脚本图标后应渲染弹窗');
+  t.is(
+    modal.querySelector('.ant-switch').getAttribute('aria-checked'),
+    'true',
+    'case-3 的 enable_script=true 应回填为开'
+  );
+});
+
+test.serial('openScript 防御：行数据缺省（无脚本字段）时回填空脚本且不崩溃', async t => {
+  const utils = await renderContainer();
+
+  await act(async () => {
+    fireEvent.click(rowsOf(utils.container)[1].querySelector('.anticon-code'));
+    await new Promise(resolve => setTimeout(resolve, 60));
+  });
+
+  const modal = document.body.querySelector('.ant-modal');
+  t.truthy(modal, '行数据缺省时点击入口不崩溃且正常打开弹窗');
+  t.is(
+    modal.querySelector('.ant-switch').getAttribute('aria-checked'),
+    'false',
+    '缺省 enable_script 回填为 false'
+  );
+  t.is(modal.querySelector('.cm-content').textContent, '', '缺省 test_script 回填为空串');
 });
 
 test.serial('通用规则配置：集合 colData 合并进 commonSetting 并在弹窗回显（patchState 函数式更新）', async t => {

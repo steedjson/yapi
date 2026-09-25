@@ -1,6 +1,7 @@
 // InterfaceColContent 子组件 CaseScriptModal（自定义测试脚本弹窗）单测：
 // 受控渲染 + 开关/编辑器回调上抛 + 确定/取消（render 子组件化批次 1 登记的
-// 「3 个弹窗契约测试」缺口收尾；其打开入口不可达为在册产品决策项，契约测试不依赖入口）。
+// 「3 个弹窗契约测试」缺口收尾；打开入口已恢复，点击→打开→回填链路见
+// InterfaceColContentContainer.test.js 的 openScript 用例，本文件不依赖入口）。
 // jsdom 环境必须在任何生产代码之前装载
 import '../../helpers/jsdom-setup';
 import test from 'ava';

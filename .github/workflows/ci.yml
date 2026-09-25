@@ -11,6 +11,11 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
 
+    # 关闭 @scarf/scarf 安装期遥测（swagger-client 的传递依赖）；
+    # 官方支持以 SCARF_ANALYTICS=false 环境变量禁用上报
+    env:
+      SCARF_ANALYTICS: false
+
     services:
       mongo:
         image: mongo:7

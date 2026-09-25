@@ -3,8 +3,8 @@
  * InterfaceColContent 子组件：用例列表表格区（自 InterfaceColContent.js 原位抽离的 JSX 子树）。
  *
  * 职责（单一）：把父组件持有的 rows / 测试报告映射 / 当前项目 id 以受控 props 渲染为
- * dnd-kit 可拖拽的 antd Table，并把「打开报告」「拖拽经过」「拖拽结束」三类事件按
- * 原有签名回调上抛。
+ * dnd-kit 可拖拽的 antd Table，并把「打开报告」「打开自定义脚本弹窗」「拖拽经过」
+ * 「拖拽结束」四类事件按原有签名回调上抛。
  *
  * 边界与等价性：
  *   - 本组件只做受控展示 + 事件上抛，不持有任何状态；rows 重排由父组件的
@@ -23,7 +23,8 @@ import { Tooltip, Button, Spin, Table } from 'antd';
 import {
   CheckCircleFilled,
   InfoCircleFilled,
-  ExclamationCircleFilled
+  ExclamationCircleFilled,
+  CodeOutlined
 } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 import { DndContext, PointerSensor } from '@dnd-kit/core';
@@ -74,7 +75,7 @@ const SortableRow = props => {
  * @param {any} props
  */
 const CaseTable = props => {
-  const { rows, reportMap, currProjectId, onOpenReport, onDragOver, onDragEnd } = props;
+  const { rows, reportMap, currProjectId, onOpenReport, onOpenScript, onDragOver, onDragEnd } = props;
   /** @type {any[]} */
   const columns = [
     {
@@ -193,6 +194,23 @@ const CaseTable = props => {
       }
     },
     {
+      // 恢复丢失的自定义脚本入口（产品决策）：点击上抛 record.id，由父组件
+      // openScript 按行数据回填 test_script/enable_script 后打开 CaseScriptModal
+      title: '自定义脚本',
+      dataIndex: 'id',
+      width: 100,
+      render: (/** @type {any} */ text, /** @type {any} */ record) => {
+        return (
+          <Tooltip title="自定义测试脚本">
+            <CodeOutlined
+              style={{ cursor: 'pointer' }}
+              onClick={() => onOpenScript(record.id)}
+            />
+          </Tooltip>
+        );
+      }
+    },
+    {
       title: '测试报告',
       dataIndex: 'id',
       width: 200,
@@ -234,6 +252,8 @@ CaseTable.propTypes = {
   reportMap: PropTypes.object,
   currProjectId: PropTypes.any,
   onOpenReport: PropTypes.func,
+  /** 点击「自定义脚本」图标上抛用例 id（父组件 openScript） */
+  onOpenScript: PropTypes.func,
   onDragOver: PropTypes.func,
   onDragEnd: PropTypes.func
 };

@@ -1,8 +1,8 @@
 {
   "critical": 0,
   "high": 0,
-  "moderate": 5,
+  "moderate": 2,
   "low": 0,
-  "total": 5,
-  "note": "基线来源：2026-09-22 在本仓库（分支 codex/refactor-foundation）以官方 registry https://registry.npmjs.org 实测 npm audit --json 的 metadata.vulnerabilities 计数。由上一基线（critical 0 / high 4 / moderate 5 / total 9）经依赖治理批下调：package.json overrides 锁定 brace-expansion@1→1.1.21、glob@10→10.5.0、ini@1→1.3.8、semver@5→5.7.2、semver@6→6.3.1、semver@7→7.8.5，4 项 high（brace-expansion ReDoS、glob CLI 注入、ini 原型污染、semver ReDoS，均 dev/构建链）全部消除；同批移除 core-decorators@0.17.0 直接依赖。剩余 5 项 moderate 为 react-router/react-router-dom（v7 升级待定，open-redirect 已知接受）与 conventional-changelog-cli 停更链（tempfile/uuid）。本基线仅作为 CI 基线差分门禁的对比下限，不代表这些漏洞可接受；修复后应主动下调。更新方式：本地运行 npm audit --registry=https://registry.npmjs.org --json，以其 metadata.vulnerabilities 的计数替换上述数值（total 应等于四个 severity 之和）；或运行 npm run audit:ci 查看当前计数与基线的对比结果。"
+  "total": 2,
+  "note": "基线来源：2026-09-25 在本仓库（分支 codex/refactor-foundation）以官方 registry https://registry.npmjs.org 实测 npm audit --json 的 metadata.vulnerabilities 计数。由上一基线（moderate 5 / total 5）经 conventional-changelog-cli 2→5 升级批下调：conventional-changelog-cli 停更链（tempfile/uuid）随升级移除，v5 链新报的 @conventional-changelog/git-client Argument Injection（GHSA-vh25-5764-9wcr）经非破坏 npm audit fix（git-raw-commits→5.0.1、git-semver-tags→8.0.1、git-client→2.7.0，仅 lock 层传递依赖）消除。剩余 2 项 moderate 为 react-router/react-router-dom（open-redirect 已知接受，v7 升级待定）。本基线仅作为 CI 基线差分门禁的对比下限，不代表这些漏洞可接受；修复后应主动下调。更新方式：本地运行 npm audit --registry=https://registry.npmjs.org --json，以其 metadata.vulnerabilities 的计数替换上述数值（total 应等于四个 severity 之和）；或运行 npm run audit:ci 查看当前计数与基线的对比结果。"
 }

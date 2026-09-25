@@ -141,7 +141,6 @@ async function mountLogin() {
   // user 切片已迁 Zustand（批次4）：改经 userStore 播种（快照 DOM 不变，仅数据源换轨）
   seedUserStore({ loginWrapActiveKey: '1', canRegister: true });
   renderWithProviders(React.createElement(LoginContainer), {
-    seedState: {},
     routePath: '/login',
     initialPath: '/login'
   });
@@ -173,9 +172,6 @@ async function mountGlobalChrome() {
       React.createElement(Footer)
     ),
     {
-      seedState: {
-        group: { groupList: [G1], currGroup: G1, role: 'dev' }
-      },
       routePath: '/',
       initialPath: '/'
     }
@@ -193,9 +189,6 @@ async function mountGroupList() {
   // user 切片已迁 Zustand（批次4）：studyTip/study 改经 userStore 播种
   seedUserStore({ role: 'regular', studyTip: 1, study: true });
   renderWithProviders(React.createElement(GroupList), {
-    seedState: {
-      group: { currGroup: G1, groupList: [G1, G2, G3], role: 'dev' }
-    },
     routePath: '/group/*',
     initialPath: '/group/71'
   });
@@ -212,9 +205,6 @@ async function mountAddProject() {
   seedUserStore({ uid: 11, role: 'member' });
   const { default: AddProject } = require('../../../client/containers/AddProject/AddProject.js');
   renderWithProviders(React.createElement(AddProject), {
-    seedState: {
-      group: { currGroup: G1, groupList: [G1, G2] }
-    },
     routePath: '/add-project',
     initialPath: '/add-project'
   });
@@ -240,15 +230,6 @@ const CURR_PROJECT_FULL = {
   env: [],
   cat: [{ _id: 5, name: '分类五', desc: '分类五描述' }]
 };
-const PROJECT_SEED = {
-  group: {
-    currGroup: { _id: 1, group_name: '分组一', group_desc: '', custom_field1: { name: '', enable: false } },
-    groupList: [{ _id: 1, group_name: '分组一' }]
-  },
-  inter: { curdata: { catid: 3 } },
-  news: { updateLogList: [] }
-};
-
 // user/project 切片已迁 Zustand（批次4）：project 域渲染前统一播种
 function seedProjectDomainUserStores() {
   seedUserStore({ uid: 11 });
@@ -275,7 +256,6 @@ async function mountProjectSetting() {
   seedProjectDomainUserStores();
   const { default: Setting } = require('../../../client/containers/Project/Setting/Setting.js');
   renderWithProviders(React.createElement(Setting), {
-    seedState: PROJECT_SEED,
     routePath: '/project/:id/setting',
     initialPath: '/project/12/setting'
   });

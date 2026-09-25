@@ -58,6 +58,14 @@ test('verifyPassword 对损坏的 scrypt 串返回 valid=false 而不抛错', t 
   t.false(result.legacy);
 });
 
-test('generatePassword 保持 legacy sha1 输出不变(存量数据兼容)', t => {
-  t.is(commons.generatePassword('pw123456', 'salt456'), legacyDigest('pw123456', 'salt456'));
+test('generatePassword 产出 scrypt 自描述格式且可被 verifyPassword 往返校验', t => {
+  // 新写入口令统一走 scrypt（legacy sha1 仅存在于存量数据，由 verifyPassword 兼容）
+  const stored = commons.generatePassword('pw123456', 'salt456');
+
+  t.regex(stored, /^scrypt\$16384\$8\$1\$/);
+
+  const result = commons.verifyPassword('pw123456', 'salt456', stored);
+
+  t.true(result.valid);
+  t.false(result.legacy);
 });

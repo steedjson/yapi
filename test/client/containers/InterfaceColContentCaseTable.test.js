@@ -59,6 +59,7 @@ function renderTable(overrides) {
       reportMap: REPORT_MAP,
       currProjectId: 'proj-1',
       onOpenReport: id => calls.push(['openReport', id]),
+      onOpenScript: id => calls.push(['openScript', id]),
       onDragOver: () => calls.push(['dragOver']),
       onDragEnd: () => calls.push(['dragEnd'])
     },
@@ -183,6 +184,26 @@ test.serial('受控渲染 + 事件上抛：仅存在报告的用例渲染测试�
 
   fireEvent.click(buttonByText(container, '测试报告'));
   t.deepEqual(calls, [['openReport', 'case-1']], '点击报告按钮上抛 record.id');
+});
+
+test.serial('自定义脚本列：每行渲染脚本图标，点击上抛 record.id（入口恢复回归门禁）', t => {
+  const { container, calls } = renderTable();
+
+  // 表头新增「自定义脚本」列，且位于「测试报告」列之前
+  const headers = Array.from(container.querySelectorAll('.interface-col-table thead th')).map(
+    th => (th.textContent || '').trim()
+  );
+  t.is(headers[headers.indexOf('自定义脚本') + 1], '测试报告', '自定义脚本列应位于测试报告列之前');
+
+  const trs = tableRows(container);
+  t.is(
+    trs.filter(tr => tr.querySelectorAll('td')[4].querySelector('.anticon-code')).length,
+    5,
+    '每行第 5 列（自定义脚本）应渲染 code 图标'
+  );
+
+  fireEvent.click(trs[0].querySelectorAll('td')[4].querySelector('.anticon-code'));
+  t.deepEqual(calls, [['openScript', 'case-1']], '点击脚本图标上抛 record.id');
 });
 
 test.serial('受控渲染：空 rows 时表格无数据行且不抛错', t => {

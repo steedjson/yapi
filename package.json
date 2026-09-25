@@ -120,7 +120,7 @@
     "antd": "5.29.3",
     "ava": "6.4.1",
     "buffer": "^6.0.3",
-    "conventional-changelog-cli": "^2.1.1",
+    "conventional-changelog-cli": "^5.0.0",
     "dayjs": "1.11.23",
     "eslint": "^9.39.5",
     "eslint-plugin-import": "^2.32.0",

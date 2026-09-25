@@ -605,6 +605,26 @@ const InterfaceColContent = () => {
     patchState({ enableScript: e });
   };
 
+  /**
+   * 打开自定义测试脚本弹窗：按用例 id 从当前行数据回填 test_script/enable_script。
+   * 行数据源自 /api/col/case_list（服务端 yapi.commons.getCaseList 以 'all' 全字段
+   * 查询，携带 test_script/enable_script），故无需再按用例懒拉详情接口。
+   * 查不到行时静默返回（rowsRef 与表格同一数据源，正常链路恒可命中，此处纯防御）。
+   * @param {any} caseid 用例 id
+   */
+  const openScript = caseid => {
+    const row = rowsRef.current.find((/** @type {any} */ item) => item.id === caseid);
+    if (!row) {
+      return;
+    }
+    patchState({
+      advVisible: true,
+      curCaseid: caseid,
+      curScript: row.test_script || '',
+      enableScript: !!row.enable_script
+    });
+  };
+
   const handleAdvCancel = () => {
     patchState({ advVisible: false });
   };
@@ -792,6 +812,7 @@ const InterfaceColContent = () => {
         reportMap={reportsRef.current}
         currProjectId={currProjectId}
         onOpenReport={openReport}
+        onOpenScript={openScript}
         onDragOver={onDragOver}
         onDragEnd={onDragEnd}
       />

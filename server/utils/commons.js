@@ -242,7 +242,17 @@ function legacyPasswordDigest(password, passsalt) {
   return sha1Hex(password + sha1Hex(passsalt));
 }
 
-exports.generatePassword = legacyPasswordDigest;
+/**
+ * 为新口令生成存储哈希（注册/管理员新增/重置口令/安装初始化等一切新写入路径）。
+ * 统一产出 scrypt 自描述格式（盐内嵌于哈希串，passsalt 仅 legacy 格式使用，故不再入参）。
+ * 兼容性：存量调用点（adminMethods add/resetPassword、install.js）仍按旧形态传入
+ * (password, passsalt) 两参，第二参 passsalt 在此被静默忽略，无需改调用方。
+ * legacy sha1 格式仅存在于存量数据：legacyPasswordDigest 仅供 verifyPassword 兼容
+ * 路径与测试向量消费，任何新口令不得再生成该格式。
+ * @param {string} password 明文口令
+ * @returns {string} scrypt$N$r$p$saltHex$hashHex
+ */
+exports.generatePassword = password => exports.hashPassword(password);
 
 // scrypt 参数(自描述存储格式 scrypt$N$r$p$saltHex$hashHex)
 const SCRYPT_COST_PARAMS = { N: 16384, r: 8, p: 1 };
