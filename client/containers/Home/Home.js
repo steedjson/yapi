@@ -6,7 +6,6 @@ import useUserStore from '../../store/userStore';
 import { Link, Navigate } from 'react-router-dom';
 import { Row, Col, Button, Card } from 'antd';
 import { AppstoreOutlined, ApiOutlined, DatabaseOutlined, TeamOutlined } from '@ant-design/icons';
-import PropTypes from 'prop-types';
 import LogoSVG from '../../components/LogoSVG/index.js';
 const plugin = require('client/plugin.js');
 
@@ -320,9 +319,6 @@ const HomeGuest = () => (
     </div>
   </div>
 );
-HomeGuest.propTypes = {
-  introList: PropTypes.array
-};
 
 /**
  * 游客落地页。原类组件经 Hooks 现代化迁移，渲染结构与行为保持一致：

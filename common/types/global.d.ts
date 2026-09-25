@@ -208,20 +208,6 @@ declare module 'antd' {
   export const theme: any;
 }
 
-declare module 'rc-scroll-anim' {
-  export const OverPack: any;
-}
-
-declare module 'rc-tween-one' {
-  const TweenOne: any;
-  export default TweenOne;
-}
-
-declare module 'rc-queue-anim' {
-  const QueueAnim: any;
-  export default QueueAnim;
-}
-
 // markdown-it 无内置类型且无 @types 包；插件（P8a export-data / gen-services）以
 // CJS require 形态调用主函数并 .use/.render，故按「可调用 + 静态成员」的 export = 声明。
 declare module 'markdown-it' {

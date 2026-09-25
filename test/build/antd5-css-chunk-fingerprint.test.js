@@ -29,19 +29,24 @@ const PRD_DIR = path.join(REPO_ROOT, 'static', 'prd');
 // （statistics/wiki/adv-mock client.js 改 React.lazy，swagger 导入改运行时动态
 // import()，client/common.js 与 import-har/import-postman 的 common/utils 改动态
 // 获取）后 mockjs/ajv 系/CodeMirror/markdown-it/recharts 从首屏 vendor 消失；
-// splitChunks 新增 antd 独立初始 chunk 与 rc-anim 异步 chunk（仅 Intro 引用的
-// rc-scroll-anim/tween-one/queue-anim 强制异步），vendor 5 重排为 0。CSS 哈希变化：
+// splitChunks 新增 antd 独立初始 chunk（彼时另有仅死组件 Intro 引用的动画三件套
+// 异步组，已于重构批次 B 随三件套退役整体移除），vendor 5 重排为 0。CSS 哈希变化：
 // index（内容随分包重排）、project（同）；group/user/follows/add-project 内容不变。
 // 初始 chunk 顺序变为 manifest -> antd -> 0 -> index.js。层 A/层 B 已按新产物重扫
 // （candidates 1194，confirmed-override 1 为登录页既有锚点，判定无漂移）。
 // 层 C 收尾批（2026-09）：N-2 死声明（Search.scss .search-input width:2rem）删除 →
 // index 哈希变化；N-6 提级（View.scss 补 .ant-table-container，0,3,1→0,4,1）→
 // project 哈希变化。层 A/层 B 已按新产物重扫（candidates 1193，confirmed-override 0）。
+// 重构批次 B（2026-09）：死组件 Intro 与停更动画三件套（rc-scroll-anim/rc-tween-one/
+// rc-queue-anim）整体退役，splitChunks rc-anim 异步组随之移除 → rc-anim chunk 消失，
+// 异步 vendor yu 收缩重编号为 3（LICENSE 纯子集，无新增库）；project 哈希变化——
+// 剥离 11 条 .intro-container 死样式（新旧产物逐字节比对仅此差异）。初始 chunk 顺序
+// 不变。层 A/层 B 已按新产物重扫（candidates 1193→1183，confirmed-override 0，判定无漂移）。
 const BASELINE = {
   cssChunks: {
     'index.js': 'index@d086ece37364de01.css',
     group: 'group@426f689219580b35.css',
-    project: 'project@d4dabd953a4429a2.css',
+    project: 'project@edbce51ee0e5fbb9.css',
     user: 'user@57802eb279f54184.css',
     follows: 'follows@3f80bd4670cf7f38.css',
     'add-project': 'add-project@80e6a5a4d705c349.css'

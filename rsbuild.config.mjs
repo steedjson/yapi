@@ -222,7 +222,7 @@ export default {
   // - antd5 生态（antd + @ant-design/* + rc-* + @rc-component/*）经 cacheGroup 'antd'
   //   独立分包：它是首屏真必需（Login/Home/Header 同步引用）且为 vendor 最大头，独立
   //   chunk 让应用代码迭代不再打穿其缓存；enforce+高 priority 保证不被 defaultVendors
-  //   合并回 '5'。enforce 组对初始/异步引用都生效，仅异步引用的 rc-*（如 rc-queue-anim）
+  //   合并回 '5'。enforce 组对初始/异步引用都生效，仅异步引用的 rc-*（如 rc-motion、rc-tree 等 antd 组件依赖）
   //   也会归入 'antd'，待页面按需加载，不回灌首屏（defaultVendors 的 chunks:'all' 只
   //   决定共享模块进哪个 vendor，初始清单仍由 entrypoint 决定）；
   // - CodeMirror/markdown-it/recharts 等仅异步域使用的库不再需要显式分组：其唯一同步
@@ -230,16 +230,6 @@ export default {
   //   共享模块抽为异步 vendor chunk（对应既有 r/t/u 形态），首屏 vendor 仅剩真初始依赖。
   splitChunks: {
     cacheGroups: {
-      // rc-scroll-anim/rc-tween-one/rc-queue-anim 仅被 Intro.js（barrel 链，只被异步
-      // 路由消费）引用：以更高 priority + chunks:'async' 抢在 antd 组之前，强制它们
-      // 落入异步专用 chunk，避免被 antd 组的 enforce+chunks:'all' 裹挟进初始 chunk。
-      'rc-anim': {
-        test: /[\\/]node_modules[\\/]rc-(scroll-anim|tween-one|queue-anim)[\\/]/,
-        name: 'rc-anim',
-        chunks: 'async',
-        priority: 20,
-        enforce: true
-      },
       antd: {
         test: /[\\/]node_modules[\\/](antd|@ant-design[\\/][^\\/]+|rc-[a-z-]+|@rc-component[\\/][^\\/]+)[\\/]/,
         name: 'antd',

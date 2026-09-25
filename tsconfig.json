@@ -165,7 +165,6 @@
     "client/components/GuideBtns/GuideBtns.js",
     "client/components/Header/Header.js",
     "client/components/Header/Search/Search.js",
-    "client/components/Intro/Intro.js",
     "client/components/JsonSchemaEditor/index.js",
     "client/components/JsonSchemaEditor/schemaTree.js",
     "client/components/JsonSchemaEditor/schemaUtils.js",
