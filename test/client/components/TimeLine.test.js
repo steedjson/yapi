@@ -3,9 +3,6 @@ import '../../helpers/jsdom-setup';
 import test from 'ava';
 import React from 'react';
 import { render, fireEvent, cleanup, act } from '@testing-library/react';
-import { Provider } from 'react-redux';
-import { createStore, applyMiddleware } from 'redux';
-import promiseMiddleware from 'redux-promise';
 import { MemoryRouter } from 'react-router-dom';
 import { cleanupDom } from '../../helpers/jsdom-setup';
 
@@ -14,8 +11,7 @@ const { default: TimeTree } = require('../../../client/components/TimeLine/TimeL
 // 与 TimeLine.js 共享同一模块实例（babel CJS 转译后命中同一 require 缓存）：
 // news 切片已迁 Zustand，动态数据经 useNewsStore 播种/断言
 const { default: useNewsStore } = require('../../../client/store/newsStore');
-// interface 切片已迁 Zustand（批次5）：fetchInterfaceList 不再经 redux 派发，
-// 断言改为反向断言（不再有 yapi/interface/* action）+ 渲染结果断言
+// interface 切片已迁 Zustand（批次5）：fetchInterfaceList 改为断言 HTTP 请求与 store 写入
 const { resetInterfaceStore } = require('../../helpers/interfaceStores');
 
 // fetchNewsData/fetchMoreNews（Zustand）与 fetchInterfaceList（Zustand，批次5）都会在
@@ -58,38 +54,12 @@ function makeNewsItem(overrides) {
   );
 }
 
-function makeStore(seedState) {
-  // 与生产一致挂 redux-promise 中间件(fetchInterfaceList 仍为 async action creator)。
-  // 入口 dispatch 包装记录原始 action，reducer 记录中间件二次派发的 fulfilled action
-  const dispatched = [];
-  const record = action => {
-    if (action && action.type && action.type.indexOf('@@') !== 0) {
-      dispatched.push(action);
-    }
-  };
-  const store = applyMiddleware(promiseMiddleware)(createStore)(function(state, action) {
-    record(action);
-    return state === undefined ? seedState : state;
-  }, seedState);
-  const originalDispatch = store.dispatch;
-  store.dispatch = action => {
-    record(action);
-    return originalDispatch(action);
-  };
-  return { store, dispatched };
-}
-
 const DIFF_DATA = {
   current: { path: '/new/login', title: '登录', method: 'GET', catid: 1 },
   old: { path: '/old/login', title: '登录', method: 'GET', catid: 1 }
 };
 
-// redux 种子仅保留 user 切片（TimeLine 保留的历史遗留订阅）；news 切片已迁 Zustand
-function makeSeed() {
-  return { user: { uid: 11 } };
-}
-
-// news 种子改经 Zustand store 播种（等价旧 redux seed 的 news 切片）
+// news 种子经 Zustand store 播种（原 redux seed 的 user/news 切片随迁移退役）
 function seedNews(list, total, curpage) {
   useNewsStore.setState({
     newsData: { total: total == null ? list.length : total, list },
@@ -98,16 +68,13 @@ function seedNews(list, total, curpage) {
   });
 }
 
-function renderTimeTree(props, seedState) {
-  const { store, dispatched } = makeStore(seedState);
-  const utils = render(
-    <Provider store={store}>
-      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-        <TimeTree {...props} />
-      </MemoryRouter>
-    </Provider>
+// Redux 已退役（收尾批）：原 Provider/makeStore 包装移除，仅保留路由上下文
+function renderTimeTree(props) {
+  return render(
+    <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <TimeTree {...props} />
+    </MemoryRouter>
   );
-  return Object.assign({ dispatched, store }, utils);
 }
 
 test.serial('根据 mock 数据渲染动态列表项、用户头像与动态描述', async t => {
@@ -117,7 +84,7 @@ test.serial('根据 mock 数据渲染动态列表项、用户头像与动态描�
     makeNewsItem({ uid: 22, type: 'group', content: '<span>创建了分组 电商</span>' })
   ];
   seedNews(list);
-  const { container, dispatched } = renderTimeTree({ typeid: 42, type: 'project' }, makeSeed());
+  const { container } = renderTimeTree({ typeid: 42, type: 'project' });
 
   const items = container.querySelectorAll(
     '.news-content .ant-timeline-item:not(.ant-timeline-item-pending)'
@@ -139,10 +106,7 @@ test.serial('根据 mock 数据渲染动态列表项、用户头像与动态描�
 
   const profileLink = container.querySelector('.ant-timeline-item-head a');
   t.is(profileLink.getAttribute('href'), '/user/profile/11', '头像应链接到用户主页');
-  t.falsy(
-    dispatched.some(action => action.type && action.type.indexOf('yapi/news/') === 0),
-    '不应派发任何 yapi/news/* redux action（已迁 Zustand）'
-  );
+  // 反向 dispatched 断言随 Redux 机制退役移除（收尾批）：全仓已无 dispatch 通道可断言
   t.is(useNewsStore.getState().newsData.list.length, 2, '渲染应走 Zustand store 订阅路径');
   await flushEffects();
 });
@@ -154,7 +118,7 @@ test.serial('挂载即拉取第一页动态, typeid 变化时重新拉取', asyn
     return Promise.resolve({ data: { errcode: 0, data: { total: 0, list: [] } } });
   };
   seedNews([]);
-  const { rerender, dispatched, store } = renderTimeTree({ typeid: 42, type: 'project' }, makeSeed());
+  const { rerender } = renderTimeTree({ typeid: 42, type: 'project' });
 
   const newsCalls = getCalls.filter(c => c.url === '/api/log/list');
   t.truthy(newsCalls.length >= 1, '挂载后应发起 /api/log/list 请求');
@@ -163,18 +127,13 @@ test.serial('挂载即拉取第一页动态, typeid 变化时重新拉取', asyn
     { typeid: 42, type: 'project', page: 1, limit: 10, selectValue: undefined },
     '请求参数应为第一页 10 条'
   );
-  t.falsy(
-    dispatched.some(action => action.type === 'yapi/news/FETCH_NEWS_DATA'),
-    '拉取动态不应再经 redux 派发（已迁 Zustand）'
-  );
+  // 原「不再经 redux 派发」反向断言随 Redux 机制退役移除：拉取走 Zustand store 动作
 
   // 对应旧 UNSAFE_componentWillReceiveProps: typeid 变化触发重新拉取
   rerender(
-    <Provider store={store}>
-      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-        <TimeTree typeid={43} type="project" />
-      </MemoryRouter>
-    </Provider>
+    <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <TimeTree typeid={43} type="project" />
+    </MemoryRouter>
   );
 
   const allNewsCalls = getCalls.filter(c => c.url === '/api/log/list');
@@ -199,15 +158,11 @@ test.serial('type=project 时拉取接口列表并渲染 Api 查询行', async t
     return Promise.resolve({ data: { errcode: 0, data: { total: 0, list: [] } } });
   };
   seedNews([makeNewsItem()]);
-  const { container, dispatched } = renderTimeTree({ typeid: 42, type: 'project' }, makeSeed());
+  const { container } = renderTimeTree({ typeid: 42, type: 'project' });
 
   t.truthy(container.textContent.indexOf('选择查询的 Api：') > -1, '应渲染 Api 查询行');
-  // fetchInterfaceList 已迁 Zustand（批次5），不再经 redux 派发
+  // fetchInterfaceList 已迁 Zustand（批次5），断言走 HTTP 请求计数与 store 写入
   await flushEffects();
-  t.falsy(
-    dispatched.some(action => String(action.type).indexOf('yapi/interface/') === 0),
-    '拉取接口列表不应再经 redux 派发（已迁 Zustand）'
-  );
   t.truthy(getCalls.indexOf('/api/interface/list') > -1, '应请求接口列表数据');
   // fetchInterfaceList 已迁 Zustand（批次5）：数据写入 store（渲染进 AutoComplete 需下拉展开，
   // 此处断言 store 状态与组件消费链已接上）
@@ -216,7 +171,7 @@ test.serial('type=project 时拉取接口列表并渲染 Api 查询行', async t
   t.is(useInterfaceStore.getState().totalTableList[0].title, '登录');
 
   seedNews([makeNewsItem()]);
-  const groupType = renderTimeTree({ typeid: 42, type: 'group' }, makeSeed());
+  const groupType = renderTimeTree({ typeid: 42, type: 'group' });
   t.is(
     groupType.container.querySelector('.news-search'),
     null,
@@ -232,7 +187,7 @@ test.serial('有更多动态时展示查看更多, 点击防抖拉取下一页',
     return Promise.resolve({ data: { errcode: 0, data: { total: 0, list: [] } } });
   };
   seedNews([makeNewsItem()], 5, 1);
-  const { container, dispatched } = renderTimeTree({ typeid: 42, type: 'project' }, makeSeed());
+  const { container } = renderTimeTree({ typeid: 42, type: 'project' });
 
   const more = container.querySelector('.loggetMore');
   t.truthy(more, 'total > curpage 应渲染查看更多');
@@ -249,10 +204,7 @@ test.serial('有更多动态时展示查看更多, 点击防抖拉取下一页',
     { typeid: 42, type: 'project', page: 2, limit: 10, selectValue: '' },
     '应拉取 curpage+1=2 页并透传筛选值'
   );
-  t.falsy(
-    dispatched.some(action => action.type === 'yapi/news/FETCH_MORE_NEWS'),
-    '加载下一页不应再经 redux 派发（已迁 Zustand）'
-  );
+  // 原「不再经 redux 派发」反向断言随 Redux 机制退役移除：加载下一页走 Zustand store 动作
 
   await flushEffects(30);
   t.falsy(container.querySelector('.ant-spin'), '请求完成后 loading 应复位');
@@ -262,15 +214,11 @@ test.serial('有更多动态时展示查看更多, 点击防抖拉取下一页',
 test.serial('已到末页时展示"以上为全部内容"且不渲染查看更多', async t => {
   axios.get = () => Promise.resolve({ data: { errcode: 0, data: { total: 0, list: [] } } });
   seedNews([makeNewsItem()], 1, 1);
-  const { container, dispatched } = renderTimeTree({ typeid: 42, type: 'project' }, makeSeed());
+  const { container } = renderTimeTree({ typeid: 42, type: 'project' });
 
   t.is(container.querySelector('.loggetMore'), null, '无更多动态时不渲染查看更多');
   t.is(container.querySelector('.logbidden').textContent, '以上为全部内容');
-  t.is(
-    dispatched.filter(a => a.type === 'yapi/news/FETCH_MORE_NEWS').length,
-    0,
-    '末页不应有任何加载更多派发'
-  );
+  // 原「末页无加载更多派发」断言随 Redux 机制退役移除；末页行为由「不渲染查看更多」覆盖
   await flushEffects();
 });
 
@@ -278,7 +226,7 @@ test.serial('点击改动详情打开 diff 弹窗并展示差异内容', async t
   axios.get = () => Promise.resolve({ data: { errcode: 0, data: { total: 0, list: [] } } });
   const list = [makeNewsItem({ data: DIFF_DATA })];
   seedNews(list);
-  const { container } = renderTimeTree({ typeid: 42, type: 'project' }, makeSeed());
+  const { container } = renderTimeTree({ typeid: 42, type: 'project' });
 
   t.is(container.ownerDocument.querySelector('.ant-modal-wrap'), null, '初始不渲染弹窗');
 
@@ -302,7 +250,7 @@ test.serial('点击改动详情打开 diff 弹窗并展示差异内容', async t
 test.serial('无动态数据时渲染空状态提示', async t => {
   axios.get = () => Promise.resolve({ data: { errcode: 0, data: { total: 0, list: [] } } });
   seedNews([]);
-  const { container } = renderTimeTree({ typeid: 42, type: 'project' }, makeSeed());
+  const { container } = renderTimeTree({ typeid: 42, type: 'project' });
 
   t.is(container.querySelectorAll('.news-content').length, 0, '空数据不渲染时间线');
   t.truthy(container.querySelector('.err-msg'), '应渲染 ErrMsg 空状态');

@@ -27,8 +27,8 @@ import { htmlFilter } from '../common';
  *   无对全局 toast 的行为依赖；
  * - 动作命名与旧 action creator 一致（getProject/getToken/fetchProjectList 等），
  *   消费方以 `getProject(id).then(res => res.data…)` 直调；
- * - 旧模块文件 client/reducer/modules/project.js 保留在盘上（本批次禁止删除旧
- *   reducer 文件）：已无状态读取方与派发方，待后续批次清理。
+ * - 旧模块文件 client/reducer/modules/project.js 已随 Redux 退役删除（收尾批，
+ *   删除前已无状态读取方与派发方）。
  */
 
 const useProjectStore = create((/** @type {any} */ set) => ({

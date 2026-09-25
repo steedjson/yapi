@@ -82,9 +82,9 @@ test.serial.afterEach.always(() => {
 const CURR_PROJECT = { _id: 12, name: '演示项目', group_id: 1, basepath: '/base' };
 
 // project 切片已迁 Zustand：项目未就绪前组件读取的是 projectStore.currProject
+// Redux 已退役（收尾批）：makeSeed 只做 projectStore 播种，原 redux 种子返回值移除
 function makeSeed() {
   seedProjectStore({ currProject: CURR_PROJECT });
-  return {};
 }
 
 // currGroup 播种真实 Zustand store（group 切片不再经 redux 读取）
@@ -122,10 +122,10 @@ test.serial('接口子路由: 子导航高亮接口且路由分发到接口桩�
   const groupFixture = { _id: 1, group_name: '分组一', type: 'public', role: 'owner' };
   stubApi(groupFixture);
   seedGroupStore(groupFixture);
+  makeSeed();
   const { container } = renderWithProviders(React.createElement(Project), {
     routePath: '/project/:id/*',
-    initialPath: '/project/12/interface/api/lists',
-    seedState: makeSeed()
+    initialPath: '/project/12/interface/api/lists'
   });
   await flushEffects();
 
@@ -167,10 +167,10 @@ test.serial('动态子路由+私有分组: 高亮动态且子导航过滤成员�
   const groupFixture = { _id: 1, group_name: '分组一', type: 'private', role: 'dev' };
   stubApi(groupFixture);
   seedGroupStore(groupFixture);
+  makeSeed();
   const { container } = renderWithProviders(React.createElement(Project), {
     routePath: '/project/:id/*',
-    initialPath: '/project/12/activity',
-    seedState: makeSeed()
+    initialPath: '/project/12/activity'
   });
   await flushEffects();
 
@@ -200,8 +200,7 @@ test.serial('项目未就绪: currProject 为空时渲染全局 Loading', async 
   seedProjectStore({});
   const { container } = renderWithProviders(React.createElement(Project), {
     routePath: '/project/:id/*',
-    initialPath: '/project/12/setting',
-    seedState: {}
+    initialPath: '/project/12/setting'
   });
   await flushEffects();
 
@@ -230,8 +229,7 @@ test.serial('项目 id 变化: 路由内导航触发重拉（对应旧 cWRP 分�
   seedProjectStore({ currProject: CURR_PROJECT });
   const utils = renderWithProviders(React.createElement(Project), {
     routePath: '/project/:id/*',
-    initialPath: '/project/12/interface/api/lists',
-    seedState: {}
+    initialPath: '/project/12/interface/api/lists'
   });
   await flushEffects();
   t.is(

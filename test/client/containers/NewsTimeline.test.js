@@ -50,9 +50,7 @@ test.serial('挂载即拉取动态并渲染 Timeline 列表项', async t => {
   const logRequests = [];
   mockLogList(logRequests);
   seedNews({ list: LOG_ITEMS.slice(), total: 2 }, 1);
-  const { container, dispatched } = renderWithProviders(React.createElement(NewsTimeline), {
-    seedState: {}
-  });
+  const { container } = renderWithProviders(React.createElement(NewsTimeline));
   await flushEffects();
 
   t.is(logRequests.length, 1, '挂载应发起一次 /api/log/list 请求');
@@ -61,10 +59,7 @@ test.serial('挂载即拉取动态并渲染 Timeline 列表项', async t => {
   t.is(logRequests[0].params.type, 'project', 'type 固定为 project');
   t.is(logRequests[0].params.page, 1, 'page 应取 store 的 curpage');
   t.is(logRequests[0].params.limit, 8, 'limit 固定为 8');
-  t.falsy(
-    dispatched.some(action => action.type === 'yapi/news/FETCH_NEWS_DATA'),
-    '拉取动态不应再经 redux 派发（已迁 Zustand）'
-  );
+  // 原「不再经 redux 派发」反向断言随 Redux 机制退役移除：拉取走 Zustand store 动作
   t.true(useNewsStore.getState().newsRequestId > 0, 'store 应记录挂载期请求序号');
 
   // antd5 Timeline 会把 pending 节点渲染为额外的 .ant-timeline-item，故按内容元素计数
@@ -85,9 +80,7 @@ test.serial('点击「查看更多」触发 fetchNewsData 并短暂进入 loadin
   const logRequests = [];
   mockLogList(logRequests);
   seedNews({ list: LOG_ITEMS.slice(), total: 5 }, 3);
-  const { container, dispatched } = renderWithProviders(React.createElement(NewsTimeline), {
-    seedState: {}
-  });
+  const { container } = renderWithProviders(React.createElement(NewsTimeline));
   await flushEffects(); // 先等挂载请求完成，避免 act 告警干扰点击断言
   t.is(logRequests.length, 1, '挂载应已发起一次请求');
 
@@ -106,10 +99,7 @@ test.serial('点击「查看更多」触发 fetchNewsData 并短暂进入 loadin
   t.is(logRequests.length, 2, '点击应立即发起请求');
   t.is(logRequests[1].params.page, 3, 'page 应为点击时的 curpage=3');
   t.is(logRequests[1].params.limit, 8);
-  t.falsy(
-    dispatched.some(action => action.type === 'yapi/news/FETCH_NEWS_DATA'),
-    '点击拉取不应再经 redux 派发（已迁 Zustand）'
-  );
+  // 原「不再经 redux 派发」反向断言随 Redux 机制退役移除：点击拉取走 Zustand store 动作
 
   await flushEffects();
   t.is(logRequests.length, 2, '等待期间不应重复请求');
@@ -126,9 +116,7 @@ test.serial('返回末页时点击后 pending 区变为「以上为全部内容�
   // 列表保留非空内容，保证末页提示渲染在 Timeline pending 区（空列表时 Timeline 整体不渲染）
   mockLogList(logRequests, LOG_ITEMS, 0);
   seedNews({ list: LOG_ITEMS.slice(), total: 0 }, 1);
-  const { container } = renderWithProviders(React.createElement(NewsTimeline), {
-    seedState: {}
-  });
+  const { container } = renderWithProviders(React.createElement(NewsTimeline));
   await flushEffects(); // 先等挂载请求完成
 
   t.is(logRequests[0].params.page, 1);

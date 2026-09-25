@@ -284,3 +284,40 @@ const useFollowStore = create((set, get) => ({
 - `npm test` 全量：**1061 passed**（1043 基线 + 18 新增，既有测试适配无净减，0 failed）；
 - `npx tsc --noEmit`：0 错误（interfaceStore 补入 tsconfig include）；`npm run lint`：0/0；`npm run build-client`：成功；
 - grep 终态：全仓无 `state.inter` 读取方与 `reducer/modules/interface` 导入方；combineReducers 状态树清零（reducerModules 空）。
+
+## 14. 收尾批实例记录（Redux 全链路退役，2026-09）
+
+### 14.1 迁移内容（最后 2 个消费方 + 死模块删除 + 依赖卸载）
+
+| 对象 | 处置 | 语义要点 |
+| --- | --- | --- |
+| ProjectCard（follow） | `useDispatch` + 旧 `addFollow`/`delFollow` action creators → `useFollowStore` 直调，解包 `res.payload.data` → `res.data`；`latestRef` 镜像对象去 `dispatch` | followStore 动作内部已做写后重拉（`_uid` 缺省时跳过/回退，无害）；`callbackResult` 回调语义保持（errcode===0 才调，供 ProjectList 等非关注页刷新星标态） |
+| ProjectData（news） | `dispatch(fetchUpdateLogData(...))` → `useNewsStore` 直调；解包 `result.payload.data` → `result.data` | fetchUpdateLogData 迁入 newsStore，**不套用该 store 其余动作的「吞错返回 null」口径**：网络错误原样 reject 透传、errcode 非 0 且非 40011 显式 `throw Error(errmsg)`（镜像旧 messageMiddleware toast + throw）——ProjectData 的 catch 分支「获取同步差异失败」依赖 reject 语义（同批次 5 delete* 纯请求动作先例） |
+| 死模块删除 | `client/reducer/**` 全目录 13 文件（10 模块 + reducer.js + create.js + middleware/messageMiddleware.js）+ 3 个旧 reducer 直测文件 | 删除前逐个 grep 验证零消费；旧测试覆盖缺口先移植到 store 单测再删（见 §14.2） |
+| Redux 挂载拆除 | index.js 删 Provider/createStore（ThemedRoot/StyleProvider/ConfigProvider 结构不变）；plugin.js 删 add_reducer 钩子；global.d.ts 删 redux/redux-promise/react-redux 声明与 3 个死 reducer 模块存根；tsconfig include 删 13 条死条目（11 个模块文件 + create.js + messageMiddleware.js） | add_reducer 钩子已零生产者（advanced-mock 批次 3 注销），拆除属追认 |
+
+**插件兼容性说明（add_reducer 退役）**：`plugin.js` 的 `add_reducer` 监听钩子随 Redux 退役移除，原位留注释——外部插件如需状态管理应使用 Zustand store（`client/store/`），以普通模块导入方式读写，无需注入钩子。bundled 插件已于批次 2/3 全部迁离该钩子，本批无行为影响；**外置老插件若仍 `bindHook('add_reducer', ...)`，因 emitHook/bindHook 对未知钩子名直接 throw（且插件注册遍历无 try/catch），将导致 client/plugin.js 模块求值失败、客户端启动崩溃——升级时必须先移除该绑定**（响亮失败而非静默无效）。
+
+### 14.2 旧 reducer 直测的覆盖移植（删除前核对）
+
+旧 3 个直测文件的用例与对应 store 单测逐条对照，**仅存在缺口的部分移植**（断言按 store 模式改写，语义不丢弃）：
+
+- groupReducer.test.js → groupStore.test.js 移植 4 条：setCurrGroup 同类型两请求乱序守卫、响应体异常（缺 data）不写入、fetchGroupMsg errcode 非 0 不污染 role/currGroup/field、setCurrGroup/fetchGroupMsg 连续调用共用序列递增；
+- newsReducer.test.js → newsStore.test.js 移植 2 条：fetchMoreNews 过期分页响应丢弃、fetchNewsData 响应体异常不写入；
+- interfaceReducer.test.js：两条用例（竞态守卫 / errcode 非 0 保留）已被 interfaceStore.test.js 等价覆盖，无需移植。
+
+### 14.3 测试基建终态
+
+- **containers.js**：`makeStore` 与 Provider 包装、`opts.reducer` 活 store 选项整体删除；`renderWithProviders` 保留 StyleProvider + MemoryRouter（routePath/initialPath/navigate 捕获）且调用签名兼容——调用方遗留的 `seedState`/`reducer` 选项不会被识别，须同步清理；
+- **适配范围**：32 个 dispatched/seedState 消费文件全部清理——dispatched 断言改 Zustand getState 或 HTTP 请求计数（含写后重拉序列断言）；死 redux 种子（user/group/inter/news/mockCol 空切片）删除；「不再派发 yapi/*」反向断言**因 dispatch 机制整体消失而删除**，删除处留一行注释。**已核对的例外**：test/client/visual/antd5-fixpoint.test.js 与 antd5-runtime-diff.test.js 共 23 处 `seedState` 死键仍向收口后的 renderWithProviders 传参（被静默忽略，行为无影响——两文件组件数据源已走 Zustand 直接播种/axios 桩），登记为后续清洁度清理项；
+- store 复位约定不变：afterEach 里 `useXxxStore.setState(初始态)` / 既有 helper（resetUserProjectStores / resetInterfaceStore）；
+- Application.test.js 去 Provider 包装，直接 `render(<App/>)`（history.push 驱动路由）；
+- 自建 Provider/rerender 复刻结构同步减层：StyleProvider > MemoryRouter > Routes > Route（原 Provider 层删除，组件类型与位置一致性原则不变）。
+
+### 14.4 收尾批验证数据
+
+- 新增 store 单测 10 条（group 移植 4 + news 移植 2 + fetchUpdateLogData 4）全绿；
+- `npm test` 全量冷库：**1058 passed**（1061 基线 + 10 新增 - 15 个旧 reducer 直测用例删除 + tester 收尾验证补入 2 条 ProjectCard errcode 非 0 负例，既有测试适配无净减，0 failed）；
+- `npx tsc --noEmit`：0 错误；`npm run lint`：0/0；`npm run build-client`：成功；
+- 依赖终态：redux / react-redux / redux-promise 从 package.json 与 lock 卸载，全仓（client/exts/test/common/server）零 import；
+- grep 终态：全仓无 `react-redux`/`useDispatch`/`useSelector` 代码引用（剩余命中均为历史注释）；`client/reducer/` 目录不存在。

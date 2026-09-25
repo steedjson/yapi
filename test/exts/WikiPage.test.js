@@ -24,14 +24,14 @@ test.serial.afterEach.always(() => {
   resetUserProjectStores();
 });
 
+// Redux 种子选项已随收尾批退役移除，仅保留 Zustand store 播种
 function seedState() {
   seedProjectStore({ currProject: { _id: 12, role: 'admin', switch_notice: true } });
-  return {};
 }
 
 function renderWikiPage() {
+  seedState();
   return renderWithProviders(React.createElement(require(WIKI_PATH).default), {
-    seedState: seedState(),
     routePath: '/project/:id/wiki',
     initialPath: '/project/12/wiki'
   });

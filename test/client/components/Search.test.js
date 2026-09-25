@@ -3,9 +3,6 @@ import '../../helpers/jsdom-setup';
 import test from 'ava';
 import React from 'react';
 import { render, fireEvent, cleanup, act } from '@testing-library/react';
-import { Provider } from 'react-redux';
-import { createStore, applyMiddleware } from 'redux';
-import promiseMiddleware from 'redux-promise';
 import { MemoryRouter, useLocation } from 'react-router-dom';
 import { cleanupDom } from '../../helpers/jsdom-setup';
 
@@ -38,8 +35,6 @@ function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-// 组件经 useGroupStore 读取 group 切片、useSelector 读取 project 切片并 dispatch 派发
-
 const SEARCH_RESULT = {
   errcode: 0,
   data: {
@@ -49,27 +44,23 @@ const SEARCH_RESULT = {
   }
 };
 
+// Redux 已退役（收尾批）：原 Provider/makeStore 占位包装移除，Srch 的 group 读取
+// 已迁 Zustand（useGroupStore），搜索结果跳转经 react-router useNavigate
 function renderSrch() {
   useGroupStore.setState({ ...INITIAL_GROUP_STATE, groupList: [] });
-  // project 切片仍走 redux（Srch 的 group 读取已迁 Zustand），store 仅作 Provider 占位
-  const store = applyMiddleware(promiseMiddleware)(createStore)(function(state) {
-    return state === undefined ? { project: { projectList: [] } } : state;
-  }, { project: { projectList: [] } });
   let locationRef = null;
   function LocationProbe() {
     locationRef = useLocation();
     return null;
   }
   const utils = render(
-    <Provider store={store}>
-      <MemoryRouter
-        initialEntries={['/group']}
-        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
-      >
-        <LocationProbe />
-        <Srch />
-      </MemoryRouter>
-    </Provider>
+    <MemoryRouter
+      initialEntries={['/group']}
+      future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+    >
+      <LocationProbe />
+      <Srch />
+    </MemoryRouter>
   );
   return Object.assign({ getLocation: () => locationRef }, utils);
 }

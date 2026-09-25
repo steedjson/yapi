@@ -12,13 +12,9 @@ const SERVICES_PATH = '../../exts/yapi-plugin-gen-services/Services/Services';
 // project 切片已迁 Zustand（批次4）：token 改经 projectStore 播种/收敛
 const { seedProjectStore, resetUserProjectStores } = require('../helpers/userProjectStores');
 
+// Redux 死种子（user/inter/mockCol 空切片）随 Redux 退役移除（收尾批），仅保留 Zustand 播种
 function seedState(token) {
   seedProjectStore({ token: token || '' });
-  return {
-    user: {},
-    inter: {},
-    mockCol: {}
-  };
 }
 
 test.serial.afterEach.always(() => {
@@ -29,8 +25,8 @@ test.serial('Services 挂载：按 projectId 拉取项目 token', async t => {
   axiosMock.setRoutes([
     { match: '/api/project/token', respond: () => ({ errcode: 0, data: 'token-abc' }) }
   ]);
+  seedState('');
   renderWithProviders(React.createElement(require(SERVICES_PATH).default, { projectId: '36' }), {
-    seedState: seedState(''),
     routePath: '/project/:id/services',
     initialPath: '/project/36/services'
   });
@@ -49,10 +45,10 @@ test.serial('Services 模板渲染：token 回填后出现在两段配置中，�
   axiosMock.setRoutes([
     { match: '/api/project/token', respond: () => ({ errcode: 0, data: 'token-abc' }) }
   ]);
+  seedState('token-abc');
   const { container } = renderWithProviders(
     React.createElement(require(SERVICES_PATH).default, { projectId: '36' }),
     {
-      seedState: seedState('token-abc'),
       routePath: '/project/:id/services',
       initialPath: '/project/36/services'
     }

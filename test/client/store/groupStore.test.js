@@ -171,6 +171,75 @@ test.serial('fetchGroupMemberList 成功写入 member；网络错误返回 null'
   t.is(res, null, '网络错误返回 null');
 });
 
+// —— 以下 4 条为旧 groupReducer.test.js 的覆盖移植（Redux 退役删除旧文件，语义不得丢弃）——
+
+test.serial('setCurrGroup 忽略先发后至的旧响应（同为选中分组的两请求乱序）', async t => {
+  const pending = [];
+  axios.get = (url, config) =>
+    new Promise(resolve => {
+      pending.push({ resolve, id: config && config.params && config.params.id });
+    });
+
+  const pStale = useGroupStore.getState().setCurrGroup({ _id: 2 }); // 先发（序号 1，响应后到）
+  const pFresh = useGroupStore.getState().setCurrGroup({ _id: 1 }); // 后发（序号 2，响应先到）
+  t.is(pending[0].id, 2);
+  t.is(pending[1].id, 1);
+
+  pending[1].resolve({ data: { errcode: 0, data: groupPayload(1) } });
+  await pFresh;
+  const ridAfterFresh = useGroupStore.getState().groupRequestId;
+
+  pending[0].resolve({ data: { errcode: 0, data: groupPayload(2) } });
+  await pStale;
+
+  const state = useGroupStore.getState();
+  t.is(state.currGroup._id, 1, '先发后至的旧响应不得覆盖新分组');
+  t.is(state.groupRequestId, ridAfterFresh, '过期响应不应推进 groupRequestId');
+});
+
+test.serial('setCurrGroup 响应体异常（缺失 data）保留已有分组', async t => {
+  axios.get = () => Promise.resolve({ data: { errcode: 0, data: groupPayload(1) } });
+  await useGroupStore.getState().setCurrGroup({ _id: 1 });
+  const seeded = useGroupStore.getState();
+
+  // 旧用例为 action 无 payload：store 等价形态为响应体缺失/为 null
+  axios.get = () => Promise.resolve({});
+  await useGroupStore.getState().setCurrGroup({ _id: 2 });
+
+  t.is(useGroupStore.getState().currGroup, seeded.currGroup, '异常响应不污染已有 currGroup');
+});
+
+test.serial('fetchGroupMsg errcode 非 0：不污染 role/currGroup/field', async t => {
+  axios.get = () => Promise.resolve({ data: { errcode: 0, data: groupPayload(1) } });
+  await useGroupStore.getState().fetchGroupMsg(1);
+  const seeded = useGroupStore.getState();
+
+  axios.get = () => Promise.resolve({ data: { errcode: 403, errmsg: '无权限', data: null } });
+  await useGroupStore.getState().fetchGroupMsg(2);
+
+  const state = useGroupStore.getState();
+  t.is(state.currGroup, seeded.currGroup);
+  t.is(state.role, seeded.role);
+  t.deepEqual(state.field, seeded.field);
+  t.is(state.groupRequestId, seeded.groupRequestId, '失败响应不推进 groupRequestId');
+});
+
+test.serial('setCurrGroup/fetchGroupMsg 连续调用分配递增请求号（共用序列）', async t => {
+  axios.get = () => Promise.resolve({ data: { errcode: 0, data: groupPayload(9) } });
+  const ridStart = useGroupStore.getState().groupRequestId;
+
+  await useGroupStore.getState().setCurrGroup({ _id: 9 });
+  const first = useGroupStore.getState().groupRequestId;
+  await useGroupStore.getState().fetchGroupMsg(9);
+  const second = useGroupStore.getState().groupRequestId;
+  await useGroupStore.getState().setCurrGroup({ _id: 9 });
+  const third = useGroupStore.getState().groupRequestId;
+
+  t.true(first > ridStart, '首次调用应入账递增序号');
+  t.true(second > first, 'SET_CURR_GROUP 与 FETCH_GROUP_MSG 共用同一递增序列');
+  t.true(third > second, '连续调用序号单调递增');
+});
+
 test.serial('成员与分组写请求为纯请求动作：不触达状态并原样返回响应', async t => {
   const posts = [];
   axios.post = (url, body) => {

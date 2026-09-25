@@ -14,8 +14,8 @@ import axios from 'axios';
  * - fetchInterfaceProject：旧 redux-promise 链路无 errcode 守卫（HTTP 200 即写入
  *   `payload.data.data`），此处原样保留；网络层 reject 时返回 null 并保留旧状态；
  * - clipboard 字段存函数（旧 initialState 即为 `() => {}`），zustand set 原样存引用；
- * - 旧模块文件 client/reducer/modules/addInterface.js 保留在盘上（本批次禁止删除旧
- *   reducer 文件）；该模块在迁移前已无任何 import 方与状态读取方，注销 combineReducers
+ * - 旧模块文件 client/reducer/modules/addInterface.js 已随 Redux 退役删除（收尾批）；
+ *   该模块在删除前已无任何 import 方与状态读取方，注销 combineReducers
  *   无行为影响，待后续批次清理。
  */
 

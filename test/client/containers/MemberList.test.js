@@ -35,14 +35,7 @@ test.serial.afterEach.always(() => {
   useGroupStore.setState(INITIAL_GROUP_STATE);
 });
 
-function seedState() {
-  return {
-    user: { uid: 11 },
-    group: { currGroup: { _id: 71, group_name: '测试分组' }, role: 'dev' }
-  };
-}
-
-// 组件读取 currGroup 已走 Zustand：播种真实 store（redux 种子仅保留 user 切片占位）
+// Redux 死种子（user/group 切片）随 Redux 退役移除（收尾批）；组件读取 currGroup 走 Zustand
 function seedGroupStore() {
   useGroupStore.setState({
     ...INITIAL_GROUP_STATE,
@@ -83,9 +76,7 @@ test.serial('owner 视角渲染成员表格（用户名/角色）并提供添加
   const logRequests = [];
   mockGroupApis(logRequests, 'owner');
   seedGroupStore();
-  const { container } = renderWithProviders(React.createElement(MemberList), {
-    seedState: seedState()
-  });
+  const { container } = renderWithProviders(React.createElement(MemberList));
   await flushEffects();
 
   t.truthy(
@@ -122,9 +113,7 @@ test.serial('点击「添加成员」展开 Modal（用户名自动补全 + 权�
   const logRequests = [];
   mockGroupApis(logRequests, 'owner');
   seedGroupStore();
-  const { container } = renderWithProviders(React.createElement(MemberList), {
-    seedState: seedState()
-  });
+  const { container } = renderWithProviders(React.createElement(MemberList));
   await flushEffects();
 
   t.falsy(document.body.querySelector('.ant-modal'), '初始不应渲染 Modal');
@@ -153,9 +142,7 @@ test.serial('非管理员视角仅展示角色文案且无添加成员入口', a
   const logRequests = [];
   mockGroupApis(logRequests, 'member');
   seedGroupStore();
-  const { container } = renderWithProviders(React.createElement(MemberList), {
-    seedState: seedState()
-  });
+  const { container } = renderWithProviders(React.createElement(MemberList));
   await flushEffects();
 
   const names = Array.from(container.querySelectorAll('.m-user-name')).map(el => el.textContent);
@@ -175,9 +162,7 @@ test.serial('分组切换: currGroup 变化触发成员列表重拉（先成员�
   const logRequests = [];
   mockGroupApis(logRequests, 'owner');
   seedGroupStore();
-  renderWithProviders(React.createElement(MemberList), {
-    seedState: seedState()
-  });
+  renderWithProviders(React.createElement(MemberList));
   await flushEffects();
   t.is(
     logRequests.filter(req => req.url === '/api/group/get_member_list').length,

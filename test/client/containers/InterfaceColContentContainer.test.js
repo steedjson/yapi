@@ -269,8 +269,8 @@ async function renderContainer() {
     token: SEED_STATE.project.token,
     projectEnv: SEED_STATE.project.projectEnv
   });
+  // Redux 已退役（收尾批）：seedState 选项移除，播种全部走上方 Zustand store
   const utils = renderWithProviders(React.createElement(InterfaceColContent), {
-    seedState: SEED_STATE,
     initialPath: '/project/12/interface/col/5',
     routePath: '/project/:id/interface/col/:actionId'
   });

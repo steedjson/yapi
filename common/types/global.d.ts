@@ -107,17 +107,6 @@ declare module 'js-base64' {
   };
 }
 
-declare module 'redux' {
-  export function combineReducers(reducers: Record<string, any>): any;
-  export function createStore(reducer: any, preloadedState?: any, enhancer?: any): any;
-  export function applyMiddleware(...middleware: any[]): any;
-}
-
-declare module 'redux-promise' {
-  const reduxPromise: any;
-  export default reduxPromise;
-}
-
 declare module 'immer' {
   // immer@10 移除了默认导出，仅保留命名导出（produce 等）
   export function produce(base: any, recipe: (draft: any) => void): any;
@@ -169,24 +158,6 @@ declare module 'react-dom/client' {
 declare module 'prop-types' {
   const PropTypes: any;
   export default PropTypes;
-}
-
-declare module 'react-redux' {
-  export function connect(
-    mapStateToProps?: any,
-    mapDispatchToProps?: any,
-    mergeProps?: any,
-    options?: any
-  ): any;
-  // react-redux 8 起提供 Hooks API；项目未对 Redux state 建模，
-  // selector 的 state 参数按 any 处理。
-  export function useDispatch(): any;
-  export function useSelector(
-    selector: (state: any) => any,
-    equalityFn?: (a: any, b: any) => boolean
-  ): any;
-  // client/index.js 使用（P7d）：根组件以 <Provider store={store}> 包裹应用。
-  export const Provider: any;
 }
 
 declare module 'antd' {
@@ -381,17 +352,8 @@ declare module 'client/common.js' {
   export function json5_parse(json: any): any;
 }
 
-declare module 'client/reducer/modules/mockCol' {
-  export function fetchMockCol(interfaceId: any): any;
-}
-
-declare module 'client/reducer/modules/user' {
-  export function setBreadcrumb(data: any): any;
-}
-
-declare module 'client/reducer/modules/project' {
-  export function handleSwaggerUrlData(url: any): any;
-}
+// 旧 client/reducer/modules/* 的环境声明存根（mockCol/user/project action creators）
+// 已随 Redux 全链路退役删除（收尾批）：目标模块文件不存在，全部消费方已迁 Zustand store。
 
 // client/components/Loading/Loading.js 供 exts 插件 client.js 的 Suspense fallback
 // 使用（批次1 组件级异步分包）；tsconfig 未配置 client/* 的 paths 映射，按最小子集声明。

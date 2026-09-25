@@ -76,17 +76,6 @@
     "server/controllers/user/authMethods.js",
     "server/controllers/user/adminMethods.js",
     "server/controllers/user/avatarMethods.js",
-    "client/reducer/modules/menu.js",
-    "client/reducer/modules/follow.js",
-    "client/reducer/modules/mockCol.js",
-    "client/reducer/modules/news.js",
-    "client/reducer/modules/group.js",
-    "client/reducer/modules/interface.js",
-    "client/reducer/modules/interfaceCol.js",
-    "client/reducer/modules/addInterface.js",
-    "client/reducer/modules/project.js",
-    "client/reducer/modules/user.js",
-    "client/reducer/create.js",
     "client/containers/Login/Login.js",
     "client/containers/Login/LoginWrap.js",
     "client/containers/Login/Reg.js",
@@ -162,7 +151,6 @@
     "client/theme.js",
     "client/withRouter.jsx",
     "client/constants/v4IconMap.js",
-    "client/reducer/middleware/messageMiddleware.js",
     "client/components/AceEditor/AceEditor.js",
     "client/components/AceEditor/mockEditor.js",
     "client/components/AsyncComponent/index.js",
@@ -280,9 +268,10 @@
     // TS 覆盖收口（J 批）：client 4 个未纳入文件 + exts 14 个插件入口
     // （index.js / defaultTheme.js 清单），全部补 // @ts-check 后纳入；
     // 至此 client/exts/common 下 JS 文件零遗漏（实测 0 错）。
+    // 状态管理迁移收尾批：client/reducer/**（13 文件）随 Redux 退役删除，
+    // 其 include 条目一并移除。
     "client/constants/variable.js",
     "client/history.js",
-    "client/reducer/modules/reducer.js",
     "client/utils/sanitize.js",
     // 状态管理迁移批次5：interfaceStore 纳入白名单（其它 store 经消费方 import 链传递
     // 纳入 tsc program；显式条目更稳，不依赖消费方）

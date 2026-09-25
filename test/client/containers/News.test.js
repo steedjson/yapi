@@ -33,10 +33,9 @@ test.serial('挂载渲染动态页结构（Subnav/Mock地址/下载按钮/动态
     return Promise.reject(new Error('unexpected request: ' + url));
   };
 
-  const { container } = renderWithProviders(React.createElement(News), {
-    // news 切片已迁 Zustand，Redux 种子中不再包含（动态数据由挂载期 fetchMock 经 store 收敛）
-    seedState: { user: { uid: 11 } }
-  });
+  // news 已迁 Zustand（动态数据由挂载期 fetchMock 经 store 收敛）；
+  // Redux 种子选项已随收尾批退役移除
+  const { container } = renderWithProviders(React.createElement(News));
   await flushEffects();
 
   // Subnav：默认选中「动态」，三个导航项

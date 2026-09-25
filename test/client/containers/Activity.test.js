@@ -39,14 +39,14 @@ test.serial.afterEach.always(() => {
   resetUserProjectStores();
 });
 
+// Redux 已退役（收尾批）：seedState 只做 projectStore 播种，原 redux 种子返回值移除
 function seedState() {
   seedProjectStore({ currProject: { _id: 12, basepath: '/mock-path' } });
-  return {};
 }
 
 test.serial('渲染项目动态面板: mock 地址/下载链接/TimeLine 参数均来自路由与 store', t => {
+  seedState();
   const { container } = renderWithProviders(React.createElement(ActivityWithRouter), {
-    seedState: seedState(),
     routePath: '/project/:id/*',
     initialPath: '/project/12/activity'
   });
@@ -73,8 +73,8 @@ test.serial('渲染项目动态面板: mock 地址/下载链接/TimeLine 参数�
 });
 
 test.serial('路由参数变化时下载链接与 TimeLine typeid 跟随变化', t => {
+  seedState();
   const { container } = renderWithProviders(React.createElement(ActivityWithRouter), {
-    seedState: seedState(),
     routePath: '/project/:id/*',
     initialPath: '/project/77/activity'
   });

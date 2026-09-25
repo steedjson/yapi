@@ -60,7 +60,7 @@ test.serial('渲染 4 个日志类型菜单项且默认选中第 0 项', async t
 });
 
 test.serial('点击菜单项: 选中态迁移并直调 fetchNewsData(23, 0, 5)', async t => {
-  const { container, dispatched, setLoadingCalls, logRequests } = renderNewsList();
+  const { container, setLoadingCalls, logRequests } = renderNewsList();
 
   const items = () => Array.from(container.querySelectorAll('.ant-menu-item.log-item'));
 
@@ -73,10 +73,7 @@ test.serial('点击菜单项: 选中态迁移并直调 fetchNewsData(23, 0, 5)',
   t.is(items()[0].className.indexOf('ant-menu-item-selected'), -1, '原选中项应取消选中');
   t.deepEqual(setLoadingCalls, [true], '点击后应立即 setLoading(true)');
   t.is(logRequests.length, 1, '应立即发起 /api/log/list 请求');
-  t.falsy(
-    dispatched.some(action => action.type === 'yapi/news/FETCH_NEWS_DATA'),
-    '拉取动态不应再经 redux 派发（已迁 Zustand）'
-  );
+  // 原「不再经 redux 派发」反向断言随 Redux 机制退役移除：拉取走 Zustand store 动作
 
   await flushEffects();
   // 请求完成后 loading 正常复位：store 动作返回 Promise，.then 中的 setLoading(false) 触发

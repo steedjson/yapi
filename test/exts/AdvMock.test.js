@@ -49,8 +49,8 @@ test.serial.afterEach.always(() => {
 });
 
 function renderAdvMock() {
+  seedState();
   return renderWithProviders(React.createElement(require(ADVMOCK_PATH).default), {
-    seedState: seedState(),
     routePath: '/project/:id/interface/api/:actionId',
     initialPath: '/project/12/interface/api/100'
   });

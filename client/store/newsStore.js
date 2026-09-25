@@ -21,9 +21,14 @@ import variable from '../constants/variable';
  * - 旧链路经 messageMiddleware 会在 errcode 非 0 时全局 toast 并抛错；本 store 静默
  *   失败：TimeLine/News 页有 ErrMsg 空态兜底，NewsTimeline 空数据优雅渲染，且旧抛错
  *   会使消费方 `.then` 中的 loading 复位永不执行（卡死），静默化同时修复该缺陷；
- * - 旧模块文件 client/reducer/modules/news.js 保留在盘上：ProjectData 仍以其
- *   fetchUpdateLogData（type 为 '' 的纯 promise 助手，不触达 news 状态）经 redux
- *   派发；newsReducer.test.js 亦直接覆盖该文件。
+ * - fetchUpdateLogData（收尾批迁入）是例外：旧链路 ProjectData 依赖 messageMiddleware
+ *   「errcode 非 0 且非 40011 → toast + throw」与 redux-promise「网络错误 reject」双双
+ *   进入消费方 catch 分支提示「获取同步差异失败」，且旧 action 为 type '' 的纯 promise
+ *   助手、不触达 news 状态——故该动作保持透传（网络错误原样 reject，业务错误显式
+ *   throw Error(errmsg)，同批次 5 deleteInterfaceData 的「消费方 catch 依赖」先例），
+ *   不套用本 store 其余动作的「吞错返回 null」口径。
+ * - 旧模块文件 client/reducer/modules/news.js 已随 Redux 退役删除（收尾批），
+ *   语义对照留存于本文档注释与 docs/zustand-migration-pattern.md。
  */
 
 // 模块级自增序列（旧 news.js 同名变量）：requestId 单调递增，配合守卫丢弃过期响应
@@ -138,6 +143,28 @@ const useNewsStore = create((set, get) => ({
     } catch (err) {
       return null;
     }
+  },
+
+  // 拉取数据同步差异（旧 news.js 同名 action creator 的等价迁移，收尾批）
+  // 旧形态为 type '' 的纯 promise 助手：reducer 无对应分支（不触达 news 状态），
+  // 仅经 redux-promise 解包后返回响应本体。语义对齐（见文件头 JSDoc）：
+  // - 成功：返回 axios 响应本体，取值层级与旧 `result.payload.data` 对应——
+  //   消费方从 `result.payload.data.data` 改为 `result.data.data`；
+  // - errcode 非 0 且非 40011：显式 throw Error(errmsg)（镜像旧 messageMiddleware
+  //   的 toast + throw，ProjectData catch 分支依赖该 reject 语义）；
+  // - 网络层错误：原样 reject 透传（同批次 5 纯请求动作的「消费方 catch 依赖」先例）。
+  /**
+   * @param {any} params 含 type/typeid/apis
+   * @returns {Promise<any>} axios 响应
+   * @throws {Error} errcode 非 0 且非 40011 时抛出（errmsg 取自响应体）
+   */
+  fetchUpdateLogData: async params => {
+    const res = await axios.post('/api/log/list_by_update', params);
+    const errcode = res && res.data && res.data.errcode;
+    if (errcode && errcode !== 40011) {
+      throw new Error(res.data.errmsg);
+    }
+    return res;
   }
 }));
 

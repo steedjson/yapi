@@ -41,7 +41,6 @@ const Activity = () => {
 };
 
 Activity.propTypes = {
-  getMockUrl: PropTypes.func,
   match: PropTypes.object
 };
 

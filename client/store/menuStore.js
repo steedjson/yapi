@@ -12,8 +12,8 @@ import { create } from 'zustand';
  *   属测试可用性修正，浏览器行为不变；
  * - changeMenuItem 为同步动作，等价替代旧 redux action creator；全仓无 state.menu
  *   状态读取方（写入后仅作菜单高亮占位），注销 combineReducers 无行为影响；
- * - 旧模块文件 client/reducer/modules/menu.js 保留在盘上（本批次禁止删除旧 reducer
- *   文件），其同步 action creator 已无消费方，待后续批次清理。
+ * - 旧模块文件 client/reducer/modules/menu.js 已随 Redux 退役删除（收尾批，
+ *   删除前其同步 action creator 已无消费方）。
  */
 
 /**

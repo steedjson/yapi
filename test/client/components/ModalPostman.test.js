@@ -3,9 +3,6 @@ import '../../helpers/jsdom-setup';
 import test from 'ava';
 import React from 'react';
 import { render, fireEvent, cleanup, act } from '@testing-library/react';
-import { Provider } from 'react-redux';
-import { createStore, applyMiddleware } from 'redux';
-import promiseMiddleware from 'redux-promise';
 import { cleanupDom } from '../../helpers/jsdom-setup';
 
 const axios = require('axios');
@@ -59,41 +56,33 @@ function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-// 在 act 中等待异步副作用(axios promise → redux-promise fulfilled 二次派发 → setState)完成
+// 在 act 中等待异步副作用(axios promise → store 写入 → setState)完成
 async function flushEffects(ms) {
   await act(async () => {
     await sleep(ms == null ? 15 : ms);
   });
 }
 
-function makeStore(seedState) {
-  return applyMiddleware(promiseMiddleware)(createStore)(function(state) {
-    return state === undefined ? seedState : state;
-  }, seedState);
-}
-
-// VariablesSelect 经 useInterfaceColStore 读取 currColId 并发起请求,
-// redux store 仅作 Provider 占位（剩余切片不再被本组件消费）
+// VariablesSelect 经 useInterfaceColStore 读取 currColId 并发起请求。
+// Redux 已退役（收尾批）：原 Provider/makeStore 占位包装移除，Zustand 无需 Provider
 function renderModalPostman(props) {
   useInterfaceColStore.setState({ ...INITIAL_INTERFACE_COL_STATE, currColId: CURR_CASE_ID });
   const okValues = [];
   const cancelCalls = [];
   const utils = render(
-    <Provider store={makeStore({})}>
-      <ModalPostman
-        visible={true}
-        handleOk={val => {
-          okValues.push(val);
-        }}
-        handleCancel={() => {
-          cancelCalls.push(true);
-        }}
-        inputValue=""
-        envType="case"
-        id={CURR_CASE_ID}
-        {...props}
-      />
-    </Provider>
+    <ModalPostman
+      visible={true}
+      handleOk={val => {
+        okValues.push(val);
+      }}
+      handleCancel={() => {
+        cancelCalls.push(true);
+      }}
+      inputValue=""
+      envType="case"
+      id={CURR_CASE_ID}
+      {...props}
+    />
   );
   // 弹窗经 antd Modal 传送到 document.body,查询须基于 document
   const doc = utils.container.ownerDocument;

@@ -21,8 +21,8 @@ import axios from 'axios';
  * - 旧链路 messageMiddleware 的 errcode 全局 toast 随迁移静默化：消费方自带
  *   errcode 分支与本地提示（MemberList/GroupSetting/GroupList 等），无对全局
  *   toast 的行为依赖；
- * - 旧模块文件 client/reducer/modules/group.js 保留在盘上（本批次禁止删除旧
- *   reducer 文件）：groupReducer.test.js 仍直接覆盖该文件，待后续批次清理。
+ * - 旧模块文件 client/reducer/modules/group.js 已随 Redux 退役删除（收尾批），
+ *   groupReducer.test.js 的用例语义先移植到本文件单测后随文件删除。
  */
 
 // 模块级自增序列（旧 group.js 同名变量）：requestId 单调递增，配合守卫丢弃过期响应

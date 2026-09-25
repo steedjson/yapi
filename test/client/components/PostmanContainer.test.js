@@ -157,14 +157,6 @@ const CASE_DATA = Object.assign({}, INTER_DATA, {
 
 const BASE_PROPS = { curUid: 9, interfaceId: 100, projectId: 12, save: () => {} };
 
-// Postman 自身不消费 store；仍按容器级测试模式以 Provider + Router 包裹，
-// 保证 PostmanModals → ProjectEnv 等既有消费方在任何场景下都有等价上下文
-const SEED_STATE = {
-  group: { field: { enable: false, name: '' } },
-  project: { currProject: { _id: 12, name: '演示项目' } },
-  user: { uid: 9 }
-};
-
 test.serial.afterEach.always(() => {
   cleanup();
   cleanupDom();
@@ -185,7 +177,6 @@ async function renderPostman(data, type, opts) {
   }
   const utils = renderWithProviders(
     React.createElement(Postman, Object.assign({}, BASE_PROPS, { data, type })),
-    { seedState: SEED_STATE }
   );
   await flushEffects(options.waitMs == null ? 400 : options.waitMs);
   return utils;

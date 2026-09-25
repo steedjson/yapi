@@ -17,9 +17,9 @@ import axios from 'axios';
  * - 旧链路经 messageMiddleware 会在 errcode 非 0 时全局 toast 并抛错；本 store 静默
  *   失败（MockCol 页面对列表无额外错误 UI，写/删/改操作各自已有 message 反馈，与
  *   follow 试点同一模式）；
- * - 旧模块文件 client/reducer/modules/mockCol.js 保留在盘上（本批次禁止删除旧 reducer
- *   文件）；实际注册点为插件 add_reducer 钩子（exts/yapi-plugin-advanced-mock/client.js），
- *   本批已随迁移注销。
+ * - 旧模块文件 client/reducer/modules/mockCol.js 已随 Redux 退役删除（收尾批）；
+ *   历史注册点为插件 add_reducer 钩子（exts/yapi-plugin-advanced-mock/client.js，
+ *   已于批次 2 随迁移注销）。
  */
 const useMockColStore = create(set => ({
   /** @type {any[]} 高级 Mock 期望用例列表 */

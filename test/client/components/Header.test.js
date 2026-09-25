@@ -3,8 +3,6 @@ import '../../helpers/jsdom-setup';
 import test from 'ava';
 import React from 'react';
 import { render, fireEvent, cleanup, act } from '@testing-library/react';
-import { Provider } from 'react-redux';
-import { legacy_createStore as createStore } from 'redux';
 import { MemoryRouter, useLocation } from 'react-router-dom';
 import { cleanupDom } from '../../helpers/jsdom-setup';
 
@@ -26,8 +24,7 @@ Module._resolveFilename = function(request, parent, isMain, options) {
 
 const { default: HeaderCom } = require('../../../client/components/Header/Header.js');
 // user 切片已迁 Zustand（批次4）：Header/Breadcrumb 改经 useUserStore 读取，
-// Search 的 project.projectList stale 订阅已随迁移移除；
-// 但内嵌 Srch 仍经 useDispatch 派发 interface 动作（inter 未迁移），Provider 需保留
+// Search 的 interface 动作亦已迁 store（批次5）——Redux 退役（收尾批）后 Provider 一并移除
 const { seedUserStore, resetUserProjectStores } = require('../../helpers/userProjectStores');
 
 // 退出登录等 action 的 payload 是 axios 请求，测试统一拦截（axios 为 CJS 单例）
@@ -69,25 +66,20 @@ function renderHeader(userState, opts) {
       userState
     )
   );
-  // redux store 仅服务于内嵌 Srch 的 useDispatch（inter 模块未迁移），固定空 reducer 即可
-  const store = createStore(function() {
-    return {};
-  });
+  // Redux 已退役（收尾批）：原 Provider 占位包装移除，Zustand 无需 Provider
   let locationRef = null;
   function LocationProbe() {
     locationRef = useLocation();
     return null;
   }
   const utils = render(
-    <Provider store={store}>
-      <MemoryRouter
-        initialEntries={[options.initialPath || '/']}
-        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
-      >
-        <LocationProbe />
-        <HeaderCom />
-      </MemoryRouter>
-    </Provider>
+    <MemoryRouter
+      initialEntries={[options.initialPath || '/']}
+      future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+    >
+      <LocationProbe />
+      <HeaderCom />
+    </MemoryRouter>
   );
   return Object.assign({ getLocation: () => locationRef }, utils);
 }

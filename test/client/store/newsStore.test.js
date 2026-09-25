@@ -6,6 +6,7 @@ import variable from '../../../client/constants/variable';
 const { default: useNewsStore } = require('../../../client/store/newsStore');
 
 const originalAxiosGet = axios.get;
+const originalAxiosPost = axios.post;
 
 // Zustand store 为模块级单例，每条用例前复位到初始状态
 test.beforeEach(() => {
@@ -14,6 +15,7 @@ test.beforeEach(() => {
 
 test.afterEach.always(() => {
   axios.get = originalAxiosGet;
+  axios.post = originalAxiosPost;
 });
 
 const item = (id, add_time) => ({ uid: id, add_time, type: 'project', content: '动态' + id });
@@ -162,6 +164,90 @@ test.serial('fetchMoreNews 新数据为空：total 更新但 curpage 不变', as
   t.is(state.curpage, before.curpage, '空页追加不应推进 curpage');
   t.deepEqual(state.newsData.list, [item(1, 500)], '空页追加不改变已有列表');
   t.true(state.newsRequestId > before.newsRequestId, 'newsRequestId 仍应推进');
+});
+
+// —— 以下 2 条为旧 newsReducer.test.js 的覆盖移植（Redux 退役删除旧文件，语义不得丢弃）——
+
+test.serial('fetchMoreNews 忽略过期分页响应', async t => {
+  const pending = [];
+  axios.get = (url, config) =>
+    new Promise(resolve => {
+      pending.push({ resolve, params: config && config.params });
+    });
+
+  const pFresh = useNewsStore.getState().fetchNewsData(42, 'project', 1); // 序号 1（先发，用于铺底）
+  pending[0].resolve({ data: { errcode: 0, data: { list: [item(2, 200)], total: 1 } } });
+  await pFresh;
+
+  const pStale = useNewsStore.getState().fetchMoreNews(42, 'project', 2); // 序号 2
+  const pNewer = useNewsStore.getState().fetchNewsData(42, 'project', 3); // 序号 3（后发先至）
+  pending[2].resolve({ data: { errcode: 0, data: { list: [item(3, 300)], total: 1 } } });
+  await pNewer;
+  const ridAfterNewer = useNewsStore.getState().newsRequestId;
+
+  // 过期的分页响应（序号 2 < 3）后返回，不得覆盖
+  pending[1].resolve({ data: { errcode: 0, data: { list: [item(1, 100)], total: 99 } } });
+  await pStale;
+
+  const state = useNewsStore.getState();
+  t.deepEqual(state.newsData.list, [item(3, 300)], '过期分页响应不应覆盖新数据');
+  t.is(state.newsRequestId, ridAfterNewer, '过期分页响应不应推进 newsRequestId');
+});
+
+test.serial('fetchNewsData 响应体异常（缺失 data）不写入', async t => {
+  // 旧用例为 action 无 payload：store 等价形态为响应体缺失/为 null
+  axios.get = () => Promise.resolve({});
+  await useNewsStore.getState().fetchNewsData(42, 'project', 1);
+
+  const state = useNewsStore.getState();
+  t.deepEqual(state.newsData, { list: [], total: 0 }, '异常响应保留初始状态');
+  t.is(state.curpage, 1);
+});
+
+// —— fetchUpdateLogData（收尾批自旧 news.js 迁入，ProjectData 数据同步差异用）——
+
+test.serial('fetchUpdateLogData 成功：POST /api/log/list_by_update 原样透传参数并返回响应', async t => {
+  const posts = [];
+  axios.post = (url, body) => {
+    posts.push({ url, body });
+    return Promise.resolve({ data: { errcode: 0, data: { diff: [{ content: '<p>x</p>' }] } } });
+  };
+  const params = { type: 'project', typeid: 12, apis: [{ method: 'GET', path: '/a' }] };
+
+  const res = await useNewsStore.getState().fetchUpdateLogData(params);
+
+  t.is(posts[0].url, '/api/log/list_by_update', '请求地址与旧 action creator 一致');
+  t.is(posts[0].body, params, '请求体应原样透传');
+  t.is(res.data.errcode, 0, '返回 axios 响应（res.data 对应旧 result.payload.data）');
+  t.deepEqual(res.data.data, { diff: [{ content: '<p>x</p>' }] }, '消费方按 res.data.data 解包差异列表');
+});
+
+test.serial('fetchUpdateLogData errcode 非 0：显式 throw（镜像旧 messageMiddleware，消费方 catch 依赖）', async t => {
+  axios.post = () =>
+    Promise.resolve({ data: { errcode: 400, errmsg: '无权限操作', data: null } });
+
+  await t.throwsAsync(
+    () => useNewsStore.getState().fetchUpdateLogData({ type: 'project', typeid: 12 }),
+    { message: '无权限操作' },
+    '旧链路 messageMiddleware 对业务错误 toast + throw，ProjectData catch 提示「获取同步差异失败」'
+  );
+});
+
+test.serial('fetchUpdateLogData errcode=40011：豁免透传响应（旧 messageMiddleware 同款豁免）', async t => {
+  axios.post = () =>
+    Promise.resolve({ data: { errcode: 40011, errmsg: '请登录', data: null } });
+
+  const res = await useNewsStore.getState().fetchUpdateLogData({ type: 'project', typeid: 12 });
+  t.is(res.data.errcode, 40011);
+});
+
+test.serial('fetchUpdateLogData 网络层 reject：原样透传（纯请求动作不吞错）', async t => {
+  axios.post = () => Promise.reject(new Error('network down'));
+
+  await t.throwsAsync(
+    () => useNewsStore.getState().fetchUpdateLogData({ type: 'project', typeid: 12 }),
+    { message: 'network down' }
+  );
 });
 
 test.serial('fetchNewsData 在 fetchMoreNews 之后调用：整表替换并归位 curpage', async t => {

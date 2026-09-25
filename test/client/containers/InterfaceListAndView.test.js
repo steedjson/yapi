@@ -226,11 +226,7 @@ test.serial('InterfaceList 挂载拉取全部接口列表并渲染表格', async
   await flushEffects();
 
   // 挂载时按路由（无 actionId）拉取全量接口列表；interface 切片已迁 store（批次5），
-  // 不再派发 yapi/interface/* redux action（反向断言防回迁）
-  t.true(
-    utils.dispatched.every(action => String(action.type).indexOf('yapi/interface/') !== 0),
-    '不应再派发 yapi/interface/* redux action'
-  );
+  // 原「不再派发 yapi/interface/*」反向断言随 Redux 机制退役移除（收尾批）
   t.true(getCalls.some(url => url.indexOf('/api/interface/list') === 0), '应请求接口列表接口');
   t.true(getCalls.every(url => url.indexOf('/api/interface/list_cat') !== 0), '不应请求分类列表');
 
@@ -256,10 +252,7 @@ test.serial('InterfaceList 分类路由按 catid 拉取分类接口并回显分�
   });
   await flushEffects();
 
-  t.true(
-    utils.dispatched.every(action => String(action.type).indexOf('yapi/interface/') !== 0),
-    '不应再派发 yapi/interface/* redux action'
-  );
+  // 原「不再派发 yapi/interface/*」反向断言随 Redux 机制退役移除（收尾批）
   const catCall = getCalls.find(call => call.url.indexOf('/api/interface/list_cat') === 0);
   t.truthy(catCall, '应请求分类下接口列表');
   t.is(String(catCall.config.params.catid), '5', '请求应携带 catid=5');

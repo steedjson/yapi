@@ -26,8 +26,8 @@ import qs from 'qs';
  * - 旧链路 messageMiddleware 的 errcode 全局 toast 随迁移静默化：消费方自带
  *   errcode 分支与本地提示（InterfaceList/InterfaceMenu/InterfaceContent 等），
  *   旧版「中间件 toast + 消费方 toast」双提示收敛为单提示（已知轻微 UX 差异）；
- * - 旧模块文件 client/reducer/modules/interface.js 保留在盘上：interfaceReducer.test.js
- *   仍直接覆盖该文件，待 redux 三件套收尾批次统一清理。
+ * - 旧模块文件 client/reducer/modules/interface.js 已随 Redux 退役删除（收尾批），
+ *   interfaceReducer.test.js 的两条用例已被本文件单测等价覆盖后随文件删除。
  */
 
 // 模块级自增序列（旧 interface.js 同名变量）：requestId 单调递增，配合守卫丢弃过期响应

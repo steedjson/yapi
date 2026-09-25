@@ -13,7 +13,6 @@ const STAT_PATH = '../../exts/yapi-plugin-statistics/statisticsClientPage';
 
 function renderStatistics() {
   return renderWithProviders(React.createElement(require(STAT_PATH).default), {
-    seedState: {},
     routePath: '/statistic',
     initialPath: '/statistic'
   });

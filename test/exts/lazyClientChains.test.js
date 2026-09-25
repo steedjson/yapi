@@ -60,7 +60,6 @@ test.serial('statistics client.js：app_route 组件为 lazy 包装且渲染真�
 
   // 懒加载组件经完整渲染后（import() 落地）应出现统计页真实内容而非停在 fallback
   const { container } = renderWithProviders(React.createElement(app.statisticsPage.component), {
-    seedState: {},
     routePath: '/statistic',
     initialPath: '/statistic'
   });
@@ -138,7 +137,6 @@ test.serial('wiki client.js：sub_nav 组件为 lazy 包装且渲染真实 Wiki 
   ]);
   seedProjectStore({ currProject: { _id: 12, role: 'admin', switch_notice: true } });
   const { container } = renderWithProviders(React.createElement(Comp), {
-    seedState: {},
     routePath: '/project/:id/wiki',
     initialPath: '/project/12/wiki'
   });

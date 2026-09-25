@@ -32,9 +32,9 @@ test.serial.afterEach.always(() => {
   resetUserProjectStores();
 });
 
+// Redux 已退役（收尾批）：seedState 只做 userStore 播种，原 redux 种子返回值移除
 function seedState(userRole, uid) {
   seedUserStore({ role: userRole, uid: uid == null ? 999 : uid });
-  return {};
 }
 
 function mockUserList(logRequests) {
@@ -52,9 +52,8 @@ function mockUserList(logRequests) {
 test.serial('admin 视角渲染用户表格（用户名/邮箱/角色/状态/更新日期）与分页', async t => {
   const logRequests = [];
   mockUserList(logRequests);
-  const { container } = renderWithProviders(React.createElement(List), {
-    seedState: seedState('admin', 1)
-  });
+  seedState('admin', 1);
+  const { container } = renderWithProviders(React.createElement(List));
   await flushEffects();
 
   t.is(logRequests.length, 1, '挂载应发起一次用户列表请求');
@@ -115,9 +114,8 @@ test.serial('admin 视角渲染用户表格（用户名/邮箱/角色/状态/更
 test.serial('非 admin 视角隐藏功能列与添加用户按钮', async t => {
   const logRequests = [];
   mockUserList(logRequests);
-  const { container } = renderWithProviders(React.createElement(List), {
-    seedState: seedState('member', 999)
-  });
+  seedState('member', 999);
+  const { container } = renderWithProviders(React.createElement(List));
   await flushEffects();
 
   const headers = Array.from(container.querySelectorAll('.ant-table-thead th')).map(

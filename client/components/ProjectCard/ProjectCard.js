@@ -4,16 +4,16 @@ import React, { useMemo, useRef } from 'react';
 import { Card, Tooltip, Modal, Alert, Input, message } from 'antd';
 import { CopyOutlined, StarFilled, StarOutlined } from '@ant-design/icons';
 import { getV4Icon } from '../../constants/v4IconMap';
-import { useDispatch } from 'react-redux';
-import { delFollow, addFollow } from '../../reducer/modules/follow';
 import PropTypes from 'prop-types';
 import { useNavigate } from 'react-router-dom';
 import { debounce } from '../../common';
 import constants from '../../constants/variable.js';
 import { produce } from 'immer';
-// user/project 切片已迁至 Zustand（批次4），follow 模块仍未迁移（保留 useDispatch 混用）
+// user/project 切片已迁至 Zustand（批次4）；follow 动作随收尾批改经 useFollowStore 直调
+// （Redux 全链路已退役，仓内不再有 react-redux 消费方）
 import useUserStore from '../../store/userStore';
 import useProjectStore from '../../store/projectStore';
+import useFollowStore from '../../store/followStore';
 import { trim } from '../../common.js';
 const confirm = Modal.confirm;
 
@@ -21,17 +21,18 @@ const confirm = Modal.confirm;
  * @param {any} props
  */
 export default function ProjectCard(props) {
-  const dispatch = useDispatch();
   const navigate = useNavigate();
   const uid = useUserStore(state => state.uid);
   const getProject = useProjectStore(state => state.getProject);
   const checkProjectName = useProjectStore(state => state.checkProjectName);
   const copyProjectMsg = useProjectStore(state => state.copyProjectMsg);
+  const addFollow = useFollowStore(state => state.addFollow);
+  const delFollow = useFollowStore(state => state.delFollow);
   const { projectData, inFollowPage, isShow, callbackResult } = props;
 
   // 用 ref 始终指向最新 props,防抖回调经 useMemo 只创建一次,避免闭包读到陈旧值
   const latestRef = useRef({});
-  latestRef.current = { projectData, uid, callbackResult, dispatch };
+  latestRef.current = { projectData, uid, callbackResult, addFollow, delFollow };
 
   // 复制项目
   /**
@@ -97,10 +98,10 @@ export default function ProjectCard(props) {
   const del = useMemo(
     () =>
       debounce(() => {
-        const { projectData: data, dispatch: d, callbackResult: cb } = latestRef.current;
+        const { projectData: data, delFollow: doDelFollow, callbackResult: cb } = latestRef.current;
         const id = data.projectid || data._id;
-        d(delFollow(id)).then((/** @type {any} */ res) => {
-          if (res.payload.data.errcode === 0) {
+        doDelFollow(id).then((/** @type {any} */ res) => {
+          if (res.data.errcode === 0) {
             cb();
             // message.success('已取消关注！');  // 星号已做出反馈 无需重复提醒用户
           }
@@ -112,7 +113,7 @@ export default function ProjectCard(props) {
   const add = useMemo(
     () =>
       debounce(() => {
-        const { projectData: data, uid: currentUid, dispatch: d, callbackResult: cb } =
+        const { projectData: data, uid: currentUid, addFollow: doAddFollow, callbackResult: cb } =
           latestRef.current;
         const param = {
           uid: currentUid,
@@ -121,8 +122,8 @@ export default function ProjectCard(props) {
           icon: data.icon || constants.PROJECT_ICON[0],
           color: data.color || constants.PROJECT_COLOR.blue
         };
-        d(addFollow(param)).then((/** @type {any} */ res) => {
-          if (res.payload.data.errcode === 0) {
+        doAddFollow(param).then((/** @type {any} */ res) => {
+          if (res.data.errcode === 0) {
             cb();
             // message.success('已添加关注！');  // 星号已做出反馈 无需重复提醒用户
           }

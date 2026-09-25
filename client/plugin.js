@@ -213,23 +213,14 @@ hooks = {
     listener: []
   },
   /*
-   * 添加 reducer
-   * @param Object reducerModules
-   * 
-   * @info
-   * importDataModule = {}; 
+   * 插件 add_reducer 通道随 Redux 退役（收尾批）已移除：外部插件如需状态管理
+   * 应使用 Zustand store（client/store/），以普通模块导入方式读写，无需注入钩子。
    */
-
-  add_reducer: {
-    type: 'listener',
-    mulit: true,
-    listener: []
-  },
 
   /*
    * 添加 subnav 钩子
    * @param Object reducerModules
-   * 
+   *
    *  let routers = {
       interface: { name: '接口', path: "/project/:id/interface/:action", component:Interface },
       activity: { name: '动态', path: "/project/:id/activity", component:  Activity},

@@ -24,8 +24,8 @@ import axios from 'axios';
  *   消费方自带 errcode 分支/本地提示，无对全局 toast 的行为依赖；
  * - setColData 为同步动作，等价旧 SET_COL_DATA 的浅合并 `{...state, ...payload}`
  *   （zustand 的 set 对象入参默认浅合并，允许动态新增 key）；
- * - 旧模块文件 client/reducer/modules/interfaceCol.js 保留在盘上（本批次禁止删除旧
- *   reducer 文件），全部消费方迁移后已无 import 方，待后续批次清理。
+ * - 旧模块文件 client/reducer/modules/interfaceCol.js 已随 Redux 退役删除（收尾批，
+ *   全部消费方迁移后已无 import 方）。
  */
 
 const initialState = {

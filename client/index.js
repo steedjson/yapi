@@ -8,8 +8,6 @@ import { createRoot } from 'react-dom/client';
 import { ConfigProvider } from 'antd';
 import { StyleProvider } from '@ant-design/cssinjs';
 import App from './Application';
-import { Provider } from 'react-redux';
-import createStore from './reducer/create';
 import { initSkin, useSkinTheme } from './theme';
 
 // 由于 antd 组件的默认文案是英文，所以需要修改为中文
@@ -21,8 +19,6 @@ import 'dayjs/locale/zh-cn';
 dayjs.locale('zh-cn');
 
 initSkin();
-
-const store = createStore();
 
 // 根组件消费皮肤主题:useSkinTheme 内部订阅 theme.js 的发布订阅,
 // setSkin/initSkin 应用皮肤后通知,ConfigProvider 的 theme 随 getThemeConfig(skin) 即时切换。
@@ -41,10 +37,10 @@ function ThemedRoot({ children }) {
   );
 }
 
+// Redux 全链路已随状态管理迁移收尾批退役：Provider/createStore 挂载点移除，
+// 全部业务状态改经 Zustand store（client/store/）管理。
 createRoot(document.getElementById('yapi')).render(
-  <Provider store={store}>
-    <ThemedRoot>
-      <App />
-    </ThemedRoot>
-  </Provider>
+  <ThemedRoot>
+    <App />
+  </ThemedRoot>
 );

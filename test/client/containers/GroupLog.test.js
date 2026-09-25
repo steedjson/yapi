@@ -43,10 +43,6 @@ test.serial.afterEach.always(() => {
   useGroupStore.setState(INITIAL_GROUP_STATE);
 });
 
-function seedState() {
-  return { user: { uid: 11 } };
-}
-
 // currGroup 播种真实 Zustand store（旧 redux group 种子已随迁移失效）
 function seedGroupStore(currGroupId) {
   useGroupStore.setState({
@@ -57,9 +53,7 @@ function seedGroupStore(currGroupId) {
 
 test.serial('渲染分组动态面板并将 store 当前分组 id 传给 TimeLine', t => {
   seedGroupStore(101);
-  const { container } = renderWithProviders(React.createElement(GroupLog), {
-    seedState: seedState(101)
-  });
+  const { container } = renderWithProviders(React.createElement(GroupLog));
 
   t.truthy(container.querySelector('.g-row'), '应渲染 .g-row 外层容器');
   const panel = container.querySelector('section.news-box.m-panel');
@@ -76,9 +70,7 @@ test.serial('渲染分组动态面板并将 store 当前分组 id 传给 TimeLin
 
 test.serial('store 中分组变化时传给 TimeLine 的 typeid 跟随变化', t => {
   seedGroupStore(205);
-  const { container } = renderWithProviders(React.createElement(GroupLog), {
-    seedState: seedState(205)
-  });
+  const { container } = renderWithProviders(React.createElement(GroupLog));
   const timeline = container.querySelector('.stub-timeline');
   t.is(timeline.getAttribute('data-typeid'), '205', 'typeid 应跟随 currGroup._id 变化');
 });

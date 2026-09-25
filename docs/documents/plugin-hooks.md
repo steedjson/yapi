@@ -273,6 +273,12 @@ hooks = {
    * @info
    * importDataModule = {};
    *
+   * 【已退役】add_reducer 钩子随 Redux 全链路退役（2026-09 状态管理收尾批）已从
+   * client/plugin.js 移除：Redux 状态树清零后该注册通道无接收方。注意 emitHook/bindHook
+   * 对未知钩子名直接抛出「不存在的hook name」异常且插件注册遍历无 try/catch——外置老
+   * 插件若仍 bindHook('add_reducer') 将导致客户端启动崩溃（响亮失败），升级时必须先移除
+   * 该绑定。插件如需客户端状态管理，请定义 Zustand store（client/store/*Store.js，参照
+   * docs/zustand-migration-pattern.md）并在插件 client.js 中导入使用。
    */
 
   add_reducer: {

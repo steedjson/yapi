@@ -57,11 +57,10 @@ const CURDATA = {
   req_body_other: ''
 };
 
-// mockCol/project/interface 切片均已迁 Zustand，Redux 种子中不再包含
+// mockCol/project/interface 切片均已迁 Zustand；Redux 种子选项已随收尾批退役移除
 function seedState(role) {
   seedProjectStore({ currProject: { _id: 12, role: role, switch_notice: true } });
   seedInterfaceStore({ curdata: CURDATA });
-  return {};
 }
 
 test.serial.afterEach.always(() => {
@@ -73,8 +72,8 @@ test.serial.afterEach.always(() => {
 });
 
 function renderMockCol(role) {
+  seedState(role);
   const utils = renderWithProviders(React.createElement(require(MOCKCOL_PATH).default), {
-    seedState: seedState(role),
     routePath: '/project/:id/interface/api/:actionId',
     initialPath: '/project/12/interface/api/100'
   });
@@ -91,17 +90,14 @@ test.serial('MockCol guest 角色：挂载拉取期望列表，操作按钮与�
   axiosMock.setRoutes([
     { match: '/api/plugin/advmock/case/list', respond: () => ({ errcode: 0, data: MOCK_LIST_A }) }
   ]);
-  const { container, dispatched } = renderMockCol('guest');
+  const { container } = renderMockCol('guest');
   await flushEffects();
 
   // 挂载期拉取期望列表（经 Zustand fetchMockCol）
   const listCalls = axiosMock.filter('/api/plugin/advmock/case/list');
   t.is(listCalls.length, 1);
   t.regex(listCalls[0].url, /interface_id=100$/);
-  t.falsy(
-    dispatched.some(action => action.type === 'yapi/mockCol/FETCH_MOCK_COL'),
-    '拉取期望列表不应再经 redux 派发（已迁 Zustand）'
-  );
+  // 原「不再经 redux 派发」反向断言随 Redux 机制退役移除：拉取走 Zustand store 动作
   t.deepEqual(useMockColStore.getState().list, MOCK_LIST_A, '列表数据应收敛进 Zustand store');
 
   // guest：添加期望禁用，且操作列不渲染任何按钮

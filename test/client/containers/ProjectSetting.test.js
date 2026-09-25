@@ -92,6 +92,7 @@ function seedGroupStore() {
   });
 }
 
+// Redux 死种子（inter/news 空切片）随 Redux 退役移除（收尾批），仅保留 Zustand 播种
 function makeSeed(role) {
   seedUserStore({ uid: 11 });
   seedProjectStore({
@@ -100,10 +101,6 @@ function makeSeed(role) {
     token: 'tk_seed_9f8e7d6c',
     swaggerUrlData: ''
   });
-  return {
-    inter: { curdata: { catid: 3 } },
-    news: { updateLogList: [] }
-  };
 }
 
 function mockProjectApis(getCalls) {
@@ -151,8 +148,8 @@ const BUILTIN_TABS = ['项目配置', '环境配置', '请求配置', 'token配�
 test.serial('Setting owner 角色渲染全部 5 个内建设置页签（含 token配置）', async t => {
   const getCalls = [];
   mockProjectApis(getCalls);
+  makeSeed('owner');
   const { container } = renderWithProviders(React.createElement(Setting), {
-    seedState: makeSeed('owner'),
     routePath: '/project/:id/setting',
     initialPath: '/project/12/setting'
   });
@@ -182,8 +179,8 @@ test.serial('Setting owner 角色渲染全部 5 个内建设置页签（含 toke
 
 test.serial('Setting guest 角色不渲染 token配置页签', async t => {
   mockProjectApis([]);
+  makeSeed('guest');
   const { container } = renderWithProviders(React.createElement(Setting), {
-    seedState: makeSeed('guest'),
     routePath: '/project/:id/setting',
     initialPath: '/project/12/setting'
   });
@@ -207,9 +204,10 @@ test.serial('Setting guest 角色不渲染 token配置页签', async t => {
 test.serial('ProjectToken 展示 store 中 token，admin 角色可见刷新入口且挂载即请求 token', async t => {
   const getCalls = [];
   mockProjectApis(getCalls);
+  seedGroupStore();
+  makeSeed('admin');
   const { container } = renderWithProviders(
-    React.createElement(ProjectToken, { projectId: 12, curProjectRole: 'admin' }),
-    { PRE_SEED: seedGroupStore(), seedState: makeSeed('admin') }
+    React.createElement(ProjectToken, { projectId: 12, curProjectRole: 'admin' })
   );
   await flushEffects();
 
@@ -227,9 +225,10 @@ test.serial('ProjectToken 展示 store 中 token，admin 角色可见刷新入�
 
 test.serial('ProjectToken dev 角色不渲染刷新入口', async t => {
   mockProjectApis([]);
+  seedGroupStore();
+  makeSeed('dev');
   const { container } = renderWithProviders(
-    React.createElement(ProjectToken, { projectId: 12, curProjectRole: 'dev' }),
-    { PRE_SEED: seedGroupStore(), seedState: makeSeed('dev') }
+    React.createElement(ProjectToken, { projectId: 12, curProjectRole: 'dev' })
   );
   await flushEffects();
 
@@ -244,10 +243,9 @@ test.serial('ProjectMock 首帧回填 mock 配置，切换开关并保存提交�
     postCalls.push({ url, body });
     return Promise.resolve({ data: { errcode: 0, data: {} } });
   };
-  const { container } = renderWithProviders(
-    React.createElement(ProjectMock, { projectId: 12 }),
-    { PRE_SEED: seedGroupStore(), seedState: makeSeed('owner') }
-  );
+  seedGroupStore();
+  makeSeed('owner');
+  const { container } = renderWithProviders(React.createElement(ProjectMock, { projectId: 12 }));
 
   // 首帧即回填（等价旧 UNSAFE_componentWillMount 首帧前赋值）
   const switchBtn = container.querySelector('button[role="switch"]');
@@ -284,10 +282,9 @@ test.serial('ProjectRequest 首帧回填前后脚本并支持保存提交', asyn
     postCalls.push({ url, body });
     return Promise.resolve({ data: { errcode: 0, data: {} } });
   };
-  const { container } = renderWithProviders(
-    React.createElement(ProjectRequest, { projectId: 12 }),
-    { PRE_SEED: seedGroupStore(), seedState: makeSeed('owner') }
-  );
+  seedGroupStore();
+  makeSeed('owner');
+  const { container } = renderWithProviders(React.createElement(ProjectRequest, { projectId: 12 }));
 
   t.is(
     container.querySelectorAll('.request-editor').length,

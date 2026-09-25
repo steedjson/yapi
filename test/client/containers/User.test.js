@@ -22,9 +22,9 @@ test.serial.afterEach.always(() => {
   resetUserProjectStores();
 });
 
+// Redux 已退役（收尾批）：seedState 只做 userStore 播种，原 redux 种子返回值移除
 function seedState() {
   seedUserStore({ uid: 11, type: 'site', role: 'admin' });
-  return {};
 }
 
 test.serial('/user/list 子路由渲染用户管理表格', async t => {
@@ -45,8 +45,8 @@ test.serial('/user/list 子路由渲染用户管理表格', async t => {
     return Promise.reject(new Error('unexpected request: ' + url));
   };
 
+  seedState();
   const { container } = renderWithProviders(React.createElement(User), {
-    seedState: seedState(),
     routePath: '/user/*',
     initialPath: '/user/list'
   });
@@ -92,8 +92,8 @@ test.serial('/user/profile/:uid 子路由渲染资料页', async t => {
     return Promise.reject(new Error('unexpected request: ' + url));
   };
 
+  seedState();
   const { container } = renderWithProviders(React.createElement(User), {
-    seedState: seedState(),
     routePath: '/user/*',
     initialPath: '/user/profile/9'
   });
@@ -121,8 +121,8 @@ test.serial('/user/profile/:uid 子路由渲染资料页', async t => {
 });
 
 test.serial('未匹配的子路由不渲染列表或资料页', t => {
+  seedState();
   const { container } = renderWithProviders(React.createElement(User), {
-    seedState: seedState(),
     routePath: '/user/*',
     initialPath: '/user/other'
   });

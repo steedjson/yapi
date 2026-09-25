@@ -50,10 +50,6 @@ function seedGroupStore(currGroup) {
   });
 }
 
-function makeSeed(overrides) {
-  seedProjectStore({});
-  return Object.assign({}, overrides);
-}
 
 test.serial('空列表(私有分组): 挂载即拉取项目列表并渲染空态提示', async t => {
   const listRequests = [];
@@ -65,9 +61,7 @@ test.serial('空列表(私有分组): 挂载即拉取项目列表并渲染空态
   seedGroupStore();
   seedProjectStore({});
 
-  const { container } = renderWithProviders(React.createElement(ProjectList), {
-    seedState: makeSeed()
-  });
+  const { container } = renderWithProviders(React.createElement(ProjectList));
   await flushEffects();
 
   t.is(listRequests.length, 1, '挂载期应经 projectStore 拉取项目列表（fetchProjectList）');
@@ -136,9 +130,7 @@ test.serial('无权限成员: 添加项目按钮禁用并有 Tooltip 提示', as
     role: 'guest'
   });
 
-  const { container } = renderWithProviders(React.createElement(ProjectList), {
-    seedState: makeSeed()
-  });
+  const { container } = renderWithProviders(React.createElement(ProjectList));
   await flushEffects();
 
   const addBtn = Array.from(container.querySelectorAll('button')).find(b =>
@@ -159,9 +151,7 @@ test.serial('分组切换: currGroup 变化触发重拉（对应旧 cWRP 分支�
   };
   seedGroupStore();
   seedProjectStore({});
-  renderWithProviders(React.createElement(ProjectList), {
-    seedState: makeSeed()
-  });
+  renderWithProviders(React.createElement(ProjectList));
   await flushEffects();
   t.is(listCalls.length, 1, '挂载期以当前分组拉取一次');
   t.is(listCalls[0], 1);

@@ -15,7 +15,6 @@ import {
   Checkbox
 } from 'antd';
 import { QuestionCircleOutlined, InboxOutlined, ExclamationCircleFilled } from '@ant-design/icons';
-import { useDispatch } from 'react-redux';
 import { useParams } from 'react-router-dom';
 import './ProjectData.scss';
 import axios from 'axios';
@@ -23,10 +22,10 @@ import axios from 'axios';
 import URL from 'url';
 
 const Dragger = Upload.Dragger;
-import { fetchUpdateLogData } from '../../../../reducer/modules/news.js';
 import sanitizeHtml from '../../../../utils/sanitize.js';
-// project 切片已迁至 Zustand（批次4）；news.js 的 fetchUpdateLogData 仍走 redux
+// project/news 切片已迁至 Zustand（批次4 + 收尾批），fetchUpdateLogData 改经 useNewsStore 直调
 import useProjectStore from '../../../../store/projectStore';
+import useNewsStore from '../../../../store/newsStore';
 import { formatCatTreeData, flattenCatList } from 'common/utils.js';
 const Option = Select.Option;
 const confirm = Modal.confirm;
@@ -69,11 +68,11 @@ function handleExportRouteParams(
  *   渲染的状态，与旧类组件 this.state 的实时语义一致）。
  */
 const ProjectData = () => {
-  const dispatch = useDispatch();
   const { id } = useParams();
   const basePath = useProjectStore((/** @type {any} */ state) => state.currProject.basepath);
   const swaggerUrlData = useProjectStore((/** @type {any} */ state) => state.swaggerUrlData);
   const handleSwaggerUrlData = useProjectStore((/** @type {any} */ state) => state.handleSwaggerUrlData);
+  const fetchUpdateLogData = useNewsStore((/** @type {any} */ state) => state.fetchUpdateLogData);
 
   // 断言为 number|string：初始值保持旧 constructor 的 ''，而 setSelectCatid 写入的是
   // 分类 id（number），见 selectChange / applyCategoryMenu。
@@ -238,19 +237,17 @@ const ProjectData = () => {
     });
     let result;
     try {
-      result = await dispatch(
-        fetchUpdateLogData({
-          type: 'project',
-          typeid,
-          apis: apiCollections
-        })
-      );
+      result = await fetchUpdateLogData({
+        type: 'project',
+        typeid,
+        apis: apiCollections
+      });
     } catch (/** @type {any} */ err) {
       setShowLoading(false);
       setDataSync('normal');
       return message.error('获取同步差异失败：' + err.message);
     }
-    let domainData = result.payload.data.data;
+    let domainData = result.data.data;
     const ref = confirm({
       title: '您确认要进行数据同步????',
       width: 600,

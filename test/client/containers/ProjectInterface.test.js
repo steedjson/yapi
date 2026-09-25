@@ -79,7 +79,6 @@ const {
 } = require('../../../client/containers/Project/Interface/InterfaceCol/InterfaceCaseContent.js');
 
 const axios = require('axios');
-const { Provider } = require('react-redux');
 const { StyleProvider } = require('@ant-design/cssinjs');
 const { MemoryRouter, Routes, Route } = require('react-router-dom');
 const originalAxiosGet = axios.get;
@@ -196,15 +195,12 @@ function runSeed() {
   seedProjectStore({ currProject: CURR_PROJECT });
   // interface 切片已迁 Zustand（批次5）
   seedInterfaceStore({ curdata: CURR_INTERFACE, list: [], editStatus: false });
-  return {};
 }
 
 test.serial('Run 渲染 Postman 并透传合并项目环境后的接口数据', async t => {
   stubColApis([], []);
-  const { container } = renderWithProviders(React.createElement(Run), {
-    seedState: runSeed(),
-    ...ROUTE
-  });
+  runSeed();
+  const { container } = renderWithProviders(React.createElement(Run), ROUTE);
   await flushEffects();
 
   const postman = container.querySelector('.stub-postman');
@@ -224,10 +220,8 @@ test.serial('Run 渲染 Postman 并透传合并项目环境后的接口数据', 
 test.serial('Run 点击保存打开 AddColModal，确认后提交用例并关闭弹窗', async t => {
   const postCalls = [];
   stubColApis([], postCalls);
-  const { container } = renderWithProviders(React.createElement(Run), {
-    seedState: runSeed(),
-    ...ROUTE
-  });
+  runSeed();
+  const { container } = renderWithProviders(React.createElement(Run), ROUTE);
   await flushEffects();
 
   fireEvent.click(container.querySelector('.stub-save'));
@@ -281,10 +275,7 @@ test.serial('AddColModal 支持选择集合并以输入的用例名回调 onOk',
       onOk: (colId, caseName) => onOkCalls.push([colId, caseName]),
       onCancel: () => {}
     }),
-    {
-      seedState: {},
-      ...ROUTE
-    }
+    ROUTE
   );
 
   const modal = document.body.querySelector('.add-col-modal');
@@ -318,36 +309,29 @@ test.serial('AddColModal 父级 props 变化时默认选中首集合并回填用
     ...INITIAL_INTERFACE_COL_STATE,
     interfaceColList: [{ _id: 5, name: '集合一' }, { _id: 6, name: '集合二' }]
   });
-  const utils = renderWithProviders(React.createElement(AddColModal, props), {
-    seedState: {},
-    ...ROUTE
-  });
+  const utils = renderWithProviders(React.createElement(AddColModal, props), ROUTE);
   t.falsy(document.body.querySelector('.add-col-modal'), 'visible=false 不渲染弹窗内容');
 
   // 模拟父组件重渲染打开弹窗（旧实现中任意 props 变化经 cWRP 回填列表首项与 caseName）。
   // rerender 须复刻 renderWithProviders 的包裹结构（StyleProvider(hashPriority=high) >
-  // Provider > MemoryRouter > Routes > Route），组件类型与位置完全一致才会原位复用实例
-  // （props 变化而非重挂载）
+  // MemoryRouter > Routes > Route；Redux Provider 已随收尾批退役移除），组件类型与
+  // 位置完全一致才会原位复用实例（props 变化而非重挂载）
   utils.rerender(
     React.createElement(
       StyleProvider,
       { hashPriority: 'high' },
       React.createElement(
-        Provider,
-        { store: utils.store },
+        MemoryRouter,
+        {
+          future: { v7_startTransition: true, v7_relativeSplatPath: true },
+          initialEntries: [ROUTE.initialPath]
+        },
         React.createElement(
-          MemoryRouter,
-          {
-            future: { v7_startTransition: true, v7_relativeSplatPath: true },
-            initialEntries: [ROUTE.initialPath]
-          },
+          Routes,
+          null,
           React.createElement(
-            Routes,
-            null,
-            React.createElement(
-              Route,
-              { path: ROUTE.routePath, element: React.createElement(AddColModal, { ...props, visible: true }) }
-            )
+            Route,
+            { path: ROUTE.routePath, element: React.createElement(AddColModal, { ...props, visible: true }) }
           )
         )
       )
@@ -466,7 +450,6 @@ test.serial('InterfaceCaseContent 挂载拉取用例数据并渲染用例标题�
     projectEnv: { env: [{ name: 'local', domain: 'http://localhost' }] }
   });
   const { container } = renderWithProviders(React.createElement(InterfaceCaseContent), {
-    seedState: {},
     routePath: '/project/:id/interface/case/:actionId',
     initialPath: '/project/12/interface/case/100'
   });
@@ -517,7 +500,6 @@ test.serial('InterfaceCaseContent 更新用例提交 Postman state，用例名�
     projectEnv: { env: [] }
   });
   const { container } = renderWithProviders(React.createElement(InterfaceCaseContent), {
-    seedState: {},
     routePath: '/project/:id/interface/case/:actionId',
     initialPath: '/project/12/interface/case/100'
   });

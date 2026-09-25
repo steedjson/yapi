@@ -69,6 +69,7 @@ const CURR_PROJECT = {
   ]
 };
 
+// Redux 死种子（group/inter/news 空切片）随 Redux 退役移除（收尾批），仅保留 Zustand 播种
 function makeSeed(role) {
   seedUserStore({ uid: 11 });
   seedProjectStore({
@@ -80,14 +81,6 @@ function makeSeed(role) {
     token: 'tk_seed_9f8e7d6c',
     swaggerUrlData: ''
   });
-  return {
-    group: {
-      currGroup: { _id: 1, group_name: '分组一', group_desc: '', custom_field1: { name: '', enable: false } },
-      groupList: []
-    },
-    inter: { curdata: { catid: 3 } },
-    news: { updateLogList: [] }
-  };
 }
 
 function mockApis(overrides) {
@@ -146,9 +139,8 @@ function mockApis(overrides) {
 
 test.serial('ProjectEnv 首帧空列表，加载后渲染环境且支持选中切换', async t => {
   mockApis();
-  const { container } = renderWithProviders(React.createElement(ProjectEnv, { projectId: 12 }), {
-    seedState: makeSeed('owner')
-  });
+  makeSeed('owner');
+  const { container } = renderWithProviders(React.createElement(ProjectEnv, { projectId: 12 }));
 
   // 首帧：项目详情尚未返回，侧边栏无环境项
   t.is(container.querySelectorAll('.menu-item').length, 1, '首帧仅渲染“环境列表”标题行');
@@ -179,8 +171,8 @@ test.serial('ProjectEnv 首帧空列表，加载后渲染环境且支持选中�
 
 test.serial('ProjectMember owner 渲染成员表与分组卡片，并可打开添加成员弹窗', async t => {
   mockApis();
+  makeSeed('owner');
   const { container } = renderWithProviders(React.createElement(ProjectMember), {
-    seedState: makeSeed('owner'),
     routePath: '/project/:id/members',
     initialPath: '/project/12/members'
   });
@@ -213,8 +205,8 @@ test.serial('ProjectMember owner 渲染成员表与分组卡片，并可打开�
 
 test.serial('ProjectMember dev 角色只读展示项目角色', async t => {
   mockApis();
+  makeSeed('dev');
   const { container } = renderWithProviders(React.createElement(ProjectMember), {
-    seedState: makeSeed('dev'),
     routePath: '/project/:id/members',
     initialPath: '/project/12/members'
   });
@@ -233,8 +225,8 @@ test.serial('ProjectMember dev 角色只读展示项目角色', async t => {
 
 test.serial('ProjectData 加载分类树并支持开启 url 导入', async t => {
   mockApis();
+  makeSeed('owner');
   const { container } = renderWithProviders(React.createElement(ProjectData), {
-    seedState: makeSeed('owner'),
     routePath: '/project/:id/data',
     initialPath: '/project/12/data'
   });

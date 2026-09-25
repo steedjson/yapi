@@ -3,9 +3,6 @@ import '../helpers/jsdom-setup';
 import test from 'ava';
 import React from 'react';
 import { render, cleanup } from '@testing-library/react';
-import { Provider } from 'react-redux';
-import { createStore, applyMiddleware } from 'redux';
-import promiseMiddleware from 'redux-promise';
 import { cleanupDom, flushEffects, stubDefaultExport } from '../helpers/containers';
 
 const axios = require('axios');
@@ -34,8 +31,8 @@ const ProjectStub = () => React.createElement('div', { 'data-stub': 'PROJECT' },
 stubDefaultExport(path.join(REPO_ROOT, 'client/containers/Project/Project.js'), ProjectStub);
 
 const { default: App } = require('../../client/Application.js');
-// Application 内部以自己的 HistoryRouter(history 单例)接管路由，不能再包一层
-// 外部 Router（v6 禁止嵌套），这里仅提供 redux Provider，location 用 history.push 驱动
+// Application 内部以自己的 HistoryRouter(history 单例)接管路由，location 用 history.push 驱动。
+// Redux 已随收尾批退役：原「仅提供 redux Provider」包装移除，Zustand 无 Provider。
 const history = require('../../client/history').default;
 // user 切片已迁 Zustand（批次4）：loginState/role 改经 userStore 播种，
 // checkLoginState 改为断言 /api/user/status 请求发生
@@ -46,21 +43,8 @@ const {
   useUserStore
 } = require('../helpers/userProjectStores');
 
-function makeStore(seedState) {
-  const dispatched = [];
-  const store = applyMiddleware(promiseMiddleware)(createStore)(function(state, action) {
-    if (action && action.type && action.type.indexOf('@@') !== 0) {
-      dispatched.push(action);
-    }
-    return state === undefined ? seedState : state;
-  }, seedState);
-  return { store, dispatched };
-}
-
-function renderApp(seedState) {
-  const { store, dispatched } = makeStore(seedState);
-  const utils = render(React.createElement(Provider, { store }, React.createElement(App)));
-  return Object.assign({ store, dispatched }, utils);
+function renderApp() {
+  return render(React.createElement(App));
 }
 
 // user 切片已迁 Zustand（批次4）：登录态不再经 redux 种子，统一渲染前播种 userStore
@@ -102,11 +86,9 @@ test.serial('已登录成员访问项目路由: 渲染完整外壳(Header/路由
   history.push('/project/12/interface/api');
 
   seedAppUser(Object.assign({}, MEMBER_USER));
-  // Header 内的 Search 组件订阅 group 切片（已迁 Zustand），同步播种防串场
+  // Header 内的 Search 组件订阅 groupStore（Zustand），同步播种防串场
   seedProjectStore({});
-  const { container } = renderApp({
-    group: { groupList: [], currGroup: {} }
-  });
+  const { container } = renderApp();
   await flushEffects(60);
 
   t.is(statusCalls.length, 1, '挂载期应经 userStore.checkLoginState 拉取登录态');
@@ -128,7 +110,7 @@ test.serial('登录态获取中: 整壳以 Loading 呈现且不渲染 Header', a
 
   seedAppUser({ loginState: 0, isLogin: false, role: '' });
   seedProjectStore({});
-  const { container } = renderApp({});
+  const { container } = renderApp();
 
   t.truthy(container.querySelector('.loading-box'), '登录态加载中应渲染全局 Loading');
   t.is(container.querySelector('.m-header'), null, '加载中不应渲染 Header');
@@ -143,7 +125,7 @@ test.serial('游客访问 /login: 登录页渲染且 Header 隐藏', async t => 
 
   seedAppUser({ loginState: 1, isLogin: false, role: '', userName: null, uid: null });
   seedProjectStore({});
-  const { container } = renderApp({});
+  const { container } = renderApp();
 
   t.truthy(container.querySelector('.g-body.login-body'), '游客访问 /login 应渲染登录页');
   t.is(container.querySelector('.m-header'), null, '登录页不渲染 Header');
