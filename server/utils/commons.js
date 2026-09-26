@@ -18,7 +18,7 @@ const sandboxFn = require('./sandbox')
 
 
 
-const ejs = require('easy-json-schema');
+const ejs = require('./easy-json-schema');
 
 const { schemaValidator } = require('../../common/utils');
 const http = require('http');

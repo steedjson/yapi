@@ -3,7 +3,28 @@
 // module(ES 命名空间，函数在 .default)——浏览器 bundle 下直接调用会报 not a function。
 const swaggerModule = /** @type {any} */ (require('swagger-client'));
 const swagger = swaggerModule.default || swaggerModule;
-const compareVersions = require('compare-versions');
+
+/**
+ * 版本号 >= 目标版本（按数值逐段比较，'3.0.1'/'3.1' 等缺段形态按 0 处理）。
+ * 自 2026-09 起内联替代停更的 compare-versions@3（唯一调用点 openapi 版本判定）。
+ * @param {string} version
+ * @param {string} target
+ * @returns {boolean}
+ */
+function isVersionAtLeast(version, target) {
+  const seg = /** @param {any} s */ s =>
+    String(s)
+      .split('.')
+      .map(n => parseInt(n, 10) || 0);
+  const a = seg(version);
+  const b = seg(target);
+  for (let i = 0; i < 3; i++) {
+    if ((a[i] || 0) !== (b[i] || 0)) {
+      return (a[i] || 0) > (b[i] || 0);
+    }
+  }
+  return true;
+}
 
   /** @type {any} */
   var SwaggerData, isOAS3;
@@ -120,7 +141,7 @@ const compareVersions = require('compare-versions');
         }
       }
 
-      isOAS3 = res.openapi && compareVersions(res.openapi,'3.0.0') >= 0;
+      isOAS3 = res.openapi && isVersionAtLeast(res.openapi, '3.0.0');
       let basePath = '';
       if (isOAS3) {
         basePath = getServerBasePath(res);
