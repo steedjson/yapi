@@ -35,21 +35,25 @@ const NewsTimeline = () => {
     fetchNewsData(21, 'project', curpage, 8);
   }, []);
 
-  let data = newsData ? newsData.list : [];
-  if (data && data.length) {
-    data = data.map(function(/** @type {any} */ item, /** @type {any} */ i) {
-      return (
-        <Timeline.Item key={i}>
-          <span className="logoTimeago">{timeago(item.add_time)}</span>
-          <span className="logusername">{item.username}</span>
-          <span className="logtype">{item.type}</span>
-          <span className="logtime">{formatTime(item.add_time)}</span>
-          <span className="logcontent">{item.content}</span>
-        </Timeline.Item>
-      );
+  // antd5 Timeline 移除 Timeline.Item JSX，改用 items 配置({ key, children })
+  let timelineItems = newsData ? newsData.list : [];
+  if (timelineItems && timelineItems.length) {
+    timelineItems = timelineItems.map(function(/** @type {any} */ item, /** @type {any} */ i) {
+      return {
+        key: i,
+        children: (
+          <>
+            <span className="logoTimeago">{timeago(item.add_time)}</span>
+            <span className="logusername">{item.username}</span>
+            <span className="logtype">{item.type}</span>
+            <span className="logtime">{formatTime(item.add_time)}</span>
+            <span className="logcontent">{item.content}</span>
+          </>
+        )
+      };
     });
   } else {
-    data = '';
+    timelineItems = [];
   }
   let pending = bidden ? (
     <a className={bidden}>以上为全部内容</a>
@@ -63,7 +67,7 @@ const NewsTimeline = () => {
   }
   return (
     <section className="news-timeline">
-      {data ? <Timeline pending={pending}>{data}</Timeline> : data}
+      {timelineItems.length ? <Timeline pending={pending} items={timelineItems} /> : ''}
     </section>
   );
 };

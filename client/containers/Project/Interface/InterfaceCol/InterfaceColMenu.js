@@ -452,23 +452,6 @@ export default function InterfaceColMenu(props) {
   // const { currColId, currCaseId, isShowCol } = this.props;
   const { colModalType, colModalVisible, importInterVisible } = state;
   const currProjectId = id;
-  // const menu = (col) => {
-  //   return (
-  //     <Menu>
-  //       <Menu.Item>
-  //         <span onClick={() => this.showColModal('edit', col)}>修改集合</span>
-  //       </Menu.Item>
-  //       <Menu.Item>
-  //         <span onClick={() => {
-  //           this.showDelColConfirm(col._id)
-  //         }}>删除集合</span>
-  //       </Menu.Item>
-  //       <Menu.Item>
-  //         <span onClick={() => this.showImportInterface(col._id)}>导入接口</span>
-  //       </Menu.Item>
-  //     </Menu>
-  //   )
-  // };
 
   const defaultExpandedKeys = () => {
     const rNull = { expands: [], selects: [] };
@@ -648,9 +631,6 @@ export default function InterfaceColMenu(props) {
                     />
                   </Tooltip>
                 </div>
-                {/*<Dropdown overlay={menu(col)} trigger={['click']} onClick={e => e.stopPropagation()}>
-
-                </Dropdown>*/}
               </div>
             ),
             children: col.caseList.map(itemInterfaceColCreate)
