@@ -19,7 +19,7 @@ import variable from '../constants/variable';
  *   3) 排序与翻页：按 add_time 降序；FETCH_NEWS_DATA 整表替换且 curpage 归 1，
  *      FETCH_MORE_NEWS 追加且仅在新数据非空时 curpage+1；
  * - 旧链路经 messageMiddleware 会在 errcode 非 0 时全局 toast 并抛错；本 store 静默
- *   失败：TimeLine/News 页有 ErrMsg 空态兜底，NewsTimeline 空数据优雅渲染，且旧抛错
+ *   失败：TimeLine 页有 ErrMsg 空态兜底，且旧抛错
  *   会使消费方 `.then` 中的 loading 复位永不执行（卡死），静默化同时修复该缺陷；
  * - fetchUpdateLogData（收尾批迁入）是例外：旧链路 ProjectData 依赖 messageMiddleware
  *   「errcode 非 0 且非 40011 → toast + throw」与 redux-promise「网络错误 reject」双双
