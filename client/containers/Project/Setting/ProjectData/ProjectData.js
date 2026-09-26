@@ -23,9 +23,9 @@ import URL from 'url';
 
 const Dragger = Upload.Dragger;
 import sanitizeHtml from '../../../../utils/sanitize.js';
-// project/news 切片已迁至 Zustand（批次4 + 收尾批），fetchUpdateLogData 改经 useNewsStore 直调
+// project/news 切片已迁至 Zustand（批次4 + 收尾批），fetchUpdateLogData 改经 useActivityStore 直调
 import useProjectStore from '../../../../store/projectStore';
-import useNewsStore from '../../../../store/newsStore';
+import useActivityStore from '../../../../store/activityStore';
 import { formatCatTreeData, flattenCatList } from 'common/utils.js';
 const Option = Select.Option;
 const confirm = Modal.confirm;
@@ -72,7 +72,7 @@ const ProjectData = () => {
   const basePath = useProjectStore((/** @type {any} */ state) => state.currProject.basepath);
   const swaggerUrlData = useProjectStore((/** @type {any} */ state) => state.swaggerUrlData);
   const handleSwaggerUrlData = useProjectStore((/** @type {any} */ state) => state.handleSwaggerUrlData);
-  const fetchUpdateLogData = useNewsStore((/** @type {any} */ state) => state.fetchUpdateLogData);
+  const fetchUpdateLogData = useActivityStore((/** @type {any} */ state) => state.fetchUpdateLogData);
 
   // 断言为 number|string：初始值保持旧 constructor 的 ''，而 setSelectCatid 写入的是
   // 分类 id（number），见 selectChange / applyCategoryMenu。

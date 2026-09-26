@@ -1,4 +1,4 @@
-// 纯 store 单测：无 DOM 依赖，不引入 jsdom（参照 followStore/newsStore 单测风格）
+// 纯 store 单测：无 DOM 依赖，不引入 jsdom（参照 followStore/activityStore 单测风格）
 import test from 'ava';
 import axios from 'axios';
 

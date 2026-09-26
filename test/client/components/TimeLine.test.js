@@ -9,12 +9,12 @@ import { cleanupDom } from '../../helpers/jsdom-setup';
 const axios = require('axios');
 const { default: TimeTree } = require('../../../client/components/TimeLine/TimeLine.js');
 // 与 TimeLine.js 共享同一模块实例（babel CJS 转译后命中同一 require 缓存）：
-// news 切片已迁 Zustand，动态数据经 useNewsStore 播种/断言
-const { default: useNewsStore } = require('../../../client/store/newsStore');
+// news 切片已迁 Zustand，动态数据经 useActivityStore 播种/断言
+const { default: useActivityStore } = require('../../../client/store/activityStore');
 // interface 切片已迁 Zustand（批次5）：fetchInterfaceList 改为断言 HTTP 请求与 store 写入
 const { resetInterfaceStore } = require('../../helpers/interfaceStores');
 
-// fetchNewsData/fetchMoreNews（Zustand）与 fetchInterfaceList（Zustand，批次5）都会在
+// fetchActivityData/fetchMoreActivity（Zustand）与 fetchInterfaceList（Zustand，批次5）都会在
 // 挂载即发请求，因此每个用例都必须先打桩（axios 为 CJS 单例，生产代码调用时才读取
 // .get，替换属性即可生效）
 const originalAxiosGet = axios.get;
@@ -24,7 +24,7 @@ test.serial.afterEach.always(() => {
   cleanupDom();
   axios.get = originalAxiosGet;
   // news 已迁 Zustand：模块级单例，用例间复位避免状态串场
-  useNewsStore.setState({ newsData: { list: [], total: 0 }, curpage: 1, newsRequestId: 0 });
+  useActivityStore.setState({ activityData: { list: [], total: 0 }, curpage: 1, activityRequestId: 0 });
   // interface 已迁 Zustand（批次5）：同样复位
   resetInterfaceStore();
 });
@@ -40,7 +40,7 @@ async function flushEffects(ms) {
   });
 }
 
-function makeNewsItem(overrides) {
+function makeActivityItem(overrides) {
   return Object.assign(
     {
       uid: 11,
@@ -60,11 +60,11 @@ const DIFF_DATA = {
 };
 
 // news 种子经 Zustand store 播种（原 redux seed 的 user/news 切片随迁移退役）
-function seedNews(list, total, curpage) {
-  useNewsStore.setState({
-    newsData: { total: total == null ? list.length : total, list },
+function seedActivity(list, total, curpage) {
+  useActivityStore.setState({
+    activityData: { total: total == null ? list.length : total, list },
     curpage: curpage == null ? 1 : curpage,
-    newsRequestId: 0
+    activityRequestId: 0
   });
 }
 
@@ -80,10 +80,10 @@ function renderTimeTree(props) {
 test.serial('根据 mock 数据渲染动态列表项、用户头像与动态描述', async t => {
   axios.get = () => Promise.resolve({ data: { errcode: 0, data: { total: 0, list: [] } } });
   const list = [
-    makeNewsItem({ uid: 11, type: 'project' }),
-    makeNewsItem({ uid: 22, type: 'group', content: '<span>创建了分组 电商</span>' })
+    makeActivityItem({ uid: 11, type: 'project' }),
+    makeActivityItem({ uid: 22, type: 'group', content: '<span>创建了分组 电商</span>' })
   ];
-  seedNews(list);
+  seedActivity(list);
   const { container } = renderTimeTree({ typeid: 42, type: 'project' });
 
   const items = container.querySelectorAll(
@@ -107,7 +107,7 @@ test.serial('根据 mock 数据渲染动态列表项、用户头像与动态描�
   const profileLink = container.querySelector('.ant-timeline-item-head a');
   t.is(profileLink.getAttribute('href'), '/user/profile/11', '头像应链接到用户主页');
   // 反向 dispatched 断言随 Redux 机制退役移除（收尾批）：全仓已无 dispatch 通道可断言
-  t.is(useNewsStore.getState().newsData.list.length, 2, '渲染应走 Zustand store 订阅路径');
+  t.is(useActivityStore.getState().activityData.list.length, 2, '渲染应走 Zustand store 订阅路径');
   await flushEffects();
 });
 
@@ -117,7 +117,7 @@ test.serial('挂载即拉取第一页动态, typeid 变化时重新拉取', asyn
     getCalls.push({ url, config });
     return Promise.resolve({ data: { errcode: 0, data: { total: 0, list: [] } } });
   };
-  seedNews([]);
+  seedActivity([]);
   const { rerender } = renderTimeTree({ typeid: 42, type: 'project' });
 
   const newsCalls = getCalls.filter(c => c.url === '/api/log/list');
@@ -136,10 +136,10 @@ test.serial('挂载即拉取第一页动态, typeid 变化时重新拉取', asyn
     </MemoryRouter>
   );
 
-  const allNewsCalls = getCalls.filter(c => c.url === '/api/log/list');
-  t.truthy(allNewsCalls.length >= 2, 'typeid 变化应再次拉取动态');
+  const allActivityCalls = getCalls.filter(c => c.url === '/api/log/list');
+  t.truthy(allActivityCalls.length >= 2, 'typeid 变化应再次拉取动态');
   t.is(
-    allNewsCalls[allNewsCalls.length - 1].config.params.typeid,
+    allActivityCalls[allActivityCalls.length - 1].config.params.typeid,
     43,
     '最新一次拉取应使用新 typeid'
   );
@@ -157,7 +157,7 @@ test.serial('type=project 时拉取接口列表并渲染 Api 查询行', async t
     }
     return Promise.resolve({ data: { errcode: 0, data: { total: 0, list: [] } } });
   };
-  seedNews([makeNewsItem()]);
+  seedActivity([makeActivityItem()]);
   const { container } = renderTimeTree({ typeid: 42, type: 'project' });
 
   t.truthy(container.textContent.indexOf('选择查询的 Api：') > -1, '应渲染 Api 查询行');
@@ -170,7 +170,7 @@ test.serial('type=project 时拉取接口列表并渲染 Api 查询行', async t
   t.is(useInterfaceStore.getState().totalTableList.length, 1, '接口列表数据应写入 interfaceStore');
   t.is(useInterfaceStore.getState().totalTableList[0].title, '登录');
 
-  seedNews([makeNewsItem()]);
+  seedActivity([makeActivityItem()]);
   const groupType = renderTimeTree({ typeid: 42, type: 'group' });
   t.is(
     groupType.container.querySelector('.news-search'),
@@ -186,7 +186,7 @@ test.serial('有更多动态时展示查看更多, 点击防抖拉取下一页',
     getCalls.push({ url, config });
     return Promise.resolve({ data: { errcode: 0, data: { total: 0, list: [] } } });
   };
-  seedNews([makeNewsItem()], 5, 1);
+  seedActivity([makeActivityItem()], 5, 1);
   const { container } = renderTimeTree({ typeid: 42, type: 'project' });
 
   const more = container.querySelector('.loggetMore');
@@ -213,7 +213,7 @@ test.serial('有更多动态时展示查看更多, 点击防抖拉取下一页',
 
 test.serial('已到末页时展示"以上为全部内容"且不渲染查看更多', async t => {
   axios.get = () => Promise.resolve({ data: { errcode: 0, data: { total: 0, list: [] } } });
-  seedNews([makeNewsItem()], 1, 1);
+  seedActivity([makeActivityItem()], 1, 1);
   const { container } = renderTimeTree({ typeid: 42, type: 'project' });
 
   t.is(container.querySelector('.loggetMore'), null, '无更多动态时不渲染查看更多');
@@ -224,8 +224,8 @@ test.serial('已到末页时展示"以上为全部内容"且不渲染查看更�
 
 test.serial('点击改动详情打开 diff 弹窗并展示差异内容', async t => {
   axios.get = () => Promise.resolve({ data: { errcode: 0, data: { total: 0, list: [] } } });
-  const list = [makeNewsItem({ data: DIFF_DATA })];
-  seedNews(list);
+  const list = [makeActivityItem({ data: DIFF_DATA })];
+  seedActivity(list);
   const { container } = renderTimeTree({ typeid: 42, type: 'project' });
 
   t.is(container.ownerDocument.querySelector('.ant-modal-wrap'), null, '初始不渲染弹窗');
@@ -249,7 +249,7 @@ test.serial('点击改动详情打开 diff 弹窗并展示差异内容', async t
 
 test.serial('无动态数据时渲染空状态提示', async t => {
   axios.get = () => Promise.resolve({ data: { errcode: 0, data: { total: 0, list: [] } } });
-  seedNews([]);
+  seedActivity([]);
   const { container } = renderTimeTree({ typeid: 42, type: 'project' });
 
   t.is(container.querySelectorAll('.news-content').length, 0, '空数据不渲染时间线');

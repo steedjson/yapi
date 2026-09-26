@@ -6,7 +6,7 @@ import { QuestionCircleOutlined, ExclamationCircleOutlined, UpOutlined, DownOutl
 import { Input, Button, message, Card, Alert, Modal, Switch, Row, Col, Tooltip } from 'antd';
 // news / group / user 切片均已迁至 Zustand（批次2 / 批次3 / 批次4），
 // 本组件的 redux 依赖随迁移全部移除
-import useNewsStore from '../../../store/newsStore';
+import useActivityStore from '../../../store/activityStore';
 import useGroupStore from '../../../store/groupStore';
 import useUserStore from '../../../store/userStore';
 const { TextArea } = Input;
@@ -24,7 +24,7 @@ const confirm = Modal.confirm;
  *   等价于旧类组件的实时 this.props 语义。
  */
 const GroupSetting = () => {
-  const fetchNewsData = useNewsStore(state => state.fetchNewsData);
+  const fetchActivityData = useActivityStore(state => state.fetchActivityData);
   const changeGroupMsg = useGroupStore(state => state.changeGroupMsg);
   const fetchGroupList = useGroupStore(state => state.fetchGroupList);
   const setCurrGroup = useGroupStore(state => state.setCurrGroup);
@@ -130,7 +130,7 @@ const GroupSetting = () => {
       });
       setCurrGroup(nextGroup);
       fetchGroupMsg(currGroupRef.current._id);
-      fetchNewsData(currGroupRef.current._id, 'group', 1, 10);
+      fetchActivityData(currGroupRef.current._id, 'group', 1, 10);
     }
   };
 
@@ -285,7 +285,7 @@ GroupSetting.propTypes = {
   fetchGroupList: PropTypes.func,
   setCurrGroup: PropTypes.func,
   fetchGroupMsg: PropTypes.func,
-  fetchNewsData: PropTypes.func,
+  fetchActivityData: PropTypes.func,
   updateGroupList: PropTypes.func,
   deleteGroup: PropTypes.func,
   groupList: PropTypes.array

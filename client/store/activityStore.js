@@ -4,20 +4,21 @@ import axios from 'axios';
 import variable from '../constants/variable';
 
 /**
- * news 模块 Zustand store（Redux 迁移批次 2，与 menu/mockCol 同批）。
+ * activity（动态）模块 Zustand store（Redux 迁移批次 2，与 menu/mockCol 同批；前身名 news，
+ * 2026-09 随孤儿 News 页组件群删除一并更名，对齐 UI「动态」语义）。
  * 迁移模式与 redux-promise 语义差异说明见 docs/zustand-migration-pattern.md。
  *
  * 与旧 Redux 版（client/reducer/modules/news.js）的语义对应：
- * - 状态形状与旧 initialState 一致：newsData({list,total}) / curpage / newsRequestId，
+ * - 状态形状与旧 initialState 一致：activityData({list,total}) / curpage / activityRequestId，
  *   无新增/删除；
  * - 旧 redux-promise 链路：action 为 `{type, payload: axiosPromise, meta: {requestId}}`，
  *   payload resolve 后 reducer 收 `action.payload.data.data`；本 store 动作内直接
  *   await axios，按 `res.data.data` 解构，层级等价；
- * - 旧 reducer 的三段逻辑原样内聚到 applyNewsResponse：
- *   1) 过期响应守卫：requestId < 已入账 newsRequestId 时丢弃（"后发先至"竞态）；
+ * - 旧 reducer 的三段逻辑原样内聚到 applyActivityResponse：
+ *   1) 过期响应守卫：requestId < 已入账 activityRequestId 时丢弃（"后发先至"竞态）；
  *   2) errcode 守卫：非 0 不写入，保留旧状态；
- *   3) 排序与翻页：按 add_time 降序；FETCH_NEWS_DATA 整表替换且 curpage 归 1，
- *      FETCH_MORE_NEWS 追加且仅在新数据非空时 curpage+1；
+ *   3) 排序与翻页：按 add_time 降序；FETCH_ACTIVITY_DATA 整表替换且 curpage 归 1，
+ *      FETCH_MORE_ACTIVITY 追加且仅在新数据非空时 curpage+1；
  * - 旧链路经 messageMiddleware 会在 errcode 非 0 时全局 toast 并抛错；本 store 静默
  *   失败：TimeLine 页有 ErrMsg 空态兜底，且旧抛错
  *   会使消费方 `.then` 中的 loading 复位永不执行（卡死），静默化同时修复该缺陷；
@@ -35,16 +36,16 @@ import variable from '../constants/variable';
 let newsRequestSequence = 0;
 
 /**
- * 应用 /api/log/list 响应（旧 reducer FETCH_NEWS_DATA / FETCH_MORE_NEWS 分支的等价实现）。
+ * 应用 /api/log/list 响应（旧 reducer FETCH_ACTIVITY_DATA / FETCH_MORE_ACTIVITY 分支的等价实现）。
  * @param {(partial: any) => void} set
  * @param {() => any} get
  * @param {number} requestId 本次请求的自增序号
  * @param {any} res axios 响应（取值层级对应旧 action.payload）
- * @param {boolean} isMore true = FETCH_MORE_NEWS（追加），false = FETCH_NEWS_DATA（整表替换）
+ * @param {boolean} isMore true = FETCH_MORE_ACTIVITY（追加），false = FETCH_ACTIVITY_DATA（整表替换）
  */
-const applyNewsResponse = (set, get, requestId, res, isMore) => {
+const applyActivityResponse = (set, get, requestId, res, isMore) => {
   // 过期响应守卫（旧 reducer 同款判断）
-  if (requestId && requestId < get().newsRequestId) {
+  if (requestId && requestId < get().activityRequestId) {
     return;
   }
   // errcode 守卫：非 0 不写入，保留旧状态（旧 reducer 同款判断）
@@ -54,22 +55,22 @@ const applyNewsResponse = (set, get, requestId, res, isMore) => {
   const data = res.data.data;
   if (isMore) {
     // 追加后整体降序拷贝排序，严禁原地 sort 变更 store 内数组
-    const list = [...get().newsData.list, ...data.list].sort(
+    const list = [...get().activityData.list, ...data.list].sort(
       (/** @type {any} */ a, /** @type {any} */ b) => b.add_time - a.add_time
     );
     set({
-      newsData: { total: data.total, list },
+      activityData: { total: data.total, list },
       curpage: data.list && data.list.length ? get().curpage + 1 : get().curpage,
-      newsRequestId: requestId
+      activityRequestId: requestId
     });
   } else {
     const list = [...data.list].sort(
       (/** @type {any} */ a, /** @type {any} */ b) => b.add_time - a.add_time
     );
     set({
-      newsData: { total: data.total, list },
+      activityData: { total: data.total, list },
       curpage: 1,
-      newsRequestId: requestId
+      activityRequestId: requestId
     });
   }
 };
@@ -86,19 +87,19 @@ const buildParams = (typeid, type, page, limit, selectValue) => {
   return { typeid, type, page, limit: limit ? limit : variable.PAGE_LIMIT, selectValue };
 };
 
-const useNewsStore = create((set, get) => ({
+const useActivityStore = create((set, get) => ({
   /** @type {{ list: any[], total: number }} 动态列表与总数 */
-  newsData: {
+  activityData: {
     list: [],
     total: 0
   },
   /** @type {number} 当前页码 */
   curpage: 1,
   /** @type {number} 最近一次成功入账的请求序号（过期响应守卫基准） */
-  newsRequestId: 0,
+  activityRequestId: 0,
 
   // 拉取第一页/指定页动态（整表替换）
-  // 返回 axios 响应：取值层级与旧 `dispatch(fetchNewsData(...)).then(res => res.payload)`
+  // 返回 axios 响应：取值层级与旧 `dispatch(fetchActivityData(...)).then(res => res.payload)`
   // 对应——`res.data` 即旧 `res.payload.data`
   /**
    * @param {any} typeid
@@ -108,13 +109,13 @@ const useNewsStore = create((set, get) => ({
    * @param {any} [selectValue]
    * @returns {Promise<any>}
    */
-  fetchNewsData: async (typeid, type, page, limit, selectValue) => {
+  fetchActivityData: async (typeid, type, page, limit, selectValue) => {
     const requestId = ++newsRequestSequence;
     try {
       const res = await axios.get('/api/log/list', {
         params: buildParams(typeid, type, page, limit, selectValue)
       });
-      applyNewsResponse(set, get, requestId, res, false);
+      applyActivityResponse(set, get, requestId, res, false);
       return res;
     } catch (err) {
       // 旧 redux-promise 对 reject 的 payload 有中间件捕获，消费方 .then 必达；
@@ -123,7 +124,7 @@ const useNewsStore = create((set, get) => ({
     }
   },
 
-  // 追加加载下一页动态（fetchMoreNews 与 fetchNewsData 仅追加/替换与 curpage 语义不同）
+  // 追加加载下一页动态（fetchMoreActivity 与 fetchActivityData 仅追加/替换与 curpage 语义不同）
   /**
    * @param {any} typeid
    * @param {any} type
@@ -132,13 +133,13 @@ const useNewsStore = create((set, get) => ({
    * @param {any} [selectValue]
    * @returns {Promise<any>}
    */
-  fetchMoreNews: async (typeid, type, page, limit, selectValue) => {
+  fetchMoreActivity: async (typeid, type, page, limit, selectValue) => {
     const requestId = ++newsRequestSequence;
     try {
       const res = await axios.get('/api/log/list', {
         params: buildParams(typeid, type, page, limit, selectValue)
       });
-      applyNewsResponse(set, get, requestId, res, true);
+      applyActivityResponse(set, get, requestId, res, true);
       return res;
     } catch (err) {
       return null;
@@ -168,4 +169,4 @@ const useNewsStore = create((set, get) => ({
   }
 }));
 
-export default useNewsStore;
+export default useActivityStore;

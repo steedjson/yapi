@@ -8,7 +8,7 @@ import sanitizeHtml from '../../utils/sanitize.js';
 import variable from '../../constants/variable';
 import { Link } from 'react-router-dom';
 // news 切片已迁至 Zustand（批次2），interface 切片已迁至 Zustand（批次5）
-import useNewsStore from '../../store/newsStore';
+import useActivityStore from '../../store/activityStore';
 import useInterfaceStore from '../../store/interfaceStore';
 import ErrMsg from '../ErrMsg/ErrMsg.js';
 // jsondiffpatch 0.7 起移除 dist UMD 产物, 主入口为 CJS/ESM 双形态, webpack 直接打包 lib;
@@ -55,10 +55,10 @@ AddDiffView.propTypes = {
 export default function TimeTree(props) {
   // news 切片已迁至 Zustand（批次2）；user 切片已迁至 Zustand（批次4），
   // 原历史遗留的 user.uid 订阅（仅声明未消费）随迁移移除
-  const newsData = /** @type {any} */ (useNewsStore(state => state.newsData));
-  const curpage = useNewsStore(state => state.curpage);
-  const fetchNewsData = useNewsStore(state => state.fetchNewsData);
-  const fetchMoreNews = useNewsStore(state => state.fetchMoreNews);
+  const activityData = /** @type {any} */ (useActivityStore(state => state.activityData));
+  const curpage = useActivityStore(state => state.curpage);
+  const fetchActivityData = useActivityStore(state => state.fetchActivityData);
+  const fetchMoreActivity = useActivityStore(state => state.fetchMoreActivity);
   // interface 切片已迁至 Zustand（批次5）：fetchInterfaceList 动作直调，不再经 redux dispatch
   const fetchInterfaceList = useInterfaceStore(state => state.fetchInterfaceList);
 
@@ -72,13 +72,13 @@ export default function TimeTree(props) {
 
   // 用 ref 始终指向最新 props/state,异步回调(getMore)中读取时不会拿到陈旧值
   const latestRef = useRef({});
-  latestRef.current = { typeid: props.typeid, type: props.type, newsData, curpage, fetchInterfaceList };
+  latestRef.current = { typeid: props.typeid, type: props.type, activityData, curpage, fetchInterfaceList };
 
   useEffect(() => {
     // 对应原 UNSAFE_componentWillMount + UNSAFE_componentWillReceiveProps:
     // 首次挂载与 typeid 变化时都重新拉取动态数据
     const current = latestRef.current;
-    fetchNewsData(current.typeid, current.type, 1, 10);
+    fetchActivityData(current.typeid, current.type, 1, 10);
     if (current.type === 'project') {
       getApiList();
     }
@@ -87,9 +87,9 @@ export default function TimeTree(props) {
   function getMore() {
     const current = latestRef.current;
 
-    if (current.curpage <= current.newsData.total) {
+    if (current.curpage <= current.activityData.total) {
       setLoading(true);
-      fetchMoreNews(
+      fetchMoreActivity(
         current.typeid,
         current.type,
         current.curpage + 1,
@@ -127,10 +127,10 @@ export default function TimeTree(props) {
    */
   function handleSelectApi(selectValue) {
     curSelectValueRef.current = selectValue;
-    fetchNewsData(props.typeid, props.type, 1, 10, selectValue);
+    fetchActivityData(props.typeid, props.type, 1, 10, selectValue);
   }
 
-  let data = newsData ? newsData.list : [];
+  let data = activityData ? activityData.list : [];
 
   /** @type {Record<string, string>} */
   let logType = {
@@ -198,7 +198,7 @@ export default function TimeTree(props) {
     });
   }
   let pending =
-    newsData.total <= curpage ? (
+    activityData.total <= curpage ? (
       <a className="logbidden">以上为全部内容</a>
     ) : (
       <a className="loggetMore" onClick={getMore}>

@@ -11,7 +11,7 @@ import UsernameAutoComplete from '../../../components/UsernameAutoComplete/Usern
 import GuideBtns from '../../../components/GuideBtns/GuideBtns.js';
 // news / group / user 切片均已迁至 Zustand（批次2 / 批次3 / 批次4），
 // 本组件的 redux 依赖随迁移全部移除
-import useNewsStore from '../../../store/newsStore';
+import useActivityStore from '../../../store/activityStore';
 import useGroupStore from '../../../store/groupStore';
 import useUserStore from '../../../store/userStore';
 import {
@@ -46,7 +46,7 @@ const tip = (
 const GroupList = () => {
   const navigate = useNavigate();
   const params = useParams();
-  const fetchNewsData = useNewsStore(state => state.fetchNewsData);
+  const fetchActivityData = useActivityStore(state => state.fetchActivityData);
   const fetchGroupList = useGroupStore(state => state.fetchGroupList);
   const setCurrGroup = useGroupStore(state => state.setCurrGroup);
   const fetchGroupMsg = useGroupStore(state => state.fetchGroupMsg);
@@ -154,7 +154,7 @@ const GroupList = () => {
       await fetchGroupList();
       setLocalGroupList(groupListRef.current);
       fetchGroupMsg(currGroupRef.current._id);
-      fetchNewsData(currGroupRef.current._id, 'group', 1, 10);
+      fetchActivityData(currGroupRef.current._id, 'group', 1, 10);
     } else {
       message.error(res.data.errmsg);
     }
@@ -334,7 +334,7 @@ GroupList.propTypes = {
   curUserRoleInGroup: PropTypes.string,
   studyTip: PropTypes.number,
   study: PropTypes.bool,
-  fetchNewsData: PropTypes.func,
+  fetchActivityData: PropTypes.func,
   fetchGroupMsg: PropTypes.func
 };
 

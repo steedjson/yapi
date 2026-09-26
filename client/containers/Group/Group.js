@@ -117,7 +117,6 @@ const Group = () => {
 };
 
 Group.propTypes = {
-  fetchNewsData: PropTypes.func,
   curGroupId: PropTypes.number,
   curUserRole: PropTypes.string,
   currGroup: PropTypes.object,
