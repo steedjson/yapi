@@ -361,9 +361,12 @@ test.serial('downloadCrx 设置下载响应头并返回 zip Buffer', async t => 
       getInst: () => ({}),
       WEBROOT: '/webroot',
       fs: {
-        readFileSync: file => {
-          t.is(file, '/webroot/static/attachment/cross-request.zip');
-          return zipBuffer;
+        // downloadCrx 惰性缓存已改异步读盘（2026-09-26），桩随实现同步为 promises.readFile
+        promises: {
+          readFile: file => {
+            t.is(file, '/webroot/static/attachment/cross-request.zip');
+            return Promise.resolve(zipBuffer);
+          }
         }
       },
       path: { join: (...parts) => parts.join('/') }

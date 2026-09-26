@@ -301,13 +301,13 @@ class interfaceController extends baseController {
    * @returns {Promise<any>}
    */
   async downloadCrx(ctx) {
-    let filename = 'crossRequest.zip';
     if (!crossRequestZipBuffer) {
-      crossRequestZipBuffer = yapi.fs.readFileSync(
+      // 惰性缓存改为异步读盘，消除首次请求的同步阻塞
+      crossRequestZipBuffer = await yapi.fs.promises.readFile(
         yapi.path.join(yapi.WEBROOT, 'static/attachment/cross-request.zip')
       );
     }
-    ctx.set('Content-disposition', 'attachment; filename=' + filename);
+    ctx.set('Content-disposition', 'attachment; filename=crossRequest.zip');
     ctx.set('Content-Type', 'application/zip');
     ctx.body = crossRequestZipBuffer;
   }

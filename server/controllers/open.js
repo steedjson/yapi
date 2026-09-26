@@ -336,7 +336,9 @@ class openController extends baseController {
     }
     let mode = ctx.params.mode || 'html';
     if(ctx.params.download === true) {
-      ctx.set('Content-Disposition', `attachment; filename=test.${mode}`);
+      // mode 来自查询参数（用户可控），文件名仅保留词字符，阻断响应头注入与异常文件名
+      const safeMode = String(mode).replace(/[^\w-]/g, '') || 'html';
+      ctx.set('Content-Disposition', `attachment; filename="test.${safeMode}"`);
     }
     if (ctx.params.mode === 'json') {
       return (ctx.body = reportsResult);

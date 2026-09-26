@@ -107,10 +107,10 @@
 - 推进路径：每次触碰未纳入文件时顺手加 `// @ts-check` + 纳入 include 并清零错误。~~**当前未纳入清单**：client/ 4 个（`constants/variable.js`、`history.js`、`reducer/modules/reducer.js`、`utils/sanitize.js`）、exts/ 14 个插件入口 `index.js`/`defaultTheme.js`（清单/主题数据文件）。~~ → **已全部纳入（J 批）**：18 个文件补 `// @ts-check` 后入白名单，实测 0 错；至此 client/exts/common 下 JS 文件零遗漏。
 - 遗留技术细节：① `json5@2` 自带类型只导出 `{parse, stringify}` 无 default，而项目内 CJS/ESM 两种用法并存，故仍保留等价声明——若统一改命名导入即可删除；② `mockjs` 无自带类型，仍需声明（`json-schema-editor-visual` 已随自研编辑器批次 4 删除，其声明已无消费方）；③ ~~`common/lib.js` 的 `Compare*` 三个函数 `@param {*} flag` 尚可收紧为 `boolean`~~ → **已收紧（K 批：CompareArray/CompareObj 的 flag 改 boolean，调用点均传字面量 true）**。
 
-### 4. 状态管理 Redux+redux-promise → Zustand（已完成主体，剩收尾批）
+### 4. 状态管理 Redux+redux-promise → Zustand（✅ 全部完成）
 
 - ~~建议：迭代到对应 reducer 模块时以 Zustand（或 RTK）重写该模块，不整体大爆炸迁移。`redux-promise` 停更，但当前 15 个 reducer 模块均为薄封装，风险可控。~~ → **已实施完成（试点 + 批次 1–5）**：全部业务 reducer 模块迁至 Zustand，`combineReducers` 状态树清零（最后注册项 inter 于批次 5 注销，空模块走占位 reducer fallback）。
-- **待收尾批次**：卸载 redux/react-redux/redux-promise（现仅剩 `client/index.js` Provider 挂载、ProjectCard 的 follow useDispatch、ProjectData 的 news dispatch 三处残留消费）；删除旧 reducer 模块文件（`client/reducer/modules/*.js` 及对应 `interfaceReducer.test.js` 护栏、reducer create/middleware）；`client/plugin.js` 的 add_reducer 钩子机制随卸载一并评估移除。
+- ~~**待收尾批次**：卸载 redux/react-redux/redux-promise（现仅剩 `client/index.js` Provider 挂载、ProjectCard 的 follow useDispatch、ProjectData 的 news dispatch 三处残留消费）；删除旧 reducer 模块文件（`client/reducer/modules/*.js` 及对应 `interfaceReducer.test.js` 护栏、reducer create/middleware）；`client/plugin.js` 的 add_reducer 钩子机制随卸载一并评估移除。~~ → **已完成（状态管理迁移收尾批；2026-09-26 复核订正）**：redux/react-redux/redux-promise 依赖已卸载，`client/index.js` 无 Provider、`combineReducers`/`createStore` 全仓零命中、reducer 模块文件已删——本节此前滞后于代码，现订正。
 
 ### 5. 文档系统 ydoc → VitePress（暂缓，低优先）
 
@@ -190,12 +190,19 @@
 - ~~`server/utils/commons.js:133` 每次日志 `writeFileSync`~~ → **已改为异步 `fs.writeFile` 非阻塞写入（commit 本次）**；
 - ~~`server/controllers/interface.js:857/864` 每请求重复 `readFileSync` 差异 CSS 静态资源~~ → **已增加 `diffCssCache` 内存缓存（commit 本次）**；
 - ~~`server/controllers/user.js:953` 头像兜底重复读盘~~ → **已增加 `defaultAvatarBuffer` 内存缓存（commit 本次）**；
-- 剩余项：`server/controllers/interface.js:580` 插件包下载等边缘文件读取，随对应业务模块优化。
+- ~~剩余项：`server/controllers/interface.js:580` 插件包下载等边缘文件读取，随对应业务模块优化。~~ → **已完成（2026-09-26 依赖清扫批）**：`downloadCrx` 的 cross-request.zip 惰性缓存改 `fs.promises.readFile` 异步读盘（首次请求不再同步阻塞）；upMethods diff CSS 与头像兜底此前已缓存化，`reportHtml/defaultTheme.js` 为模块加载期一次性读取（合理）——请求路径同步 I/O 至此清零。
 
 ### 7. 其他遗留依赖与待审查项
 
-- 停更/弃用：`url@0.11.0`（官方弃用）、`rewire@2.5.2`、`mockjs 1.0.1-beta3`、`easy-json-schema 0.0.2-beta`、`compare-versions@3`、`generate-schema`（已显性化）；`prop-types` 仍被 75 个文件使用（React 18 已非必需）。（`webpack-node-externals`、`mime`、`style-loader` 已随 Rsbuild 阶段四移除；动画三件套 `rc-queue-anim`/`rc-scroll-anim`/`rc-tween-one` 已随重构批次 B 删除。）
-- ~~7 处 `dangerouslySetInnerHTML` 建议做一次 XSS 专项审查~~ → **已由 P9a 专项覆盖**：5 处复核均接 DOMPurify、reportHtml 全转义、Postman iframe 加 sandbox；豁免面遗留（邮件 HTML 注入、下载件内容注入）另册登记。
+- ~~停更/弃用：`url@0.11.0`（官方弃用）、`rewire@2.5.2`、`mockjs 1.0.1-beta3`、`easy-json-schema 0.0.2-beta`、`compare-versions@3`、`generate-schema`（已显性化）；`prop-types` 仍被 75 个文件使用（React 18 已非必需）。（`webpack-node-externals`、`mime`、`style-loader` 已随 Rsbuild 阶段四移除；动画三件套 `rc-queue-anim`/`rc-scroll-anim`/`rc-tween-one` 已随重构批次 B 删除。）~~ → **处置完成（2026-09-26 依赖清扫批，逐包裁决）**：
+  - `easy-json-schema@0.0.2-beta`：**卸载**——87 行转换算法原样内联为 `server/utils/easy-json-schema.js`（行为由 validateParams 测试钉住），消除停更 beta 依赖；
+  - `compare-versions@3`：**卸载**——唯一调用点（import-swagger run.js 的 OAS3 版本判定）内联 `isVersionAtLeast` 数值逐段比较替代；
+  - `url@0.11.0`：**保留（有据）**——4 处消费方（postmanLib 跨端请求运行器/两个导入插件/ProjectData）依赖 legacy `URL.parse(str, true)`+`URL.format({query: 对象})` 语义，该包是浏览器 bundle 下 legacy URL API 的标准 shim，零 advisory；WHATWG 替换涉及核心运行器 query 编码差异，风险收益不对等，如替换需独立批并补 postmanLib 测试；
+  - `rewire@2.5.2`：**保留（有据）**——仅 10 个测试文件使用，零运行时暴露；如迁 rewiremock 需独立批；
+  - `mockjs`：**保留（feature 依赖）**——advanced-mock 高级 Mock 模板引擎（`common/mock-extra.js` + 插件 server 端）核心依赖，删除即删功能，非可清之债；
+  - `generate-schema`：**保留**——动态 import 已显性化（B1 模式），行为有测试钉住，工作正常；
+  - `prop-types`：75 文件维持**随触碰渐退**策略不变。
+- ~~7 处 `dangerouslySetInnerHTML` 建议做一次 XSS 专项审查~~ → **已由 P9a 专项覆盖**：5 处复核均接 DOMPurify、reportHtml 全转义、Postman iframe 加 sandbox；~~豁免面遗留（邮件 HTML 注入、下载件内容注入）另册登记。~~ → **豁免面已全部闭合（2026-09-26 复核+收尾）**：① 邮件 HTML——upMethods（用户名/接口名/路径/方法/项目名）、authMethods 两处 email、open.js autoTestUrl 均已 escapeHtml（后续批次落地）；diff 视图 title 全为硬编码标签，content 由 jsondiffpatch 0.7 html formatter 内部 htmlEscape 输出（源码级复核）；② api.html 下载件——export-data/gen-services 均经 `escapeListPlainFields`+`createHtml5` 转义纯文本字段（desc 类 Markdown 创作面按设计与站内渲染行为一致保留）；③ 新收口：run_auto_test 下载 filename 的 `mode` 查询参数（用户可控）原样进 Content-Disposition，本次改为词字符白名单并引号包裹，阻断响应头注入。
 
 ### 建议优先级（供裁决）
 
@@ -214,7 +221,7 @@
 - **临时替换 config.json 的纪律**：先 `cp config.json /tmp/<name>.bak` 并记录 sha256（原始值 `6dc9b4c27137702233d03a4d1cdb619a622dd4180ab4044b16316114ed4864a9`），结束前恢复并校验；用户容器 27017（mongo:4.4）/27018（mongo:8.0）禁止触碰。
 - 浏览器冒烟（历史轮次）：注册/登录（scrypt + legacy 自动升级）、接口编辑页编辑器、用例表格拖拽持久化、Markdown 双写、Wiki 编辑器、面包屑、路由分包按需加载，全部通过。**最近一轮（antd5 层 C）：4 皮肤 × 5 页面矩阵 92/0 + dev 抽查 23/0（commit a0fd2e41）。**
 
-| 类组件 Hooks 化收官（commit 本次） | client/ 最后 5 个类组件：Home 409、ProjectList 233（全仓最后 1 处 @autobind）、Project 197、LoginWrap 52、Application 214（全仓最后 1 处 @connect） | 5 个全部迁移为函数组件 + Hooks（新增 4 测试文件 12 用例）；**client/ 全仓类组件清零**（仅 ErrorBoundary 按 React 18 规范保留），@connect/@autobind/UNSAFE_ 装饰器与废弃生命周期全仓归零 | 独立验证 13/13 场景渲染逐字节等价（Application 全外壳含真实 lazy chunk 3 场景）；checkLoginState cDM→useEffect 时序逐帧推演成立（首帧全 LOADING、route(0) 提前 return 无旧值消费者）；ProjectList 页码怪癖实证保留；5 处死代码 HEAD 零调用点核实。**主 Agent 浏览器 UI 验证（UI_VERIFIED，dev:4000 真实环境）**：游客/登录态首页、分组页（585 接口真实项目）、项目子导航、接口列表分页、接口详情 View、退出→登录→注册→自动登录→重登全链路正常。已知时序面：隔离挂载下 cWM→useEffect 请求顺序可观察差异（最终渲染等价、无数据竞争，声明内语义）。测试缺口备忘：Project id 变化重拉与 ProjectList 切组重拉两个分支待补路由内导航用例。门禁（三方独立复跑 + UI 实测）：lint 0/0、typecheck 0 错、**npm test 689** 全绿冷库 |
+| 类组件 Hooks 化收官（commit 本次） | client/ 最后 5 个类组件：Home 409、ProjectList 233（全仓最后 1 处 @autobind）、Project 197、LoginWrap 52、Application 214（全仓最后 1 处 @connect） | 5 个全部迁移为函数组件 + Hooks（新增 4 测试文件 12 用例）；**client/ 全仓类组件清零**（仅 ErrorBoundary 按 React 18 规范保留），@connect/@autobind/UNSAFE_ 装饰器与废弃生命周期全仓归零 | 独立验证 13/13 场景渲染逐字节等价（Application 全外壳含真实 lazy chunk 3 场景）；checkLoginState cDM→useEffect 时序逐帧推演成立（首帧全 LOADING、route(0) 提前 return 无旧值消费者）；ProjectList 页码怪癖实证保留；5 处死代码 HEAD 零调用点核实。**主 Agent 浏览器 UI 验证（UI_VERIFIED，dev:4000 真实环境）**：游客/登录态首页、分组页（585 接口真实项目）、项目子导航、接口列表分页、接口详情 View、退出→登录→注册→自动登录→重登全链路正常。已知时序面：隔离挂载下 cWM→useEffect 请求顺序可观察差异（最终渲染等价、无数据竞争，声明内语义）。~~测试缺口备忘：Project id 变化重拉与 ProjectList 切组重拉两个分支待补路由内导航用例。~~ → **已在册（2026-09-26 复核订正）**：`Project.test.js`「项目 id 变化: 路由内导航触发重拉（对应旧 cWRP 分支）」与 `ProjectList.test.js`「分组切换: currGroup 变化触发重拉（对应旧 cWRP 分支）」两用例已存在并通过——备忘此前滞后。门禁（三方独立复跑 + UI 实测）：lint 0/0、typecheck 0 错、**npm test 689** 全绿冷库 |
 
 | 依赖安全中档升级批（commit 本次） | audit 34 项（2 critical/24 high/8 moderate）：jsrsasign critical（14 条签名/密码学 advisory）、markdown-it 系 5 项 high、koa-websocket/ws 2 项 high、jsondiffpatch high、jsonpath 链 high | markdown-it 8.4→15.0.2、anchor 4→10、toc 0.3.2→1.2.0；koa-websocket 4→7（新增 ws 集成测试 3 用例）；jsondiffpatch 0.3.11→0.7.6（formatters 子路径适配、存量日志为快照非持久 delta——0.3 delta→0.7 formatter 兼容探针 12/12）；json-schema-faker rc16→0.5.9（requiredOnly 适配对齐 rc16 语义，7 形态探针一致；**拒绝最新 rc 因其 jsonpath-plus@5 有 critical RCE**）；**jsrsasign 8→11.1.5（critical 消除，项目仅透传沙箱零 API 调用，KJUR/KEYUTIL 面实测齐全）**；新增 anchorSlugify 安全 slug（防 anchor v10 encodeURIComponent 被 unescape 复活成属性注入，反证成立）+ 落库回归测试 4 用例 | audit **34→23**（critical 2→1 剩 loader-utils 构建链、high 24→14），基线已下调 audit:ci 零差；golden 3 处空行差异逐条对应 markdown.js 适配；构建产物重建 assets.js 16/16 chunk 完整。**浏览器 UI 验证（UI_VERIFIED）**：真实环境 TimeLine 日志渲染 + 改动详情弹窗 jsondiffpatch 0.7 客户端 diff（integer→string 差异正确显示）、Project loadError 分支。决策记录：react-router v7 不做（32 文件依赖 v6 API 面，moderate 在基线受控，单独立项）；json-schema-faker 0.6 可另行立项。注意：jsondiffpatch 0.7 ESM-only 需 Node ≥22.12（.nvmrc=24 满足，生产部署需确认）。门禁（三方独立复跑 + UI 实测）：lint 0/0、typecheck 0 错、**npm test 692** 全绿冷库、build-client 0 error |
 
