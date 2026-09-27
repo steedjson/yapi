@@ -210,7 +210,7 @@
 2. ~~最小 CI 四步门禁~~ → **已完成（commit ff37aebe）**，含 audit 基线差分门禁；后续跟踪项见第 2 节；
 3. ~~类组件迁移优先 containers 并同步补 containers 测试~~ → **已完成**（client/exts 类组件清零，containers 测试成体系）；
 4. ~~同步 I/O 收口与 god file 拆分随改造进行~~ → **已完成**（同步 I/O 仅剩 interface.js:580 边缘读取；god file 全部拆分）；
-5. major 升级：markdown-it/jsondiffpatch/koa-websocket 已完成；~~剩余 react-router v7、antd6、react19 单独排期~~——**react19 已完成迁移（2026-09-27 批次）**：react 19.3.0 + @ant-design/v5-patch-for-react-19 双装载（生产入口 + 测试装载器 setupDom() 之后，根因见 docs/BUGLOG/codex-react19.md）、类型 13 错清零、handleCurrDomain 竞态守卫（附 8 例回归）、四门禁全绿（终审独立复跑 1090/1090）+ 主 Agent 真机 UI 验证 11 页面×三皮肤 0 JS error；评估文档 [docs/react19-upgrade-assessment.md](docs/react19-upgrade-assessment.md)。**antd6 评估已完成（2026-09-27）**：[docs/antd6-upgrade-assessment.md](docs/antd6-upgrade-assessment.md)——**可行，2-3 人日单批次**；破坏面收敛为 Select DOM 重构单一根因（36 例测试断言漂移），typecheck/build 零障碍，v5-patch 可退役，spike 固化于 `spike/antd6` 分支。**剩余 react-router v7 单独排期**。
+5. major 升级：markdown-it/jsondiffpatch/koa-websocket 已完成；~~剩余 react-router v7、antd6、react19 单独排期~~——**react19 已完成迁移（2026-09-27 批次）**：react 19.3.0 + @ant-design/v5-patch-for-react-19 双装载（生产入口 + 测试装载器 setupDom() 之后，根因见 docs/BUGLOG/codex-react19.md）、类型 13 错清零、handleCurrDomain 竞态守卫（附 8 例回归）、四门禁全绿（终审独立复跑 1090/1090）+ 主 Agent 真机 UI 验证 11 页面×三皮肤 0 JS error；评估文档 [docs/react19-upgrade-assessment.md](docs/react19-upgrade-assessment.md)。**antd6 已完成迁移（2026-09-27 批次）**：antd 6.6.5 + cssinjs 2.1.2 + v5-patch 退役；实际破坏面 3 类（Select DOM 重构/Tabs 类更名/Timeline Steps 化），14 测试文件适配 + 8 类新弃用 prop 清扫（deprecated 179→0）+ D-1 指纹基线重登记；四门禁 1096 全绿 + 四皮肤真机验证（css-var 模式 token 映射未破坏）；评估文档 [docs/antd6-upgrade-assessment.md](docs/antd6-upgrade-assessment.md)；遗留 message 静态警告 1 条（清法需 App 上下文批，动 client/index.js + 159 调用点）。**剩余 react-router v7 单独排期（已裁决暂缓）**。
 
 ## 五、验证基线
 
