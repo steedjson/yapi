@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import './index.scss';
-import { Row, Col, Input, Select, Button, AutoComplete, Tooltip, Form } from 'antd';
+import { Row, Col, Input, Select, Button, AutoComplete, Tooltip, Form, Space } from 'antd';
 
 import { DeleteOutlined, QuestionCircleOutlined, SaveOutlined } from '@ant-design/icons';
 const FormItem = Form.Item;
