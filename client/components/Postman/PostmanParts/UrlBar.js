@@ -16,11 +16,10 @@
  */
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Button, Input, Select, Tooltip } from 'antd';
+import { Button, Input, Select, Tooltip, Space } from 'antd';
 import constants from '../../../constants/variable.js';
 
 const HTTP_METHOD = constants.HTTP_METHOD;
-const InputGroup = Input.Group;
 const Option = Select.Option;
 
 /**
@@ -43,7 +42,7 @@ const UrlBar = props => {
 
   return (
     <div className="url">
-      <InputGroup compact style={{ display: 'flex' }}>
+      <Space.Compact style={{ display: 'flex' }}>
         <Select disabled value={method} style={{ flexBasis: 60 }}>
           {Object.keys(HTTP_METHOD).map(name => (
             <Option value={name.toUpperCase()} key={name}>
@@ -74,7 +73,7 @@ const UrlBar = props => {
           spellCheck="false"
           style={{ flexBasis: 180, flexGrow: 1 }}
         />
-      </InputGroup>
+      </Space.Compact>
 
       <Tooltip
         placement="bottom"

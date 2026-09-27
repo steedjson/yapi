@@ -17,7 +17,7 @@
  */
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Select, TreeSelect, Input, Tooltip, Button, Row, Col, Form } from 'antd';
+import { Select, TreeSelect, Input, Tooltip, Button, Row, Col, Form, Space } from 'antd';
 import { QuestionCircleOutlined } from '@ant-design/icons';
 import { nameLengthLimit } from '../../../../../common.js';
 import { formatCatTreeData } from 'common/utils.js';
@@ -30,7 +30,6 @@ import { paramsTpl } from '../interfaceEditFormUtils/paramTemplates.js';
 
 const FormItem = Form.Item;
 const Option = Select.Option;
-const InputGroup = Input.Group;
 
 /**
  * @param {any} props
@@ -117,7 +116,7 @@ const BasicSettingPanel = props => {
             </span>
           }
         >
-          <InputGroup compact>
+          <Space.Compact>
             <Select value={method} onChange={onChangeMethod} style={{ width: '15%' }}>
               {HTTP_METHOD_KEYS.map(item => {
                 return (
@@ -155,7 +154,7 @@ const BasicSettingPanel = props => {
             >
               <Input onChange={onPathChange} placeholder="/path" style={{ width: '60%' }} />
             </FormItem>
-          </InputGroup>
+          </Space.Compact>
           <Row className="interface-edit-item">
             <Col span={24} offset={0}>
               {paramsList}
