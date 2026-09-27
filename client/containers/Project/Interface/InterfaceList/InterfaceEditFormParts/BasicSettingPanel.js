@@ -87,7 +87,7 @@ const BasicSettingPanel = props => {
             treeData={formatCatTreeData(cat)}
             placeholder="请选择一个分类"
             treeDefaultExpandAll={true}
-            dropdownStyle={{ maxHeight: 400, overflow: 'auto' }}
+            styles={{ popup: { root: { maxHeight: 400, overflow: 'auto' } } }}
           />
         </FormItem>
 

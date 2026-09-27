@@ -268,7 +268,7 @@ const InterfaceList = () => {
             <Tooltip title="开放接口" placement="topLeft">
               <span>{record.api_opened && <EyeOutlined className="opened" />}</span>
             </Tooltip>
-            <Tooltip title={path} placement="topLeft" overlayClassName="toolTip">
+            <Tooltip title={path} placement="topLeft" classNames={{ root: 'toolTip' }}>
               <span className="path">{path}</span>
             </Tooltip>
           </div>
@@ -286,7 +286,7 @@ const InterfaceList = () => {
             className="select path"
             treeData={formatCatTreeData(catList)}
             value={item + ''}
-            dropdownStyle={{ maxHeight: 400, overflow: 'auto', minWidth: 200 }}
+            styles={{ popup: { root: { maxHeight: 400, overflow: 'auto', minWidth: 200 } } }}
             treeDefaultExpandAll={true}
             onChange={(/** @type {any} */ catid) => changeInterfaceCat(record._id, catid)}
           />

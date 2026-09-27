@@ -78,7 +78,7 @@ function AddInterfaceForm(props) {
           treeData={formatCatTreeData(props.catdata)}
           placeholder="请选择接口分类"
           treeDefaultExpandAll={true}
-          dropdownStyle={{ maxHeight: 400, overflow: 'auto' }}
+          styles={{ popup: { root: { maxHeight: 400, overflow: 'auto' } } }}
         />
       </FormItem>
       <FormItem

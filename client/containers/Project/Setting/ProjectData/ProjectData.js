@@ -411,7 +411,7 @@ const ProjectData = () => {
                 value={selectCatid ? String(selectCatid) : undefined}
                 treeData={formatCatTreeData(menuList)}
                 style={{ width: '100%' }}
-                dropdownStyle={{ maxHeight: 400, overflow: 'auto', minWidth: 200 }}
+                styles={{ popup: { root: { maxHeight: 400, overflow: 'auto', minWidth: 200 } } }}
                 placeholder="请选择数据导入的默认分类"
                 treeDefaultExpandAll={true}
                 onChange={selectChange}
