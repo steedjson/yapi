@@ -405,7 +405,7 @@ const ProjectMember = () => {
           className="setting-project-member"
         />
         <Card
-          bordered={false}
+          variant="borderless"
           title={
             state.groupName + ' 分组成员 ' + '(' + state.groupMemberList.length + ') 人'
           }

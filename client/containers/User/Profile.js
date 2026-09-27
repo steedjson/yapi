@@ -1,7 +1,7 @@
 // @ts-check
 import React, { useEffect, useRef, useState } from 'react';
 import { EditOutlined } from '@ant-design/icons';
-import { Row, Col, Input, Button, Select, message, Upload, Tooltip } from 'antd';
+import { Row, Col, Input, Button, Select, message, Upload, Tooltip, Space } from 'antd';
 import axios from 'axios';
 import { formatTime } from '../../common.js';
 import PropTypes from 'prop-types';
@@ -208,7 +208,6 @@ const Profile = () => {
     );
   };
 
-  let ButtonGroup = Button.Group;
   let userNameEditHtml, emailEditHtml, secureEditHtml, roleEditHtml;
   const Option = Select.Option;
   /** @type {Record<string, string>} */
@@ -251,7 +250,7 @@ const Profile = () => {
           onChange={changeUserinfo}
           placeholder="用户名"
         />
-        <ButtonGroup className="edit-buttons">
+        <Space.Compact className="edit-buttons">
           <Button
             className="edit-button"
             onClick={() => {
@@ -269,7 +268,7 @@ const Profile = () => {
           >
             确定
           </Button>
-        </ButtonGroup>
+        </Space.Compact>
       </div>
     );
   }
@@ -301,7 +300,7 @@ const Profile = () => {
           name="email"
           onChange={changeUserinfo}
         />
-        <ButtonGroup className="edit-buttons">
+        <Space.Compact className="edit-buttons">
           <Button
             className="edit-button"
             onClick={() => {
@@ -319,7 +318,7 @@ const Profile = () => {
           >
             确定
           </Button>
-        </ButtonGroup>
+        </Space.Compact>
       </div>
     );
   }
@@ -369,7 +368,7 @@ const Profile = () => {
         />
         <Input placeholder="新的密码" type="password" name="password" id="password" />
         <Input placeholder="确认密码" type="password" name="verify_pass" id="verify_pass" />
-        <ButtonGroup className="edit-buttons">
+        <Space.Compact className="edit-buttons">
           <Button
             className="edit-button"
             onClick={() => {
@@ -381,7 +380,7 @@ const Profile = () => {
           <Button className="edit-button" onClick={updatePassword} type="primary">
             确定
           </Button>
-        </ButtonGroup>
+        </Space.Compact>
       </div>
     );
   }
