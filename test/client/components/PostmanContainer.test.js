@@ -239,8 +239,8 @@ const EXPECTED_INTER_INITIAL_SNAPSHOT = `<div>
                 <a href="https://juejin.im/post/5e3bbd986fb9a07ce152b53d" target="blank">
                   "[谷歌请求插件详细安装教程]"
     <div class="url">
-      <span class="ant-input-group.ant-input-group-compact.CSSHASH" style="display:flex">
-        <div class="ant-select.ant-select-outlined.CSSHASH.ant-select-single.ant-select-show-arrow.ant-select-disabled" style="flex-basis:60px">
+      <div class="ant-space-compact.CSSHASH" style="display:flex">
+        <div class="ant-select.ant-select-outlined.ant-select-compact-item.ant-select-compact-first-item.CSSHASH.ant-select-single.ant-select-show-arrow.ant-select-disabled" style="flex-basis:60px">
           <div class="ant-select-selector">
             <span class="ant-select-selection-wrap">
               <span class="ant-select-selection-search">
@@ -251,7 +251,7 @@ const EXPECTED_INTER_INITIAL_SNAPSHOT = `<div>
             <span aria-label="down" class="anticon.anticon-down.ant-select-suffix" role="img">
               <svg aria-hidden="true" data-icon="down" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                 <path d="SVG_PATH">
-        <div class="ant-select.ant-select-outlined.CSSHASH.ant-select-single.ant-select-show-arrow" style="flex-basis:180px;flex-grow:1">
+        <div class="ant-select.ant-select-outlined.ant-select-compact-item.CSSHASH.ant-select-single.ant-select-show-arrow" style="flex-basis:180px;flex-grow:1">
           <div class="ant-select-selector">
             <span class="ant-select-selection-wrap">
               <span class="ant-select-selection-search">
@@ -262,7 +262,7 @@ const EXPECTED_INTER_INITIAL_SNAPSHOT = `<div>
             <span aria-label="down" class="anticon.anticon-down.ant-select-suffix" role="img">
               <svg aria-hidden="true" data-icon="down" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                 <path d="SVG_PATH">
-        <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined" disabled="" spellcheck="false" style="flex-basis:180px;flex-grow:1" type="text" value="/api/pet/{id}">
+        <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.ant-input-compact-item.ant-input-compact-last-item" disabled="" spellcheck="false" style="flex-basis:180px;flex-grow:1" type="text" value="/api/pet/{id}">
       <button aria-describedby="test-id" class="ant-btn.CSSHASH.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" disabled="" type="button">
         <span>
           "发 送"
@@ -285,13 +285,11 @@ const EXPECTED_INTER_INITIAL_SNAPSHOT = `<div>
                 <input aria-describedby="test-id" class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.key" disabled="" type="text" value="id">
               <span class="eq-symbol">
                 "="
-              <span class="ant-input-group-wrapper.ant-input-group-wrapper-outlined.CSSHASH.value">
-                <span class="ant-input-wrapper.ant-input-group.CSSHASH">
-                  <input class="ant-input.CSSHASH.ant-input-outlined" id="req_params_0" placeholder="参数值" type="text" value="42">
-                  <span class="ant-input-group-addon">
-                    <span aria-label="edit" class="anticon.anticon-edit" role="img" tabindex="-1">
-                      <svg aria-hidden="true" data-icon="edit" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
-                        <path d="SVG_PATH">
+              <div class="ant-space-compact.CSSHASH.value">
+                <input class="ant-input.CSSHASH.ant-input-outlined.ant-input-compact-item.ant-input-compact-first-item" id="req_params_0" placeholder="参数值" type="text" value="42">
+                <span aria-label="edit" class="anticon.anticon-edit" role="img" tabindex="-1">
+                  <svg aria-hidden="true" data-icon="edit" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
+                    <path d="SVG_PATH">
             <button class="ant-btn.CSSHASH.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" style="display:none" type="button">
               <span class="ant-btn-icon">
                 <span aria-label="plus" class="anticon.anticon-plus" role="img">
@@ -319,13 +317,11 @@ const EXPECTED_INTER_INITIAL_SNAPSHOT = `<div>
                   <span class="ant-checkbox-inner">
               <span class="eq-symbol">
                 "="
-              <span class="ant-input-group-wrapper.ant-input-group-wrapper-outlined.CSSHASH.value">
-                <span class="ant-input-wrapper.ant-input-group.CSSHASH">
-                  <input class="ant-input.CSSHASH.ant-input-outlined" id="req_query_0" placeholder="参数值" type="text" value="hello">
-                  <span class="ant-input-group-addon">
-                    <span aria-label="edit" class="anticon.anticon-edit" role="img" tabindex="-1">
-                      <svg aria-hidden="true" data-icon="edit" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
-                        <path d="SVG_PATH">
+              <div class="ant-space-compact.CSSHASH.value">
+                <input class="ant-input.CSSHASH.ant-input-outlined.ant-input-compact-item.ant-input-compact-first-item" id="req_query_0" placeholder="参数值" type="text" value="hello">
+                <span aria-label="edit" class="anticon.anticon-edit" role="img" tabindex="-1">
+                  <svg aria-hidden="true" data-icon="edit" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
+                    <path d="SVG_PATH">
             <div class="key-value-wrap">
               <div>
                 <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.key" disabled="" type="text" value="opt">
@@ -335,13 +331,11 @@ const EXPECTED_INTER_INITIAL_SNAPSHOT = `<div>
                   <span class="ant-checkbox-inner">
               <span class="eq-symbol">
                 "="
-              <span class="ant-input-group-wrapper.ant-input-group-wrapper-outlined.CSSHASH.value">
-                <span class="ant-input-wrapper.ant-input-group.CSSHASH">
-                  <input class="ant-input.CSSHASH.ant-input-outlined" id="req_query_1" placeholder="参数值" type="text" value="">
-                  <span class="ant-input-group-addon">
-                    <span aria-label="edit" class="anticon.anticon-edit" role="img" tabindex="-1">
-                      <svg aria-hidden="true" data-icon="edit" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
-                        <path d="SVG_PATH">
+              <div class="ant-space-compact.CSSHASH.value">
+                <input class="ant-input.CSSHASH.ant-input-outlined.ant-input-compact-item.ant-input-compact-first-item" id="req_query_1" placeholder="参数值" type="text" value="">
+                <span aria-label="edit" class="anticon.anticon-edit" role="img" tabindex="-1">
+                  <svg aria-hidden="true" data-icon="edit" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
+                    <path d="SVG_PATH">
             <button class="ant-btn.CSSHASH.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" style="display:none" type="button">
               <span class="ant-btn-icon">
                 <span aria-label="plus" class="anticon.anticon-plus" role="img">
@@ -365,19 +359,18 @@ const EXPECTED_INTER_INITIAL_SNAPSHOT = `<div>
                 <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.key" disabled="" type="text" value="Content-Type">
               <span class="eq-symbol">
                 "="
-              <span class="ant-input-group-wrapper.ant-input-group-wrapper-outlined.CSSHASH.value">
-                <span class="ant-input-wrapper.ant-input-group.CSSHASH">
-                  <input class="ant-input.CSSHASH.ant-input-outlined" id="req_headers_0" placeholder="参数值" type="text" value="application/json">
-                  <span class="ant-input-group-addon">
-                    <span aria-label="edit" class="anticon.anticon-edit" role="img" tabindex="-1">
-                      <svg aria-hidden="true" data-icon="edit" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
-                        <path d="SVG_PATH">
+              <div class="ant-space-compact.CSSHASH.value">
+                <input class="ant-input.CSSHASH.ant-input-outlined.ant-input-compact-item.ant-input-compact-first-item" id="req_headers_0" placeholder="参数值" type="text" value="application/json">
+                <span aria-label="edit" class="anticon.anticon-edit" role="img" tabindex="-1">
+                  <svg aria-hidden="true" data-icon="edit" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
+                    <path d="SVG_PATH">
             <div class="key-value-wrap">
               <div>
                 <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.key" disabled="" type="text" value="X-Env">
               <span class="eq-symbol">
                 "="
-              <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.value" disabled="" id="req_headers_1" placeholder="参数值" type="text" value="local">
+              <div class="ant-space-compact.CSSHASH.value">
+                <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.ant-input-compact-item.ant-input-compact-first-item.ant-input-compact-last-item" disabled="" id="req_headers_1" placeholder="参数值" type="text" value="local">
             <button class="ant-btn.CSSHASH.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" style="display:none" type="button">
               <span class="ant-btn-icon">
                 <span aria-label="plus" class="anticon.anticon-plus" role="img">
@@ -463,8 +456,8 @@ const EXPECTED_CASE_INITIAL_SNAPSHOT = `<div>
   <div class="interface-test.postman">
     <div>
     <div class="url">
-      <span class="ant-input-group.ant-input-group-compact.CSSHASH" style="display:flex">
-        <div class="ant-select.ant-select-outlined.CSSHASH.ant-select-single.ant-select-show-arrow.ant-select-disabled" style="flex-basis:60px">
+      <div class="ant-space-compact.CSSHASH" style="display:flex">
+        <div class="ant-select.ant-select-outlined.ant-select-compact-item.ant-select-compact-first-item.CSSHASH.ant-select-single.ant-select-show-arrow.ant-select-disabled" style="flex-basis:60px">
           <div class="ant-select-selector">
             <span class="ant-select-selection-wrap">
               <span class="ant-select-selection-search">
@@ -475,7 +468,7 @@ const EXPECTED_CASE_INITIAL_SNAPSHOT = `<div>
             <span aria-label="down" class="anticon.anticon-down.ant-select-suffix" role="img">
               <svg aria-hidden="true" data-icon="down" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                 <path d="SVG_PATH">
-        <div class="ant-select.ant-select-outlined.CSSHASH.ant-select-single.ant-select-show-arrow" style="flex-basis:180px;flex-grow:1">
+        <div class="ant-select.ant-select-outlined.ant-select-compact-item.CSSHASH.ant-select-single.ant-select-show-arrow" style="flex-basis:180px;flex-grow:1">
           <div class="ant-select-selector">
             <span class="ant-select-selection-wrap">
               <span class="ant-select-selection-search">
@@ -486,7 +479,7 @@ const EXPECTED_CASE_INITIAL_SNAPSHOT = `<div>
             <span aria-label="down" class="anticon.anticon-down.ant-select-suffix" role="img">
               <svg aria-hidden="true" data-icon="down" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                 <path d="SVG_PATH">
-        <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined" disabled="" spellcheck="false" style="flex-basis:180px;flex-grow:1" type="text" value="/api/pet/{id}">
+        <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.ant-input-compact-item.ant-input-compact-last-item" disabled="" spellcheck="false" style="flex-basis:180px;flex-grow:1" type="text" value="/api/pet/{id}">
       <button aria-describedby="test-id" class="ant-btn.CSSHASH.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" type="button">
         <span>
           "发 送"
@@ -509,13 +502,11 @@ const EXPECTED_CASE_INITIAL_SNAPSHOT = `<div>
                 <input aria-describedby="test-id" class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.key" disabled="" type="text" value="id">
               <span class="eq-symbol">
                 "="
-              <span class="ant-input-group-wrapper.ant-input-group-wrapper-outlined.CSSHASH.value">
-                <span class="ant-input-wrapper.ant-input-group.CSSHASH">
-                  <input class="ant-input.CSSHASH.ant-input-outlined" id="req_params_0" placeholder="参数值" type="text" value="42">
-                  <span class="ant-input-group-addon">
-                    <span aria-label="edit" class="anticon.anticon-edit" role="img" tabindex="-1">
-                      <svg aria-hidden="true" data-icon="edit" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
-                        <path d="SVG_PATH">
+              <div class="ant-space-compact.CSSHASH.value">
+                <input class="ant-input.CSSHASH.ant-input-outlined.ant-input-compact-item.ant-input-compact-first-item" id="req_params_0" placeholder="参数值" type="text" value="42">
+                <span aria-label="edit" class="anticon.anticon-edit" role="img" tabindex="-1">
+                  <svg aria-hidden="true" data-icon="edit" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
+                    <path d="SVG_PATH">
             <button class="ant-btn.CSSHASH.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" style="display:none" type="button">
               <span class="ant-btn-icon">
                 <span aria-label="plus" class="anticon.anticon-plus" role="img">
@@ -543,13 +534,11 @@ const EXPECTED_CASE_INITIAL_SNAPSHOT = `<div>
                   <span class="ant-checkbox-inner">
               <span class="eq-symbol">
                 "="
-              <span class="ant-input-group-wrapper.ant-input-group-wrapper-outlined.CSSHASH.value">
-                <span class="ant-input-wrapper.ant-input-group.CSSHASH">
-                  <input class="ant-input.CSSHASH.ant-input-outlined" id="req_query_0" placeholder="参数值" type="text" value="hello">
-                  <span class="ant-input-group-addon">
-                    <span aria-label="edit" class="anticon.anticon-edit" role="img" tabindex="-1">
-                      <svg aria-hidden="true" data-icon="edit" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
-                        <path d="SVG_PATH">
+              <div class="ant-space-compact.CSSHASH.value">
+                <input class="ant-input.CSSHASH.ant-input-outlined.ant-input-compact-item.ant-input-compact-first-item" id="req_query_0" placeholder="参数值" type="text" value="hello">
+                <span aria-label="edit" class="anticon.anticon-edit" role="img" tabindex="-1">
+                  <svg aria-hidden="true" data-icon="edit" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
+                    <path d="SVG_PATH">
             <div class="key-value-wrap">
               <div>
                 <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.key" disabled="" type="text" value="opt">
@@ -559,13 +548,11 @@ const EXPECTED_CASE_INITIAL_SNAPSHOT = `<div>
                   <span class="ant-checkbox-inner">
               <span class="eq-symbol">
                 "="
-              <span class="ant-input-group-wrapper.ant-input-group-wrapper-outlined.CSSHASH.value">
-                <span class="ant-input-wrapper.ant-input-group.CSSHASH">
-                  <input class="ant-input.CSSHASH.ant-input-outlined" id="req_query_1" placeholder="参数值" type="text" value="">
-                  <span class="ant-input-group-addon">
-                    <span aria-label="edit" class="anticon.anticon-edit" role="img" tabindex="-1">
-                      <svg aria-hidden="true" data-icon="edit" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
-                        <path d="SVG_PATH">
+              <div class="ant-space-compact.CSSHASH.value">
+                <input class="ant-input.CSSHASH.ant-input-outlined.ant-input-compact-item.ant-input-compact-first-item" id="req_query_1" placeholder="参数值" type="text" value="">
+                <span aria-label="edit" class="anticon.anticon-edit" role="img" tabindex="-1">
+                  <svg aria-hidden="true" data-icon="edit" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
+                    <path d="SVG_PATH">
             <button class="ant-btn.CSSHASH.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" style="display:none" type="button">
               <span class="ant-btn-icon">
                 <span aria-label="plus" class="anticon.anticon-plus" role="img">
@@ -589,13 +576,11 @@ const EXPECTED_CASE_INITIAL_SNAPSHOT = `<div>
                 <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.key" disabled="" type="text" value="Content-Type">
               <span class="eq-symbol">
                 "="
-              <span class="ant-input-group-wrapper.ant-input-group-wrapper-outlined.CSSHASH.value">
-                <span class="ant-input-wrapper.ant-input-group.CSSHASH">
-                  <input class="ant-input.CSSHASH.ant-input-outlined" id="req_headers_0" placeholder="参数值" type="text" value="application/json">
-                  <span class="ant-input-group-addon">
-                    <span aria-label="edit" class="anticon.anticon-edit" role="img" tabindex="-1">
-                      <svg aria-hidden="true" data-icon="edit" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
-                        <path d="SVG_PATH">
+              <div class="ant-space-compact.CSSHASH.value">
+                <input class="ant-input.CSSHASH.ant-input-outlined.ant-input-compact-item.ant-input-compact-first-item" id="req_headers_0" placeholder="参数值" type="text" value="application/json">
+                <span aria-label="edit" class="anticon.anticon-edit" role="img" tabindex="-1">
+                  <svg aria-hidden="true" data-icon="edit" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
+                    <path d="SVG_PATH">
             <button class="ant-btn.CSSHASH.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" style="display:none" type="button">
               <span class="ant-btn-icon">
                 <span aria-label="plus" class="anticon.anticon-plus" role="img">
@@ -685,8 +670,8 @@ const EXPECTED_PARAMS_EDITED_SNAPSHOT = `<div>
   <div class="interface-test.postman">
     <div>
     <div class="url">
-      <span class="ant-input-group.ant-input-group-compact.CSSHASH" style="display:flex">
-        <div class="ant-select.ant-select-outlined.CSSHASH.ant-select-single.ant-select-show-arrow.ant-select-disabled" style="flex-basis:60px">
+      <div class="ant-space-compact.CSSHASH" style="display:flex">
+        <div class="ant-select.ant-select-outlined.ant-select-compact-item.ant-select-compact-first-item.CSSHASH.ant-select-single.ant-select-show-arrow.ant-select-disabled" style="flex-basis:60px">
           <div class="ant-select-selector">
             <span class="ant-select-selection-wrap">
               <span class="ant-select-selection-search">
@@ -697,7 +682,7 @@ const EXPECTED_PARAMS_EDITED_SNAPSHOT = `<div>
             <span aria-label="down" class="anticon.anticon-down.ant-select-suffix" role="img">
               <svg aria-hidden="true" data-icon="down" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                 <path d="SVG_PATH">
-        <div class="ant-select.ant-select-outlined.CSSHASH.ant-select-single.ant-select-show-arrow" style="flex-basis:180px;flex-grow:1">
+        <div class="ant-select.ant-select-outlined.ant-select-compact-item.CSSHASH.ant-select-single.ant-select-show-arrow" style="flex-basis:180px;flex-grow:1">
           <div class="ant-select-selector">
             <span class="ant-select-selection-wrap">
               <span class="ant-select-selection-search">
@@ -708,7 +693,7 @@ const EXPECTED_PARAMS_EDITED_SNAPSHOT = `<div>
             <span aria-label="down" class="anticon.anticon-down.ant-select-suffix" role="img">
               <svg aria-hidden="true" data-icon="down" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                 <path d="SVG_PATH">
-        <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined" disabled="" spellcheck="false" style="flex-basis:180px;flex-grow:1" type="text" value="/api/pet/{id}">
+        <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.ant-input-compact-item.ant-input-compact-last-item" disabled="" spellcheck="false" style="flex-basis:180px;flex-grow:1" type="text" value="/api/pet/{id}">
       <button aria-describedby="test-id" class="ant-btn.CSSHASH.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" type="button">
         <span>
           "发 送"
@@ -731,13 +716,11 @@ const EXPECTED_PARAMS_EDITED_SNAPSHOT = `<div>
                 <input aria-describedby="test-id" class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.key" disabled="" type="text" value="id">
               <span class="eq-symbol">
                 "="
-              <span class="ant-input-group-wrapper.ant-input-group-wrapper-outlined.CSSHASH.value">
-                <span class="ant-input-wrapper.ant-input-group.CSSHASH">
-                  <input class="ant-input.CSSHASH.ant-input-outlined" id="req_params_0" placeholder="参数值" type="text" value="42">
-                  <span class="ant-input-group-addon">
-                    <span aria-label="edit" class="anticon.anticon-edit" role="img" tabindex="-1">
-                      <svg aria-hidden="true" data-icon="edit" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
-                        <path d="SVG_PATH">
+              <div class="ant-space-compact.CSSHASH.value">
+                <input class="ant-input.CSSHASH.ant-input-outlined.ant-input-compact-item.ant-input-compact-first-item" id="req_params_0" placeholder="参数值" type="text" value="42">
+                <span aria-label="edit" class="anticon.anticon-edit" role="img" tabindex="-1">
+                  <svg aria-hidden="true" data-icon="edit" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
+                    <path d="SVG_PATH">
             <button class="ant-btn.CSSHASH.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" style="display:none" type="button">
               <span class="ant-btn-icon">
                 <span aria-label="plus" class="anticon.anticon-plus" role="img">
@@ -765,13 +748,11 @@ const EXPECTED_PARAMS_EDITED_SNAPSHOT = `<div>
                   <span class="ant-checkbox-inner">
               <span class="eq-symbol">
                 "="
-              <span class="ant-input-group-wrapper.ant-input-group-wrapper-outlined.CSSHASH.value">
-                <span class="ant-input-wrapper.ant-input-group.CSSHASH">
-                  <input class="ant-input.CSSHASH.ant-input-outlined" id="req_query_0" placeholder="参数值" type="text" value="zz">
-                  <span class="ant-input-group-addon">
-                    <span aria-label="edit" class="anticon.anticon-edit" role="img" tabindex="-1">
-                      <svg aria-hidden="true" data-icon="edit" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
-                        <path d="SVG_PATH">
+              <div class="ant-space-compact.CSSHASH.value">
+                <input class="ant-input.CSSHASH.ant-input-outlined.ant-input-compact-item.ant-input-compact-first-item" id="req_query_0" placeholder="参数值" type="text" value="zz">
+                <span aria-label="edit" class="anticon.anticon-edit" role="img" tabindex="-1">
+                  <svg aria-hidden="true" data-icon="edit" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
+                    <path d="SVG_PATH">
             <div class="key-value-wrap">
               <div>
                 <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.key" disabled="" type="text" value="opt">
@@ -781,13 +762,11 @@ const EXPECTED_PARAMS_EDITED_SNAPSHOT = `<div>
                   <span class="ant-checkbox-inner">
               <span class="eq-symbol">
                 "="
-              <span class="ant-input-group-wrapper.ant-input-group-wrapper-outlined.CSSHASH.value">
-                <span class="ant-input-wrapper.ant-input-group.CSSHASH">
-                  <input class="ant-input.CSSHASH.ant-input-outlined" id="req_query_1" placeholder="参数值" type="text" value="">
-                  <span class="ant-input-group-addon">
-                    <span aria-label="edit" class="anticon.anticon-edit" role="img" tabindex="-1">
-                      <svg aria-hidden="true" data-icon="edit" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
-                        <path d="SVG_PATH">
+              <div class="ant-space-compact.CSSHASH.value">
+                <input class="ant-input.CSSHASH.ant-input-outlined.ant-input-compact-item.ant-input-compact-first-item" id="req_query_1" placeholder="参数值" type="text" value="">
+                <span aria-label="edit" class="anticon.anticon-edit" role="img" tabindex="-1">
+                  <svg aria-hidden="true" data-icon="edit" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
+                    <path d="SVG_PATH">
             <button class="ant-btn.CSSHASH.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" style="display:none" type="button">
               <span class="ant-btn-icon">
                 <span aria-label="plus" class="anticon.anticon-plus" role="img">
@@ -811,19 +790,18 @@ const EXPECTED_PARAMS_EDITED_SNAPSHOT = `<div>
                 <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.key" disabled="" type="text" value="Content-Type">
               <span class="eq-symbol">
                 "="
-              <span class="ant-input-group-wrapper.ant-input-group-wrapper-outlined.CSSHASH.value">
-                <span class="ant-input-wrapper.ant-input-group.CSSHASH">
-                  <input class="ant-input.CSSHASH.ant-input-outlined" id="req_headers_0" placeholder="参数值" type="text" value="application/json">
-                  <span class="ant-input-group-addon">
-                    <span aria-label="edit" class="anticon.anticon-edit" role="img" tabindex="-1">
-                      <svg aria-hidden="true" data-icon="edit" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
-                        <path d="SVG_PATH">
+              <div class="ant-space-compact.CSSHASH.value">
+                <input class="ant-input.CSSHASH.ant-input-outlined.ant-input-compact-item.ant-input-compact-first-item" id="req_headers_0" placeholder="参数值" type="text" value="application/json">
+                <span aria-label="edit" class="anticon.anticon-edit" role="img" tabindex="-1">
+                  <svg aria-hidden="true" data-icon="edit" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
+                    <path d="SVG_PATH">
             <div class="key-value-wrap">
               <div>
                 <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.key" disabled="" type="text" value="X-Env">
               <span class="eq-symbol">
                 "="
-              <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.value" disabled="" id="req_headers_1" placeholder="参数值" type="text" value="local">
+              <div class="ant-space-compact.CSSHASH.value">
+                <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.ant-input-compact-item.ant-input-compact-first-item.ant-input-compact-last-item" disabled="" id="req_headers_1" placeholder="参数值" type="text" value="local">
             <button class="ant-btn.CSSHASH.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" style="display:none" type="button">
               <span class="ant-btn-icon">
                 <span aria-label="plus" class="anticon.anticon-plus" role="img">
@@ -909,8 +887,8 @@ const EXPECTED_RESPONSE_SNAPSHOT = `<div>
   <div class="interface-test.postman">
     <div>
     <div class="url">
-      <span class="ant-input-group.ant-input-group-compact.CSSHASH" style="display:flex">
-        <div class="ant-select.ant-select-outlined.CSSHASH.ant-select-single.ant-select-show-arrow.ant-select-disabled" style="flex-basis:60px">
+      <div class="ant-space-compact.CSSHASH" style="display:flex">
+        <div class="ant-select.ant-select-outlined.ant-select-compact-item.ant-select-compact-first-item.CSSHASH.ant-select-single.ant-select-show-arrow.ant-select-disabled" style="flex-basis:60px">
           <div class="ant-select-selector">
             <span class="ant-select-selection-wrap">
               <span class="ant-select-selection-search">
@@ -921,7 +899,7 @@ const EXPECTED_RESPONSE_SNAPSHOT = `<div>
             <span aria-label="down" class="anticon.anticon-down.ant-select-suffix" role="img">
               <svg aria-hidden="true" data-icon="down" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                 <path d="SVG_PATH">
-        <div class="ant-select.ant-select-outlined.CSSHASH.ant-select-single.ant-select-show-arrow" style="flex-basis:180px;flex-grow:1">
+        <div class="ant-select.ant-select-outlined.ant-select-compact-item.CSSHASH.ant-select-single.ant-select-show-arrow" style="flex-basis:180px;flex-grow:1">
           <div class="ant-select-selector">
             <span class="ant-select-selection-wrap">
               <span class="ant-select-selection-search">
@@ -932,7 +910,7 @@ const EXPECTED_RESPONSE_SNAPSHOT = `<div>
             <span aria-label="down" class="anticon.anticon-down.ant-select-suffix" role="img">
               <svg aria-hidden="true" data-icon="down" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                 <path d="SVG_PATH">
-        <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined" disabled="" spellcheck="false" style="flex-basis:180px;flex-grow:1" type="text" value="/api/pet/{id}">
+        <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.ant-input-compact-item.ant-input-compact-last-item" disabled="" spellcheck="false" style="flex-basis:180px;flex-grow:1" type="text" value="/api/pet/{id}">
       <button aria-describedby="test-id" class="ant-btn.CSSHASH.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" type="button">
         <span class="ant-btn-icon.ant-btn-loading-icon.ant-btn-loading-icon-motion-STATE.ant-btn-loading-icon-motion">
           <span aria-label="loading" class="anticon.anticon-loading.anticon-spin" role="img">
@@ -959,13 +937,11 @@ const EXPECTED_RESPONSE_SNAPSHOT = `<div>
                 <input aria-describedby="test-id" class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.key" disabled="" type="text" value="id">
               <span class="eq-symbol">
                 "="
-              <span class="ant-input-group-wrapper.ant-input-group-wrapper-outlined.CSSHASH.value">
-                <span class="ant-input-wrapper.ant-input-group.CSSHASH">
-                  <input class="ant-input.CSSHASH.ant-input-outlined" id="req_params_0" placeholder="参数值" type="text" value="42">
-                  <span class="ant-input-group-addon">
-                    <span aria-label="edit" class="anticon.anticon-edit" role="img" tabindex="-1">
-                      <svg aria-hidden="true" data-icon="edit" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
-                        <path d="SVG_PATH">
+              <div class="ant-space-compact.CSSHASH.value">
+                <input class="ant-input.CSSHASH.ant-input-outlined.ant-input-compact-item.ant-input-compact-first-item" id="req_params_0" placeholder="参数值" type="text" value="42">
+                <span aria-label="edit" class="anticon.anticon-edit" role="img" tabindex="-1">
+                  <svg aria-hidden="true" data-icon="edit" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
+                    <path d="SVG_PATH">
             <button class="ant-btn.CSSHASH.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" style="display:none" type="button">
               <span class="ant-btn-icon">
                 <span aria-label="plus" class="anticon.anticon-plus" role="img">
@@ -993,13 +969,11 @@ const EXPECTED_RESPONSE_SNAPSHOT = `<div>
                   <span class="ant-checkbox-inner">
               <span class="eq-symbol">
                 "="
-              <span class="ant-input-group-wrapper.ant-input-group-wrapper-outlined.CSSHASH.value">
-                <span class="ant-input-wrapper.ant-input-group.CSSHASH">
-                  <input class="ant-input.CSSHASH.ant-input-outlined" id="req_query_0" placeholder="参数值" type="text" value="hello">
-                  <span class="ant-input-group-addon">
-                    <span aria-label="edit" class="anticon.anticon-edit" role="img" tabindex="-1">
-                      <svg aria-hidden="true" data-icon="edit" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
-                        <path d="SVG_PATH">
+              <div class="ant-space-compact.CSSHASH.value">
+                <input class="ant-input.CSSHASH.ant-input-outlined.ant-input-compact-item.ant-input-compact-first-item" id="req_query_0" placeholder="参数值" type="text" value="hello">
+                <span aria-label="edit" class="anticon.anticon-edit" role="img" tabindex="-1">
+                  <svg aria-hidden="true" data-icon="edit" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
+                    <path d="SVG_PATH">
             <div class="key-value-wrap">
               <div>
                 <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.key" disabled="" type="text" value="opt">
@@ -1009,13 +983,11 @@ const EXPECTED_RESPONSE_SNAPSHOT = `<div>
                   <span class="ant-checkbox-inner">
               <span class="eq-symbol">
                 "="
-              <span class="ant-input-group-wrapper.ant-input-group-wrapper-outlined.CSSHASH.value">
-                <span class="ant-input-wrapper.ant-input-group.CSSHASH">
-                  <input class="ant-input.CSSHASH.ant-input-outlined" id="req_query_1" placeholder="参数值" type="text" value="">
-                  <span class="ant-input-group-addon">
-                    <span aria-label="edit" class="anticon.anticon-edit" role="img" tabindex="-1">
-                      <svg aria-hidden="true" data-icon="edit" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
-                        <path d="SVG_PATH">
+              <div class="ant-space-compact.CSSHASH.value">
+                <input class="ant-input.CSSHASH.ant-input-outlined.ant-input-compact-item.ant-input-compact-first-item" id="req_query_1" placeholder="参数值" type="text" value="">
+                <span aria-label="edit" class="anticon.anticon-edit" role="img" tabindex="-1">
+                  <svg aria-hidden="true" data-icon="edit" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
+                    <path d="SVG_PATH">
             <button class="ant-btn.CSSHASH.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" style="display:none" type="button">
               <span class="ant-btn-icon">
                 <span aria-label="plus" class="anticon.anticon-plus" role="img">
@@ -1039,19 +1011,18 @@ const EXPECTED_RESPONSE_SNAPSHOT = `<div>
                 <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.key" disabled="" type="text" value="Content-Type">
               <span class="eq-symbol">
                 "="
-              <span class="ant-input-group-wrapper.ant-input-group-wrapper-outlined.CSSHASH.value">
-                <span class="ant-input-wrapper.ant-input-group.CSSHASH">
-                  <input class="ant-input.CSSHASH.ant-input-outlined" id="req_headers_0" placeholder="参数值" type="text" value="application/json">
-                  <span class="ant-input-group-addon">
-                    <span aria-label="edit" class="anticon.anticon-edit" role="img" tabindex="-1">
-                      <svg aria-hidden="true" data-icon="edit" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
-                        <path d="SVG_PATH">
+              <div class="ant-space-compact.CSSHASH.value">
+                <input class="ant-input.CSSHASH.ant-input-outlined.ant-input-compact-item.ant-input-compact-first-item" id="req_headers_0" placeholder="参数值" type="text" value="application/json">
+                <span aria-label="edit" class="anticon.anticon-edit" role="img" tabindex="-1">
+                  <svg aria-hidden="true" data-icon="edit" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
+                    <path d="SVG_PATH">
             <div class="key-value-wrap">
               <div>
                 <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.key" disabled="" type="text" value="X-Env">
               <span class="eq-symbol">
                 "="
-              <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.value" disabled="" id="req_headers_1" placeholder="参数值" type="text" value="local">
+              <div class="ant-space-compact.CSSHASH.value">
+                <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.ant-input-compact-item.ant-input-compact-first-item.ant-input-compact-last-item" disabled="" id="req_headers_1" placeholder="参数值" type="text" value="local">
             <button class="ant-btn.CSSHASH.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" style="display:none" type="button">
               <span class="ant-btn-icon">
                 <span aria-label="plus" class="anticon.anticon-plus" role="img">
@@ -1137,8 +1108,8 @@ const EXPECTED_TEST_TAB_SNAPSHOT = `<div>
   <div class="interface-test.postman">
     <div>
     <div class="url">
-      <span class="ant-input-group.ant-input-group-compact.CSSHASH" style="display:flex">
-        <div class="ant-select.ant-select-outlined.CSSHASH.ant-select-single.ant-select-show-arrow.ant-select-disabled" style="flex-basis:60px">
+      <div class="ant-space-compact.CSSHASH" style="display:flex">
+        <div class="ant-select.ant-select-outlined.ant-select-compact-item.ant-select-compact-first-item.CSSHASH.ant-select-single.ant-select-show-arrow.ant-select-disabled" style="flex-basis:60px">
           <div class="ant-select-selector">
             <span class="ant-select-selection-wrap">
               <span class="ant-select-selection-search">
@@ -1149,7 +1120,7 @@ const EXPECTED_TEST_TAB_SNAPSHOT = `<div>
             <span aria-label="down" class="anticon.anticon-down.ant-select-suffix" role="img">
               <svg aria-hidden="true" data-icon="down" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                 <path d="SVG_PATH">
-        <div class="ant-select.ant-select-outlined.CSSHASH.ant-select-single.ant-select-show-arrow" style="flex-basis:180px;flex-grow:1">
+        <div class="ant-select.ant-select-outlined.ant-select-compact-item.CSSHASH.ant-select-single.ant-select-show-arrow" style="flex-basis:180px;flex-grow:1">
           <div class="ant-select-selector">
             <span class="ant-select-selection-wrap">
               <span class="ant-select-selection-search">
@@ -1160,7 +1131,7 @@ const EXPECTED_TEST_TAB_SNAPSHOT = `<div>
             <span aria-label="down" class="anticon.anticon-down.ant-select-suffix" role="img">
               <svg aria-hidden="true" data-icon="down" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                 <path d="SVG_PATH">
-        <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined" disabled="" spellcheck="false" style="flex-basis:180px;flex-grow:1" type="text" value="/api/pet/{id}">
+        <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.ant-input-compact-item.ant-input-compact-last-item" disabled="" spellcheck="false" style="flex-basis:180px;flex-grow:1" type="text" value="/api/pet/{id}">
       <button aria-describedby="test-id" class="ant-btn.CSSHASH.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" type="button">
         <span>
           "发 送"
@@ -1183,13 +1154,11 @@ const EXPECTED_TEST_TAB_SNAPSHOT = `<div>
                 <input aria-describedby="test-id" class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.key" disabled="" type="text" value="id">
               <span class="eq-symbol">
                 "="
-              <span class="ant-input-group-wrapper.ant-input-group-wrapper-outlined.CSSHASH.value">
-                <span class="ant-input-wrapper.ant-input-group.CSSHASH">
-                  <input class="ant-input.CSSHASH.ant-input-outlined" id="req_params_0" placeholder="参数值" type="text" value="42">
-                  <span class="ant-input-group-addon">
-                    <span aria-label="edit" class="anticon.anticon-edit" role="img" tabindex="-1">
-                      <svg aria-hidden="true" data-icon="edit" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
-                        <path d="SVG_PATH">
+              <div class="ant-space-compact.CSSHASH.value">
+                <input class="ant-input.CSSHASH.ant-input-outlined.ant-input-compact-item.ant-input-compact-first-item" id="req_params_0" placeholder="参数值" type="text" value="42">
+                <span aria-label="edit" class="anticon.anticon-edit" role="img" tabindex="-1">
+                  <svg aria-hidden="true" data-icon="edit" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
+                    <path d="SVG_PATH">
             <button class="ant-btn.CSSHASH.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" style="display:none" type="button">
               <span class="ant-btn-icon">
                 <span aria-label="plus" class="anticon.anticon-plus" role="img">
@@ -1217,13 +1186,11 @@ const EXPECTED_TEST_TAB_SNAPSHOT = `<div>
                   <span class="ant-checkbox-inner">
               <span class="eq-symbol">
                 "="
-              <span class="ant-input-group-wrapper.ant-input-group-wrapper-outlined.CSSHASH.value">
-                <span class="ant-input-wrapper.ant-input-group.CSSHASH">
-                  <input class="ant-input.CSSHASH.ant-input-outlined" id="req_query_0" placeholder="参数值" type="text" value="hello">
-                  <span class="ant-input-group-addon">
-                    <span aria-label="edit" class="anticon.anticon-edit" role="img" tabindex="-1">
-                      <svg aria-hidden="true" data-icon="edit" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
-                        <path d="SVG_PATH">
+              <div class="ant-space-compact.CSSHASH.value">
+                <input class="ant-input.CSSHASH.ant-input-outlined.ant-input-compact-item.ant-input-compact-first-item" id="req_query_0" placeholder="参数值" type="text" value="hello">
+                <span aria-label="edit" class="anticon.anticon-edit" role="img" tabindex="-1">
+                  <svg aria-hidden="true" data-icon="edit" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
+                    <path d="SVG_PATH">
             <div class="key-value-wrap">
               <div>
                 <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.key" disabled="" type="text" value="opt">
@@ -1233,13 +1200,11 @@ const EXPECTED_TEST_TAB_SNAPSHOT = `<div>
                   <span class="ant-checkbox-inner">
               <span class="eq-symbol">
                 "="
-              <span class="ant-input-group-wrapper.ant-input-group-wrapper-outlined.CSSHASH.value">
-                <span class="ant-input-wrapper.ant-input-group.CSSHASH">
-                  <input class="ant-input.CSSHASH.ant-input-outlined" id="req_query_1" placeholder="参数值" type="text" value="">
-                  <span class="ant-input-group-addon">
-                    <span aria-label="edit" class="anticon.anticon-edit" role="img" tabindex="-1">
-                      <svg aria-hidden="true" data-icon="edit" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
-                        <path d="SVG_PATH">
+              <div class="ant-space-compact.CSSHASH.value">
+                <input class="ant-input.CSSHASH.ant-input-outlined.ant-input-compact-item.ant-input-compact-first-item" id="req_query_1" placeholder="参数值" type="text" value="">
+                <span aria-label="edit" class="anticon.anticon-edit" role="img" tabindex="-1">
+                  <svg aria-hidden="true" data-icon="edit" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
+                    <path d="SVG_PATH">
             <button class="ant-btn.CSSHASH.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" style="display:none" type="button">
               <span class="ant-btn-icon">
                 <span aria-label="plus" class="anticon.anticon-plus" role="img">
@@ -1263,13 +1228,11 @@ const EXPECTED_TEST_TAB_SNAPSHOT = `<div>
                 <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.key" disabled="" type="text" value="Content-Type">
               <span class="eq-symbol">
                 "="
-              <span class="ant-input-group-wrapper.ant-input-group-wrapper-outlined.CSSHASH.value">
-                <span class="ant-input-wrapper.ant-input-group.CSSHASH">
-                  <input class="ant-input.CSSHASH.ant-input-outlined" id="req_headers_0" placeholder="参数值" type="text" value="application/json">
-                  <span class="ant-input-group-addon">
-                    <span aria-label="edit" class="anticon.anticon-edit" role="img" tabindex="-1">
-                      <svg aria-hidden="true" data-icon="edit" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
-                        <path d="SVG_PATH">
+              <div class="ant-space-compact.CSSHASH.value">
+                <input class="ant-input.CSSHASH.ant-input-outlined.ant-input-compact-item.ant-input-compact-first-item" id="req_headers_0" placeholder="参数值" type="text" value="application/json">
+                <span aria-label="edit" class="anticon.anticon-edit" role="img" tabindex="-1">
+                  <svg aria-hidden="true" data-icon="edit" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
+                    <path d="SVG_PATH">
             <button class="ant-btn.CSSHASH.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" style="display:none" type="button">
               <span class="ant-btn-icon">
                 <span aria-label="plus" class="anticon.anticon-plus" role="img">

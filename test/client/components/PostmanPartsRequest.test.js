@@ -270,19 +270,19 @@ test.serial('RequestParamsPanel 按 props 渲染四项并上抛改值、勾选�
   t.false(headerInputs[1].disabled, '普通 header 应可编辑');
   const headerRows = Array.from(container.querySelectorAll('.key-value-wrap'));
   t.is(
-    headerRows[4].querySelectorAll('.ant-input-group-addon .anticon-edit').length,
+    headerRows[4].querySelectorAll('.ant-space-compact .anticon-edit').length,
     1,
     '可编辑 header 行应带高级参数插入图标'
   );
   t.is(
-    headerRows[3].querySelectorAll('.ant-input-group-addon .anticon-edit').length,
+    headerRows[3].querySelectorAll('.ant-space-compact .anticon-edit').length,
     0,
     '只读 header 行不应带插入图标'
   );
 
   // 编辑图标上抛 showModal(value, index, type)
   await act(async () => {
-    fireEvent.click(headerRows[4].querySelector('.ant-input-group-addon .anticon-edit'));
+    fireEvent.click(headerRows[4].querySelector('.ant-space-compact .anticon-edit'));
     await sleep(10);
   });
   t.deepEqual(
@@ -388,7 +388,7 @@ test.serial('BodyPanel 按 req_body_type 渲染 raw/form/file 三形态并上抛
   );
   await act(async () => {
     fireEvent.click(
-      Array.from(formUtils.container.querySelectorAll('.ant-input-group-addon .anticon-edit'))[0]
+      Array.from(formUtils.container.querySelectorAll('.ant-space-compact .anticon-edit'))[0]
     );
     await sleep(10);
   });

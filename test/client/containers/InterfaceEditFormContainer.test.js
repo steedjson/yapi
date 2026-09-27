@@ -235,8 +235,8 @@ const EXPECTED_EDITFORM_SNAPSHOT = `<div>
               <div class="ant-col.ant-col-18.ant-form-item-control.CSSHASH">
                 <div class="ant-form-item-control-input">
                   <div class="ant-form-item-control-input-content">
-                    <span class="ant-input-group.ant-input-group-compact.CSSHASH">
-                      <div class="ant-select.ant-select-outlined.CSSHASH.ant-select-single.ant-select-show-arrow">
+                    <div class="ant-space-compact.CSSHASH">
+                      <div class="ant-select.ant-select-outlined.ant-select-in-form-item.ant-select-compact-item.ant-select-compact-first-item.CSSHASH.ant-select-single.ant-select-show-arrow">
                         <div class="ant-select-selector">
                           <span class="ant-select-selection-wrap">
                             <span class="ant-select-selection-search">
@@ -247,8 +247,8 @@ const EXPECTED_EDITFORM_SNAPSHOT = `<div>
                           <span aria-label="down" class="anticon.anticon-down.ant-select-suffix" role="img">
                             <svg aria-hidden="true" data-icon="down" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                               <path d="SVG_PATH">
-                      <input aria-describedby="test-id" class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined" disabled="" readonly="" type="text" value="/base">
-                      <input aria-required="true" class="ant-input.CSSHASH.ant-input-outlined" id="path" placeholder="/path" type="text" value="/api/a/{id}">
+                      <input aria-describedby="test-id" class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.ant-input-compact-item" disabled="" readonly="" type="text" value="/base">
+                      <input aria-required="true" class="ant-input.CSSHASH.ant-input-outlined.ant-input-compact-item.ant-input-compact-last-item" id="path" placeholder="/path" type="text" value="/api/a/{id}">
                     <div class="ant-row.interface-edit-item.CSSHASH">
                       <div class="ant-col.ant-col-24.CSSHASH">
                         <div class="ant-row.interface-edit-item-content.CSSHASH">
