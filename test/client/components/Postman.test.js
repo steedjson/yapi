@@ -365,7 +365,7 @@ test.serial('Postman ref.state 暴露保存用例所需的实时请求参数', a
   // 环境下拉切换后 ref.state 应读到最新 case_env，并合并新环境的 header
   await act(async () => {
     const domainSelect = utils.container.querySelector('.ant-select-single:not(.ant-select-disabled)');
-    fireEvent.mouseDown(domainSelect.querySelector('.ant-select-selector'));
+    fireEvent.mouseDown(domainSelect.querySelector('.ant-select-input'));
     await sleep(50);
   });
   const localOption = Array.from(document.querySelectorAll('.ant-select-item-option')).find(

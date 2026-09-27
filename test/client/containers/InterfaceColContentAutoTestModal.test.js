@@ -89,7 +89,7 @@ test.serial('受控渲染：标题/输出格式/开关/URL 按 props 回显，fo
   );
   t.truthy(modeLabel, '应渲染输出格式行');
   t.is(
-    modeLabel.closest('.ant-row').querySelector('.ant-select-selection-item').textContent,
+    modeLabel.closest('.ant-row').querySelector('.ant-select-content').textContent,
     'json',
     '输出格式受控回显'
   );
@@ -153,7 +153,7 @@ test.serial('回调上抛：输出格式下拉选择触发 onModeChange', async 
   const modeLabel = Array.from(
     document.querySelectorAll('.autoTestsModal .label')
   ).find(el => el.textContent.trim() === '输出格式：');
-  const modeSelector = modeLabel.closest('.ant-row').querySelector('.ant-select-selector');
+  const modeSelector = modeLabel.closest('.ant-row').querySelector('.ant-select-input');
 
   await act(async () => {
     fireEvent.mouseDown(modeSelector);

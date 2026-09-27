@@ -303,53 +303,50 @@ function buttonByText(container, text) {
 
 const EXPECTED_INITIAL_SNAPSHOT = `<div>
   <div class="interface-col">
-    <div class="ant-row.ant-row-center.ant-row-top.CSSHASH" type="flex">
-      <div class="ant-col.ant-col-5.CSSHASH">
+    <div class="ant-row.ant-row-center.ant-row-top.CSSHASH.css-var-root" type="flex">
+      <div class="ant-col.ant-col-5.CSSHASH.css-var-root">
         <h2 class="interface-title" style="display:inline-block">
           "测试集合"
           <a href="https://hellosean1025.github.io/yapi/documents/case.html" rel="noopener noreferrer" target="_blank">
-            <span aria-describedby="test-id" aria-label="question-circle" class="anticon.anticon-question-circle" role="img">
+            <span aria-label="question-circle" class="anticon.anticon-question-circle" role="img">
               <svg aria-hidden="true" data-icon="question-circle" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                 <path d="SVG_PATH">
                 <path d="SVG_PATH">
-      <div class="ant-col.ant-col-10.CSSHASH">
-        <div class="ant-collapse.ant-collapse-icon-position-start.CSSHASH">
+      <div class="ant-col.ant-col-10.CSSHASH.css-var-root">
+        <div class="ant-collapse.ant-collapse-icon-placement-start.CSSHASH.css-var-root">
           <div class="ant-collapse-item.ant-collapse-item-active">
             <div aria-disabled="false" aria-expanded="true" class="ant-collapse-header" role="button" tabindex="0">
               <div class="ant-collapse-expand-icon">
-                <span aria-label="expanded" class="anticon.anticon-right.ant-collapse-arrow" role="img">
+                <span aria-hidden="true" aria-label="right" class="anticon.anticon-right.ant-collapse-arrow" role="img">
                   <svg aria-hidden="true" data-icon="right" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                     <path d="SVG_PATH">
-              <span class="ant-collapse-header-text">
+              <span class="ant-collapse-title">
                 <span>
                   "选择测试用例环境"
-                  <span aria-describedby="test-id">
+                  <span>
                     <span aria-label="question-circle" class="anticon.anticon-question-circle" role="img">
                       <svg aria-hidden="true" data-icon="question-circle" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                         <path d="SVG_PATH">
                         <path d="SVG_PATH">
-            <div class="ant-collapse-content.ant-collapse-content-active">
-              <div class="ant-collapse-content-box">
+            <div class="ant-collapse-panel.ant-collapse-panel-active">
+              <div class="ant-collapse-body">
                 <div class="case-env">
                   <div>
-                    <div class="ant-row.ant-row-space-around.ant-row-middle.env-item.CSSHASH" type="flex">
-                      <div class="ant-col.ant-col-6.label.CSSHASH">
-                        <span aria-describedby="test-id" class="label-name">
+                    <div class="ant-row.ant-row-space-around.ant-row-middle.env-item.CSSHASH.css-var-root" type="flex">
+                      <div class="ant-col.ant-col-6.label.CSSHASH.css-var-root">
+                        <span class="label-name">
                           "演示项目"
-                      <div class="ant-col.ant-col-18.CSSHASH">
-                        <div class="ant-select.ant-select-outlined.CSSHASH.ant-select-single.ant-select-show-arrow">
-                          <div class="ant-select-selector">
-                            <span class="ant-select-selection-wrap">
-                              <span class="ant-select-selection-search">
-                                <input aria-autocomplete="list" aria-controls="rc_select_TEST_OR_SSR_list" aria-expanded="false" aria-haspopup="listbox" aria-owns="rc_select_TEST_OR_SSR_list" autocomplete="off" class="ant-select-selection-search-input" id="rc_select_TEST_OR_SSR" readonly="" role="combobox" type="search" unselectable="on" value="">
-                              <span class="ant-select-selection-item" title="默认环境">
-                                "默认环境"
-                          <span aria-hidden="true" class="ant-select-arrow" unselectable="on">
-                            <span aria-label="down" class="anticon.anticon-down.ant-select-suffix" role="img">
+                      <div class="ant-col.ant-col-18.CSSHASH.css-var-root">
+                        <div class="ant-select.ant-select-outlined.css-var-root.ant-select-css-var.CSSHASH.ant-select-single.ant-select-show-arrow">
+                          <div class="ant-select-content.ant-select-content-has-value" title="默认环境">
+                            "默认环境"
+                            <input aria-autocomplete="list" aria-expanded="false" aria-haspopup="listbox" autocomplete="new-password" class="ant-select-input" id="test-id" readonly="" role="combobox" type="text" value="">
+                          <div class="ant-select-suffix">
+                            <span aria-label="down" class="anticon.anticon-down" role="img">
                               <svg aria-hidden="true" data-icon="down" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                                 <path d="SVG_PATH">
-      <div class="ant-col.ant-col-9.CSSHASH">
-        <button aria-describedby="test-id" class="ant-btn.CSSHASH.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" disabled="" type="button">
+      <div class="ant-col.ant-col-9.CSSHASH.css-var-root">
+        <button class="ant-btn.CSSHASH.css-var-root.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" disabled="" type="button">
           <span>
             "开始测试"
     <div class="component-label-wrapper">
@@ -358,13 +355,13 @@ const EXPECTED_INITIAL_SNAPSHOT = `<div>
           <div>
             <p>
               "集合描述"
-              <span aria-describedby="test-id" aria-label="edit" class="anticon.anticon-edit.interface-delete-icon" role="img" tabindex="-1">
+              <span aria-label="edit" class="anticon.anticon-edit.interface-delete-icon" role="img" tabindex="-1">
                 <svg aria-hidden="true" data-icon="edit" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                   <path d="SVG_PATH">
-    <div class="ant-table-wrapper.interface-col-table.CSSHASH">
-      <div class="ant-spin-nested-loading.CSSHASH">
+    <div class="css-var-root.ant-table-css-var.ant-table-wrapper.interface-col-table.CSSHASH">
+      <div aria-busy="false" aria-live="polite" class="ant-spin.CSSHASH.css-var-root">
         <div class="ant-spin-container">
-          <div class="ant-table.CSSHASH">
+          <div class="ant-table.css-var-root.ant-table-css-var.CSSHASH">
             <div class="ant-table-container">
               <div class="ant-table-content">
                 <table>
@@ -380,7 +377,7 @@ const EXPECTED_INITIAL_SNAPSHOT = `<div>
                       <th class="ant-table-cell" scope="col">
                         "用例名称"
                       <th class="ant-table-cell" scope="col">
-                        <span aria-describedby="test-id">
+                        <span>
                           "Key"
                       <th class="ant-table-cell" scope="col">
                         "状态"
@@ -399,14 +396,14 @@ const EXPECTED_INITIAL_SNAPSHOT = `<div>
                         "case-1"
                       <td class="ant-table-cell">
                         <div>
-                          <span aria-describedby="test-id" aria-label="check-circle" class="anticon.anticon-check-circle" role="img">
+                          <span aria-label="check-circle" class="anticon.anticon-check-circle" role="img">
                             <svg aria-hidden="true" data-icon="check-circle" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                               <path d="SVG_PATH">
                       <td class="ant-table-cell">
-                        <a aria-describedby="test-id" href="/project/proj-1/interface/api/if-case-1">
+                        <a href="/project/proj-1/interface/api/if-case-1">
                           "/api/base/very/long/..."
                       <td class="ant-table-cell">
-                        <span aria-describedby="test-id" aria-label="code" class="anticon.anticon-code" role="img" tabindex="-1">
+                        <span aria-label="code" class="anticon.anticon-code" role="img" tabindex="-1">
                           <svg aria-hidden="true" data-icon="code" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                             <path d="SVG_PATH">
                       <td class="ant-table-cell">
@@ -419,19 +416,19 @@ const EXPECTED_INITIAL_SNAPSHOT = `<div>
                         "case-2"
                       <td class="ant-table-cell">
                         <div>
-                          <span aria-describedby="test-id" aria-label="check-circle" class="anticon.anticon-check-circle" role="img">
+                          <span aria-label="check-circle" class="anticon.anticon-check-circle" role="img">
                             <svg aria-hidden="true" data-icon="check-circle" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                               <path d="SVG_PATH">
                       <td class="ant-table-cell">
-                        <a aria-describedby="test-id" href="/project/proj-1/interface/api/if-case-2">
+                        <a href="/project/proj-1/interface/api/if-case-2">
                           "/api/base/two"
                       <td class="ant-table-cell">
-                        <span aria-describedby="test-id" aria-label="code" class="anticon.anticon-code" role="img" tabindex="-1">
+                        <span aria-label="code" class="anticon.anticon-code" role="img" tabindex="-1">
                           <svg aria-hidden="true" data-icon="code" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                             <path d="SVG_PATH">
                       <td class="ant-table-cell">
                         <div class="interface-col-table-action">
-                          <button class="ant-btn.CSSHASH.ant-btn-default.ant-btn-color-default.ant-btn-variant-outlined" type="button">
+                          <button class="ant-btn.CSSHASH.css-var-root.ant-btn-default.ant-btn-color-default.ant-btn-variant-outlined" type="button">
                             <span>
                               "测试报告"
                     <tr aria-describedby="DndDescribedBy-N" aria-disabled="false" aria-roledescription="sortable" class="ant-table-row.ant-table-row-level-0" data-row-key="case-3" role="button" tabindex="0">
@@ -442,19 +439,19 @@ const EXPECTED_INITIAL_SNAPSHOT = `<div>
                         "case-3"
                       <td class="ant-table-cell">
                         <div>
-                          <span aria-describedby="test-id" aria-label="info-circle" class="anticon.anticon-info-circle" role="img">
+                          <span aria-label="info-circle" class="anticon.anticon-info-circle" role="img">
                             <svg aria-hidden="true" data-icon="info-circle" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                               <path d="SVG_PATH">
                       <td class="ant-table-cell">
-                        <a aria-describedby="test-id" href="/project/proj-1/interface/api/if-case-3">
+                        <a href="/project/proj-1/interface/api/if-case-3">
                           "/api/base/three"
                       <td class="ant-table-cell">
-                        <span aria-describedby="test-id" aria-label="code" class="anticon.anticon-code" role="img" tabindex="-1">
+                        <span aria-label="code" class="anticon.anticon-code" role="img" tabindex="-1">
                           <svg aria-hidden="true" data-icon="code" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                             <path d="SVG_PATH">
                       <td class="ant-table-cell">
                         <div class="interface-col-table-action">
-                          <button class="ant-btn.CSSHASH.ant-btn-default.ant-btn-color-default.ant-btn-variant-outlined" type="button">
+                          <button class="ant-btn.CSSHASH.css-var-root.ant-btn-default.ant-btn-color-default.ant-btn-variant-outlined" type="button">
                             <span>
                               "测试报告"
     <div id="DndDescribedBy-N" style="display:none">
@@ -518,7 +515,9 @@ test.serial('快照门禁灵敏度：CaseTable 外包一层 div 即被检出（M
     '给 CaseTable 外包一层 div 必须改变快照（否则该门禁形同虚设）'
   );
   t.true(
-    snapshot(clone).indexOf('\n    <div>\n      <div class="ant-table-wrapper') !== -1,
+    // antd6 起 table wrapper 类前缀随 css-var 模式漂移（css-var-root.ant-table-css-var.
+    // ant-table-wrapper），这里只钉「多出的一层无类 div 内嵌带类 div」结构特征本身
+    snapshot(clone).indexOf('\n    <div>\n      <div class="') !== -1,
     '突变后应可观察到多出的一层 div'
   );
 });

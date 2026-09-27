@@ -224,15 +224,16 @@ async function waitFor(predicate, timeoutMs) {
 
 // ---- 规范化 DOM 快照序列化器已下沉为共享模块 test/helpers/domSnapshot.js ----
 
+
 // ---- 基线快照（5 场景）----
 // 场景①：inter 型初始 + 无 cross-request 插件（等满 500ms 探测周期后 hasPlugin=false，
 // 渲染 CheckCrossInstall 告警、发送按钮转禁用）
 const EXPECTED_INTER_INITIAL_SNAPSHOT = `<div>
   <div class="interface-test.postman">
     <div class="has-plugin">
-      <div class="ant-alert.ant-alert-warning.ant-alert-no-icon.CSSHASH" data-show="true" role="alert">
-        <div class="ant-alert-content">
-          <div class="ant-alert-message">
+      <div class="ant-alert.ant-alert-warning.ant-alert-outlined.ant-alert-no-icon.css-var-root.CSSHASH" data-show="true" role="alert">
+        <div class="ant-alert-section">
+          <div class="ant-alert-title">
             <div>
               "重要：当前的接口测试服务，需安装免费测试增强插件,仅支持 chrome 浏览器，选择下面任意一种安装方式："
               <div>
@@ -240,57 +241,51 @@ const EXPECTED_INTER_INITIAL_SNAPSHOT = `<div>
                   "[谷歌请求插件详细安装教程]"
     <div class="url">
       <div class="ant-space-compact.CSSHASH" style="display:flex">
-        <div class="ant-select.ant-select-outlined.ant-select-compact-item.ant-select-compact-first-item.CSSHASH.ant-select-single.ant-select-show-arrow.ant-select-disabled" style="flex-basis:60px">
-          <div class="ant-select-selector">
-            <span class="ant-select-selection-wrap">
-              <span class="ant-select-selection-search">
-                <input aria-autocomplete="list" aria-controls="rc_select_TEST_OR_SSR_list" aria-expanded="false" aria-haspopup="listbox" aria-owns="rc_select_TEST_OR_SSR_list" autocomplete="off" class="ant-select-selection-search-input" disabled="" id="rc_select_TEST_OR_SSR" readonly="" role="combobox" type="search" unselectable="on" value="">
-              <span class="ant-select-selection-item" title="POST">
-                "POST"
-          <span aria-hidden="true" class="ant-select-arrow" unselectable="on">
-            <span aria-label="down" class="anticon.anticon-down.ant-select-suffix" role="img">
+        <div class="ant-select.ant-select-outlined.ant-select-compact-item.ant-select-compact-first-item.css-var-root.ant-select-css-var.CSSHASH.ant-select-single.ant-select-show-arrow.ant-select-disabled" style="flex-basis:60px">
+          <div class="ant-select-content.ant-select-content-has-value" title="POST">
+            "POST"
+            <input aria-autocomplete="list" aria-expanded="false" aria-haspopup="listbox" autocomplete="new-password" class="ant-select-input" disabled="" id="test-id" readonly="" role="combobox" type="text" value="">
+          <div class="ant-select-suffix">
+            <span aria-label="down" class="anticon.anticon-down" role="img">
               <svg aria-hidden="true" data-icon="down" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                 <path d="SVG_PATH">
-        <div class="ant-select.ant-select-outlined.ant-select-compact-item.CSSHASH.ant-select-single.ant-select-show-arrow" style="flex-basis:180px;flex-grow:1">
-          <div class="ant-select-selector">
-            <span class="ant-select-selection-wrap">
-              <span class="ant-select-selection-search">
-                <input aria-autocomplete="list" aria-controls="rc_select_TEST_OR_SSR_list" aria-expanded="false" aria-haspopup="listbox" aria-owns="rc_select_TEST_OR_SSR_list" autocomplete="off" class="ant-select-selection-search-input" id="rc_select_TEST_OR_SSR" readonly="" role="combobox" type="search" unselectable="on" value="">
-              <span class="ant-select-selection-item" title="local：http://localhost:3000">
-                "local：http://localhost:3000"
-          <span aria-hidden="true" class="ant-select-arrow" unselectable="on">
-            <span aria-label="down" class="anticon.anticon-down.ant-select-suffix" role="img">
+        <div class="ant-select.ant-select-outlined.ant-select-compact-item.css-var-root.ant-select-css-var.CSSHASH.ant-select-single.ant-select-show-arrow" style="flex-basis:180px;flex-grow:1">
+          <div class="ant-select-content.ant-select-content-has-value" title="local：http://localhost:3000">
+            "local：http://localhost:3000"
+            <input aria-autocomplete="list" aria-expanded="false" aria-haspopup="listbox" autocomplete="new-password" class="ant-select-input" id="test-id" readonly="" role="combobox" type="text" value="">
+          <div class="ant-select-suffix">
+            <span aria-label="down" class="anticon.anticon-down" role="img">
               <svg aria-hidden="true" data-icon="down" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                 <path d="SVG_PATH">
-        <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.ant-input-compact-item.ant-input-compact-last-item" disabled="" spellcheck="false" style="flex-basis:180px;flex-grow:1" type="text" value="/api/pet/{id}">
-      <button aria-describedby="test-id" class="ant-btn.CSSHASH.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" disabled="" type="button">
+        <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.css-var-root.ant-input-css-var.ant-input-compact-item.ant-input-compact-last-item" disabled="" spellcheck="false" style="flex-basis:180px;flex-grow:1" type="text" value="/api/pet/{id}">
+      <button class="ant-btn.CSSHASH.css-var-root.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" disabled="" type="button">
         <span>
           "发 送"
-      <button aria-describedby="test-id" class="ant-btn.CSSHASH.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" type="button">
+      <button class="ant-btn.CSSHASH.css-var-root.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" type="button">
         <span>
           "保 存"
-    <div class="ant-collapse.ant-collapse-icon-position-start.CSSHASH">
+    <div class="ant-collapse.ant-collapse-icon-placement-start.CSSHASH.css-var-root">
       <div class="ant-collapse-item.ant-collapse-item-active">
         <div aria-disabled="false" aria-expanded="true" class="ant-collapse-header" role="button" tabindex="0">
           <div class="ant-collapse-expand-icon">
-            <span aria-label="expanded" class="anticon.anticon-right.ant-collapse-arrow" role="img">
+            <span aria-hidden="true" aria-label="right" class="anticon.anticon-right.ant-collapse-arrow" role="img">
               <svg aria-hidden="true" data-icon="right" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                 <path d="SVG_PATH">
-          <span class="ant-collapse-header-text">
+          <span class="ant-collapse-title">
             "PATH PARAMETERS"
-        <div class="ant-collapse-content.ant-collapse-content-active">
-          <div class="ant-collapse-content-box">
+        <div class="ant-collapse-panel.ant-collapse-panel-active">
+          <div class="ant-collapse-body">
             <div class="key-value-wrap">
               <div>
-                <input aria-describedby="test-id" class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.key" disabled="" type="text" value="id">
+                <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.key.css-var-root.ant-input-css-var" disabled="" type="text" value="id">
               <span class="eq-symbol">
                 "="
               <div class="ant-space-compact.CSSHASH.value">
-                <input class="ant-input.CSSHASH.ant-input-outlined.ant-input-compact-item.ant-input-compact-first-item" id="req_params_0" placeholder="参数值" type="text" value="42">
+                <input class="ant-input.CSSHASH.ant-input-outlined.css-var-root.ant-input-css-var.ant-input-compact-item.ant-input-compact-first-item" id="req_params_0" placeholder="参数值" type="text" value="42">
                 <span aria-label="edit" class="anticon.anticon-edit" role="img" tabindex="-1">
                   <svg aria-hidden="true" data-icon="edit" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                     <path d="SVG_PATH">
-            <button class="ant-btn.CSSHASH.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" style="display:none" type="button">
+            <button class="ant-btn.CSSHASH.css-var-root.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" style="display:none" type="button">
               <span class="ant-btn-icon">
                 <span aria-label="plus" class="anticon.anticon-plus" role="img">
                   <svg aria-hidden="true" data-icon="plus" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
@@ -301,42 +296,40 @@ const EXPECTED_INTER_INITIAL_SNAPSHOT = `<div>
       <div class="ant-collapse-item.ant-collapse-item-active">
         <div aria-disabled="false" aria-expanded="true" class="ant-collapse-header" role="button" tabindex="0">
           <div class="ant-collapse-expand-icon">
-            <span aria-label="expanded" class="anticon.anticon-right.ant-collapse-arrow" role="img">
+            <span aria-hidden="true" aria-label="right" class="anticon.anticon-right.ant-collapse-arrow" role="img">
               <svg aria-hidden="true" data-icon="right" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                 <path d="SVG_PATH">
-          <span class="ant-collapse-header-text">
+          <span class="ant-collapse-title">
             "QUERY PARAMETERS"
-        <div class="ant-collapse-content.ant-collapse-content-active">
-          <div class="ant-collapse-content-box">
+        <div class="ant-collapse-panel.ant-collapse-panel-active">
+          <div class="ant-collapse-body">
             <div class="key-value-wrap">
               <div>
-                <input aria-describedby="test-id" class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.key" disabled="" type="text" value="q">
-              <label class="ant-checkbox-wrapper.ant-checkbox-wrapper-checked.ant-checkbox-wrapper-disabled.params-enable.CSSHASH">
+                <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.key.css-var-root.ant-input-css-var" disabled="" type="text" value="q">
+              <label class="ant-checkbox-wrapper.ant-checkbox-wrapper-checked.ant-checkbox-wrapper-disabled.params-enable.css-var-root.ant-checkbox-css-var.CSSHASH">
                 <span class="ant-checkbox.ant-wave-target.CSSHASH.ant-checkbox-checked.ant-checkbox-disabled">
                   <input checked="true" class="ant-checkbox-input" disabled="" type="checkbox">
-                  <span class="ant-checkbox-inner">
               <span class="eq-symbol">
                 "="
               <div class="ant-space-compact.CSSHASH.value">
-                <input class="ant-input.CSSHASH.ant-input-outlined.ant-input-compact-item.ant-input-compact-first-item" id="req_query_0" placeholder="参数值" type="text" value="hello">
+                <input class="ant-input.CSSHASH.ant-input-outlined.css-var-root.ant-input-css-var.ant-input-compact-item.ant-input-compact-first-item" id="req_query_0" placeholder="参数值" type="text" value="hello">
                 <span aria-label="edit" class="anticon.anticon-edit" role="img" tabindex="-1">
                   <svg aria-hidden="true" data-icon="edit" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                     <path d="SVG_PATH">
             <div class="key-value-wrap">
               <div>
-                <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.key" disabled="" type="text" value="opt">
-              <label class="ant-checkbox-wrapper.params-enable.CSSHASH">
+                <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.key.css-var-root.ant-input-css-var" disabled="" type="text" value="opt">
+              <label class="ant-checkbox-wrapper.params-enable.css-var-root.ant-checkbox-css-var.CSSHASH">
                 <span class="ant-checkbox.ant-wave-target.CSSHASH">
                   <input checked="false" class="ant-checkbox-input" type="checkbox">
-                  <span class="ant-checkbox-inner">
               <span class="eq-symbol">
                 "="
               <div class="ant-space-compact.CSSHASH.value">
-                <input class="ant-input.CSSHASH.ant-input-outlined.ant-input-compact-item.ant-input-compact-first-item" id="req_query_1" placeholder="参数值" type="text" value="">
+                <input class="ant-input.CSSHASH.ant-input-outlined.css-var-root.ant-input-css-var.ant-input-compact-item.ant-input-compact-first-item" id="req_query_1" placeholder="参数值" type="text" value="">
                 <span aria-label="edit" class="anticon.anticon-edit" role="img" tabindex="-1">
                   <svg aria-hidden="true" data-icon="edit" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                     <path d="SVG_PATH">
-            <button class="ant-btn.CSSHASH.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" style="display:none" type="button">
+            <button class="ant-btn.CSSHASH.css-var-root.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" style="display:none" type="button">
               <span class="ant-btn-icon">
                 <span aria-label="plus" class="anticon.anticon-plus" role="img">
                   <svg aria-hidden="true" data-icon="plus" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
@@ -347,31 +340,31 @@ const EXPECTED_INTER_INITIAL_SNAPSHOT = `<div>
       <div class="ant-collapse-item.ant-collapse-item-active">
         <div aria-disabled="false" aria-expanded="true" class="ant-collapse-header" role="button" tabindex="0">
           <div class="ant-collapse-expand-icon">
-            <span aria-label="expanded" class="anticon.anticon-right.ant-collapse-arrow" role="img">
+            <span aria-hidden="true" aria-label="right" class="anticon.anticon-right.ant-collapse-arrow" role="img">
               <svg aria-hidden="true" data-icon="right" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                 <path d="SVG_PATH">
-          <span class="ant-collapse-header-text">
+          <span class="ant-collapse-title">
             "HEADERS"
-        <div class="ant-collapse-content.ant-collapse-content-active">
-          <div class="ant-collapse-content-box">
+        <div class="ant-collapse-panel.ant-collapse-panel-active">
+          <div class="ant-collapse-body">
             <div class="key-value-wrap">
               <div>
-                <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.key" disabled="" type="text" value="Content-Type">
+                <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.key.css-var-root.ant-input-css-var" disabled="" type="text" value="Content-Type">
               <span class="eq-symbol">
                 "="
               <div class="ant-space-compact.CSSHASH.value">
-                <input class="ant-input.CSSHASH.ant-input-outlined.ant-input-compact-item.ant-input-compact-first-item" id="req_headers_0" placeholder="参数值" type="text" value="application/json">
+                <input class="ant-input.CSSHASH.ant-input-outlined.css-var-root.ant-input-css-var.ant-input-compact-item.ant-input-compact-first-item" id="req_headers_0" placeholder="参数值" type="text" value="application/json">
                 <span aria-label="edit" class="anticon.anticon-edit" role="img" tabindex="-1">
                   <svg aria-hidden="true" data-icon="edit" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                     <path d="SVG_PATH">
             <div class="key-value-wrap">
               <div>
-                <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.key" disabled="" type="text" value="X-Env">
+                <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.key.css-var-root.ant-input-css-var" disabled="" type="text" value="X-Env">
               <span class="eq-symbol">
                 "="
               <div class="ant-space-compact.CSSHASH.value">
-                <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.ant-input-compact-item.ant-input-compact-first-item.ant-input-compact-last-item" disabled="" id="req_headers_1" placeholder="参数值" type="text" value="local">
-            <button class="ant-btn.CSSHASH.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" style="display:none" type="button">
+                <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.css-var-root.ant-input-css-var.ant-input-compact-item.ant-input-compact-first-item.ant-input-compact-last-item" disabled="" id="req_headers_1" placeholder="参数值" type="text" value="local">
+            <button class="ant-btn.CSSHASH.css-var-root.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" style="display:none" type="button">
               <span class="ant-btn-icon">
                 <span aria-label="plus" class="anticon.anticon-plus" role="img">
                   <svg aria-hidden="true" data-icon="plus" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
@@ -382,28 +375,28 @@ const EXPECTED_INTER_INITIAL_SNAPSHOT = `<div>
       <div class="ant-collapse-item.ant-collapse-item-active.POST">
         <div aria-disabled="false" aria-expanded="true" class="ant-collapse-header" role="button" tabindex="0">
           <div class="ant-collapse-expand-icon">
-            <span aria-label="expanded" class="anticon.anticon-right.ant-collapse-arrow" role="img">
+            <span aria-hidden="true" aria-label="right" class="anticon.anticon-right.ant-collapse-arrow" role="img">
               <svg aria-hidden="true" data-icon="right" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                 <path d="SVG_PATH">
-          <span class="ant-collapse-header-text">
+          <span class="ant-collapse-title">
             <div style="display:flex">
-              <span aria-describedby="test-id">
+              <span>
                 "BODY(F9)"
-        <div class="ant-collapse-content.ant-collapse-content-active">
-          <div class="ant-collapse-content-box">
+        <div class="ant-collapse-panel.ant-collapse-panel-active">
+          <div class="ant-collapse-body">
             <div style="display:block">
               <div class="adv-button">
-                <button class="ant-btn.CSSHASH.ant-btn-default.ant-btn-color-default.ant-btn-variant-outlined" type="button">
+                <button class="ant-btn.CSSHASH.css-var-root.ant-btn-default.ant-btn-color-default.ant-btn-variant-outlined" type="button">
                   <span>
                     "高级参数设置"
-                <span aria-describedby="test-id">
+                <span>
                   <span aria-label="question-circle" class="anticon.anticon-question-circle" role="img">
                     <svg aria-hidden="true" data-icon="question-circle" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                       <path d="SVG_PATH">
                       <path d="SVG_PATH">
               <div class="pretty-editor" data-data="{\\"name\\":\\"zhang\\"}" data-mode="null" data-readonly="false">
                 "STUB_ACE"
-    <div class="ant-tabs.ant-tabs-top.ant-tabs-large.response-tab.CSSHASH">
+    <div class="ant-tabs.ant-tabs-top.ant-tabs-large.response-tab.CSSHASH.css-var-root.ant-tabs-css-var">
       <div aria-orientation="horizontal" class="ant-tabs-nav" role="tablist">
         <div class="ant-tabs-nav-wrap">
           <div class="ant-tabs-nav-list">
@@ -416,10 +409,10 @@ const EXPECTED_INTER_INITIAL_SNAPSHOT = `<div>
             <span aria-label="ellipsis" class="anticon.anticon-ellipsis" role="img">
               <svg aria-hidden="true" data-icon="ellipsis" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                 <path d="SVG_PATH">
-      <div class="ant-tabs-content-holder">
-        <div class="ant-tabs-content.ant-tabs-content-top">
-          <div aria-hidden="false" aria-labelledby="rc-tabs-test-tab-res" class="ant-tabs-tabpane.ant-tabs-tabpane-active" id="rc-tabs-test-panel-res" role="tabpanel" tabindex="0">
-            <div class="ant-spin-nested-loading.CSSHASH">
+      <div class="ant-tabs-body-holder">
+        <div class="ant-tabs-body.ant-tabs-body-top">
+          <div aria-hidden="false" aria-labelledby="rc-tabs-test-tab-res" class="ant-tabs-content.ant-tabs-content-active" id="rc-tabs-test-panel-res" role="tabpanel" tabindex="0">
+            <div aria-busy="false" aria-live="polite" class="ant-spin.CSSHASH.css-var-root">
               <div class="ant-spin-container">
                 <h2 class="res-code.fail" style="display:none">
                   "null null"
@@ -441,10 +434,9 @@ const EXPECTED_INTER_INITIAL_SNAPSHOT = `<div>
                     <div class="container-title">
                       <h4>
                         "Body"
-                      <label class="ant-checkbox-wrapper.ant-checkbox-wrapper-checked.CSSHASH">
+                      <label class="ant-checkbox-wrapper.ant-checkbox-wrapper-checked.css-var-root.ant-checkbox-css-var.CSSHASH">
                         <span class="ant-checkbox.ant-wave-target.CSSHASH.ant-checkbox-checked">
                           <input checked="true" class="ant-checkbox-input" type="checkbox">
-                          <span class="ant-checkbox-inner">
                         <span class="ant-checkbox-label">
                           <span>
                             "自动预览HTML"
@@ -457,57 +449,51 @@ const EXPECTED_CASE_INITIAL_SNAPSHOT = `<div>
     <div>
     <div class="url">
       <div class="ant-space-compact.CSSHASH" style="display:flex">
-        <div class="ant-select.ant-select-outlined.ant-select-compact-item.ant-select-compact-first-item.CSSHASH.ant-select-single.ant-select-show-arrow.ant-select-disabled" style="flex-basis:60px">
-          <div class="ant-select-selector">
-            <span class="ant-select-selection-wrap">
-              <span class="ant-select-selection-search">
-                <input aria-autocomplete="list" aria-controls="rc_select_TEST_OR_SSR_list" aria-expanded="false" aria-haspopup="listbox" aria-owns="rc_select_TEST_OR_SSR_list" autocomplete="off" class="ant-select-selection-search-input" disabled="" id="rc_select_TEST_OR_SSR" readonly="" role="combobox" type="search" unselectable="on" value="">
-              <span class="ant-select-selection-item" title="POST">
-                "POST"
-          <span aria-hidden="true" class="ant-select-arrow" unselectable="on">
-            <span aria-label="down" class="anticon.anticon-down.ant-select-suffix" role="img">
+        <div class="ant-select.ant-select-outlined.ant-select-compact-item.ant-select-compact-first-item.css-var-root.ant-select-css-var.CSSHASH.ant-select-single.ant-select-show-arrow.ant-select-disabled" style="flex-basis:60px">
+          <div class="ant-select-content.ant-select-content-has-value" title="POST">
+            "POST"
+            <input aria-autocomplete="list" aria-expanded="false" aria-haspopup="listbox" autocomplete="new-password" class="ant-select-input" disabled="" id="test-id" readonly="" role="combobox" type="text" value="">
+          <div class="ant-select-suffix">
+            <span aria-label="down" class="anticon.anticon-down" role="img">
               <svg aria-hidden="true" data-icon="down" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                 <path d="SVG_PATH">
-        <div class="ant-select.ant-select-outlined.ant-select-compact-item.CSSHASH.ant-select-single.ant-select-show-arrow" style="flex-basis:180px;flex-grow:1">
-          <div class="ant-select-selector">
-            <span class="ant-select-selection-wrap">
-              <span class="ant-select-selection-search">
-                <input aria-autocomplete="list" aria-controls="rc_select_TEST_OR_SSR_list" aria-expanded="false" aria-haspopup="listbox" aria-owns="rc_select_TEST_OR_SSR_list" autocomplete="off" class="ant-select-selection-search-input" id="rc_select_TEST_OR_SSR" readonly="" role="combobox" type="search" unselectable="on" value="">
-              <span class="ant-select-selection-item" title="prod：https://prod.example.com">
-                "prod：https://prod.example.com"
-          <span aria-hidden="true" class="ant-select-arrow" unselectable="on">
-            <span aria-label="down" class="anticon.anticon-down.ant-select-suffix" role="img">
+        <div class="ant-select.ant-select-outlined.ant-select-compact-item.css-var-root.ant-select-css-var.CSSHASH.ant-select-single.ant-select-show-arrow" style="flex-basis:180px;flex-grow:1">
+          <div class="ant-select-content.ant-select-content-has-value" title="prod：https://prod.example.com">
+            "prod：https://prod.example.com"
+            <input aria-autocomplete="list" aria-expanded="false" aria-haspopup="listbox" autocomplete="new-password" class="ant-select-input" id="test-id" readonly="" role="combobox" type="text" value="">
+          <div class="ant-select-suffix">
+            <span aria-label="down" class="anticon.anticon-down" role="img">
               <svg aria-hidden="true" data-icon="down" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                 <path d="SVG_PATH">
-        <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.ant-input-compact-item.ant-input-compact-last-item" disabled="" spellcheck="false" style="flex-basis:180px;flex-grow:1" type="text" value="/api/pet/{id}">
-      <button aria-describedby="test-id" class="ant-btn.CSSHASH.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" type="button">
+        <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.css-var-root.ant-input-css-var.ant-input-compact-item.ant-input-compact-last-item" disabled="" spellcheck="false" style="flex-basis:180px;flex-grow:1" type="text" value="/api/pet/{id}">
+      <button class="ant-btn.CSSHASH.css-var-root.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" type="button">
         <span>
           "发 送"
-      <button aria-describedby="test-id" class="ant-btn.CSSHASH.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" type="button">
+      <button class="ant-btn.CSSHASH.css-var-root.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" type="button">
         <span>
           "更 新"
-    <div class="ant-collapse.ant-collapse-icon-position-start.CSSHASH">
+    <div class="ant-collapse.ant-collapse-icon-placement-start.CSSHASH.css-var-root">
       <div class="ant-collapse-item.ant-collapse-item-active">
         <div aria-disabled="false" aria-expanded="true" class="ant-collapse-header" role="button" tabindex="0">
           <div class="ant-collapse-expand-icon">
-            <span aria-label="expanded" class="anticon.anticon-right.ant-collapse-arrow" role="img">
+            <span aria-hidden="true" aria-label="right" class="anticon.anticon-right.ant-collapse-arrow" role="img">
               <svg aria-hidden="true" data-icon="right" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                 <path d="SVG_PATH">
-          <span class="ant-collapse-header-text">
+          <span class="ant-collapse-title">
             "PATH PARAMETERS"
-        <div class="ant-collapse-content.ant-collapse-content-active">
-          <div class="ant-collapse-content-box">
+        <div class="ant-collapse-panel.ant-collapse-panel-active">
+          <div class="ant-collapse-body">
             <div class="key-value-wrap">
               <div>
-                <input aria-describedby="test-id" class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.key" disabled="" type="text" value="id">
+                <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.key.css-var-root.ant-input-css-var" disabled="" type="text" value="id">
               <span class="eq-symbol">
                 "="
               <div class="ant-space-compact.CSSHASH.value">
-                <input class="ant-input.CSSHASH.ant-input-outlined.ant-input-compact-item.ant-input-compact-first-item" id="req_params_0" placeholder="参数值" type="text" value="42">
+                <input class="ant-input.CSSHASH.ant-input-outlined.css-var-root.ant-input-css-var.ant-input-compact-item.ant-input-compact-first-item" id="req_params_0" placeholder="参数值" type="text" value="42">
                 <span aria-label="edit" class="anticon.anticon-edit" role="img" tabindex="-1">
                   <svg aria-hidden="true" data-icon="edit" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                     <path d="SVG_PATH">
-            <button class="ant-btn.CSSHASH.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" style="display:none" type="button">
+            <button class="ant-btn.CSSHASH.css-var-root.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" style="display:none" type="button">
               <span class="ant-btn-icon">
                 <span aria-label="plus" class="anticon.anticon-plus" role="img">
                   <svg aria-hidden="true" data-icon="plus" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
@@ -518,42 +504,40 @@ const EXPECTED_CASE_INITIAL_SNAPSHOT = `<div>
       <div class="ant-collapse-item.ant-collapse-item-active">
         <div aria-disabled="false" aria-expanded="true" class="ant-collapse-header" role="button" tabindex="0">
           <div class="ant-collapse-expand-icon">
-            <span aria-label="expanded" class="anticon.anticon-right.ant-collapse-arrow" role="img">
+            <span aria-hidden="true" aria-label="right" class="anticon.anticon-right.ant-collapse-arrow" role="img">
               <svg aria-hidden="true" data-icon="right" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                 <path d="SVG_PATH">
-          <span class="ant-collapse-header-text">
+          <span class="ant-collapse-title">
             "QUERY PARAMETERS"
-        <div class="ant-collapse-content.ant-collapse-content-active">
-          <div class="ant-collapse-content-box">
+        <div class="ant-collapse-panel.ant-collapse-panel-active">
+          <div class="ant-collapse-body">
             <div class="key-value-wrap">
               <div>
-                <input aria-describedby="test-id" class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.key" disabled="" type="text" value="q">
-              <label class="ant-checkbox-wrapper.ant-checkbox-wrapper-checked.ant-checkbox-wrapper-disabled.params-enable.CSSHASH">
+                <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.key.css-var-root.ant-input-css-var" disabled="" type="text" value="q">
+              <label class="ant-checkbox-wrapper.ant-checkbox-wrapper-checked.ant-checkbox-wrapper-disabled.params-enable.css-var-root.ant-checkbox-css-var.CSSHASH">
                 <span class="ant-checkbox.ant-wave-target.CSSHASH.ant-checkbox-checked.ant-checkbox-disabled">
                   <input checked="true" class="ant-checkbox-input" disabled="" type="checkbox">
-                  <span class="ant-checkbox-inner">
               <span class="eq-symbol">
                 "="
               <div class="ant-space-compact.CSSHASH.value">
-                <input class="ant-input.CSSHASH.ant-input-outlined.ant-input-compact-item.ant-input-compact-first-item" id="req_query_0" placeholder="参数值" type="text" value="hello">
+                <input class="ant-input.CSSHASH.ant-input-outlined.css-var-root.ant-input-css-var.ant-input-compact-item.ant-input-compact-first-item" id="req_query_0" placeholder="参数值" type="text" value="hello">
                 <span aria-label="edit" class="anticon.anticon-edit" role="img" tabindex="-1">
                   <svg aria-hidden="true" data-icon="edit" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                     <path d="SVG_PATH">
             <div class="key-value-wrap">
               <div>
-                <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.key" disabled="" type="text" value="opt">
-              <label class="ant-checkbox-wrapper.params-enable.CSSHASH">
+                <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.key.css-var-root.ant-input-css-var" disabled="" type="text" value="opt">
+              <label class="ant-checkbox-wrapper.params-enable.css-var-root.ant-checkbox-css-var.CSSHASH">
                 <span class="ant-checkbox.ant-wave-target.CSSHASH">
                   <input checked="false" class="ant-checkbox-input" type="checkbox">
-                  <span class="ant-checkbox-inner">
               <span class="eq-symbol">
                 "="
               <div class="ant-space-compact.CSSHASH.value">
-                <input class="ant-input.CSSHASH.ant-input-outlined.ant-input-compact-item.ant-input-compact-first-item" id="req_query_1" placeholder="参数值" type="text" value="">
+                <input class="ant-input.CSSHASH.ant-input-outlined.css-var-root.ant-input-css-var.ant-input-compact-item.ant-input-compact-first-item" id="req_query_1" placeholder="参数值" type="text" value="">
                 <span aria-label="edit" class="anticon.anticon-edit" role="img" tabindex="-1">
                   <svg aria-hidden="true" data-icon="edit" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                     <path d="SVG_PATH">
-            <button class="ant-btn.CSSHASH.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" style="display:none" type="button">
+            <button class="ant-btn.CSSHASH.css-var-root.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" style="display:none" type="button">
               <span class="ant-btn-icon">
                 <span aria-label="plus" class="anticon.anticon-plus" role="img">
                   <svg aria-hidden="true" data-icon="plus" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
@@ -564,24 +548,24 @@ const EXPECTED_CASE_INITIAL_SNAPSHOT = `<div>
       <div class="ant-collapse-item.ant-collapse-item-active">
         <div aria-disabled="false" aria-expanded="true" class="ant-collapse-header" role="button" tabindex="0">
           <div class="ant-collapse-expand-icon">
-            <span aria-label="expanded" class="anticon.anticon-right.ant-collapse-arrow" role="img">
+            <span aria-hidden="true" aria-label="right" class="anticon.anticon-right.ant-collapse-arrow" role="img">
               <svg aria-hidden="true" data-icon="right" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                 <path d="SVG_PATH">
-          <span class="ant-collapse-header-text">
+          <span class="ant-collapse-title">
             "HEADERS"
-        <div class="ant-collapse-content.ant-collapse-content-active">
-          <div class="ant-collapse-content-box">
+        <div class="ant-collapse-panel.ant-collapse-panel-active">
+          <div class="ant-collapse-body">
             <div class="key-value-wrap">
               <div>
-                <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.key" disabled="" type="text" value="Content-Type">
+                <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.key.css-var-root.ant-input-css-var" disabled="" type="text" value="Content-Type">
               <span class="eq-symbol">
                 "="
               <div class="ant-space-compact.CSSHASH.value">
-                <input class="ant-input.CSSHASH.ant-input-outlined.ant-input-compact-item.ant-input-compact-first-item" id="req_headers_0" placeholder="参数值" type="text" value="application/json">
+                <input class="ant-input.CSSHASH.ant-input-outlined.css-var-root.ant-input-css-var.ant-input-compact-item.ant-input-compact-first-item" id="req_headers_0" placeholder="参数值" type="text" value="application/json">
                 <span aria-label="edit" class="anticon.anticon-edit" role="img" tabindex="-1">
                   <svg aria-hidden="true" data-icon="edit" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                     <path d="SVG_PATH">
-            <button class="ant-btn.CSSHASH.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" style="display:none" type="button">
+            <button class="ant-btn.CSSHASH.css-var-root.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" style="display:none" type="button">
               <span class="ant-btn-icon">
                 <span aria-label="plus" class="anticon.anticon-plus" role="img">
                   <svg aria-hidden="true" data-icon="plus" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
@@ -592,28 +576,28 @@ const EXPECTED_CASE_INITIAL_SNAPSHOT = `<div>
       <div class="ant-collapse-item.ant-collapse-item-active.POST">
         <div aria-disabled="false" aria-expanded="true" class="ant-collapse-header" role="button" tabindex="0">
           <div class="ant-collapse-expand-icon">
-            <span aria-label="expanded" class="anticon.anticon-right.ant-collapse-arrow" role="img">
+            <span aria-hidden="true" aria-label="right" class="anticon.anticon-right.ant-collapse-arrow" role="img">
               <svg aria-hidden="true" data-icon="right" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                 <path d="SVG_PATH">
-          <span class="ant-collapse-header-text">
+          <span class="ant-collapse-title">
             <div style="display:flex">
-              <span aria-describedby="test-id">
+              <span>
                 "BODY(F9)"
-        <div class="ant-collapse-content.ant-collapse-content-active">
-          <div class="ant-collapse-content-box">
+        <div class="ant-collapse-panel.ant-collapse-panel-active">
+          <div class="ant-collapse-body">
             <div style="display:block">
               <div class="adv-button">
-                <button class="ant-btn.CSSHASH.ant-btn-default.ant-btn-color-default.ant-btn-variant-outlined" type="button">
+                <button class="ant-btn.CSSHASH.css-var-root.ant-btn-default.ant-btn-color-default.ant-btn-variant-outlined" type="button">
                   <span>
                     "高级参数设置"
-                <span aria-describedby="test-id">
+                <span>
                   <span aria-label="question-circle" class="anticon.anticon-question-circle" role="img">
                     <svg aria-hidden="true" data-icon="question-circle" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                       <path d="SVG_PATH">
                       <path d="SVG_PATH">
               <div class="pretty-editor" data-data="{\\"name\\":\\"zhang\\"}" data-mode="null" data-readonly="false">
                 "STUB_ACE"
-    <div class="ant-tabs.ant-tabs-top.ant-tabs-large.response-tab.CSSHASH">
+    <div class="ant-tabs.ant-tabs-top.ant-tabs-large.response-tab.CSSHASH.css-var-root.ant-tabs-css-var">
       <div aria-orientation="horizontal" class="ant-tabs-nav" role="tablist">
         <div class="ant-tabs-nav-wrap">
           <div class="ant-tabs-nav-list">
@@ -622,7 +606,7 @@ const EXPECTED_CASE_INITIAL_SNAPSHOT = `<div>
                 "Response"
             <div class="ant-tabs-tab" data-node-key="test">
               <div aria-controls="rc-tabs-test-panel-test" aria-selected="false" class="ant-tabs-tab-btn" id="rc-tabs-test-tab-test" role="tab" tabindex="-1">
-                <span aria-describedby="test-id">
+                <span>
                   "Test"
             <div class="ant-tabs-ink-bar.ant-tabs-ink-bar-animated">
         <div class="ant-tabs-nav-operations.ant-tabs-nav-operations-hidden">
@@ -630,10 +614,10 @@ const EXPECTED_CASE_INITIAL_SNAPSHOT = `<div>
             <span aria-label="ellipsis" class="anticon.anticon-ellipsis" role="img">
               <svg aria-hidden="true" data-icon="ellipsis" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                 <path d="SVG_PATH">
-      <div class="ant-tabs-content-holder">
-        <div class="ant-tabs-content.ant-tabs-content-top">
-          <div aria-hidden="false" aria-labelledby="rc-tabs-test-tab-res" class="ant-tabs-tabpane.ant-tabs-tabpane-active" id="rc-tabs-test-panel-res" role="tabpanel" tabindex="0">
-            <div class="ant-spin-nested-loading.CSSHASH">
+      <div class="ant-tabs-body-holder">
+        <div class="ant-tabs-body.ant-tabs-body-top">
+          <div aria-hidden="false" aria-labelledby="rc-tabs-test-tab-res" class="ant-tabs-content.ant-tabs-content-active" id="rc-tabs-test-panel-res" role="tabpanel" tabindex="0">
+            <div aria-busy="false" aria-live="polite" class="ant-spin.CSSHASH.css-var-root">
               <div class="ant-spin-container">
                 <h2 class="res-code.fail" style="display:none">
                   "null null"
@@ -655,10 +639,9 @@ const EXPECTED_CASE_INITIAL_SNAPSHOT = `<div>
                     <div class="container-title">
                       <h4>
                         "Body"
-                      <label class="ant-checkbox-wrapper.ant-checkbox-wrapper-checked.CSSHASH">
+                      <label class="ant-checkbox-wrapper.ant-checkbox-wrapper-checked.css-var-root.ant-checkbox-css-var.CSSHASH">
                         <span class="ant-checkbox.ant-wave-target.CSSHASH.ant-checkbox-checked">
                           <input checked="true" class="ant-checkbox-input" type="checkbox">
-                          <span class="ant-checkbox-inner">
                         <span class="ant-checkbox-label">
                           <span>
                             "自动预览HTML"
@@ -671,57 +654,51 @@ const EXPECTED_PARAMS_EDITED_SNAPSHOT = `<div>
     <div>
     <div class="url">
       <div class="ant-space-compact.CSSHASH" style="display:flex">
-        <div class="ant-select.ant-select-outlined.ant-select-compact-item.ant-select-compact-first-item.CSSHASH.ant-select-single.ant-select-show-arrow.ant-select-disabled" style="flex-basis:60px">
-          <div class="ant-select-selector">
-            <span class="ant-select-selection-wrap">
-              <span class="ant-select-selection-search">
-                <input aria-autocomplete="list" aria-controls="rc_select_TEST_OR_SSR_list" aria-expanded="false" aria-haspopup="listbox" aria-owns="rc_select_TEST_OR_SSR_list" autocomplete="off" class="ant-select-selection-search-input" disabled="" id="rc_select_TEST_OR_SSR" readonly="" role="combobox" type="search" unselectable="on" value="">
-              <span class="ant-select-selection-item" title="POST">
-                "POST"
-          <span aria-hidden="true" class="ant-select-arrow" unselectable="on">
-            <span aria-label="down" class="anticon.anticon-down.ant-select-suffix" role="img">
+        <div class="ant-select.ant-select-outlined.ant-select-compact-item.ant-select-compact-first-item.css-var-root.ant-select-css-var.CSSHASH.ant-select-single.ant-select-show-arrow.ant-select-disabled" style="flex-basis:60px">
+          <div class="ant-select-content.ant-select-content-has-value" title="POST">
+            "POST"
+            <input aria-autocomplete="list" aria-expanded="false" aria-haspopup="listbox" autocomplete="new-password" class="ant-select-input" disabled="" id="test-id" readonly="" role="combobox" type="text" value="">
+          <div class="ant-select-suffix">
+            <span aria-label="down" class="anticon.anticon-down" role="img">
               <svg aria-hidden="true" data-icon="down" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                 <path d="SVG_PATH">
-        <div class="ant-select.ant-select-outlined.ant-select-compact-item.CSSHASH.ant-select-single.ant-select-show-arrow" style="flex-basis:180px;flex-grow:1">
-          <div class="ant-select-selector">
-            <span class="ant-select-selection-wrap">
-              <span class="ant-select-selection-search">
-                <input aria-autocomplete="list" aria-controls="rc_select_TEST_OR_SSR_list" aria-expanded="false" aria-haspopup="listbox" aria-owns="rc_select_TEST_OR_SSR_list" autocomplete="off" class="ant-select-selection-search-input" id="rc_select_TEST_OR_SSR" readonly="" role="combobox" type="search" unselectable="on" value="">
-              <span class="ant-select-selection-item" title="local：http://localhost:3000">
-                "local：http://localhost:3000"
-          <span aria-hidden="true" class="ant-select-arrow" unselectable="on">
-            <span aria-label="down" class="anticon.anticon-down.ant-select-suffix" role="img">
+        <div class="ant-select.ant-select-outlined.ant-select-compact-item.css-var-root.ant-select-css-var.CSSHASH.ant-select-single.ant-select-show-arrow" style="flex-basis:180px;flex-grow:1">
+          <div class="ant-select-content.ant-select-content-has-value" title="local：http://localhost:3000">
+            "local：http://localhost:3000"
+            <input aria-autocomplete="list" aria-expanded="false" aria-haspopup="listbox" autocomplete="new-password" class="ant-select-input" id="test-id" readonly="" role="combobox" type="text" value="">
+          <div class="ant-select-suffix">
+            <span aria-label="down" class="anticon.anticon-down" role="img">
               <svg aria-hidden="true" data-icon="down" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                 <path d="SVG_PATH">
-        <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.ant-input-compact-item.ant-input-compact-last-item" disabled="" spellcheck="false" style="flex-basis:180px;flex-grow:1" type="text" value="/api/pet/{id}">
-      <button aria-describedby="test-id" class="ant-btn.CSSHASH.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" type="button">
+        <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.css-var-root.ant-input-css-var.ant-input-compact-item.ant-input-compact-last-item" disabled="" spellcheck="false" style="flex-basis:180px;flex-grow:1" type="text" value="/api/pet/{id}">
+      <button class="ant-btn.CSSHASH.css-var-root.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" type="button">
         <span>
           "发 送"
-      <button aria-describedby="test-id" class="ant-btn.CSSHASH.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" type="button">
+      <button class="ant-btn.CSSHASH.css-var-root.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" type="button">
         <span>
           "保 存"
-    <div class="ant-collapse.ant-collapse-icon-position-start.CSSHASH">
+    <div class="ant-collapse.ant-collapse-icon-placement-start.CSSHASH.css-var-root">
       <div class="ant-collapse-item.ant-collapse-item-active">
         <div aria-disabled="false" aria-expanded="true" class="ant-collapse-header" role="button" tabindex="0">
           <div class="ant-collapse-expand-icon">
-            <span aria-label="expanded" class="anticon.anticon-right.ant-collapse-arrow" role="img">
+            <span aria-hidden="true" aria-label="right" class="anticon.anticon-right.ant-collapse-arrow" role="img">
               <svg aria-hidden="true" data-icon="right" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                 <path d="SVG_PATH">
-          <span class="ant-collapse-header-text">
+          <span class="ant-collapse-title">
             "PATH PARAMETERS"
-        <div class="ant-collapse-content.ant-collapse-content-active">
-          <div class="ant-collapse-content-box">
+        <div class="ant-collapse-panel.ant-collapse-panel-active">
+          <div class="ant-collapse-body">
             <div class="key-value-wrap">
               <div>
-                <input aria-describedby="test-id" class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.key" disabled="" type="text" value="id">
+                <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.key.css-var-root.ant-input-css-var" disabled="" type="text" value="id">
               <span class="eq-symbol">
                 "="
               <div class="ant-space-compact.CSSHASH.value">
-                <input class="ant-input.CSSHASH.ant-input-outlined.ant-input-compact-item.ant-input-compact-first-item" id="req_params_0" placeholder="参数值" type="text" value="42">
+                <input class="ant-input.CSSHASH.ant-input-outlined.css-var-root.ant-input-css-var.ant-input-compact-item.ant-input-compact-first-item" id="req_params_0" placeholder="参数值" type="text" value="42">
                 <span aria-label="edit" class="anticon.anticon-edit" role="img" tabindex="-1">
                   <svg aria-hidden="true" data-icon="edit" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                     <path d="SVG_PATH">
-            <button class="ant-btn.CSSHASH.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" style="display:none" type="button">
+            <button class="ant-btn.CSSHASH.css-var-root.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" style="display:none" type="button">
               <span class="ant-btn-icon">
                 <span aria-label="plus" class="anticon.anticon-plus" role="img">
                   <svg aria-hidden="true" data-icon="plus" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
@@ -732,42 +709,40 @@ const EXPECTED_PARAMS_EDITED_SNAPSHOT = `<div>
       <div class="ant-collapse-item.ant-collapse-item-active">
         <div aria-disabled="false" aria-expanded="true" class="ant-collapse-header" role="button" tabindex="0">
           <div class="ant-collapse-expand-icon">
-            <span aria-label="expanded" class="anticon.anticon-right.ant-collapse-arrow" role="img">
+            <span aria-hidden="true" aria-label="right" class="anticon.anticon-right.ant-collapse-arrow" role="img">
               <svg aria-hidden="true" data-icon="right" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                 <path d="SVG_PATH">
-          <span class="ant-collapse-header-text">
+          <span class="ant-collapse-title">
             "QUERY PARAMETERS"
-        <div class="ant-collapse-content.ant-collapse-content-active">
-          <div class="ant-collapse-content-box">
+        <div class="ant-collapse-panel.ant-collapse-panel-active">
+          <div class="ant-collapse-body">
             <div class="key-value-wrap">
               <div>
-                <input aria-describedby="test-id" class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.key" disabled="" type="text" value="q">
-              <label class="ant-checkbox-wrapper.ant-checkbox-wrapper-checked.ant-checkbox-wrapper-disabled.params-enable.CSSHASH">
+                <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.key.css-var-root.ant-input-css-var" disabled="" type="text" value="q">
+              <label class="ant-checkbox-wrapper.ant-checkbox-wrapper-checked.ant-checkbox-wrapper-disabled.params-enable.css-var-root.ant-checkbox-css-var.CSSHASH">
                 <span class="ant-checkbox.ant-wave-target.CSSHASH.ant-checkbox-checked.ant-checkbox-disabled">
                   <input checked="true" class="ant-checkbox-input" disabled="" type="checkbox">
-                  <span class="ant-checkbox-inner">
               <span class="eq-symbol">
                 "="
               <div class="ant-space-compact.CSSHASH.value">
-                <input class="ant-input.CSSHASH.ant-input-outlined.ant-input-compact-item.ant-input-compact-first-item" id="req_query_0" placeholder="参数值" type="text" value="zz">
+                <input class="ant-input.CSSHASH.ant-input-outlined.css-var-root.ant-input-css-var.ant-input-compact-item.ant-input-compact-first-item" id="req_query_0" placeholder="参数值" type="text" value="zz">
                 <span aria-label="edit" class="anticon.anticon-edit" role="img" tabindex="-1">
                   <svg aria-hidden="true" data-icon="edit" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                     <path d="SVG_PATH">
             <div class="key-value-wrap">
               <div>
-                <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.key" disabled="" type="text" value="opt">
-              <label class="ant-checkbox-wrapper.ant-checkbox-wrapper-checked.params-enable.CSSHASH">
+                <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.key.css-var-root.ant-input-css-var" disabled="" type="text" value="opt">
+              <label class="ant-checkbox-wrapper.ant-checkbox-wrapper-checked.params-enable.css-var-root.ant-checkbox-css-var.CSSHASH">
                 <span class="ant-checkbox.ant-wave-target.CSSHASH.ant-checkbox-checked">
                   <input checked="true" class="ant-checkbox-input" type="checkbox">
-                  <span class="ant-checkbox-inner">
               <span class="eq-symbol">
                 "="
               <div class="ant-space-compact.CSSHASH.value">
-                <input class="ant-input.CSSHASH.ant-input-outlined.ant-input-compact-item.ant-input-compact-first-item" id="req_query_1" placeholder="参数值" type="text" value="">
+                <input class="ant-input.CSSHASH.ant-input-outlined.css-var-root.ant-input-css-var.ant-input-compact-item.ant-input-compact-first-item" id="req_query_1" placeholder="参数值" type="text" value="">
                 <span aria-label="edit" class="anticon.anticon-edit" role="img" tabindex="-1">
                   <svg aria-hidden="true" data-icon="edit" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                     <path d="SVG_PATH">
-            <button class="ant-btn.CSSHASH.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" style="display:none" type="button">
+            <button class="ant-btn.CSSHASH.css-var-root.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" style="display:none" type="button">
               <span class="ant-btn-icon">
                 <span aria-label="plus" class="anticon.anticon-plus" role="img">
                   <svg aria-hidden="true" data-icon="plus" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
@@ -778,31 +753,31 @@ const EXPECTED_PARAMS_EDITED_SNAPSHOT = `<div>
       <div class="ant-collapse-item.ant-collapse-item-active">
         <div aria-disabled="false" aria-expanded="true" class="ant-collapse-header" role="button" tabindex="0">
           <div class="ant-collapse-expand-icon">
-            <span aria-label="expanded" class="anticon.anticon-right.ant-collapse-arrow" role="img">
+            <span aria-hidden="true" aria-label="right" class="anticon.anticon-right.ant-collapse-arrow" role="img">
               <svg aria-hidden="true" data-icon="right" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                 <path d="SVG_PATH">
-          <span class="ant-collapse-header-text">
+          <span class="ant-collapse-title">
             "HEADERS"
-        <div class="ant-collapse-content.ant-collapse-content-active">
-          <div class="ant-collapse-content-box">
+        <div class="ant-collapse-panel.ant-collapse-panel-active">
+          <div class="ant-collapse-body">
             <div class="key-value-wrap">
               <div>
-                <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.key" disabled="" type="text" value="Content-Type">
+                <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.key.css-var-root.ant-input-css-var" disabled="" type="text" value="Content-Type">
               <span class="eq-symbol">
                 "="
               <div class="ant-space-compact.CSSHASH.value">
-                <input class="ant-input.CSSHASH.ant-input-outlined.ant-input-compact-item.ant-input-compact-first-item" id="req_headers_0" placeholder="参数值" type="text" value="application/json">
+                <input class="ant-input.CSSHASH.ant-input-outlined.css-var-root.ant-input-css-var.ant-input-compact-item.ant-input-compact-first-item" id="req_headers_0" placeholder="参数值" type="text" value="application/json">
                 <span aria-label="edit" class="anticon.anticon-edit" role="img" tabindex="-1">
                   <svg aria-hidden="true" data-icon="edit" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                     <path d="SVG_PATH">
             <div class="key-value-wrap">
               <div>
-                <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.key" disabled="" type="text" value="X-Env">
+                <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.key.css-var-root.ant-input-css-var" disabled="" type="text" value="X-Env">
               <span class="eq-symbol">
                 "="
               <div class="ant-space-compact.CSSHASH.value">
-                <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.ant-input-compact-item.ant-input-compact-first-item.ant-input-compact-last-item" disabled="" id="req_headers_1" placeholder="参数值" type="text" value="local">
-            <button class="ant-btn.CSSHASH.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" style="display:none" type="button">
+                <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.css-var-root.ant-input-css-var.ant-input-compact-item.ant-input-compact-first-item.ant-input-compact-last-item" disabled="" id="req_headers_1" placeholder="参数值" type="text" value="local">
+            <button class="ant-btn.CSSHASH.css-var-root.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" style="display:none" type="button">
               <span class="ant-btn-icon">
                 <span aria-label="plus" class="anticon.anticon-plus" role="img">
                   <svg aria-hidden="true" data-icon="plus" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
@@ -813,28 +788,28 @@ const EXPECTED_PARAMS_EDITED_SNAPSHOT = `<div>
       <div class="ant-collapse-item.ant-collapse-item-active.POST">
         <div aria-disabled="false" aria-expanded="true" class="ant-collapse-header" role="button" tabindex="0">
           <div class="ant-collapse-expand-icon">
-            <span aria-label="expanded" class="anticon.anticon-right.ant-collapse-arrow" role="img">
+            <span aria-hidden="true" aria-label="right" class="anticon.anticon-right.ant-collapse-arrow" role="img">
               <svg aria-hidden="true" data-icon="right" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                 <path d="SVG_PATH">
-          <span class="ant-collapse-header-text">
+          <span class="ant-collapse-title">
             <div style="display:flex">
-              <span aria-describedby="test-id">
+              <span>
                 "BODY(F9)"
-        <div class="ant-collapse-content.ant-collapse-content-active">
-          <div class="ant-collapse-content-box">
+        <div class="ant-collapse-panel.ant-collapse-panel-active">
+          <div class="ant-collapse-body">
             <div style="display:block">
               <div class="adv-button">
-                <button class="ant-btn.CSSHASH.ant-btn-default.ant-btn-color-default.ant-btn-variant-outlined" type="button">
+                <button class="ant-btn.CSSHASH.css-var-root.ant-btn-default.ant-btn-color-default.ant-btn-variant-outlined" type="button">
                   <span>
                     "高级参数设置"
-                <span aria-describedby="test-id">
+                <span>
                   <span aria-label="question-circle" class="anticon.anticon-question-circle" role="img">
                     <svg aria-hidden="true" data-icon="question-circle" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                       <path d="SVG_PATH">
                       <path d="SVG_PATH">
               <div class="pretty-editor" data-data="{\\"name\\":\\"zhang\\"}" data-mode="null" data-readonly="false">
                 "STUB_ACE"
-    <div class="ant-tabs.ant-tabs-top.ant-tabs-large.response-tab.CSSHASH">
+    <div class="ant-tabs.ant-tabs-top.ant-tabs-large.response-tab.CSSHASH.css-var-root.ant-tabs-css-var">
       <div aria-orientation="horizontal" class="ant-tabs-nav" role="tablist">
         <div class="ant-tabs-nav-wrap">
           <div class="ant-tabs-nav-list">
@@ -847,10 +822,10 @@ const EXPECTED_PARAMS_EDITED_SNAPSHOT = `<div>
             <span aria-label="ellipsis" class="anticon.anticon-ellipsis" role="img">
               <svg aria-hidden="true" data-icon="ellipsis" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                 <path d="SVG_PATH">
-      <div class="ant-tabs-content-holder">
-        <div class="ant-tabs-content.ant-tabs-content-top">
-          <div aria-hidden="false" aria-labelledby="rc-tabs-test-tab-res" class="ant-tabs-tabpane.ant-tabs-tabpane-active" id="rc-tabs-test-panel-res" role="tabpanel" tabindex="0">
-            <div class="ant-spin-nested-loading.CSSHASH">
+      <div class="ant-tabs-body-holder">
+        <div class="ant-tabs-body.ant-tabs-body-top">
+          <div aria-hidden="false" aria-labelledby="rc-tabs-test-tab-res" class="ant-tabs-content.ant-tabs-content-active" id="rc-tabs-test-panel-res" role="tabpanel" tabindex="0">
+            <div aria-busy="false" aria-live="polite" class="ant-spin.CSSHASH.css-var-root">
               <div class="ant-spin-container">
                 <h2 class="res-code.fail" style="display:none">
                   "null null"
@@ -872,10 +847,9 @@ const EXPECTED_PARAMS_EDITED_SNAPSHOT = `<div>
                     <div class="container-title">
                       <h4>
                         "Body"
-                      <label class="ant-checkbox-wrapper.ant-checkbox-wrapper-checked.CSSHASH">
+                      <label class="ant-checkbox-wrapper.ant-checkbox-wrapper-checked.css-var-root.ant-checkbox-css-var.CSSHASH">
                         <span class="ant-checkbox.ant-wave-target.CSSHASH.ant-checkbox-checked">
                           <input checked="true" class="ant-checkbox-input" type="checkbox">
-                          <span class="ant-checkbox-inner">
                         <span class="ant-checkbox-label">
                           <span>
                             "自动预览HTML"
@@ -888,61 +862,55 @@ const EXPECTED_RESPONSE_SNAPSHOT = `<div>
     <div>
     <div class="url">
       <div class="ant-space-compact.CSSHASH" style="display:flex">
-        <div class="ant-select.ant-select-outlined.ant-select-compact-item.ant-select-compact-first-item.CSSHASH.ant-select-single.ant-select-show-arrow.ant-select-disabled" style="flex-basis:60px">
-          <div class="ant-select-selector">
-            <span class="ant-select-selection-wrap">
-              <span class="ant-select-selection-search">
-                <input aria-autocomplete="list" aria-controls="rc_select_TEST_OR_SSR_list" aria-expanded="false" aria-haspopup="listbox" aria-owns="rc_select_TEST_OR_SSR_list" autocomplete="off" class="ant-select-selection-search-input" disabled="" id="rc_select_TEST_OR_SSR" readonly="" role="combobox" type="search" unselectable="on" value="">
-              <span class="ant-select-selection-item" title="POST">
-                "POST"
-          <span aria-hidden="true" class="ant-select-arrow" unselectable="on">
-            <span aria-label="down" class="anticon.anticon-down.ant-select-suffix" role="img">
+        <div class="ant-select.ant-select-outlined.ant-select-compact-item.ant-select-compact-first-item.css-var-root.ant-select-css-var.CSSHASH.ant-select-single.ant-select-show-arrow.ant-select-disabled" style="flex-basis:60px">
+          <div class="ant-select-content.ant-select-content-has-value" title="POST">
+            "POST"
+            <input aria-autocomplete="list" aria-expanded="false" aria-haspopup="listbox" autocomplete="new-password" class="ant-select-input" disabled="" id="test-id" readonly="" role="combobox" type="text" value="">
+          <div class="ant-select-suffix">
+            <span aria-label="down" class="anticon.anticon-down" role="img">
               <svg aria-hidden="true" data-icon="down" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                 <path d="SVG_PATH">
-        <div class="ant-select.ant-select-outlined.ant-select-compact-item.CSSHASH.ant-select-single.ant-select-show-arrow" style="flex-basis:180px;flex-grow:1">
-          <div class="ant-select-selector">
-            <span class="ant-select-selection-wrap">
-              <span class="ant-select-selection-search">
-                <input aria-autocomplete="list" aria-controls="rc_select_TEST_OR_SSR_list" aria-expanded="false" aria-haspopup="listbox" aria-owns="rc_select_TEST_OR_SSR_list" autocomplete="off" class="ant-select-selection-search-input" id="rc_select_TEST_OR_SSR" readonly="" role="combobox" type="search" unselectable="on" value="">
-              <span class="ant-select-selection-item" title="local：http://localhost:3000">
-                "local：http://localhost:3000"
-          <span aria-hidden="true" class="ant-select-arrow" unselectable="on">
-            <span aria-label="down" class="anticon.anticon-down.ant-select-suffix" role="img">
+        <div class="ant-select.ant-select-outlined.ant-select-compact-item.css-var-root.ant-select-css-var.CSSHASH.ant-select-single.ant-select-show-arrow" style="flex-basis:180px;flex-grow:1">
+          <div class="ant-select-content.ant-select-content-has-value" title="local：http://localhost:3000">
+            "local：http://localhost:3000"
+            <input aria-autocomplete="list" aria-expanded="false" aria-haspopup="listbox" autocomplete="new-password" class="ant-select-input" id="test-id" readonly="" role="combobox" type="text" value="">
+          <div class="ant-select-suffix">
+            <span aria-label="down" class="anticon.anticon-down" role="img">
               <svg aria-hidden="true" data-icon="down" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                 <path d="SVG_PATH">
-        <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.ant-input-compact-item.ant-input-compact-last-item" disabled="" spellcheck="false" style="flex-basis:180px;flex-grow:1" type="text" value="/api/pet/{id}">
-      <button aria-describedby="test-id" class="ant-btn.CSSHASH.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" type="button">
+        <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.css-var-root.ant-input-css-var.ant-input-compact-item.ant-input-compact-last-item" disabled="" spellcheck="false" style="flex-basis:180px;flex-grow:1" type="text" value="/api/pet/{id}">
+      <button class="ant-btn.CSSHASH.css-var-root.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" type="button">
         <span class="ant-btn-icon.ant-btn-loading-icon.ant-btn-loading-icon-motion-STATE.ant-btn-loading-icon-motion">
           <span aria-label="loading" class="anticon.anticon-loading.anticon-spin" role="img">
             <svg aria-hidden="true" data-icon="loading" fill="currentColor" focusable="false" height="1em" viewBox="0 0 1024 1024" width="1em">
               <path d="SVG_PATH">
         <span>
           "发 送"
-      <button aria-describedby="test-id" class="ant-btn.CSSHASH.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" type="button">
+      <button class="ant-btn.CSSHASH.css-var-root.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" type="button">
         <span>
           "保 存"
-    <div class="ant-collapse.ant-collapse-icon-position-start.CSSHASH">
+    <div class="ant-collapse.ant-collapse-icon-placement-start.CSSHASH.css-var-root">
       <div class="ant-collapse-item.ant-collapse-item-active">
         <div aria-disabled="false" aria-expanded="true" class="ant-collapse-header" role="button" tabindex="0">
           <div class="ant-collapse-expand-icon">
-            <span aria-label="expanded" class="anticon.anticon-right.ant-collapse-arrow" role="img">
+            <span aria-hidden="true" aria-label="right" class="anticon.anticon-right.ant-collapse-arrow" role="img">
               <svg aria-hidden="true" data-icon="right" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                 <path d="SVG_PATH">
-          <span class="ant-collapse-header-text">
+          <span class="ant-collapse-title">
             "PATH PARAMETERS"
-        <div class="ant-collapse-content.ant-collapse-content-active">
-          <div class="ant-collapse-content-box">
+        <div class="ant-collapse-panel.ant-collapse-panel-active">
+          <div class="ant-collapse-body">
             <div class="key-value-wrap">
               <div>
-                <input aria-describedby="test-id" class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.key" disabled="" type="text" value="id">
+                <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.key.css-var-root.ant-input-css-var" disabled="" type="text" value="id">
               <span class="eq-symbol">
                 "="
               <div class="ant-space-compact.CSSHASH.value">
-                <input class="ant-input.CSSHASH.ant-input-outlined.ant-input-compact-item.ant-input-compact-first-item" id="req_params_0" placeholder="参数值" type="text" value="42">
+                <input class="ant-input.CSSHASH.ant-input-outlined.css-var-root.ant-input-css-var.ant-input-compact-item.ant-input-compact-first-item" id="req_params_0" placeholder="参数值" type="text" value="42">
                 <span aria-label="edit" class="anticon.anticon-edit" role="img" tabindex="-1">
                   <svg aria-hidden="true" data-icon="edit" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                     <path d="SVG_PATH">
-            <button class="ant-btn.CSSHASH.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" style="display:none" type="button">
+            <button class="ant-btn.CSSHASH.css-var-root.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" style="display:none" type="button">
               <span class="ant-btn-icon">
                 <span aria-label="plus" class="anticon.anticon-plus" role="img">
                   <svg aria-hidden="true" data-icon="plus" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
@@ -953,42 +921,40 @@ const EXPECTED_RESPONSE_SNAPSHOT = `<div>
       <div class="ant-collapse-item.ant-collapse-item-active">
         <div aria-disabled="false" aria-expanded="true" class="ant-collapse-header" role="button" tabindex="0">
           <div class="ant-collapse-expand-icon">
-            <span aria-label="expanded" class="anticon.anticon-right.ant-collapse-arrow" role="img">
+            <span aria-hidden="true" aria-label="right" class="anticon.anticon-right.ant-collapse-arrow" role="img">
               <svg aria-hidden="true" data-icon="right" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                 <path d="SVG_PATH">
-          <span class="ant-collapse-header-text">
+          <span class="ant-collapse-title">
             "QUERY PARAMETERS"
-        <div class="ant-collapse-content.ant-collapse-content-active">
-          <div class="ant-collapse-content-box">
+        <div class="ant-collapse-panel.ant-collapse-panel-active">
+          <div class="ant-collapse-body">
             <div class="key-value-wrap">
               <div>
-                <input aria-describedby="test-id" class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.key" disabled="" type="text" value="q">
-              <label class="ant-checkbox-wrapper.ant-checkbox-wrapper-checked.ant-checkbox-wrapper-disabled.params-enable.CSSHASH">
+                <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.key.css-var-root.ant-input-css-var" disabled="" type="text" value="q">
+              <label class="ant-checkbox-wrapper.ant-checkbox-wrapper-checked.ant-checkbox-wrapper-disabled.params-enable.css-var-root.ant-checkbox-css-var.CSSHASH">
                 <span class="ant-checkbox.ant-wave-target.CSSHASH.ant-checkbox-checked.ant-checkbox-disabled">
                   <input checked="true" class="ant-checkbox-input" disabled="" type="checkbox">
-                  <span class="ant-checkbox-inner">
               <span class="eq-symbol">
                 "="
               <div class="ant-space-compact.CSSHASH.value">
-                <input class="ant-input.CSSHASH.ant-input-outlined.ant-input-compact-item.ant-input-compact-first-item" id="req_query_0" placeholder="参数值" type="text" value="hello">
+                <input class="ant-input.CSSHASH.ant-input-outlined.css-var-root.ant-input-css-var.ant-input-compact-item.ant-input-compact-first-item" id="req_query_0" placeholder="参数值" type="text" value="hello">
                 <span aria-label="edit" class="anticon.anticon-edit" role="img" tabindex="-1">
                   <svg aria-hidden="true" data-icon="edit" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                     <path d="SVG_PATH">
             <div class="key-value-wrap">
               <div>
-                <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.key" disabled="" type="text" value="opt">
-              <label class="ant-checkbox-wrapper.params-enable.CSSHASH">
+                <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.key.css-var-root.ant-input-css-var" disabled="" type="text" value="opt">
+              <label class="ant-checkbox-wrapper.params-enable.css-var-root.ant-checkbox-css-var.CSSHASH">
                 <span class="ant-checkbox.ant-wave-target.CSSHASH">
                   <input checked="false" class="ant-checkbox-input" type="checkbox">
-                  <span class="ant-checkbox-inner">
               <span class="eq-symbol">
                 "="
               <div class="ant-space-compact.CSSHASH.value">
-                <input class="ant-input.CSSHASH.ant-input-outlined.ant-input-compact-item.ant-input-compact-first-item" id="req_query_1" placeholder="参数值" type="text" value="">
+                <input class="ant-input.CSSHASH.ant-input-outlined.css-var-root.ant-input-css-var.ant-input-compact-item.ant-input-compact-first-item" id="req_query_1" placeholder="参数值" type="text" value="">
                 <span aria-label="edit" class="anticon.anticon-edit" role="img" tabindex="-1">
                   <svg aria-hidden="true" data-icon="edit" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                     <path d="SVG_PATH">
-            <button class="ant-btn.CSSHASH.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" style="display:none" type="button">
+            <button class="ant-btn.CSSHASH.css-var-root.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" style="display:none" type="button">
               <span class="ant-btn-icon">
                 <span aria-label="plus" class="anticon.anticon-plus" role="img">
                   <svg aria-hidden="true" data-icon="plus" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
@@ -999,31 +965,31 @@ const EXPECTED_RESPONSE_SNAPSHOT = `<div>
       <div class="ant-collapse-item.ant-collapse-item-active">
         <div aria-disabled="false" aria-expanded="true" class="ant-collapse-header" role="button" tabindex="0">
           <div class="ant-collapse-expand-icon">
-            <span aria-label="expanded" class="anticon.anticon-right.ant-collapse-arrow" role="img">
+            <span aria-hidden="true" aria-label="right" class="anticon.anticon-right.ant-collapse-arrow" role="img">
               <svg aria-hidden="true" data-icon="right" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                 <path d="SVG_PATH">
-          <span class="ant-collapse-header-text">
+          <span class="ant-collapse-title">
             "HEADERS"
-        <div class="ant-collapse-content.ant-collapse-content-active">
-          <div class="ant-collapse-content-box">
+        <div class="ant-collapse-panel.ant-collapse-panel-active">
+          <div class="ant-collapse-body">
             <div class="key-value-wrap">
               <div>
-                <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.key" disabled="" type="text" value="Content-Type">
+                <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.key.css-var-root.ant-input-css-var" disabled="" type="text" value="Content-Type">
               <span class="eq-symbol">
                 "="
               <div class="ant-space-compact.CSSHASH.value">
-                <input class="ant-input.CSSHASH.ant-input-outlined.ant-input-compact-item.ant-input-compact-first-item" id="req_headers_0" placeholder="参数值" type="text" value="application/json">
+                <input class="ant-input.CSSHASH.ant-input-outlined.css-var-root.ant-input-css-var.ant-input-compact-item.ant-input-compact-first-item" id="req_headers_0" placeholder="参数值" type="text" value="application/json">
                 <span aria-label="edit" class="anticon.anticon-edit" role="img" tabindex="-1">
                   <svg aria-hidden="true" data-icon="edit" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                     <path d="SVG_PATH">
             <div class="key-value-wrap">
               <div>
-                <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.key" disabled="" type="text" value="X-Env">
+                <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.key.css-var-root.ant-input-css-var" disabled="" type="text" value="X-Env">
               <span class="eq-symbol">
                 "="
               <div class="ant-space-compact.CSSHASH.value">
-                <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.ant-input-compact-item.ant-input-compact-first-item.ant-input-compact-last-item" disabled="" id="req_headers_1" placeholder="参数值" type="text" value="local">
-            <button class="ant-btn.CSSHASH.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" style="display:none" type="button">
+                <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.css-var-root.ant-input-css-var.ant-input-compact-item.ant-input-compact-first-item.ant-input-compact-last-item" disabled="" id="req_headers_1" placeholder="参数值" type="text" value="local">
+            <button class="ant-btn.CSSHASH.css-var-root.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" style="display:none" type="button">
               <span class="ant-btn-icon">
                 <span aria-label="plus" class="anticon.anticon-plus" role="img">
                   <svg aria-hidden="true" data-icon="plus" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
@@ -1034,28 +1000,28 @@ const EXPECTED_RESPONSE_SNAPSHOT = `<div>
       <div class="ant-collapse-item.ant-collapse-item-active.POST">
         <div aria-disabled="false" aria-expanded="true" class="ant-collapse-header" role="button" tabindex="0">
           <div class="ant-collapse-expand-icon">
-            <span aria-label="expanded" class="anticon.anticon-right.ant-collapse-arrow" role="img">
+            <span aria-hidden="true" aria-label="right" class="anticon.anticon-right.ant-collapse-arrow" role="img">
               <svg aria-hidden="true" data-icon="right" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                 <path d="SVG_PATH">
-          <span class="ant-collapse-header-text">
+          <span class="ant-collapse-title">
             <div style="display:flex">
-              <span aria-describedby="test-id">
+              <span>
                 "BODY(F9)"
-        <div class="ant-collapse-content.ant-collapse-content-active">
-          <div class="ant-collapse-content-box">
+        <div class="ant-collapse-panel.ant-collapse-panel-active">
+          <div class="ant-collapse-body">
             <div style="display:block">
               <div class="adv-button">
-                <button class="ant-btn.CSSHASH.ant-btn-default.ant-btn-color-default.ant-btn-variant-outlined" type="button">
+                <button class="ant-btn.CSSHASH.css-var-root.ant-btn-default.ant-btn-color-default.ant-btn-variant-outlined" type="button">
                   <span>
                     "高级参数设置"
-                <span aria-describedby="test-id">
+                <span>
                   <span aria-label="question-circle" class="anticon.anticon-question-circle" role="img">
                     <svg aria-hidden="true" data-icon="question-circle" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                       <path d="SVG_PATH">
                       <path d="SVG_PATH">
               <div class="pretty-editor" data-data="{\\"name\\":\\"zhang\\"}" data-mode="null" data-readonly="false">
                 "STUB_ACE"
-    <div class="ant-tabs.ant-tabs-top.ant-tabs-large.response-tab.CSSHASH">
+    <div class="ant-tabs.ant-tabs-top.ant-tabs-large.response-tab.CSSHASH.css-var-root.ant-tabs-css-var">
       <div aria-orientation="horizontal" class="ant-tabs-nav" role="tablist">
         <div class="ant-tabs-nav-wrap">
           <div class="ant-tabs-nav-list">
@@ -1068,10 +1034,10 @@ const EXPECTED_RESPONSE_SNAPSHOT = `<div>
             <span aria-label="ellipsis" class="anticon.anticon-ellipsis" role="img">
               <svg aria-hidden="true" data-icon="ellipsis" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                 <path d="SVG_PATH">
-      <div class="ant-tabs-content-holder">
-        <div class="ant-tabs-content.ant-tabs-content-top">
-          <div aria-hidden="false" aria-labelledby="rc-tabs-test-tab-res" class="ant-tabs-tabpane.ant-tabs-tabpane-active" id="rc-tabs-test-panel-res" role="tabpanel" tabindex="0">
-            <div class="ant-spin-nested-loading.CSSHASH">
+      <div class="ant-tabs-body-holder">
+        <div class="ant-tabs-body.ant-tabs-body-top">
+          <div aria-hidden="false" aria-labelledby="rc-tabs-test-tab-res" class="ant-tabs-content.ant-tabs-content-active" id="rc-tabs-test-panel-res" role="tabpanel" tabindex="0">
+            <div aria-busy="false" aria-live="polite" class="ant-spin.CSSHASH.css-var-root">
               <div class="ant-spin-container">
                 <h2 class="res-code.success">
                   "200 OK"
@@ -1093,10 +1059,9 @@ const EXPECTED_RESPONSE_SNAPSHOT = `<div>
                     <div class="container-title">
                       <h4>
                         "Body"
-                      <label class="ant-checkbox-wrapper.ant-checkbox-wrapper-checked.CSSHASH">
+                      <label class="ant-checkbox-wrapper.ant-checkbox-wrapper-checked.css-var-root.ant-checkbox-css-var.CSSHASH">
                         <span class="ant-checkbox.ant-wave-target.CSSHASH.ant-checkbox-checked">
                           <input checked="true" class="ant-checkbox-input" type="checkbox">
-                          <span class="ant-checkbox-inner">
                         <span class="ant-checkbox-label">
                           <span>
                             "自动预览HTML"
@@ -1109,57 +1074,51 @@ const EXPECTED_TEST_TAB_SNAPSHOT = `<div>
     <div>
     <div class="url">
       <div class="ant-space-compact.CSSHASH" style="display:flex">
-        <div class="ant-select.ant-select-outlined.ant-select-compact-item.ant-select-compact-first-item.CSSHASH.ant-select-single.ant-select-show-arrow.ant-select-disabled" style="flex-basis:60px">
-          <div class="ant-select-selector">
-            <span class="ant-select-selection-wrap">
-              <span class="ant-select-selection-search">
-                <input aria-autocomplete="list" aria-controls="rc_select_TEST_OR_SSR_list" aria-expanded="false" aria-haspopup="listbox" aria-owns="rc_select_TEST_OR_SSR_list" autocomplete="off" class="ant-select-selection-search-input" disabled="" id="rc_select_TEST_OR_SSR" readonly="" role="combobox" type="search" unselectable="on" value="">
-              <span class="ant-select-selection-item" title="POST">
-                "POST"
-          <span aria-hidden="true" class="ant-select-arrow" unselectable="on">
-            <span aria-label="down" class="anticon.anticon-down.ant-select-suffix" role="img">
+        <div class="ant-select.ant-select-outlined.ant-select-compact-item.ant-select-compact-first-item.css-var-root.ant-select-css-var.CSSHASH.ant-select-single.ant-select-show-arrow.ant-select-disabled" style="flex-basis:60px">
+          <div class="ant-select-content.ant-select-content-has-value" title="POST">
+            "POST"
+            <input aria-autocomplete="list" aria-expanded="false" aria-haspopup="listbox" autocomplete="new-password" class="ant-select-input" disabled="" id="test-id" readonly="" role="combobox" type="text" value="">
+          <div class="ant-select-suffix">
+            <span aria-label="down" class="anticon.anticon-down" role="img">
               <svg aria-hidden="true" data-icon="down" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                 <path d="SVG_PATH">
-        <div class="ant-select.ant-select-outlined.ant-select-compact-item.CSSHASH.ant-select-single.ant-select-show-arrow" style="flex-basis:180px;flex-grow:1">
-          <div class="ant-select-selector">
-            <span class="ant-select-selection-wrap">
-              <span class="ant-select-selection-search">
-                <input aria-autocomplete="list" aria-controls="rc_select_TEST_OR_SSR_list" aria-expanded="false" aria-haspopup="listbox" aria-owns="rc_select_TEST_OR_SSR_list" autocomplete="off" class="ant-select-selection-search-input" id="rc_select_TEST_OR_SSR" readonly="" role="combobox" type="search" unselectable="on" value="">
-              <span class="ant-select-selection-item" title="prod：https://prod.example.com">
-                "prod：https://prod.example.com"
-          <span aria-hidden="true" class="ant-select-arrow" unselectable="on">
-            <span aria-label="down" class="anticon.anticon-down.ant-select-suffix" role="img">
+        <div class="ant-select.ant-select-outlined.ant-select-compact-item.css-var-root.ant-select-css-var.CSSHASH.ant-select-single.ant-select-show-arrow" style="flex-basis:180px;flex-grow:1">
+          <div class="ant-select-content.ant-select-content-has-value" title="prod：https://prod.example.com">
+            "prod：https://prod.example.com"
+            <input aria-autocomplete="list" aria-expanded="false" aria-haspopup="listbox" autocomplete="new-password" class="ant-select-input" id="test-id" readonly="" role="combobox" type="text" value="">
+          <div class="ant-select-suffix">
+            <span aria-label="down" class="anticon.anticon-down" role="img">
               <svg aria-hidden="true" data-icon="down" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                 <path d="SVG_PATH">
-        <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.ant-input-compact-item.ant-input-compact-last-item" disabled="" spellcheck="false" style="flex-basis:180px;flex-grow:1" type="text" value="/api/pet/{id}">
-      <button aria-describedby="test-id" class="ant-btn.CSSHASH.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" type="button">
+        <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.css-var-root.ant-input-css-var.ant-input-compact-item.ant-input-compact-last-item" disabled="" spellcheck="false" style="flex-basis:180px;flex-grow:1" type="text" value="/api/pet/{id}">
+      <button class="ant-btn.CSSHASH.css-var-root.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" type="button">
         <span>
           "发 送"
-      <button aria-describedby="test-id" class="ant-btn.CSSHASH.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" type="button">
+      <button class="ant-btn.CSSHASH.css-var-root.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" type="button">
         <span>
           "更 新"
-    <div class="ant-collapse.ant-collapse-icon-position-start.CSSHASH">
+    <div class="ant-collapse.ant-collapse-icon-placement-start.CSSHASH.css-var-root">
       <div class="ant-collapse-item.ant-collapse-item-active">
         <div aria-disabled="false" aria-expanded="true" class="ant-collapse-header" role="button" tabindex="0">
           <div class="ant-collapse-expand-icon">
-            <span aria-label="expanded" class="anticon.anticon-right.ant-collapse-arrow" role="img">
+            <span aria-hidden="true" aria-label="right" class="anticon.anticon-right.ant-collapse-arrow" role="img">
               <svg aria-hidden="true" data-icon="right" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                 <path d="SVG_PATH">
-          <span class="ant-collapse-header-text">
+          <span class="ant-collapse-title">
             "PATH PARAMETERS"
-        <div class="ant-collapse-content.ant-collapse-content-active">
-          <div class="ant-collapse-content-box">
+        <div class="ant-collapse-panel.ant-collapse-panel-active">
+          <div class="ant-collapse-body">
             <div class="key-value-wrap">
               <div>
-                <input aria-describedby="test-id" class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.key" disabled="" type="text" value="id">
+                <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.key.css-var-root.ant-input-css-var" disabled="" type="text" value="id">
               <span class="eq-symbol">
                 "="
               <div class="ant-space-compact.CSSHASH.value">
-                <input class="ant-input.CSSHASH.ant-input-outlined.ant-input-compact-item.ant-input-compact-first-item" id="req_params_0" placeholder="参数值" type="text" value="42">
+                <input class="ant-input.CSSHASH.ant-input-outlined.css-var-root.ant-input-css-var.ant-input-compact-item.ant-input-compact-first-item" id="req_params_0" placeholder="参数值" type="text" value="42">
                 <span aria-label="edit" class="anticon.anticon-edit" role="img" tabindex="-1">
                   <svg aria-hidden="true" data-icon="edit" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                     <path d="SVG_PATH">
-            <button class="ant-btn.CSSHASH.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" style="display:none" type="button">
+            <button class="ant-btn.CSSHASH.css-var-root.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" style="display:none" type="button">
               <span class="ant-btn-icon">
                 <span aria-label="plus" class="anticon.anticon-plus" role="img">
                   <svg aria-hidden="true" data-icon="plus" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
@@ -1170,42 +1129,40 @@ const EXPECTED_TEST_TAB_SNAPSHOT = `<div>
       <div class="ant-collapse-item.ant-collapse-item-active">
         <div aria-disabled="false" aria-expanded="true" class="ant-collapse-header" role="button" tabindex="0">
           <div class="ant-collapse-expand-icon">
-            <span aria-label="expanded" class="anticon.anticon-right.ant-collapse-arrow" role="img">
+            <span aria-hidden="true" aria-label="right" class="anticon.anticon-right.ant-collapse-arrow" role="img">
               <svg aria-hidden="true" data-icon="right" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                 <path d="SVG_PATH">
-          <span class="ant-collapse-header-text">
+          <span class="ant-collapse-title">
             "QUERY PARAMETERS"
-        <div class="ant-collapse-content.ant-collapse-content-active">
-          <div class="ant-collapse-content-box">
+        <div class="ant-collapse-panel.ant-collapse-panel-active">
+          <div class="ant-collapse-body">
             <div class="key-value-wrap">
               <div>
-                <input aria-describedby="test-id" class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.key" disabled="" type="text" value="q">
-              <label class="ant-checkbox-wrapper.ant-checkbox-wrapper-checked.ant-checkbox-wrapper-disabled.params-enable.CSSHASH">
+                <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.key.css-var-root.ant-input-css-var" disabled="" type="text" value="q">
+              <label class="ant-checkbox-wrapper.ant-checkbox-wrapper-checked.ant-checkbox-wrapper-disabled.params-enable.css-var-root.ant-checkbox-css-var.CSSHASH">
                 <span class="ant-checkbox.ant-wave-target.CSSHASH.ant-checkbox-checked.ant-checkbox-disabled">
                   <input checked="true" class="ant-checkbox-input" disabled="" type="checkbox">
-                  <span class="ant-checkbox-inner">
               <span class="eq-symbol">
                 "="
               <div class="ant-space-compact.CSSHASH.value">
-                <input class="ant-input.CSSHASH.ant-input-outlined.ant-input-compact-item.ant-input-compact-first-item" id="req_query_0" placeholder="参数值" type="text" value="hello">
+                <input class="ant-input.CSSHASH.ant-input-outlined.css-var-root.ant-input-css-var.ant-input-compact-item.ant-input-compact-first-item" id="req_query_0" placeholder="参数值" type="text" value="hello">
                 <span aria-label="edit" class="anticon.anticon-edit" role="img" tabindex="-1">
                   <svg aria-hidden="true" data-icon="edit" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                     <path d="SVG_PATH">
             <div class="key-value-wrap">
               <div>
-                <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.key" disabled="" type="text" value="opt">
-              <label class="ant-checkbox-wrapper.params-enable.CSSHASH">
+                <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.key.css-var-root.ant-input-css-var" disabled="" type="text" value="opt">
+              <label class="ant-checkbox-wrapper.params-enable.css-var-root.ant-checkbox-css-var.CSSHASH">
                 <span class="ant-checkbox.ant-wave-target.CSSHASH">
                   <input checked="false" class="ant-checkbox-input" type="checkbox">
-                  <span class="ant-checkbox-inner">
               <span class="eq-symbol">
                 "="
               <div class="ant-space-compact.CSSHASH.value">
-                <input class="ant-input.CSSHASH.ant-input-outlined.ant-input-compact-item.ant-input-compact-first-item" id="req_query_1" placeholder="参数值" type="text" value="">
+                <input class="ant-input.CSSHASH.ant-input-outlined.css-var-root.ant-input-css-var.ant-input-compact-item.ant-input-compact-first-item" id="req_query_1" placeholder="参数值" type="text" value="">
                 <span aria-label="edit" class="anticon.anticon-edit" role="img" tabindex="-1">
                   <svg aria-hidden="true" data-icon="edit" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                     <path d="SVG_PATH">
-            <button class="ant-btn.CSSHASH.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" style="display:none" type="button">
+            <button class="ant-btn.CSSHASH.css-var-root.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" style="display:none" type="button">
               <span class="ant-btn-icon">
                 <span aria-label="plus" class="anticon.anticon-plus" role="img">
                   <svg aria-hidden="true" data-icon="plus" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
@@ -1216,24 +1173,24 @@ const EXPECTED_TEST_TAB_SNAPSHOT = `<div>
       <div class="ant-collapse-item.ant-collapse-item-active">
         <div aria-disabled="false" aria-expanded="true" class="ant-collapse-header" role="button" tabindex="0">
           <div class="ant-collapse-expand-icon">
-            <span aria-label="expanded" class="anticon.anticon-right.ant-collapse-arrow" role="img">
+            <span aria-hidden="true" aria-label="right" class="anticon.anticon-right.ant-collapse-arrow" role="img">
               <svg aria-hidden="true" data-icon="right" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                 <path d="SVG_PATH">
-          <span class="ant-collapse-header-text">
+          <span class="ant-collapse-title">
             "HEADERS"
-        <div class="ant-collapse-content.ant-collapse-content-active">
-          <div class="ant-collapse-content-box">
+        <div class="ant-collapse-panel.ant-collapse-panel-active">
+          <div class="ant-collapse-body">
             <div class="key-value-wrap">
               <div>
-                <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.key" disabled="" type="text" value="Content-Type">
+                <input class="ant-input.ant-input-disabled.CSSHASH.ant-input-outlined.key.css-var-root.ant-input-css-var" disabled="" type="text" value="Content-Type">
               <span class="eq-symbol">
                 "="
               <div class="ant-space-compact.CSSHASH.value">
-                <input class="ant-input.CSSHASH.ant-input-outlined.ant-input-compact-item.ant-input-compact-first-item" id="req_headers_0" placeholder="参数值" type="text" value="application/json">
+                <input class="ant-input.CSSHASH.ant-input-outlined.css-var-root.ant-input-css-var.ant-input-compact-item.ant-input-compact-first-item" id="req_headers_0" placeholder="参数值" type="text" value="application/json">
                 <span aria-label="edit" class="anticon.anticon-edit" role="img" tabindex="-1">
                   <svg aria-hidden="true" data-icon="edit" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                     <path d="SVG_PATH">
-            <button class="ant-btn.CSSHASH.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" style="display:none" type="button">
+            <button class="ant-btn.CSSHASH.css-var-root.ant-btn-primary.ant-btn-color-primary.ant-btn-variant-solid" style="display:none" type="button">
               <span class="ant-btn-icon">
                 <span aria-label="plus" class="anticon.anticon-plus" role="img">
                   <svg aria-hidden="true" data-icon="plus" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
@@ -1244,28 +1201,28 @@ const EXPECTED_TEST_TAB_SNAPSHOT = `<div>
       <div class="ant-collapse-item.ant-collapse-item-active.POST">
         <div aria-disabled="false" aria-expanded="true" class="ant-collapse-header" role="button" tabindex="0">
           <div class="ant-collapse-expand-icon">
-            <span aria-label="expanded" class="anticon.anticon-right.ant-collapse-arrow" role="img">
+            <span aria-hidden="true" aria-label="right" class="anticon.anticon-right.ant-collapse-arrow" role="img">
               <svg aria-hidden="true" data-icon="right" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                 <path d="SVG_PATH">
-          <span class="ant-collapse-header-text">
+          <span class="ant-collapse-title">
             <div style="display:flex">
-              <span aria-describedby="test-id">
+              <span>
                 "BODY(F9)"
-        <div class="ant-collapse-content.ant-collapse-content-active">
-          <div class="ant-collapse-content-box">
+        <div class="ant-collapse-panel.ant-collapse-panel-active">
+          <div class="ant-collapse-body">
             <div style="display:block">
               <div class="adv-button">
-                <button class="ant-btn.CSSHASH.ant-btn-default.ant-btn-color-default.ant-btn-variant-outlined" type="button">
+                <button class="ant-btn.CSSHASH.css-var-root.ant-btn-default.ant-btn-color-default.ant-btn-variant-outlined" type="button">
                   <span>
                     "高级参数设置"
-                <span aria-describedby="test-id">
+                <span>
                   <span aria-label="question-circle" class="anticon.anticon-question-circle" role="img">
                     <svg aria-hidden="true" data-icon="question-circle" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                       <path d="SVG_PATH">
                       <path d="SVG_PATH">
               <div class="pretty-editor" data-data="{\\"name\\":\\"zhang\\"}" data-mode="null" data-readonly="false">
                 "STUB_ACE"
-    <div class="ant-tabs.ant-tabs-top.ant-tabs-large.response-tab.CSSHASH">
+    <div class="ant-tabs.ant-tabs-top.ant-tabs-large.response-tab.CSSHASH.css-var-root.ant-tabs-css-var">
       <div aria-orientation="horizontal" class="ant-tabs-nav" role="tablist">
         <div class="ant-tabs-nav-wrap">
           <div class="ant-tabs-nav-list">
@@ -1274,7 +1231,7 @@ const EXPECTED_TEST_TAB_SNAPSHOT = `<div>
                 "Response"
             <div class="ant-tabs-tab.ant-tabs-tab-active" data-node-key="test">
               <div aria-controls="rc-tabs-test-panel-test" aria-selected="true" class="ant-tabs-tab-btn" id="rc-tabs-test-tab-test" role="tab" tabindex="0">
-                <span aria-describedby="test-id">
+                <span>
                   "Test"
             <div class="ant-tabs-ink-bar.ant-tabs-ink-bar-animated">
         <div class="ant-tabs-nav-operations.ant-tabs-nav-operations-hidden">
@@ -1282,10 +1239,10 @@ const EXPECTED_TEST_TAB_SNAPSHOT = `<div>
             <span aria-label="ellipsis" class="anticon.anticon-ellipsis" role="img">
               <svg aria-hidden="true" data-icon="ellipsis" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                 <path d="SVG_PATH">
-      <div class="ant-tabs-content-holder">
-        <div class="ant-tabs-content.ant-tabs-content-top">
-          <div aria-hidden="true" aria-labelledby="rc-tabs-test-tab-res" class="ant-tabs-tabpane.ant-tabs-tabpane-hidden" id="rc-tabs-test-panel-res" role="tabpanel" tabindex="-1">
-            <div class="ant-spin-nested-loading.CSSHASH">
+      <div class="ant-tabs-body-holder">
+        <div class="ant-tabs-body.ant-tabs-body-top">
+          <div aria-hidden="true" aria-labelledby="rc-tabs-test-tab-res" class="ant-tabs-content.ant-tabs-content-hidden" id="rc-tabs-test-panel-res" role="tabpanel" tabindex="-1">
+            <div aria-busy="false" aria-live="polite" class="ant-spin.CSSHASH.css-var-root">
               <div class="ant-spin-container">
                 <h2 class="res-code.fail" style="display:none">
                   "null null"
@@ -1307,30 +1264,29 @@ const EXPECTED_TEST_TAB_SNAPSHOT = `<div>
                     <div class="container-title">
                       <h4>
                         "Body"
-                      <label class="ant-checkbox-wrapper.ant-checkbox-wrapper-checked.CSSHASH">
+                      <label class="ant-checkbox-wrapper.ant-checkbox-wrapper-checked.css-var-root.ant-checkbox-css-var.CSSHASH">
                         <span class="ant-checkbox.ant-wave-target.CSSHASH.ant-checkbox-checked">
                           <input checked="true" class="ant-checkbox-input" type="checkbox">
-                          <span class="ant-checkbox-inner">
                         <span class="ant-checkbox-label">
                           <span>
                             "自动预览HTML"
                     <div class="pretty-editor-body" data-data="" data-mode="text" data-readonly="true">
                       "STUB_ACE"
-          <div aria-hidden="false" aria-labelledby="rc-tabs-test-tab-test" class="ant-tabs-tabpane.ant-tabs-tabpane-active.response-test" id="rc-tabs-test-panel-test" role="tabpanel" tabindex="0">
+          <div aria-hidden="false" aria-labelledby="rc-tabs-test-tab-test" class="ant-tabs-content.ant-tabs-content-active.response-test" id="rc-tabs-test-panel-test" role="tabpanel" tabindex="0">
             <h3>
               "是否开启:"
-              <button aria-checked="false" class="ant-switch.CSSHASH" role="switch" type="button">
+              <button aria-checked="false" class="ant-switch.CSSHASH.css-var-root" role="switch" type="button">
                 <div class="ant-switch-handle">
                 <span class="ant-switch-inner">
                   <span class="ant-switch-inner-checked">
                   <span class="ant-switch-inner-unchecked">
             <p>
               "注：Test 脚本只有做自动化测试才执行"
-            <div class="ant-row.CSSHASH">
-              <div class="ant-col.ant-col-18.CSSHASH">
+            <div class="ant-row.CSSHASH.css-var-root">
+              <div class="ant-col.ant-col-18.CSSHASH.css-var-root">
                 <div class="case-script" data-data="assert.equal(status, 200)" data-mode="undefined" data-readonly="false">
                   "STUB_ACE"
-              <div class="ant-col.ant-col-6.CSSHASH">
+              <div class="ant-col.ant-col-6.CSSHASH.css-var-root">
                 <div class="insert-code">
                   <div class="code-item">
                     "断言 httpCode 等于 200"

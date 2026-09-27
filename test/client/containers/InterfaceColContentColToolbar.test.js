@@ -119,7 +119,7 @@ test.serial('受控渲染：guest 角色不渲染服务端测试按钮', t => {
 test.serial('受控渲染：环境下拉的选中值来自 envValue（受控回显）', t => {
   const { container } = renderToolbar({ envValue: { 'proj-1': 'test' } });
 
-  const items = Array.from(container.querySelectorAll('.case-env .ant-select-selection-item')).map(
+  const items = Array.from(container.querySelectorAll('.case-env .ant-select-content')).map(
     el => el.textContent
   );
   t.deepEqual(items, ['test: http://test.example.com'], '选中值应回显对应环境名与 domain');

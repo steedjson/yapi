@@ -235,7 +235,7 @@ test.serial('ProjectData 加载分类树并支持开启 url 导入', async t => 
   t.truthy(container.textContent.indexOf('数据导入') > -1, '应渲染数据导入区');
   t.truthy(container.textContent.indexOf('数据导出') > -1, '应渲染数据导出区');
   t.truthy(
-    container.querySelector('.catidSelect .ant-select-selection-item').textContent.indexOf('根分类') > -1,
+    container.querySelector('.catidSelect .ant-select-content').textContent.indexOf('根分类') > -1,
     '分类树加载后应默认选中首个分类（根分类）'
   );
   t.truthy(

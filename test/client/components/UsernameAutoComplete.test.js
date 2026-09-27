@@ -32,7 +32,7 @@ function renderAutoComplete() {
 }
 
 function getSearchInput(container) {
-  return container.querySelector('.ant-select-selection-search-input');
+  return container.querySelector('.ant-select-input');
 }
 
 function getOptions(container) {
@@ -61,7 +61,7 @@ test.serial('渲染多选用户名选择框与占位文案', t => {
   const select = container.querySelector('.ant-select');
   t.truthy(select, '应渲染 antd Select, 实际 DOM: ' + container.innerHTML);
   t.truthy(select.className.indexOf('ant-select-multiple') !== -1, '应为多选模式');
-  t.is(container.querySelector('.ant-select-selection-placeholder').textContent, '请输入用户名');
+  t.is(container.querySelector('.ant-select-placeholder').textContent, '请输入用户名');
   t.truthy(getSearchInput(container), '应渲染搜索输入框');
 });
 
@@ -157,9 +157,18 @@ test.serial('选中候选用户后触发 callbackState 并清空候选项', asyn
   });
 
   t.deepEqual(selected, [['11']], '应把选中用户的 id（字符串数组）交给 callbackState');
-  t.is(getOptions(container).length, 0, '选中后应清空候选项');
+  // antd6 起多选选中后下拉立即关闭，jsdom 下离场动画停在半途、旧选项列表冻结滞留
+  // DOM（antd5 是保持展开、列表原地清空）。改断言下拉的实时空态标记，语义不变：
+  // 活动列表已无候选项。
+  const dropdown = container.ownerDocument.querySelector('.ant-select-dropdown');
   t.truthy(
-    screen.getByText('allen'),
+    dropdown && dropdown.className.indexOf('ant-select-dropdown-empty') !== -1,
+    '选中后应清空候选项'
+  );
+  t.truthy(
+    Array.from(container.querySelectorAll('.ant-select-content-item')).find(
+      n => n.textContent === 'allen'
+    ),
     '选中用户应以标签形式回显在选择框中'
   );
 });

@@ -95,7 +95,7 @@ test.serial('UrlBar 受控渲染并在切换环境/发送/保存时上抛对应�
   const methodSelect = container.querySelector('.ant-select-disabled');
   t.truthy(methodSelect, '方法选择器应为禁用态（方法不可在运行页修改）');
   t.is(
-    methodSelect.querySelector('.ant-select-selection-item').textContent,
+    methodSelect.querySelector('.ant-select-content').textContent,
     'POST',
     '方法选择器应展示接口定义的 method'
   );
@@ -108,7 +108,7 @@ test.serial('UrlBar 受控渲染并在切换环境/发送/保存时上抛对应�
   t.is(buttonByText(container, '发送').disabled, false, '插件在位时发送按钮可用');
 
   // 环境下拉：选项文案 = 名称：域名；切换上抛（索引 0 为禁用的方法选择器，1 为环境下拉）
-  const selectors = Array.from(container.querySelectorAll('.ant-select-selector'));
+  const selectors = Array.from(container.querySelectorAll('.ant-select-input'));
   await act(async () => {
     fireEvent.mouseDown(selectors[1], { target: selectors[1] });
     await sleep(30);
@@ -157,8 +157,8 @@ test.serial('UrlBar 受控渲染并在切换环境/发送/保存时上抛对应�
   // 环境配置入口按钮上抛
   const utils3 = render(<UrlBar {...props} />);
   await act(async () => {
-    fireEvent.mouseDown(utils3.container.querySelectorAll('.ant-select-selector')[1], {
-      target: utils3.container.querySelectorAll('.ant-select-selector')[1]
+    fireEvent.mouseDown(utils3.container.querySelectorAll('.ant-select-input')[1], {
+      target: utils3.container.querySelectorAll('.ant-select-input')[1]
     });
     await sleep(30);
   });
@@ -201,7 +201,7 @@ test.serial('RequestParamsPanel 按 props 渲染四项并上抛改值、勾选�
   const { container } = utils;
 
   // 面板标签与行渲染集
-  const labels = Array.from(container.querySelectorAll('.ant-collapse-header-text')).map(e =>
+  const labels = Array.from(container.querySelectorAll('.ant-collapse-title')).map(e =>
     (e.textContent || '').trim()
   );
   t.deepEqual(

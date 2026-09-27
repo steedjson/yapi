@@ -66,7 +66,7 @@ function rowByName(container, name) {
 
 // antd Select 的下拉需在 selector 内部搜索输入框上触发 mousedown 才会展开
 async function openTypeSelect(rowEl) {
-  fireEvent.mouseDown(rowEl.querySelector('.jse-type-select .ant-select-selection-search-input'));
+  fireEvent.mouseDown(rowEl.querySelector('.jse-type-select .ant-select-input'));
   await act(async () => {
     await sleep(20);
   });
@@ -83,7 +83,7 @@ test.serial('渲染: 合法 schema 按树形渲染行, 名称/类型/必填/mock
   t.is(nameInput.value, 'user');
 
   const typeTexts = Array.from(container.querySelectorAll('.jse-type-select')).map(select => {
-    const item = select.querySelector('.ant-select-selection-item');
+    const item = select.querySelector('.ant-select-content');
     return item ? item.textContent : '';
   });
   t.deepEqual(typeTexts, ['object', 'string', 'integer', 'array', 'string', 'string'], '各行类型回显');

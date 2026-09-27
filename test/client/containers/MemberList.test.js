@@ -100,7 +100,7 @@ test.serial('owner 视角渲染成员表格（用户名/角色）并提供添加
   // owner 视角：角色列渲染可切换的 Select，选中项展示角色文案
   const selects = Array.from(container.querySelectorAll('.member-opration .ant-select'));
   t.is(selects.length, 3, 'owner 视角应为每个成员渲染角色 Select');
-  const roleTexts = selects.map(select => select.querySelector('.ant-select-selection-item').textContent);
+  const roleTexts = selects.map(select => select.querySelector('.ant-select-content').textContent);
   t.deepEqual(roleTexts, ['组长', '开发者', '访客'], '角色 Select 选中项应为组长/开发者/访客');
 
   t.truthy(
@@ -127,11 +127,11 @@ test.serial('点击「添加成员」展开 Modal（用户名自动补全 + 权�
   t.truthy(modal, '点击后应展开添加成员 Modal');
   t.is(modal.querySelector('.ant-modal-title').textContent, '添加成员', 'Modal 标题应为「添加成员」');
   t.truthy(
-    modal.querySelector('.ant-select .ant-select-selection-placeholder'),
+    modal.querySelector('.ant-select .ant-select-placeholder'),
     'Modal 内应渲染用户名自动补全输入框（UsernameAutoComplete 占位）'
   );
   t.is(
-    modal.querySelector('.ant-select .ant-select-selection-placeholder').textContent,
+    modal.querySelector('.ant-select .ant-select-placeholder').textContent,
     '请输入用户名',
     '自动补全输入框占位文案应为「请输入用户名」'
   );

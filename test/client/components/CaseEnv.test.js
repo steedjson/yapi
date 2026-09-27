@@ -53,7 +53,7 @@ function renderCaseEnv(overrides) {
 // antd Select 的下拉在 selector 内部的搜索输入框上触发 mousedown 才会展开
 function openSelect(container, index) {
   const select = container.querySelectorAll('.case-env .ant-select')[index || 0];
-  fireEvent.mouseDown(select.querySelector('.ant-select-selection-search-input') || select);
+  fireEvent.mouseDown(select.querySelector('.ant-select-input') || select);
 }
 
 test.serial('渲染每个环境项的名称', t => {
@@ -80,7 +80,7 @@ test.serial('受控回显: 已选环境展示对应名称, 未选环境展示默
   const { container } = renderCaseEnv();
 
   const selections = Array.from(
-    container.querySelectorAll('.case-env .ant-select-selection-item')
+    container.querySelectorAll('.case-env .ant-select-content')
   ).map(s => s.textContent);
   t.deepEqual(
     selections,

@@ -243,6 +243,8 @@ const GLOBAL_KEYS = [
   'HTMLInputElement',
   'HTMLTextAreaElement',
   'HTMLDivElement',
+  'HTMLBodyElement',
+  'HTMLHtmlElement',
   'HTMLAnchorElement',
   'HTMLButtonElement',
   'SVGElement',

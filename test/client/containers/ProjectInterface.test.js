@@ -384,12 +384,12 @@ test.serial('ImportInterface 渲染扁平分类列表与项目下拉，跳过带
   t.is(rows[0].textContent.indexOf('分类A') > -1, true, '分类行应展示分类名');
 
   // 选中值 '12' 在 options 中无匹配项时，闭合态回显原始值（与旧实现一致）
-  const selection = container.querySelector('.select-project .ant-select-selection-item');
+  const selection = container.querySelector('.select-project .ant-select-content');
   t.truthy(selection, '应渲染项目下拉选中项');
   t.is(selection.textContent, '12', '闭合态应显示当前项目 id 原始值');
 
   // 展开下拉验证过滤：带 projectname 的项目不出现在选项中
-  fireEvent.mouseDown(container.querySelector('.select-project .ant-select-selector'));
+  fireEvent.mouseDown(container.querySelector('.select-project .ant-select-input'));
   const optionTexts = Array.from(document.body.querySelectorAll('.ant-select-item-option')).map(
     o => o.textContent
   );

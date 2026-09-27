@@ -124,7 +124,7 @@ test.serial('BasicSettingPanel 受控回填基本设置字段并上抛方法切�
   // 受控回填：名称 / 方法 / 路径 / 自定义字段标签
   t.is(container.querySelector('input#title').value, '接口一', '接口名称应回填 title');
   t.is(
-    container.querySelector('.ant-select-selection-item[title="POST"]').textContent,
+    container.querySelector('.ant-select-content[title="POST"]').textContent,
     'POST',
     '方法选择器应展示当前 method'
   );
@@ -145,7 +145,7 @@ test.serial('BasicSettingPanel 受控回填基本设置字段并上抛方法切�
   );
   t.truthy(methodSelect, '方法选择器应可定位（受控展示当前 method）');
   await act(async () => {
-    fireEvent.mouseDown(methodSelect.querySelector('.ant-select-selector'));
+    fireEvent.mouseDown(methodSelect.querySelector('.ant-select-input'));
     await sleep(30);
   });
   await act(async () => {
@@ -173,7 +173,7 @@ test.serial('BasicSettingPanel 受控回填基本设置字段并上抛方法切�
   );
   t.truthy(tagSelect, 'Tag 多选应回填已选 tagA');
   await act(async () => {
-    fireEvent.mouseDown(tagSelect.querySelector('.ant-select-selector'));
+    fireEvent.mouseDown(tagSelect.querySelector('.ant-select-input'));
     await sleep(30);
   });
   const tagSettingButton = Array.from(document.querySelectorAll('.ant-select-item-option button')).find(
