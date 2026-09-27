@@ -17,7 +17,7 @@
  */
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Button, Input, Checkbox, Tooltip } from 'antd';
+import { Button, Input, Checkbox, Tooltip, Space } from 'antd';
 import { EditOutlined, PlusOutlined, QuestionCircleOutlined } from '@ant-design/icons';
 import AceEditor from 'client/components/AceEditor/AceEditor';
 import constants from '../../../constants/variable.js';
@@ -102,18 +102,17 @@ const BodyPanel = props => {
                     //   className="value"
                     // />
                   ) : (
-                    <Input
-                      value={item.value}
-                      className="value"
-                      onChange={(/** @type {any} */ e) => onFormChange(e.target.value, index)}
-                      placeholder="参数值"
-                      id={`req_body_form_${index}`}
-                      addonAfter={
-                        <EditOutlined
-                          onClick={() => onShowModal(item.value, index, 'req_body_form')}
-                        />
-                      }
-                    />
+                    <Space.Compact className="value">
+                      <Input
+                        value={item.value}
+                        onChange={(/** @type {any} */ e) => onFormChange(e.target.value, index)}
+                        placeholder="参数值"
+                        id={`req_body_form_${index}`}
+                      />
+                      <EditOutlined
+                        onClick={() => onShowModal(item.value, index, 'req_body_form')}
+                      />
+                    </Space.Compact>
                   )}
                 </div>
               );

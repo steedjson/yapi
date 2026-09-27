@@ -19,7 +19,7 @@
  */
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Button, Input, Checkbox, Collapse, Tooltip } from 'antd';
+import { Button, Input, Checkbox, Collapse, Tooltip, Space } from 'antd';
 import { EditOutlined, PlusOutlined } from '@ant-design/icons';
 import constants from '../../../constants/variable.js';
 import ParamsName from './ParamsName.js';
@@ -62,20 +62,17 @@ const RequestParamsPanel = props => {
                   <div key={index} className="key-value-wrap">
                     <ParamsName example={item.example} desc={item.desc} name={item.name} />
                     <span className="eq-symbol">=</span>
-                    <Input
-                      value={item.value}
-                      className="value"
-                      onChange={(/** @type {any} */ e) =>
-                        onChangeParam('req_params', e.target.value, index)
-                      }
-                      placeholder="参数值"
-                      id={`req_params_${index}`}
-                      addonAfter={
-                        <EditOutlined
-                          onClick={() => onShowModal(item.value, index, 'req_params')}
-                        />
-                      }
-                    />
+                    <Space.Compact className="value">
+                      <Input
+                        value={item.value}
+                        onChange={(/** @type {any} */ e) =>
+                          onChangeParam('req_params', e.target.value, index)
+                        }
+                        placeholder="参数值"
+                        id={`req_params_${index}`}
+                      />
+                      <EditOutlined onClick={() => onShowModal(item.value, index, 'req_params')} />
+                    </Space.Compact>
                   </div>
                 );
               })}
@@ -112,18 +109,17 @@ const RequestParamsPanel = props => {
                       />
                     )}
                     <span className="eq-symbol">=</span>
-                    <Input
-                      value={item.value}
-                      className="value"
-                      onChange={(/** @type {any} */ e) => onChangeParam('req_query', e.target.value, index)}
-                      placeholder="参数值"
-                      id={`req_query_${index}`}
-                      addonAfter={
-                        <EditOutlined
-                          onClick={() => onShowModal(item.value, index, 'req_query')}
-                        />
-                      }
-                    />
+                    <Space.Compact className="value">
+                      <Input
+                        value={item.value}
+                        onChange={(/** @type {any} */ e) =>
+                          onChangeParam('req_query', e.target.value, index)
+                        }
+                        placeholder="参数值"
+                        id={`req_query_${index}`}
+                      />
+                      <EditOutlined onClick={() => onShowModal(item.value, index, 'req_query')} />
+                    </Space.Compact>
                   </div>
                 );
               })}
@@ -144,23 +140,22 @@ const RequestParamsPanel = props => {
                   <div key={index} className="key-value-wrap">
                     <ParamsName example={item.example} desc={item.desc} name={item.name} />
                     <span className="eq-symbol">=</span>
-                    <Input
-                      value={item.value}
-                      disabled={!!item.abled}
-                      className="value"
-                      onChange={(/** @type {any} */ e) =>
-                        onChangeParam('req_headers', e.target.value, index)
-                      }
-                      placeholder="参数值"
-                      id={`req_headers_${index}`}
-                      addonAfter={
-                        !item.abled && (
-                          <EditOutlined
-                            onClick={() => onShowModal(item.value, index, 'req_headers')}
-                          />
-                        )
-                      }
-                    />
+                    <Space.Compact className="value">
+                      <Input
+                        value={item.value}
+                        disabled={!!item.abled}
+                        onChange={(/** @type {any} */ e) =>
+                          onChangeParam('req_headers', e.target.value, index)
+                        }
+                        placeholder="参数值"
+                        id={`req_headers_${index}`}
+                      />
+                      {!item.abled && (
+                        <EditOutlined
+                          onClick={() => onShowModal(item.value, index, 'req_headers')}
+                        />
+                      )}
+                    </Space.Compact>
                   </div>
                 );
               })}

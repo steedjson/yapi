@@ -1,7 +1,7 @@
 // @ts-check
 import React, { useState } from 'react'
 import PropTypes from 'prop-types'
-import { Input, Select, Button, Form, TreeSelect } from 'antd';
+import { Input, Select, Button, Form, TreeSelect, Space } from 'antd';
 
 import constants from '../../../../constants/variable.js'
 import { handleApiPath, nameLengthLimit } from '../../../../common.js'
@@ -90,15 +90,22 @@ function AddInterfaceForm(props) {
         <Input placeholder="接口名称" />
       </FormItem>
 
-      <FormItem
-        {...formItemLayout}
-        label="接口路径"
-        name="path"
-        rules={[{
-          required: true, message: '请输入接口路径!'
-        }]}
-      >
-        <Input onBlur={handlePath} addonBefore={prefixSelector} placeholder="/path" />
+      <FormItem {...formItemLayout} label="接口路径">
+        <Space.Compact block>
+          {prefixSelector}
+          <FormItem
+            name="path"
+            noStyle
+            rules={[
+              {
+                required: true,
+                message: '请输入接口路径!'
+              }
+            ]}
+          >
+            <Input onBlur={handlePath} placeholder="/path" />
+          </FormItem>
+        </Space.Compact>
       </FormItem>
       <FormItem
         {...formItemLayout}

@@ -336,41 +336,42 @@ function ProjectEnvContent(props) {
           <Col span={22}>
             <FormItem
               required={false}
-              name={['env', 'domain']}
-              validateTrigger={['onChange', 'onBlur']}
-              initialValue={
-                props.projectMsg.domain ? props.projectMsg.domain.split('//')[1] : ''
-              }
-              rules={[
-                {
-                  required: false,
-                  whitespace: true,
-                  validator(/** @type {any} */ rule, /** @type {any} */ value, /** @type {any} */ callback) {
-                    if (value) {
-                      if (value.length === 0) {
-                        callback('请输入环境域名!');
-                      } else if (/\s/.test(value)) {
-                        callback('环境域名不允许出现空格!');
-                      } else {
-                        return callback();
-                      }
-                    } else {
-                      callback('请输入环境域名!');
-                    }
-                  }
-                }
-              ]}
             >
-              <Input
-                placeholder="请输入环境域名"
-                style={{ width: '100%' }}
-                addonBefore={
-                  <Select value={protocol} onChange={(/** @type {any} */ v) => setProtocol(v)}>
-                    <Option value="http://">{'http://'}</Option>
-                    <Option value="https://">{'https://'}</Option>
-                  </Select>
-                }
-              />
+              <Space.Compact block>
+                <Select value={protocol} onChange={(/** @type {any} */ v) => setProtocol(v)}>
+                  <Option value="http://">{'http://'}</Option>
+                  <Option value="https://">{'https://'}</Option>
+                </Select>
+                <FormItem
+                  name={['env', 'domain']}
+                  noStyle
+                  validateTrigger={['onChange', 'onBlur']}
+                  initialValue={
+                    props.projectMsg.domain ? props.projectMsg.domain.split('//')[1] : ''
+                  }
+                  rules={[
+                    {
+                      required: false,
+                      whitespace: true,
+                      validator(/** @type {any} */ rule, /** @type {any} */ value, /** @type {any} */ callback) {
+                        if (value) {
+                          if (value.length === 0) {
+                            callback('请输入环境域名!');
+                          } else if (/\s/.test(value)) {
+                            callback('环境域名不允许出现空格!');
+                          } else {
+                            return callback();
+                          }
+                        } else {
+                          callback('请输入环境域名!');
+                        }
+                      }
+                    }
+                  ]}
+                >
+                  <Input placeholder="请输入环境域名" />
+                </FormItem>
+              </Space.Compact>
             </FormItem>
           </Col>
         </Row>
