@@ -59,7 +59,8 @@ function Login(props) {
   };
 
   /**
-   * @param {React.SyntheticEvent} e
+   * Radio.Group onChange 事件，target 为渲染出的 input 元素
+   * @param {React.SyntheticEvent<HTMLInputElement>} e
    */
   const handleFormLayoutChange = e => {
     setLoginType(e.target.value);

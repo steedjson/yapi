@@ -12,6 +12,8 @@
  *     opts.routePath/initialPath 模拟 Application.js 的 <Routes><Route> 挂载方式；
  *     返回的 utils.navigate(to) 可在路由内导航（id/分组切换重拉类用例）；
  *   - flushEffects(ms)：在 act 中等待异步副作用（axios → store 写入 → setState）；
+ *   - waitFor(checker, desc, timeout)：轮询等待断言条件成立（React 19 并发调度下
+ *     替代「固定 sleep 再断言」，checker 可为条件函数或直接放既有断言）；
  *   - stubDefaultExport(absPath, Stub)：以 require.cache 注入方式替换带默认导出的
  *     副作用子模块（如 TimeLine），仅限测试文件在 require 生产代码之前调用。
  */
@@ -90,6 +92,54 @@ async function flushEffects(ms) {
   });
 }
 
+const DEFAULT_WAIT_FOR_TIMEOUT = 3000;
+const WAIT_FOR_INTERVAL = 10;
+
+/**
+ * 轮询等待「断言条件成立」（React 19 并发调度下替代「固定 sleep 再断言」）。
+ *
+ * 背景：React 19 的并发调度会把事件后异步链路（axios → store 写入 → setState）的
+ * 渲染/提交推迟到后续宏/微任务，固定 sleep 可能与提交窗口错位——断言跑在提交前，
+ * 且更新落在 act 外触发 not wrapped in act(...) 告警。本助手每轮先在 act 中让出
+ * 事件循环（React 在 act 作用域内完成调度的提交），再检查条件，成立即返回。
+ *
+ * checker 用法（不改变既有断言语义，只改等待方式）：
+ *   - 条件式（推荐）：返回真值视为就绪，如 () => utils.container.querySelector('.foo');
+ *     条件成立后再执行原断言，断言语句本身保持在 waitFor 之外。
+ *   - 注意不要把 ava 断言直接放进 checker：ava 断言失败是「记录失败」而非抛错，
+ *     早期轮询记录的失败会粘滞到测试结果（不会随后续轮询通过而撤销）。
+ *   - checker 若因 DOM 查询辅助（getBy*）抛错，视为未就绪继续轮询，
+ *     超时后把最后错误一并抛出，便于定位。
+ *
+ * @param {() => any} checker 条件函数（返回真值）或直接断言（抛错视为未就绪）
+ * @param {string} [desc] 条件描述，超时报错附带，便于定位
+ * @param {number} [timeout] 超时毫秒数，默认 3000
+ */
+async function waitFor(checker, desc, timeout) {
+  const timeoutMs = timeout == null ? DEFAULT_WAIT_FOR_TIMEOUT : timeout;
+  const deadline = Date.now() + timeoutMs;
+  let lastError = null;
+  for (;;) {
+    await act(async () => {
+      await sleep(WAIT_FOR_INTERVAL);
+    });
+    let ok = false;
+    try {
+      ok = Boolean(checker());
+    } catch (e) {
+      lastError = e;
+    }
+    if (ok) {
+      return;
+    }
+    if (Date.now() > deadline) {
+      const reason = desc || '等待条件未满足';
+      const hint = lastError ? `；最后错误: ${lastError.message}` : '';
+      throw new Error(`waitFor 超时（${timeoutMs}ms）：${reason}${hint}`);
+    }
+  }
+}
+
 /**
  * 以 require.cache 注入方式替换目标模块的默认导出（Node 解析相对导入时会命中同一
  * 绝对路径的缓存）。必须在 require 生产代码之前调用；每个 ava worker 为独立进程，
@@ -107,6 +157,7 @@ module.exports = {
   REPO_ROOT,
   renderWithProviders,
   flushEffects,
+  waitFor,
   stubDefaultExport,
   cleanupDom
 };

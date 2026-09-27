@@ -33,7 +33,7 @@ CheckCrossInstall.propTypes = {
 function CheckCrossInstall(props) {
   const hasPlugin = props.hasPlugin;
   return (
-    <div className={hasPlugin ? null : 'has-plugin'}>
+    <div className={hasPlugin ? undefined : 'has-plugin'}>
       {hasPlugin ? (
         ''
       ) : (

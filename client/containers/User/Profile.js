@@ -471,7 +471,7 @@ const Profile = () => {
  * - 旧 handleChange 的 this 绑定随函数组件一并移除。
  */
 /**
- * @param {{ uid: any }} props
+ * @param {{ uid: any, children?: any }} props
  */
 const AvatarUpload = ({ uid }) => {
   const url = useUserStore(state => state.imageUrl);

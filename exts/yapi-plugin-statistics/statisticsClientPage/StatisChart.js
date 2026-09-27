@@ -5,7 +5,10 @@
 import React, { useEffect, useState } from 'react';
 // import PropTypes from 'prop-types'
 import axios from 'axios';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import * as recharts from 'recharts';
+// recharts 2.15 自带 typings 基于旧版 @types/react 构建（类组件未声明 context），
+// React 19 类型下不再满足 JSX 组件约束；对命名空间整体断言为 any，仅影响类型检查，运行时不变。
+const { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } = /** @type {any} */ (recharts);
 import { Spin } from 'antd';
 
 /**

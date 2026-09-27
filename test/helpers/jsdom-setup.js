@@ -1,5 +1,5 @@
 /**
- * 前端组件测试环境（jsdom + React 18）搭建。
+ * 前端组件测试环境（jsdom + React 19）搭建。
  *
  * 使用方式：在测试文件顶部**第一行**显式 import 本模块，再 import 被测生产代码。
  * 不写入 ava.config.cjs 的 require，避免影响既有服务端 / 纯函数测试的运行环境。
@@ -19,7 +19,10 @@ const { JSDOM } = require('jsdom');
 // React 19 spike：antd v5 静态方法（message/notification/Modal.confirm）内部仍走
 // ReactDOM.render（React 19 已移除），测试环境与 client/index.js 一致，
 // 必须在组件代码加载前打官方补丁。
-require('@ant-design/v5-patch-for-react-19');
+// 注意补丁装载时机：必须在下方 setupDom() 之后 require（见文件底部说明）——
+// 补丁会连带 require antd 与 react-dom/client，而 react-dom 19.3 以模块级常量
+// 探测环境（canUseDOM / isInputEventSupported），若在 jsdom 全局就位前加载，
+// isInputEventSupported 被固化为 false，受控输入 onChange 事件全灭（34 例失败根因）。
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
 
@@ -330,7 +333,7 @@ function setupDom() {
   defineGlobal('cancelAnimationFrame', window.cancelAnimationFrame.bind(window));
   defineGlobal('getSelection', window.getSelection.bind(window));
 
-  // React 18 act() 需要显式声明测试环境
+  // React 19 act() 同样需要显式声明测试环境
   defineGlobal('IS_REACT_ACT_ENVIRONMENT', true);
   process.env.IS_REACT_ACT_ENVIRONMENT = 'true';
 
@@ -371,6 +374,12 @@ installModuleAliases();
 installAssetStubs();
 installMessageChannelUnref();
 setupDom();
+
+// 官方补丁必须在 setupDom() 之后、任何 antd/生产代码装载之前 require：
+// react-dom 19.3 以模块级常量探测环境（canUseDOM / isInputEventSupported），
+// 依赖 jsdom 全局先行——本模块是所有 client 测试的首个 import，
+// 此处装载仍满足「任何 antd 使用前打补丁」的时序不变量。
+require('@ant-design/v5-patch-for-react-19');
 
 module.exports = {
   dom: globalThis[DOM_FLAG],

@@ -111,7 +111,7 @@ const HomeGuest = () => (
                 所有的数据都可以实时随机生成。
               </p>
               <div className="code">
-                <ol start="1">
+                <ol start={1}>
                   <li className="item">
                     <span className="orderNum orderNum-first">1</span>
                     <span>
@@ -199,7 +199,7 @@ const HomeGuest = () => (
                 请求使用，也可以通过服务器代理使用（不需要修改项目一行代码）
               </p>
               <div className="code">
-                <ol start="1">
+                <ol start={1}>
                   <li className="alt">
                     <span className="orderNum orderNum-first">1</span>
                     <span>

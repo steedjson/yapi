@@ -492,7 +492,7 @@ const ProjectData = () => {
                       dangerouslySetInnerHTML={{
                         __html: curImportType
                           ? sanitizeHtml(importDataModule[curImportType].desc)
-                          : null
+                          : ''
                       }}
                     />
                   </Dragger>

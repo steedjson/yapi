@@ -204,7 +204,7 @@ const ProjectEnv = props => {
         onMouseEnter={() => enterItem(index)}
       >
         <span className="env-icon-style">
-          <span className="env-name" style={{ color: item.name === '新环境' && '#2395f1' }}>
+          <span className="env-name" style={{ color: item.name === '新环境' ? '#2395f1' : undefined }}>
             {item.name}
           </span>
           <Popconfirm

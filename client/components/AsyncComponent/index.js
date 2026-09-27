@@ -1,7 +1,10 @@
 // @ts-check
 import React from 'react';
 import Loading from '../Loading/Loading';
-import ErrorBoundary from '../ErrorBoundary/ErrorBoundary';
+import ErrorBoundaryRaw from '../ErrorBoundary/ErrorBoundary';
+// ErrorBoundary 类组件在 checkJs 推导下实例类型缺 React 19 JSX 组件约束要求的
+// context/setState 等成员；断言为 any 仅影响类型检查，运行时仍为标准 React.Component 子类。
+const ErrorBoundary = /** @type {any} */ (ErrorBoundaryRaw);
 
 /**
  * 路由/插件级代码分割的统一封装（单一来源，Application 路由与三个插件共用）：

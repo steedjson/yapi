@@ -205,9 +205,15 @@ function checkNameIsExistInArray(name, arr) {
  * 根据环境名挑选当前使用的域名配置
  * @param {any} domains 域名列表
  * @param {any} case_env 环境名称
- * @returns {any} 命中的域名配置
+ * @returns {any} 命中的域名配置；domains 未就绪（非数组）时返回 undefined
  */
 function handleCurrDomain(domains, case_env) {
+  // 数据就绪守卫：React 19 并发调度下，InterfaceColContent 可能在 env 列表
+  // 加载完成前的渲染期就消费本函数（React 18 同步渲染时序掩盖了该竞态）。
+  // domains 未就绪时等价于"无 env 命中"的既有语义：返回 undefined，由调用方回退。
+  if (!Array.isArray(domains)) {
+    return undefined;
+  }
   let currDomain = domains.find((/** @type {any} */ item) => item.name === case_env);
 
   if (!currDomain) {

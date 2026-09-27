@@ -186,7 +186,9 @@ const InterfaceColContent = () => {
     });
 
     const currDomain = handleCurrDomain(envItem && envItem.env, case_env);
-    const header = currDomain.header;
+    // env 列表未就绪时 currDomain 为 undefined（handleCurrDomain 的数据就绪守卫），
+    // 此时等价于"无 env 命中"：不注入任何 env header，直接返回原始 req_header。
+    const header = (currDomain && currDomain.header) || [];
     header.forEach((/** @type {any} */ item) => {
       if (!checkNameIsExistInArray(item.name, req_header)) {
         // item.abled = true;
