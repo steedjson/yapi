@@ -16,6 +16,11 @@ const path = require('path');
 const Module = require('module');
 const { JSDOM } = require('jsdom');
 
+// React 19 spike：antd v5 静态方法（message/notification/Modal.confirm）内部仍走
+// ReactDOM.render（React 19 已移除），测试环境与 client/index.js 一致，
+// 必须在组件代码加载前打官方补丁。
+require('@ant-design/v5-patch-for-react-19');
+
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
 
 const ALIAS_FLAG = '__YAPI_TEST_MODULE_ALIASES__';
