@@ -59,7 +59,7 @@ const ResponsePanel = props => {
       </div>
       {test_valid_msg && (
         <Alert
-          message={
+          title={
             <span>
               Warning &nbsp;
               <Tooltip title="针对定义为 json schema 的返回数据进行格式校验">

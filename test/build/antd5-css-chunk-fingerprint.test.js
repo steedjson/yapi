@@ -42,16 +42,22 @@ const PRD_DIR = path.join(REPO_ROOT, 'static', 'prd');
 // 异步 vendor yu 收缩重编号为 3（LICENSE 纯子集，无新增库）；project 哈希变化——
 // 剥离 11 条 .intro-container 死样式（新旧产物逐字节比对仅此差异）。初始 chunk 顺序
 // 不变。层 A/层 B 已按新产物重扫（candidates 1193→1183，confirmed-override 0，判定无漂移）。
+// antd6 迁移批（2026-09）：GroupList.scss F-2 搜索按钮锚点链随 antd6 Search DOM 更新
+// （.ant-input-group/.ant-input-group-addon/.ant-input-search-button → .ant-input-search/
+// .ant-input-search-btn）→ group 哈希变化；Edit.scss 删除 2 条 antd3 时代死声明
+// （N-2 同款裁决，见文件内注释）→ project 哈希变化。antd6.6.5 依赖图变化使初始
+// chunk 'a' 更名 '0'（顺序不变，link 标签序列不受影响）。层 A/层 B 已按新产物重扫
+// （层 A candidates 1126，层 B confirmed-override 0，判定无漂移）。
 const BASELINE = {
   cssChunks: {
     'index.js': 'index@d086ece37364de01.css',
-    group: 'group@426f689219580b35.css',
-    project: 'project@edbce51ee0e5fbb9.css',
+    group: 'group@e8c3877fde747b15.css',
+    project: 'project@4c60428c2563bc23.css',
     user: 'user@57802eb279f54184.css',
     follows: 'follows@3f80bd4670cf7f38.css',
     'add-project': 'add-project@80e6a5a4d705c349.css'
   },
-  initialChunks: ['manifest', 'antd', 'a', 'index.js']
+  initialChunks: ['manifest', 'antd', '0', 'index.js']
   // 批次 4：json-schema-editor-visual 的 antd.css import 已删，scoped antd3 双作用域
   // 机制退役——scopedAntd3Carrier/scopeMarker 基线随之移除（产物实测 0 处标记）。
 };

@@ -30,7 +30,7 @@ export default function Notify() {
     <div>
       {isShow && (
         <Alert
-          message={
+          title={
             <div>
               当前版本是：{version}&nbsp;&nbsp;可升级到: {newVersion}
               &nbsp;&nbsp;&nbsp;

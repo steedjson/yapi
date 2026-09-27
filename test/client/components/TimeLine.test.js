@@ -86,9 +86,11 @@ test.serial('根据 mock 数据渲染动态列表项、用户头像与动态描�
   seedActivity(list);
   const { container } = renderTimeTree({ typeid: 42, type: 'project' });
 
-  const items = container.querySelectorAll(
-    '.news-content .ant-timeline-item:not(.ant-timeline-item-pending)'
-  );
+  // antd6 起 Timeline 基于 Steps 桥接渲染：动态项不再挂 .ant-timeline-item-pending
+  // （收尾加载项由组件显式追加），改以「含 .logMesHeade 正文」过滤出真实动态项
+  const items = Array.from(
+    container.querySelectorAll('.news-content .ant-timeline-item')
+  ).filter(el => el.querySelector('.logMesHeade'));
   t.is(items.length, 2, '应渲染 2 条动态, 实际 DOM: ' + container.innerHTML);
 
   const types = Array.from(container.querySelectorAll('.logtype')).map(el => el.textContent);
@@ -101,10 +103,11 @@ test.serial('根据 mock 数据渲染动态列表项、用户头像与动态描�
   const logtime = container.querySelector('.logtime');
   t.truthy(/\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/.test(logtime.textContent), '秒级时间戳应格式化为日期时间');
 
-  const avatar = container.querySelector('.ant-timeline-item-head img');
+  // antd6: 自定义图标容器类由 .ant-timeline-item-head 更名为 .ant-timeline-item-icon
+  const avatar = container.querySelector('.ant-timeline-item-icon img');
   t.is(avatar.getAttribute('src'), '/api/user/avatar?uid=11', '头像应指向动态用户');
 
-  const profileLink = container.querySelector('.ant-timeline-item-head a');
+  const profileLink = container.querySelector('.ant-timeline-item-icon a');
   t.is(profileLink.getAttribute('href'), '/user/profile/11', '头像应链接到用户主页');
   // 反向 dispatched 断言随 Redux 机制退役移除（收尾批）：全仓已无 dispatch 通道可断言
   t.is(useActivityStore.getState().activityData.list.length, 2, '渲染应走 Zustand store 订阅路径');

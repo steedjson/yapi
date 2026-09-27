@@ -401,7 +401,7 @@ const List = () => {
       width: 300,
       render: (/** @type {any} */ item) => {
         return (
-          <Space split={<Divider type="vertical" />} style={{ whiteSpace: 'nowrap' }}>
+          <Space separator={<Divider orientation="vertical" />} style={{ whiteSpace: 'nowrap' }}>
             <a onClick={() => openEditModal(item)}>编辑</a>
             <a onClick={() => openResetModal(item)}>重置密码</a>
             {!isSelf(item) && <a onClick={() => openRoleModal(item)}>角色</a>}

@@ -45,26 +45,23 @@ function Reg(props) {
   /**
    * @param {any} rule
    * @param {any} value
-   * @param {Function} callback
    */
-  const checkPassword = (rule, value, callback) => {
+  const checkPassword = (rule, value) => {
     if (value && value !== form.getFieldValue('password')) {
-      callback('两次输入的密码不一致啊!');
-    } else {
-      callback();
+      return Promise.reject(new Error('两次输入的密码不一致啊!'));
     }
+    return Promise.resolve();
   };
 
   /**
    * @param {any} rule
    * @param {any} value
-   * @param {Function} callback
    */
-  const checkConfirm = (rule, value, callback) => {
+  const checkConfirm = (rule, value) => {
     if (value && confirmDirty) {
       form.validateFields(['confirm']);
     }
-    callback();
+    return Promise.resolve();
   };
 
   return (

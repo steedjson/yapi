@@ -2,7 +2,7 @@
 import '../../helpers/jsdom-setup';
 import test from 'ava';
 import React from 'react';
-import { render, screen, fireEvent, cleanup, act } from '@testing-library/react';
+import { render, fireEvent, cleanup, act } from '@testing-library/react';
 import { cleanupDom } from '../../helpers/jsdom-setup';
 
 const axios = require('axios');

@@ -135,7 +135,7 @@ const Content = () => {
   };
 
   if (state.loading) {
-    return <Spin className="interface-content-loading" tip="正在加载接口详情..." />;
+    return <Spin className="interface-content-loading" description="正在加载接口详情..." />;
   }
   if (state.loadError) {
     return <div className="interface-content-error">{state.loadError}</div>;

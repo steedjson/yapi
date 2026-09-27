@@ -65,7 +65,7 @@ export default function ProjectCard(props) {
       content: (
         <div style={{ marginTop: '10px', fontSize: '13px', lineHeight: '25px' }}>
           <Alert
-            message={`该操作将会复制 ${projectData.name} 下的所有接口集合，但不包括测试集合中的接口`}
+            title={`该操作将会复制 ${projectData.name} 下的所有接口集合，但不包括测试集合中的接口`}
             type="info"
           />
           <div style={{ marginTop: '16px' }}>

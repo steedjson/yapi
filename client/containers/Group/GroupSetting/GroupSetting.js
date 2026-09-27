@@ -153,7 +153,7 @@ const GroupSetting = () => {
       content: (
         <div style={{ marginTop: '10px', fontSize: '13px', lineHeight: '25px' }}>
           <Alert
-            message="警告：此操作非常危险,会删除该分组下面所有项目和接口，并且无法恢复!"
+            title="警告：此操作非常危险,会删除该分组下面所有项目和接口，并且无法恢复!"
             type="warning"
           />
           <div style={{ marginTop: '16px' }}>

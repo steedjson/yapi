@@ -856,7 +856,7 @@ test.serial('层B：group 列表页差分', async t => {
   // 反超；批次 2 借 .search/.ant-input-group/.ant-input-group-addon 真实祖先链
   // 提升到 0,7,0，color/background/border 应全部自保获胜。
   const searchBtn = Array.from(REGISTRY.values()).find(
-    e => e.candidate.selector.indexOf('.ant-input-search-button.ant-btn') !== -1
+    e => e.candidate.selector.indexOf('.ant-input-search-btn.ant-btn') !== -1
   );
   t.truthy(searchBtn, '应在 group-list 页找到搜索按钮候选（F-2 修复位）');
   for (const mode of ['dev', 'prod']) {
@@ -872,26 +872,26 @@ test.serial('层B：group 列表页差分', async t => {
   // 自身的规则，排除其后代规则（.anticon-search 色随按钮已天然更高）。
   const isSearchBtnSelfRule = sel => {
     const rightmost = sel.split(/[\s>+~]+/).pop();
-    return rightmost.indexOf('.ant-input-search-button.ant-btn') !== -1;
+    return rightmost.indexOf('.ant-input-search-btn.ant-btn') !== -1;
   };
   const prdHoverSelectors = PRD_RULES.filter(
     r => isSearchBtnSelfRule(r.selector) && /:(hover|focus)/.test(r.selector)
   ).map(r => r.selector);
   t.true(prdHoverSelectors.length >= 2, '产物应含搜索按钮 hover/focus 规则（实际 ' + prdHoverSelectors.length + ' 条）');
   for (const sel of prdHoverSelectors) {
-    t.is(cascade.computeSpecificity(sel).join(','), '0,9,0', 'M-1：hover/focus 规则应提级到 0,9,0（' + sel + '）');
+    t.is(cascade.computeSpecificity(sel).join(','), '0,8,0', 'M-1：hover/focus 规则应提级到 0,8,0（' + sel + '）');
   }
   const antdHoverColorRule = buildRuntimeRules(runtimeStyleTexts).find(
     r =>
       r.sourceKind === 'runtime' &&
-      r.selector.indexOf('.ant-input-search-button:not(.ant-btn-color-primary):not([disabled]):hover') !== -1 &&
+      r.selector.indexOf('.ant-btn:not(:disabled):not(.ant-btn-disabled):hover') !== -1 &&
       r.declarations.some(d => String(d.prop).toLowerCase() === 'color')
   );
   t.truthy(antdHoverColorRule, 'antd 运行时应注入搜索按钮 hover 前景色规则');
   t.is(
     antdHoverColorRule && cascade.computeSpecificity(antdHoverColorRule.selector).join(','),
-    '0,9,0',
-    'M-1 前置事实：antd hover 前景色规则为 0,9,0（hash 类计 1；层 C 修正前误按 :where() 计零记为 0,8,0）'
+    '0,5,0',
+    'M-1 前置事实：antd6 hover 前景色规则为 0,5,0（:where(hash) 计零后引擎口径）'
   );
 });
 

@@ -38,7 +38,7 @@ function CheckCrossInstall(props) {
         ''
       ) : (
         <Alert
-          message={
+          title={
             <div>
               重要：当前的接口测试服务，需安装免费测试增强插件,仅支持 chrome
               浏览器，选择下面任意一种安装方式：

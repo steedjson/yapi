@@ -188,7 +188,7 @@ const MemberList = () => {
       render: (/** @type {any} */ text, /** @type {any} */ record) => {
         if (role === 'owner' || role === 'admin') {
           return (
-            <Space split={<Divider type="vertical" />}>
+            <Space separator={<Divider orientation="vertical" />}>
               <Select
                 value={record.role + '-' + record.uid}
                 className="select"

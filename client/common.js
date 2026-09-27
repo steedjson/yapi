@@ -237,22 +237,24 @@ exports.nameLengthLimit = type => {
       /**
        * @param {*} rule 校验规则（未使用）
        * @param {*} value 当前字段值
-       * @param {*} callback 校验回调
-       * @returns {*} callback 的返回值
+       * @returns {Promise<void>} antd6 弃用 callback 式 validator，改为 Promise 风格
        */
-      validator(rule, value, callback) {
+      validator(rule, value) {
         const len = value ? strLength(value) : 0;
         if (len > constants.NAME_LIMIT) {
-          callback(
-            '请输入' + type + '名称，长度不超过' + constants.NAME_LIMIT + '字符(中文算作2字符)!'
+          return Promise.reject(
+            new Error(
+              '请输入' + type + '名称，长度不超过' + constants.NAME_LIMIT + '字符(中文算作2字符)!'
+            )
           );
         } else if (len === 0) {
-          callback(
-            '请输入' + type + '名称，长度不超过' + constants.NAME_LIMIT + '字符(中文算作2字符)!'
+          return Promise.reject(
+            new Error(
+              '请输入' + type + '名称，长度不超过' + constants.NAME_LIMIT + '字符(中文算作2字符)!'
+            )
           );
-        } else {
-          return callback();
         }
+        return Promise.resolve();
       }
     }
   ];

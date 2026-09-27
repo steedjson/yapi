@@ -478,7 +478,7 @@ const ProjectData = () => {
               </div>
             ) : (
               <div className="import-content">
-                <Spin spinning={showLoading} tip="上传中...">
+                <Spin spinning={showLoading} description="上传中...">
                   <Dragger {...uploadMess}>
                     <p className="ant-upload-drag-icon">
                       <InboxOutlined />

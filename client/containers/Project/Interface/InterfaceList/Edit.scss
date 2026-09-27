@@ -50,10 +50,11 @@
     margin-left: 5px;
     cursor: pointer
   }
-  // antd6: 选中值容器由 .ant-select-selection__rendered 更名为 .ant-select-content
-  .ant-select-content{
-    line-height: 34px;
-  }
+  // N-2 同款裁决（antd6 批）：.ant-select-selection__rendered 为 antd3 时代死声明——
+  // antd4/5 起该类已不存在，规则长期未命中任何 DOM；antd6 选中值容器更名
+  // .ant-select-content 后若照搬激活，会以 0,2,0 压不住 antd 运行时
+  // `.ant-select-multiple .ant-select-content{line-height:1}`（层 B 实测 confirmed-override），
+  // 且单选行高被抬高偏离 antd5 实际渲染。按「与 antd5 真实行为等价」删除死声明。
   .interace-edit-desc{
     height: 250px;
   }
@@ -116,11 +117,10 @@
     margin-right: 7px;
     padding: 0 5px;
   }
-  // antd6: 选中值容器由 .ant-select-selection 更名为 .ant-select-content（边框/背景随之迁移）
-  .ant-select-content {
-    background-color: transparent;
-    border: none;
-  }
+  // N-2 同款裁决（antd6 批）：.ant-select-selection 为 antd3 时代死声明——antd5 下无
+  // 精确同名类，规则未命中任何 DOM，列表内状态 Select 实际一直保留 antd 默认边框；
+  // antd6 若照搬映射到 .ant-select-content 会真实去掉状态选择器边框，偏离 antd5
+  // 实际渲染。按「与 antd5 真实行为等价」删除死声明。
 }
 
 .toolTip .ant-tooltip-inner{

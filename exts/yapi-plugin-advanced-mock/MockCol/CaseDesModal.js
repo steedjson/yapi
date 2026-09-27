@@ -327,7 +327,7 @@ function CaseDesForm(props) {
     <Modal
       title={isAdd ? '添加期望' : '编辑期望'}
       open={visible}
-      maskClosable={false}
+      mask={{ closable: false }}
       onOk={() => form.submit()}
       width={780}
       onCancel={() => onCancel()}
@@ -460,8 +460,8 @@ function CaseDesForm(props) {
           initialValue={delay}
           rules={[{ required: true, message: '请输入延时时间！', type: 'integer' }]}
         >
-          <InputNumber placeholder="请输入延时时间" min={0} />
-          <span>ms</span>
+          {/* antd6: Form.Item with name 要求单子元素，单位文案改走 InputNumber suffix */}
+          <InputNumber placeholder="请输入延时时间" min={0} suffix="ms" />
         </FormItem>
         {headersTpl(headers, 'HTTP 头')}
         <FormItem wrapperCol={{ span: 6, offset: 5 }}>

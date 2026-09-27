@@ -1,6 +1,7 @@
 // @ts-check
 import React, { useEffect, useRef, useState } from 'react';
 import { Timeline, Spin, Row, Col, Tag, Avatar, Button, Modal, AutoComplete } from 'antd';
+import { LoadingOutlined } from '@ant-design/icons';
 import PropTypes from 'prop-types';
 import { formatTime } from '../../common.js';
 import showDiffMsg from '../../../common/diff-view.js';
@@ -173,12 +174,12 @@ export default function TimeTree(props) {
       }
       return {
         key: i,
-        dot: (
+        icon: (
           <Link to={`/user/profile/${item.uid}`}>
             <Avatar src={`/api/user/avatar?uid=${item.uid}`} />
           </Link>
         ),
-        children: (
+        content: (
           <div>
             <div className="logMesHeade">
               <span className="logoTimeago">{timeago(item.add_time)}</span>
@@ -209,6 +210,16 @@ export default function TimeTree(props) {
     pending = <Spin />;
   }
   let diffView = showDiffMsg(jsondiffpatch, formattersHtml, curDiffData);
+  // antd6 弃用 Timeline 的 pending prop（原 pendingDot 默认即 loading 图标），
+  // 改为手动追加收尾 item，icon 沿用 loading 图标保持视觉与 DOM 等价。
+  // 仅在有动态数据时追加，保证空数据仍走 ErrMsg noData 分支（与 antd5 行为一致）
+  if (data && data.length) {
+    timelineItems.push({
+      key: '__pending__',
+      icon: <LoadingOutlined spin />,
+      content: pending
+    });
+  }
 
   return (
     <section className="news-timeline">
@@ -242,7 +253,6 @@ export default function TimeTree(props) {
               onSelect={handleSelectApi}
               style={{ width: '100%' }}
               placeholder="Select Api"
-              optionLabelProp="title"
               filterOption={(/** @type {any} */ inputValue, /** @type {any} */ options) => {
                 if (options.props.value == '') return true;
                 if (
@@ -266,7 +276,7 @@ export default function TimeTree(props) {
         </Row>
       )}
       {timelineItems && timelineItems.length > 0 ? (
-        <Timeline className="news-content" pending={pending} items={timelineItems} />
+        <Timeline className="news-content" items={timelineItems} />
       ) : (
         <ErrMsg type="noData" />
       )}

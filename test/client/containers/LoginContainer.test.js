@@ -60,7 +60,7 @@ test.serial('canRegister=false 时注册 Tab 展示禁用注册提示', t => {
     '注册',
     'loginWrapActiveKey=2 时默认激活注册 Tab'
   );
-  const activePanel = container.querySelector('.ant-tabs-tabpane-active');
+  const activePanel = container.querySelector('.ant-tabs-content-active');
   t.truthy(activePanel, '注册面板应处于激活态');
   t.is(
     activePanel.textContent.trim(),
@@ -74,7 +74,7 @@ test.serial('canRegister=true 时注册 Tab 渲染注册表单', t => {
   seedUserStore({ loginWrapActiveKey: '2', canRegister: true });
   const { container } = renderWithProviders(React.createElement(LoginContainer), {});
 
-  const activePanel = container.querySelector('.ant-tabs-tabpane-active');
+  const activePanel = container.querySelector('.ant-tabs-content-active');
   t.truthy(activePanel, '注册面板应处于激活态');
   t.truthy(activePanel.querySelector('form'), '允许注册时应渲染注册表单');
   t.truthy(activePanel.querySelector('input[placeholder="Username"]'), '注册表单应渲染用户名输入');

@@ -143,7 +143,7 @@ export default function ModalPostman(props) {
   const handleError = () => {
     return (
       <Alert
-        message="请求“变量集”尚未运行,所以我们无法从其响应中提取的值。您可以在测试集合中测试这些变量。"
+        title="请求“变量集”尚未运行,所以我们无法从其响应中提取的值。您可以在测试集合中测试这些变量。"
         type="warning"
       />
     );
@@ -218,7 +218,7 @@ export default function ModalPostman(props) {
       onCancel={handleCancel}
       wrapClassName="modal-postman"
       width={1024}
-      maskClosable={false}
+      mask={{ closable: false }}
       okText="插入"
     >
       <Row className="modal-postman-form" type="flex">

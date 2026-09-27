@@ -30,7 +30,7 @@ test.serial('渲染登录/注册 Tabs 外壳: 默认激活 key 与登录表单',
     'loginWrapActiveKey=1 时默认激活登录 Tab'
   );
   t.truthy(
-    container.querySelector('.ant-tabs-tabpane-active form input#email'),
+    container.querySelector('.ant-tabs-content-active form input#email'),
     '激活面板应渲染登录表单 Email 输入框'
   );
 });
@@ -44,7 +44,7 @@ test.serial('canRegister=false 时注册 Tab 展示禁用注册提示而非注�
     '注册',
     'loginWrapActiveKey=2 时默认激活注册 Tab'
   );
-  const activePanel = container.querySelector('.ant-tabs-tabpane-active');
+  const activePanel = container.querySelector('.ant-tabs-content-active');
   t.is(
     activePanel.textContent.trim(),
     '管理员已禁止注册，请联系管理员',
@@ -57,7 +57,7 @@ test.serial('canRegister=true 时注册 Tab 渲染注册表单', t => {
   seedUserStore({ loginWrapActiveKey: '2', canRegister: true });
   const { container } = renderWithProviders(React.createElement(LoginWrap), {});
 
-  const activePanel = container.querySelector('.ant-tabs-tabpane-active');
+  const activePanel = container.querySelector('.ant-tabs-content-active');
   t.truthy(activePanel.querySelector('form'), '允许注册时应渲染注册表单');
   t.truthy(activePanel.querySelector('input[placeholder="Username"]'), '应渲染用户名输入');
   t.is(activePanel.querySelectorAll('input[type="password"]').length, 2, '应渲染两个密码输入');

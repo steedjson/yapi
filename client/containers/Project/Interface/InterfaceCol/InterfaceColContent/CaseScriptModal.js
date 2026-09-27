@@ -41,7 +41,7 @@ const CaseScriptModal = props => {
       open={visible}
       onCancel={onCancel}
       onOk={onOk}
-      maskClosable={false}
+      mask={{ closable: false }}
     >
       <h3>
         是否开启:&nbsp;
