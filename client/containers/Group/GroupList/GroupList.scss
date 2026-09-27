@@ -131,7 +131,7 @@
     // 借 .search / .ant-input-search 真实祖先链提升到 0,6,0（原 antd5 链为 0,7,0，
     // 见 docs/antd5-visual-audit-findings.md §3 F-2）。
     // hover/focus 态（含 :not([disabled]) 镜像）为 0,8,0：仍高于 antd6 hover
-    // 前景规则 0,4,0；antd 对「输入框 hover/focus」的 border-inline-start-color
+    // 前景规则 0,5,0；antd 对「输入框 hover/focus」的 border-inline-start-color
     // 规则经层 B 引擎实测无可见载体冲突（M-1 修复，批次 2a）。
     .search .ant-input-search .ant-input-search-btn.ant-btn {
       background: transparent;

@@ -409,10 +409,10 @@ test.serial('快照：group 列表 F-2 搜索按钮基础态 + M-1 hover/focus �
   // M-1 静态级联裁定：jsdom 对 :hover/:focus 静态不匹配（层 B 结构性盲区，
   // 动态态由主 Agent 层 C 走查），此处固化特异性关系——
   // antd6 起 hover 前景规则改由 Button 体系注入：:where(hash).ant-btn:not(:disabled)
-  // :not(.ant-btn-disabled):hover（:where 计零后 0,4,0）。我方 hover/focus 规则
+  // :not(.ant-btn-disabled):hover（:where 计零后引擎口径 0,5,0）。我方 hover/focus 规则
   // （:not([disabled]) 镜像）0,8,0（group-bar/group-operate/search/ant-input-search/
   // ant-input-search-btn/ant-btn/:hover/:not([disabled]) 共 8 个类与伪类）稳定高于
-  // antd 0,4,0；且静态源序晚于 cssinjs prepend 注入，双保险获胜。
+  // antd 0,5,0；且静态源序晚于 cssinjs prepend 注入，双保险获胜。
   const btnPrefix = '.ant-input-search-btn.ant-btn';
   const isSelfRule = sel => {
     const rightmost = sel.split(/[\s>+~]+/).pop();

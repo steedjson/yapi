@@ -47,7 +47,7 @@ const PRD_DIR = path.join(REPO_ROOT, 'static', 'prd');
 // .ant-input-search-btn）→ group 哈希变化；Edit.scss 删除 2 条 antd3 时代死声明
 // （N-2 同款裁决，见文件内注释）→ project 哈希变化。antd6.6.5 依赖图变化使初始
 // chunk 'a' 更名 '0'（顺序不变，link 标签序列不受影响）。层 A/层 B 已按新产物重扫
-// （层 A candidates 1126，层 B confirmed-override 0，判定无漂移）。
+// （层 A candidates 1181，层 B confirmed-override 0，判定无漂移）。
 const BASELINE = {
   cssChunks: {
     'index.js': 'index@d086ece37364de01.css',
