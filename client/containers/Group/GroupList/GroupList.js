@@ -258,7 +258,7 @@ const GroupList = () => {
                     {/* 文字用与普通分组相同的直属文本渲染，再由 Popover 提供引导浮层，
                         避免 Popover 包裹节点自带内边距导致文字与其它分组不对齐 */}
                     <Popover
-                      overlayClassName="popover-index"
+                      classNames={{ root: 'popover-index' }}
                       content={<GuideBtns />}
                       title={tip}
                       placement="right"

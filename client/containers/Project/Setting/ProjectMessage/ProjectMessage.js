@@ -294,7 +294,7 @@ function ProjectMessage(props) {
               title={colorSelector}
               content={iconSelector}
               trigger="click"
-              overlayClassName="change-project-container"
+              classNames={{ root: 'change-project-container' }}
             >
               {React.createElement(getV4Icon(projectMsg.icon || 'star-o'), {
                 className: 'ui-logo',
