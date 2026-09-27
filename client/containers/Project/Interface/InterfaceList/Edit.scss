@@ -50,7 +50,8 @@
     margin-left: 5px;
     cursor: pointer
   }
-  .ant-select-selection__rendered{
+  // antd6: 选中值容器由 .ant-select-selection__rendered 更名为 .ant-select-content
+  .ant-select-content{
     line-height: 34px;
   }
   .interace-edit-desc{
@@ -115,7 +116,8 @@
     margin-right: 7px;
     padding: 0 5px;
   }
-  .ant-select-selection {
+  // antd6: 选中值容器由 .ant-select-selection 更名为 .ant-select-content（边框/背景随之迁移）
+  .ant-select-content {
     background-color: transparent;
     border: none;
   }
