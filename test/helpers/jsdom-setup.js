@@ -375,11 +375,7 @@ installAssetStubs();
 installMessageChannelUnref();
 setupDom();
 
-// 官方补丁必须在 setupDom() 之后、任何 antd/生产代码装载之前 require：
-// react-dom 19.3 以模块级常量探测环境（canUseDOM / isInputEventSupported），
-// 依赖 jsdom 全局先行——本模块是所有 client 测试的首个 import，
-// 此处装载仍满足「任何 antd 使用前打补丁」的时序不变量。
-require('@ant-design/v5-patch-for-react-19');
+// antd6 spike: v5-patch 已移除（antd6 原生支持 React19，静态方法不再依赖 ReactDOM.render）
 
 module.exports = {
   dom: globalThis[DOM_FLAG],

@@ -42,8 +42,7 @@
   "author": "",
   "license": "Apache-2.0",
   "dependencies": {
-    "@ant-design/cssinjs": "1.24.0",
-    "@ant-design/v5-patch-for-react-19": "^1.0.3",
+    "@ant-design/cssinjs": "^2.1.2",
     "@koa/router": "^15.7.0",
     "ajv": "^8.20.0",
     "ajv-draft-04": "^1.0.0",
@@ -118,7 +117,7 @@
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@uiw/react-md-editor": "^4.1.2",
-    "antd": "5.29.3",
+    "antd": "^6.6.5",
     "ava": "6.4.1",
     "buffer": "^6.0.3",
     "conventional-changelog-cli": "^5.0.0",

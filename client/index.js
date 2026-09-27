@@ -1,7 +1,5 @@
 // @ts-check
-// React 19 spike: antd v5 静态方法(message/notification/Modal.*仍旧用 ReactDOM.render)
-// 需要官方补丁,必须在任何 antd 使用之前加载
-import '@ant-design/v5-patch-for-react-19';
+// antd6 spike: v5-patch 已移除(antd6 原生支持 React19)
 // antd 5 组件样式为 css-in-js 运行时注入,不再有全局 antd css;reset 提供基础 normalize。
 import 'antd/dist/reset.css';
 import './styles/common.scss';
