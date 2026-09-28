@@ -201,7 +201,7 @@
   - `rewire@2.5.2`：**保留（有据）**——仅 10 个测试文件使用，零运行时暴露；如迁 rewiremock 需独立批；
   - `mockjs`：**保留（feature 依赖）**——advanced-mock 高级 Mock 模板引擎（`common/mock-extra.js` + 插件 server 端）核心依赖，删除即删功能，非可清之债；
   - `generate-schema`：**保留**——动态 import 已显性化（B1 模式），行为有测试钉住，工作正常；
-  - `prop-types`：75 文件维持**随触碰渐退**策略不变。
+  - ~~`prop-types`：75 文件维持**随触碰渐退**策略~~ → **已完成集中清理（2026-09-29 批次）**：79 文件 799 行死代码纯删除（React 19 已移除 propTypes 运行时检查），bundle 净减 12.4KB；`prop-types` 依赖保留（recharts/react-smooth 等第三方仍需）。
 - ~~7 处 `dangerouslySetInnerHTML` 建议做一次 XSS 专项审查~~ → **已由 P9a 专项覆盖**：5 处复核均接 DOMPurify、reportHtml 全转义、Postman iframe 加 sandbox；~~豁免面遗留（邮件 HTML 注入、下载件内容注入）另册登记。~~ → **豁免面已全部闭合（2026-09-26 复核+收尾）**：① 邮件 HTML——upMethods（用户名/接口名/路径/方法/项目名）、authMethods 两处 email、open.js autoTestUrl 均已 escapeHtml（后续批次落地）；diff 视图 title 全为硬编码标签，content 由 jsondiffpatch 0.7 html formatter 内部 htmlEscape 输出（源码级复核）；② api.html 下载件——export-data/gen-services 均经 `escapeListPlainFields`+`createHtml5` 转义纯文本字段（desc 类 Markdown 创作面按设计与站内渲染行为一致保留）；③ 新收口：run_auto_test 下载 filename 的 `mode` 查询参数（用户可控）原样进 Content-Disposition，本次改为词字符白名单并引号包裹，阻断响应头注入。
 
 ### 建议优先级（供裁决）

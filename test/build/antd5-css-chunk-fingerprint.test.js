@@ -51,7 +51,9 @@ const PRD_DIR = path.join(REPO_ROOT, 'static', 'prd');
 // 向后兼容，唯一 DOM 漂移 = Link 渲染的 <a> 新增 data-discover="true" 发现模式标记，
 // 快照 6 行适配）→ vendor 依赖图变化使异步 vendor 'yu' 重编号为 'u'，初始 chunk 顺序
 // manifest/antd/u/index.js。层 A/层 B 无 CSS 侧漂移（CSS chunk 哈希不变），D-1 重登记。
-// dark 皮肤令牌化批（2026-09-28 下午）：全站 dark 亮面清扫——TimeLine 卡片
+// prop-types 清理批（2026-09-29）：79 文件 prop-types 死代码剔除（bundle -12.4KB）→
+// vendor 依赖图变化使异步 vendor chunk 重编号为 '5z'，初始 chunk 顺序
+// manifest/antd/5z/index.js。CSS chunk 哈希零变化（层 A/层 B 坐标无漂移，无需重扫）。// dark 皮肤令牌化批（2026-09-28 下午）：全站 dark 亮面清扫——TimeLine 卡片
 // （--sk-timeline-card-bg 新令牌+头部复用 --sk-bg-body）与 ProjectCard
 // （--sk-bg-component）令牌化 → 5 个 CSS chunk 哈希轮换。层 A/层 B 已按新产物
 // 重扫（candidates 1181，confirmed-override 0，判定无漂移）。
@@ -69,7 +71,7 @@ const BASELINE = {
     follows: 'follows@71cb5db9f3523bd5.css',
     'add-project': 'add-project@39679d6a4cb230c4.css'
   },
-  initialChunks: ['manifest', 'antd', 'u', 'index.js']
+  initialChunks: ['manifest', 'antd', '5z', 'index.js']
   // 批次 4：json-schema-editor-visual 的 antd.css import 已删，scoped antd3 双作用域
   // 机制退役——scopedAntd3Carrier/scopeMarker 基线随之移除（产物实测 0 处标记）。
 };
