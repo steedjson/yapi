@@ -47,6 +47,10 @@ const PRD_DIR = path.join(REPO_ROOT, 'static', 'prd');
 // .interface-filter/树分类行/选中行换 --sk-* 运行时变量，dark 皮肤白条与暗字不可见修
 // 复）→ index/project 哈希轮换。层 A/层 B 已按新产物重扫（candidates 1181，
 // confirmed-override 0，判定无漂移）。
+// dark 皮肤令牌化批（2026-09-28 下午）：全站 dark 亮面清扫——TimeLine 卡片
+// （--sk-timeline-card-bg 新令牌+头部复用 --sk-bg-body）与 ProjectCard
+// （--sk-bg-component）令牌化 → 5 个 CSS chunk 哈希轮换。层 A/层 B 已按新产物
+// 重扫（candidates 1181，confirmed-override 0，判定无漂移）。
 // （.ant-input-group/.ant-input-group-addon/.ant-input-search-button → .ant-input-search/
 // .ant-input-search-btn）→ group 哈希变化；Edit.scss 删除 2 条 antd3 时代死声明
 // （N-2 同款裁决，见文件内注释）→ project 哈希变化。antd6.6.5 依赖图变化使初始
@@ -54,12 +58,12 @@ const PRD_DIR = path.join(REPO_ROOT, 'static', 'prd');
 // （层 A candidates 1181，层 B confirmed-override 0，判定无漂移）。
 const BASELINE = {
   cssChunks: {
-    'index.js': 'index@28bb594625b70945.css',
-    group: 'group@e8c3877fde747b15.css',
-    project: 'project@bb9383e84f86bdfa.css',
+    'index.js': 'index@b6162dd533f7f762.css',
+    group: 'group@598f5bed64025a9b.css',
+    project: 'project@8ff0878bc6c13c83.css',
     user: 'user@57802eb279f54184.css',
-    follows: 'follows@75145e5fc7ccbc5a.css',
-    'add-project': 'add-project@84d2cabca8d126f8.css'
+    follows: 'follows@71cb5db9f3523bd5.css',
+    'add-project': 'add-project@39679d6a4cb230c4.css'
   },
   initialChunks: ['manifest', 'antd', '0', 'index.js']
   // 批次 4：json-schema-editor-visual 的 antd.css import 已删，scoped antd3 双作用域

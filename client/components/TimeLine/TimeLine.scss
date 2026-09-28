@@ -133,7 +133,7 @@
         }
   
         .ant-timeline-item-content{
-          background-color: #fafafa;
+          background-color: var(--sk-timeline-card-bg);
           float: left;
           width: auto;
           margin-left: 40px;
@@ -147,7 +147,7 @@
           .logMesHeade{
             padding: 8px 8px 8px 8px;
             line-height: 24px;
-            background-color: #eceef1;
+            background-color: var(--sk-bg-body);
             border-top-left-radius: 4px;
             border-top-right-radius: 4px;
           }

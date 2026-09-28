@@ -20,6 +20,7 @@
   --sk-bg-muted: #eee;              // 置灰底(搜索条/列表头/case 底)
   --sk-bg-gray: #ececec;            // 深一档灰底(mixin.scss $color-bg-gray 同值)
   --sk-bg-filter: #ddd;             // 接口页左栏过滤行底(interface.scss 硬编码 #ddd 同值)
+  --sk-timeline-card-bg: #fafafa;   // 动态时间线卡片底(TimeLine.scss 硬编码同值)
   --sk-tree-text: rgba(13, 27, 62, 0.65);  // 接口树分类行链接字(mixin $color-text-dark 同值)
   --sk-tree-selected-bg: #e6f7ff;   // 接口树选中行底(interface.scss 硬编码同值)
   --sk-tree-selected-color: #1890ff; // 接口树选中行字(同上)

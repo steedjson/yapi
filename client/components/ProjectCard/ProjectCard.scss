@@ -52,7 +52,7 @@
     text-align: center;
     border-radius: var(--sk-radius);
     border: 1px solid #e8e8e8;
-    background-color: #ffffff;
+    background-color: var(--sk-bg-component);
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     margin-bottom: 16px;
     transition: all .3s;
