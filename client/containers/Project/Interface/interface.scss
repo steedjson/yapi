@@ -1,5 +1,22 @@
 @import '../../../styles/mixin.scss';
 
+// 接口列表行内选择器(分类/状态)静默化: 静默态无边框融入表格,hover 显灰框,
+// 聚焦保持主题蓝(antd focused 规则经 cssinjs 后注入,同特异性下自动获胜)
+.table-interfacelist {
+  .ant-select-single {
+    border-color: transparent;
+
+    &:hover {
+      border-color: var(--sk-border);
+    }
+
+    // 聚焦优先于 hover: 展开编辑时边框为主题蓝
+    &.ant-select-focused {
+      border-color: var(--sk-primary);
+    }
+  }
+}
+
 // antd6 的 .ant-layout 不再拉伸交叉轴(align-items 非 stretch),显式恢复:
 // 左栏 Sider 与右栏 Content 等高,底边动态对齐
 .interface-layout {
