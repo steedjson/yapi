@@ -14,6 +14,9 @@
 // 行为与既有测试断言（document.body.querySelector('.ant-message')）不变。
 // App 实例的 holder 同样经 rc-notification 挂到 document.body，列表节点类名
 // 仍含 `ant-message`（useMessage.js: prefixCls = getPrefixCls('message')）。
+//
+// 注意：本桥仅代理 7 个消息方法；antd 静态 message 的 `config`/`useMessage`
+// 不在桥内——如需全局定位配置或 hook 形态，请直接从 'antd' 导入使用。
 import { useEffect } from 'react';
 import { App as AntdApp, message as staticMessage } from 'antd';
 
