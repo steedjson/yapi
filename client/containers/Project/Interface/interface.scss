@@ -453,3 +453,8 @@
     padding-top: 45px;
   }
 }
+// 接口行(含 container-title)的空占位 switcher 收窄 6px:
+// 使接口名称与上级分类名称"文字"左对齐(分类的文件夹图标自然凸出在文字纵列左侧)
+.left-menu .ant-tree-treenode:has(.container-title) .ant-tree-switcher-noop {
+  width: 18px;
+}
