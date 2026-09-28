@@ -51,6 +51,10 @@ const PRD_DIR = path.join(REPO_ROOT, 'static', 'prd');
 // 向后兼容，唯一 DOM 漂移 = Link 渲染的 <a> 新增 data-discover="true" 发现模式标记，
 // 快照 6 行适配）→ vendor 依赖图变化使异步 vendor 'yu' 重编号为 'u'，初始 chunk 顺序
 // manifest/antd/u/index.js。层 A/层 B 无 CSS 侧漂移（CSS chunk 哈希不变），D-1 重登记。
+// 左栏对齐收尾批（2026-09-29）：rem 陷阱修正（12rem=1200px,本仓 1rem=100px）+ 过时
+// min-height 5rem 清除 + antd6 显式 align-items:stretch 恢复 Sider 拉伸链（Sider 内联
+// height:100% 抑制 stretch,已移除）→ project 哈希轮换。层 A/层 B 已按新产物重扫
+// （candidates 1183，confirmed-override 0，判定无漂移）。
 // 接口页左栏 flex 对齐批（2026-09-29）：InterfaceMenu/InterfaceColMenu 移除 JS 量高内联
 // maxHeight（clientHeight-240 估算法），.left-menu 改弹性列 + 树区 flex 占满内部滚动——左右
 // 底边由布局自动对齐 → project 哈希轮换。层 A/层 B 已按新产物重扫（candidates 1182，
@@ -70,7 +74,7 @@ const BASELINE = {
   cssChunks: {
     'index.js': 'index@b6162dd533f7f762.css',
     group: 'group@598f5bed64025a9b.css',
-    project: 'project@3961583f282b8ec0.css',
+    project: 'project@5365c16d71247074.css',
     user: 'user@57802eb279f54184.css',
     follows: 'follows@71cb5db9f3523bd5.css',
     'add-project': 'add-project@39679d6a4cb230c4.css'

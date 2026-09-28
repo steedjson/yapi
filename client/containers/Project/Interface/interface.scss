@@ -1,11 +1,20 @@
 @import '../../../styles/mixin.scss';
 
+// antd6 的 .ant-layout 不再拉伸交叉轴(align-items 非 stretch),显式恢复:
+// 左栏 Sider 与右栏 Content 等高,底边动态对齐
+.interface-layout {
+  align-items: stretch;
+
+  .ant-layout-sider-children {
+    height: 100%;
+  }
+}
+
 .left-menu {
   // 弹性列: 底边随 Layout 行高自动与右栏内容对齐(tabs/filter 定高, 树区 flex 占满并内部滚动)
   display: flex;
   flex-direction: column;
-  min-height: 100%;
-  min-height: 5rem;
+  height: 100%;
   // background: #FFF;
   // .item-all-interface {
   //   background-color: red;

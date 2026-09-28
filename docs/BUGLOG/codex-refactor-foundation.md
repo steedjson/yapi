@@ -28,3 +28,10 @@
 - 修法: wiki controller 两处路径改 lib/formatters/styles/{annotated,html}.css,并沿用 upMethods 的模块级缓存模式(wikiDiffCssCache)消除每次更新的同步读盘;附带发现并保留原有时序语义: 通知块在 DB 保存之后,通知失败会覆盖已成功的保存响应(本次根因即为覆盖为失败)——路径修复后该风险面消除,未额外改时序
 - 关联: exts/yapi-plugin-wiki/controller.js:23-31(缓存)/128-146(读取);server/controllers/interface/upMethods.js:206-216(先例);真机闭环: 同操作路径修复前必现 ENOENT、修复后「修改于刚刚」无报错
 - 复发: 0 次 · 教训: 依赖升级迁移内部路径时,对「同构消费位点」必须 rg 全仓兜底(当时只修了报错的那个,兄弟位点静默待爆);「已入库但响应报失败」的时序错位会让缺陷看起来像保存失败,排查时先分清写库与响应覆盖
+
+## [2026-09-29][样式] 在 legacy rem 基准(1rem=100px)下新写 12rem 被解析为 1200px,接口页左栏被撑到离谱高度
+- 现象: 接口页左右两栏高达 1312px(右栏仅 1 行接口数据),用户反馈"太高了";实测 .tree-wrappper computed min-height = 1200px
+- 根因: 本次 flex 对齐改造在新规则里写了 `min-height: 12rem`,而本仓 common.scss:8 有 `html { font-size: 100px }`(老式 rem 换算基准,1rem=100px,注释明确"仅作换算基准")——12rem 被解析为 1200px,树容器被强制最小高 1200,连带把右栏拉伸
+- 修法: 两处 min-height 改显式 `200px`;本仓新增样式一律用 px 或 --sk-* 令牌,禁用 rem(除非刻意以 100px 基准换算)
+- 关联: client/containers/Project/Interface/InterfaceList/interfaceMenu.scss;InterfaceCol/InterfaceColMenu.scss;client/styles/common.scss:8
+- 复发: 0 次 · 教训: 老代码库里写新 CSS 前先查根字号基准;本仓 rem 语义与浏览器默认(16px)完全不同,rem 是地雷单位
