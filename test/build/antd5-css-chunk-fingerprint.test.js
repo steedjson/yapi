@@ -51,6 +51,9 @@ const PRD_DIR = path.join(REPO_ROOT, 'static', 'prd');
 // 向后兼容，唯一 DOM 漂移 = Link 渲染的 <a> 新增 data-discover="true" 发现模式标记，
 // 快照 6 行适配）→ vendor 依赖图变化使异步 vendor 'yu' 重编号为 'u'，初始 chunk 顺序
 // manifest/antd/u/index.js。层 A/层 B 无 CSS 侧漂移（CSS chunk 哈希不变），D-1 重登记。
+// 静默化收尾（2026-09-29）：cssinjs 后注入根规则压掉 flex(display/padding-inline-end)，
+// 升级为 display/padding !important 钉死 → 单行 32px/值文本与表头对齐 → project 哈希轮换。
+// 层 A/层 B 已按新产物重扫（candidates 1186，confirmed-override 0，判定无漂移）。
 // 接口列表行内选择器静默化批（2026-09-29）：分类/状态选择器静默无边框+hover灰框+
 // 聚焦主题蓝 → project 哈希轮换。层 A/层 B 已按新产物重扫（candidates 1183，
 // confirmed-override 0，判定无漂移）。
@@ -77,7 +80,7 @@ const BASELINE = {
   cssChunks: {
     'index.js': 'index@b6162dd533f7f762.css',
     group: 'group@598f5bed64025a9b.css',
-    project: 'project@ba2ea973aa0458e0.css',
+        project: 'project@548f871b99a2a790.css',
     user: 'user@57802eb279f54184.css',
     follows: 'follows@71cb5db9f3523bd5.css',
     'add-project': 'add-project@39679d6a4cb230c4.css'

@@ -1,10 +1,27 @@
 @import '../../../styles/mixin.scss';
 
-// 接口列表行内选择器(分类/状态)静默化: 静默态无边框融入表格,hover 显灰框,
-// 聚焦保持主题蓝(antd focused 规则经 cssinjs 后注入,同特异性下自动获胜)
+// 接口列表行内选择器(分类/状态)静默化+对齐: 静默态无边框融入表格,hover 显灰框,
+// 聚焦保持主题蓝(antd focused 规则经 cssinjs 后注入,同特异性下自动获胜);
+// flex 单行布局修掉 antd6 content(block)+suffix(block) 折行把盒子撑成双行的问题,
+// 左内边距归零使值文本与表头文字左对齐
 .table-interfacelist {
   .ant-select-single {
+    // !important: 反制 cssinjs 运行时后注入的同特异性根规则(display:inline-block/
+    // padding-inline-end:24px),否则 flex 单行与表头对齐均被压掉
+    display: flex !important;
+    align-items: center;
+    padding: 4.5px 0 !important;
     border-color: transparent;
+
+    .ant-select-content {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+
+    .ant-select-suffix {
+      flex: 0 0 auto;
+      display: inline-flex;
+    }
 
     &:hover {
       border-color: var(--sk-border);
