@@ -2,6 +2,13 @@
 
 条目由 /csl-buglog 或人工维护,供 coder/reviewer 动手前核对
 
+## [2026-09-29][exts/advanced-mock] 期望编辑弹窗 antd Row gutter 负边距造成 4px 幽灵横向滚动条
+- 现象: 「添加期望」弹窗(CaseDesModal)底部出现近满宽横向滚动条,弹窗体 scrollWidth 比 clientWidth 宽 4px
+- 根因: 弹窗内参数行用 antd Row gutter 布局,gutter 会让行容器带 -4px 左右外边距,在受限父容器(col-19)内右侧溢出 4px,把 body 撑出滚动条
+- 修法: CaseDesModal.scss `.case-des-modal .ant-modal-body` 追加 `overflow-x: hidden`(该处本有 overflow-y: scroll);判定滚动条要用 offsetHeight>clientHeight,scrollWidth>clientWidth 在 overflow hidden 下不代表有滚动条
+- 关联: exts/yapi-plugin-advanced-mock/MockCol/CaseDesModal.scss:5
+- 复发: 0 次 · 教训: antd Row gutter 负边距在非全宽父容器内必然溢出 gutter/2,受限容器需主动收敛 overflow
+
 ## [2026-09-29][client/UI] CodeMirror6 迁移后编辑器容器 min-height 语义塌缩等 5 类 UI 规范缺陷(审查批 14 处编辑器位点)
 - 现象: 设置-全局mock脚本/接口高级Mock-脚本等编辑器渲染为一行细条、容器剩余 300~500px 空白; 生成ts services 页卡片丢失且 pre 长 token 行溢出裁切; 关注页空态贴左; 公开项目成员页头像渲染为 710px 巨图挤毁表格; site-admin 打开他人私有分组项目的设置时「所属分组」显示原始 id"9"
 - 根因: ①ace→CodeMirror6 迁移把主题定为 `.cm-editor{height:100%}`, 父容器仅 min-height(高度 auto)时百分比解析为内容高度→塌缩, 而 ace 时代容器写 min-height 即可撑起(全仓共 14 处此写法) ②`.m-panel` 只定义在 group chunk 两个 scss(ProjectList/MemberList), 却被设置页/插件页当全局类用, 整页直载时样式不加载 ③ProjectMember 表格头像尺寸样式只存在于 Group MemberList.scss, 设置页作用域无约束 ④Follows 把 ErrMsg 直接放 antd Row(flex), .err-msg 无宽度声明收缩贴左 ⑤所属分组 Select 选项取自当前用户 groupList, 不含项目实际分组时显示原始 value

@@ -2,6 +2,7 @@
   .ant-modal-body {
     max-height: 520px;
     overflow-y: scroll;
+    overflow-x: hidden;
   }
   .ip-filter .ip>.ant-form-item, .ip-filter .ip-switch>.ant-form-item {
     margin-bottom: 0;
