@@ -79,8 +79,15 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
-      - name: Test
-        run: npm test
+      - name: Test (capture log for warning zero gate)
+        run: |
+          set -o pipefail
+          npm test 2>&1 | tee /tmp/ava.log
+
+      - name: Warning zero gate (antd deprecated / static context)
+        run: |
+          ! grep -qiE "Warning: \[antd" /tmp/ava.log
+          ! grep -qiE "deprecated" /tmp/ava.log
 
       - name: Build client
         run: npm run build-client

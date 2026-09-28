@@ -115,6 +115,12 @@ function ProjectMessage(props) {
         })
         .catch(() => {});
       form.resetFields();
+    }).catch((/** @type {any} */ err) => {
+      // 校验拒绝(errorFields)时行内错误已由 Form 展示,静默吸收避免 unhandledRejection;
+      // 非校验异常(网络/代码缺陷)继续上抛保持响亮失败
+      if (!(err && err.errorFields)) {
+        throw err;
+      }
     });
   };
 
