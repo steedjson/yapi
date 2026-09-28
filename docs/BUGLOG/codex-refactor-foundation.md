@@ -15,3 +15,9 @@
 - 修法: `const swaggerModule = require('swagger-client'); const swagger = swaggerModule.default || swaggerModule;`(run.js:2-5),重建后 bundle 内编译为 `i.default||i`
 - 关联: exts/yapi-plugin-import-swagger/run.js:2-5;chunk 哈希 bbd18ad0→280ebb4a(修复批,收尾批验证期间发现)
 - 复发: 0 次 · 教训: 双入口依赖(main/module 形态不同)在"Node 单测通过 ≠ 浏览器可用",凡 require 双入口包必须在浏览器 bundle 实测;无 catch 的 Promise 包装会把崩溃静默成下游守卫提示
+## [2026-09-28][测试环境/IAB] 遮挡窗口渲染冻结导致 toast「不可见且不消失」假象(非产品缺陷)
+- 现象: antd6 迁移批 UI 验证时发现 message toast 完全不可见且 DOM 永不清理——notice 卡在 `ant-message-fade-appear-start`(opacity 0),`-appear-active` 永不添加;曾误判为 P1 产品缺陷并立项热修(rc-motion rAF 看门狗 shim),后经 A/B 与深层取证推翻
+- 根因: 验证所在 IAB 窗口被遮挡(hasFocus=false 但 visibilityState=visible),Chromium 冻结该窗口渲染管线——rAF 永不触发、transitionend 不派发、**transition 属性的 computed style 冻结在动画初值**(内联改 opacity=1 后计算值仍 0);非过渡属性(display/hover)与 JS/DOM 操作照常,形成「页面活着但动画全死」的假象。rc-motion 出场动画等待的 transitionend 在此状态下永不到来,toast 冻结在初值;窗口恢复可见后动画补完、toast 正常显示并消失(无持续伤害)。正常用户窗口可见时一切正常(CDP 真实 Chrome 逐帧实验:appear +200ms/opacity 动画/3.4s 移除)
+- 修法: 非缺陷,不修。热修分支 codex/toast-motion-hotfix(rAF 看门狗 shim)已裁决废弃不合并——遮挡场景下 setTimeout 同被节流、样式管线冻结,shim 无法真正生效,属零用户收益的幻影修复
+- 关联: docs/BUGLOG/codex-toast-motion-hotfix.md(分支已删,调查过程记录);codex/message-app-context 批 UI 验证
+- 复发: 0 次 · 教训: 验证动画/过渡类行为前先探测 rAF 存活(`requestAnimationFrame` 500ms 探针)与 `document.hasFocus()`;遮挡窗口下「computed style 冻结在过渡初值」会让任何依赖 CSS 过渡的组件看起来像卡死,此类现象优先怀疑环境而非代码
