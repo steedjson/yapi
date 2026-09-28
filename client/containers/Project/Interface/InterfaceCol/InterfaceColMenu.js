@@ -20,7 +20,6 @@ import { arrayChangeIndex } from '../../../../common.js';
 
 const FormItem = Form.Item;
 const confirm = Modal.confirm;
-const headHeight = 240; // menu顶部到网页顶部部分的高度
 
 import './InterfaceColMenu.scss';
 
@@ -574,7 +573,7 @@ export default function InterfaceColMenu(props) {
           </Button>
         </Tooltip>
       </div>
-      <div className="tree-wrapper" style={{ maxHeight: parseInt((/** @type {any} */ (document.body.clientHeight))) - headHeight + 'px'}}>
+      <div className="tree-wrapper">
         <Tree
           className="col-list-tree"
           defaultExpandedKeys={currentKes.expands}

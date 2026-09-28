@@ -24,7 +24,6 @@ import { arrayChangeIndex } from '../../../../common.js';
 import './interfaceMenu.scss';
 
 const confirm = Modal.confirm;
-const headHeight = 240; // menu顶部到网页顶部部分的高度
 
 /**
  * 递归在分类树中按接口 ID 查找所属分类、接口列表以及接口在该分类中的下标。
@@ -778,10 +777,7 @@ const InterfaceMenu = (/** @type {any} */ props) => {
     <div>
       {searchBox}
       {menuList.length > 0 ? (
-        <div
-          className="tree-wrappper"
-          style={{ maxHeight: parseInt(/** @type {any} */ (document.body.clientHeight)) - headHeight + 'px' }}
-        >
+        <div className="tree-wrappper">
           <Tree
             className="interface-list"
             blockNode={true}

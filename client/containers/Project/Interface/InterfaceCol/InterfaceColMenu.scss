@@ -178,6 +178,7 @@
 }
 
 .tree-wrapper {
-  min-height: 500px;
-  overflow-y: scroll;
+  flex: 1 1 auto;
+  min-height: 12rem;
+  overflow-y: auto;
 }
