@@ -21,3 +21,10 @@
 - 修法: 非缺陷,不修。热修分支 codex/toast-motion-hotfix(rAF 看门狗 shim)已裁决废弃不合并——遮挡场景下 setTimeout 同被节流、样式管线冻结,shim 无法真正生效,属零用户收益的幻影修复
 - 关联: docs/BUGLOG/codex-toast-motion-hotfix.md(分支已删,调查过程记录);codex/message-app-context 批 UI 验证
 - 复发: 0 次 · 教训: 验证动画/过渡类行为前先探测 rAF 存活(`requestAnimationFrame` 500ms 探针)与 `document.hasFocus()`;遮挡窗口下「computed style 冻结在过渡初值」会让任何依赖 CSS 过渡的组件看起来像卡死,此类现象优先怀疑环境而非代码
+
+## [2026-09-29][exts/yapi-plugin-wiki] jsondiffpatch 0.7 样式路径迁移漏改兄弟位点,wiki「通知相关人员」更新整体失败
+- 现象: wiki 页编辑后勾选「通知相关人员」点「更新」,toast 报「更新失败: ENOENT: no such file or directory, open '.../node_modules/jsondiffpatch/dist/formatters-styles/annotated.css'」;且内容实际已入库但响应被覆盖为失败、通知邮件与变更日志双双丢失
+- 根因: jsondiffpatch 0.3.11→0.7.6 升级批把包内样式目录 dist/formatters-styles 迁移到 lib/formatters/styles,当时只修了 server/controllers/interface/upMethods.js(接口更新路径,带模块级缓存),**漏改同构的 exts/yapi-plugin-wiki/controller.js**(wiki 更新路径)——同类位点迁移时未做全仓 rg 兜底
+- 修法: wiki controller 两处路径改 lib/formatters/styles/{annotated,html}.css,并沿用 upMethods 的模块级缓存模式(wikiDiffCssCache)消除每次更新的同步读盘;附带发现并保留原有时序语义: 通知块在 DB 保存之后,通知失败会覆盖已成功的保存响应(本次根因即为覆盖为失败)——路径修复后该风险面消除,未额外改时序
+- 关联: exts/yapi-plugin-wiki/controller.js:23-31(缓存)/128-146(读取);server/controllers/interface/upMethods.js:206-216(先例);真机闭环: 同操作路径修复前必现 ENOENT、修复后「修改于刚刚」无报错
+- 复发: 0 次 · 教训: 依赖升级迁移内部路径时,对「同构消费位点」必须 rg 全仓兜底(当时只修了报错的那个,兄弟位点静默待爆);「已入库但响应报失败」的时序错位会让缺陷看起来像保存失败,排查时先分清写库与响应覆盖

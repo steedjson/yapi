@@ -13,6 +13,11 @@ const path = require('path');
 const showDiffMsg = require('../../common/diff-view.js');
 // 与 server/utils/escapeHtml.js 共享同一实现(经相对路径引用, 与 ../../common/* 同一解析环境)
 const escapeHtml = require('../../server/utils/escapeHtml.js');
+// diff 通知邮件所需两个 CSS 内容固定不变，进程内缓存避免每次 wiki 更新都同步读盘。
+// jsondiffpatch 0.7 起包内样式目录由 dist/formatters-styles 迁移到 lib/formatters/styles
+// (0.3 旧路径已不存在——曾致勾选「通知相关人员」的 wiki 更新整体报 ENOENT 失败)。
+/** @type {{ annotatedCss: string, htmlCss: string } | null} */
+let wikiDiffCssCache = null;
 class wikiController extends baseController {
   /**
    * @param {any} ctx Koa 请求上下文
@@ -112,17 +117,26 @@ class wikiController extends baseController {
       if (notice) {
         let diffView = showDiffMsg(jsondiffpatch, formattersHtml, logData);
 
-        let annotatedCss = fs.readFileSync(
-          path.resolve(
-            yapi.WEBROOT,
-            'node_modules/jsondiffpatch/dist/formatters-styles/annotated.css'
-          ),
-          'utf8'
-        );
-        let htmlCss = fs.readFileSync(
-          path.resolve(yapi.WEBROOT, 'node_modules/jsondiffpatch/dist/formatters-styles/html.css'),
-          'utf8'
-        );
+        if (!wikiDiffCssCache) {
+          wikiDiffCssCache = {
+            annotatedCss: fs.readFileSync(
+              path.resolve(
+                yapi.WEBROOT,
+                'node_modules/jsondiffpatch/lib/formatters/styles/annotated.css'
+              ),
+              'utf8'
+            ),
+            htmlCss: fs.readFileSync(
+              path.resolve(
+                yapi.WEBROOT,
+                'node_modules/jsondiffpatch/lib/formatters/styles/html.css'
+              ),
+              'utf8'
+            )
+          };
+        }
+        let annotatedCss = wikiDiffCssCache.annotatedCss;
+        let htmlCss = wikiDiffCssCache.htmlCss;
         let project = await this.projectModel.getBaseInfo(params.project_id);
 
         // 邮件 HTML 正文中的用户可控字段(用户名/项目名)统一转义, 阻断存储型 HTML 注入;
