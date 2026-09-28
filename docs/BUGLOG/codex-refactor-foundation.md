@@ -2,6 +2,13 @@
 
 条目由 /csl-buglog 或人工维护,供 coder/reviewer 动手前核对
 
+## [2026-09-29][client/UI] CodeMirror6 迁移后编辑器容器 min-height 语义塌缩等 5 类 UI 规范缺陷(审查批 14 处编辑器位点)
+- 现象: 设置-全局mock脚本/接口高级Mock-脚本等编辑器渲染为一行细条、容器剩余 300~500px 空白; 生成ts services 页卡片丢失且 pre 长 token 行溢出裁切; 关注页空态贴左; 公开项目成员页头像渲染为 710px 巨图挤毁表格; site-admin 打开他人私有分组项目的设置时「所属分组」显示原始 id"9"
+- 根因: ①ace→CodeMirror6 迁移把主题定为 `.cm-editor{height:100%}`, 父容器仅 min-height(高度 auto)时百分比解析为内容高度→塌缩, 而 ace 时代容器写 min-height 即可撑起(全仓共 14 处此写法) ②`.m-panel` 只定义在 group chunk 两个 scss(ProjectList/MemberList), 却被设置页/插件页当全局类用, 整页直载时样式不加载 ③ProjectMember 表格头像尺寸样式只存在于 Group MemberList.scss, 设置页作用域无约束 ④Follows 把 ErrMsg 直接放 antd Row(flex), .err-msg 无宽度声明收缩贴左 ⑤所属分组 Select 选项取自当前用户 groupList, 不含项目实际分组时显示原始 value
+- 修法: 编辑器容器一律显式 height(14 处, min-height 全部清除); `.m-panel` 提升到 client/styles/common.scss 全局唯一并删两处本地定义; Setting.scss `.setting-project-member` 补 .m-user-img 32px(px 不用 rem); ErrMsg.scss 补 width:100%; ProjectMessage.js 构造 groupOptions 缺项时追加 currGroup; CaseScriptModal 的 Modal 补 className="common-setting-modal" 使 Portal 场景命中高度规则
+- 关联: client/components/AceEditor/mockEditor.js(xcodeTheme height:100%); client/styles/common.scss; client/containers/Project/Setting/ProjectMock/index.js:110; exts/yapi-plugin-advanced-mock/AdvMock.js:149; client/containers/Project/Setting/ProjectMessage/ProjectMessage.js:292-302 等 19 文件
+- 复发: 0 次 · 教训: 编辑器引擎迁移时百分比高度语义随宿主变化, 容器 min-height 旧惯例必须全量 rg 排查; chunk 局部 scss 类被跨 chunk 当全局类用是整页直载丢样式的典型来源; 组件复用到新容器布局(flex/Portal)时要核对宽度与作用域选择器是否仍命中
+
 ## [2026-09-25][server/utils/commons] babel-register 把字面量 import() 转译为 require,ESM-only 包在测试环境断链
 - 现象: json-schema-faker 0.6.3 升级后,生产路径(纯 node require 链)schemaToJson 正常,ava 测试内经 commons.js 的动态 import 全部失败:`No "exports" main defined in node_modules/json-schema-faker/package.json`,探针 12/14 红
 - 根因: ava 经 @babel/register 以 test 分支 babel 配置(modules:'commonjs',未 exclude dynamic-import)转译 server/** 源码,字面量 `import()` 被改写为 require 形态;0.6 exports 仅含 import 条件(无 require/default),require 解析必败。此前验证为假阴性:用 0.5.9 做同款 scratch 实测"通过",但 0.5.9 有 require 条件,证明不了原生 import 存活

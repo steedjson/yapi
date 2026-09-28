@@ -147,14 +147,14 @@ const View = () => {
         return (
           <div className="colBody">
             {/* <div id="vres_body_json" style={{ minHeight: h * 16 + 100 }}></div> */}
-            <AceEditor data={res_body} readOnly={true} style={{ minHeight: 600 }} />
+            <AceEditor data={res_body} readOnly={true} style={{ height: 600 }} />
           </div>
         );
       }
     } else if (res_body_type === 'raw') {
       return (
         <div className="colBody">
-          <AceEditor data={res_body} readOnly={true} mode="text" style={{ minHeight: 300 }} />
+          <AceEditor data={res_body} readOnly={true} mode="text" style={{ height: 300 }} />
         </div>
       );
     }
@@ -175,7 +175,7 @@ const View = () => {
             <AceEditor
               data={req_body_other}
               readOnly={true}
-              style={{ minHeight: 300 }}
+              style={{ height: 300 }}
               mode={req_body_type === 'json' ? 'javascript' : 'text'}
             />
           </div>

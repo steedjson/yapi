@@ -69,7 +69,7 @@ function AddInterfaceForm(props) {
         <Input placeholder="备注" />
       </FormItem>
 
-      <FormItem className="catModalfoot" wrapperCol={{ span: 24, offset: 8 }}>
+      <FormItem className="catModalfoot" wrapperCol={{ span: 24 }}>
         <Button onClick={props.onCancel} style={{ marginRight: '10px' }}>
           取消
         </Button>

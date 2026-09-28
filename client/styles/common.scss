@@ -123,6 +123,17 @@ em {
   padding: .24rem;
 }
 
+// 通用卡片容器：原仅定义于 group chunk(MemberList/ProjectList.scss)局部样式,
+// 但 ProjectMock/ProjectMember/ProjectData/Activity 及 gen-services/wiki 等插件页
+// 也以 className="m-panel" 使用——SPA 直载这些页面时 group chunk 不加载,卡片失效,
+// 故提升为全局工具类(声明以 ProjectList.scss 原规则为准)。
+.m-panel {
+  background-color: var(--sk-bg-component);
+  padding: 24px;
+  min-height: 4.68rem;
+  margin-top: 0;
+}
+
 .ant-dropdown .user-menu {
   box-shadow: 0 1px 6px rgba(0, 0, 0, 0.3);
 }

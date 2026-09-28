@@ -107,7 +107,7 @@ const ProjectMock = props => {
           <AceEditor
             data={projectMockScript}
             onChange={handleMockJsInput}
-            style={{ minHeight: '500px' }}
+            style={{ height: '500px' }}
           />
         </FormItem>
         <FormItem {...tailFormItemLayout}>

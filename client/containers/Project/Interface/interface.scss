@@ -418,6 +418,7 @@
       margin-bottom: 10px;
     }
     .catModalfoot {
+      text-align: right;
       border-top: 1px solid var(--sk-border-split);
       margin-bottom: 0px;
       padding-top: 10px;
@@ -444,7 +445,7 @@
   }
 
   .case-script{
-    min-height: 200px;
+    height: 200px;
     margin: 10px;
     width: 98%;
   }

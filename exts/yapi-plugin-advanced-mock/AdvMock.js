@@ -146,7 +146,7 @@ const AdvMock = () => {
           </FormItem>
 
           <FormItem label="Mock脚本" {...formItemLayout}>
-            <div id="mock-script" style={{ minHeight: '500px' }} />
+            <div id="mock-script" style={{ height: '500px' }} />
           </FormItem>
           <FormItem {...tailFormItemLayout}>
             <Button type="primary" htmlType="submit">

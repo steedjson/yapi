@@ -32,6 +32,7 @@ const CaseScriptModal = props => {
 
   return (
     <Modal
+      className="common-setting-modal"
       title="自定义测试脚本"
       width="660px"
       style={{

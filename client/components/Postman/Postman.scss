@@ -9,18 +9,18 @@
   .pretty-editor {
     border: 1px solid var(--sk-border);
     border-radius: var(--sk-radius);
-    min-height: 200px;
+    height: 200px;
   }
   .pretty-editor-body {
     border: 1px solid var(--sk-border);
     border-radius: var(--sk-radius);
-    min-height: 300px;
+    height: 300px;
     min-width: 100%;
   }
   .pretty-editor-header {
     border: 1px solid var(--sk-border);
     border-radius: var(--sk-radius);
-    min-height: 300px;
+    height: 300px;
   }
 
   .interface-test {
@@ -44,7 +44,7 @@
   }
 
   .case-script{
-    min-height: 500px;
+    height: 500px;
     margin: 10px;
   }
 

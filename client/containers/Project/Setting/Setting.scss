@@ -46,7 +46,19 @@
   .btn{
     margin-left: 8px;
   }
+  // 头像行布局与 MemberList.scss(group chunk)的 .m-user 块视觉等价:
+  // 本页(group chunk 不加载)原先无约束, 头像 img 按原始尺寸渲染挤毁表格
+  .m-user {
+    display: flex;
+    align-items: center;
+  }
+  .m-user-img {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--sk-radius);
+  }
   .m-user-name {
+    margin-left: 8px;
     padding-right: 16px;
   }
 

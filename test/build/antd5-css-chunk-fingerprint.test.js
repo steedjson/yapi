@@ -70,7 +70,14 @@ const PRD_DIR = path.join(REPO_ROOT, 'static', 'prd');
 // confirmed-override 0，判定无漂移）。
 // prop-types 清理批（2026-09-29）：79 文件 prop-types 死代码剔除（bundle -12.4KB）→
 // vendor 依赖图变化使异步 vendor chunk 重编号为 '5z'，初始 chunk 顺序
-// manifest/antd/5z/index.js。CSS chunk 哈希零变化（层 A/层 B 坐标无漂移，无需重扫）。// dark 皮肤令牌化批（2026-09-28 下午）：全站 dark 亮面清扫——TimeLine 卡片
+// manifest/antd/5z/index.js。CSS chunk 哈希零变化（层 A/层 B 坐标无漂移，无需重扫）。
+// 客户端 UI 修复批（2026-09-29）：CodeMirror6 容器 min-height→显式 height（14 处，
+// project 包）、common.scss 新增全局 .m-panel 并删除 ProjectList/MemberList.scss 本地
+// 定义（index 包 +1 规则、group 包 -2 规则）、ErrMsg width:100%、Setting .m-user 系列、
+// Services pre overflow-x、interface.scss .catModalfoot 对齐 → index/group/project/
+// follows/add-project 5 个 CSS chunk 哈希轮换（user 内容不变）。层 A 重扫
+// candidates 1194（上批 1183，增量与新增规则数吻合），层 B 全页面通过
+//（confirmed-override 0，unsupportedSelectors 全 0），判定无漂移。初始 chunk 顺序不变。// dark 皮肤令牌化批（2026-09-28 下午）：全站 dark 亮面清扫——TimeLine 卡片
 // （--sk-timeline-card-bg 新令牌+头部复用 --sk-bg-body）与 ProjectCard
 // （--sk-bg-component）令牌化 → 5 个 CSS chunk 哈希轮换。层 A/层 B 已按新产物
 // 重扫（candidates 1181，confirmed-override 0，判定无漂移）。
@@ -81,12 +88,12 @@ const PRD_DIR = path.join(REPO_ROOT, 'static', 'prd');
 // （层 A candidates 1181，层 B confirmed-override 0，判定无漂移）。
 const BASELINE = {
   cssChunks: {
-    'index.js': 'index@b6162dd533f7f762.css',
-    group: 'group@598f5bed64025a9b.css',
-            project: 'project@be35a42924ddbe04.css',
+    'index.js': 'index@df876fe14f0236e6.css',
+    group: 'group@34fd44e5b9aff10e.css',
+    project: 'project@5e18421e29477fec.css',
     user: 'user@57802eb279f54184.css',
-    follows: 'follows@71cb5db9f3523bd5.css',
-    'add-project': 'add-project@39679d6a4cb230c4.css'
+    follows: 'follows@df5a1e4b55176587.css',
+    'add-project': 'add-project@218ad3f1e0b29164.css'
   },
   initialChunks: ['manifest', 'antd', '5z', 'index.js']
   // 批次 4：json-schema-editor-visual 的 antd.css import 已删，scoped antd3 双作用域

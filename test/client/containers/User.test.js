@@ -110,8 +110,8 @@ test.serial('/user/profile/:uid 子路由渲染资料页', async t => {
     '非本人访问应渲染对方头像'
   );
   t.truthy(
-    container.querySelector('.user-profile').textContent.indexOf('站点登陆') > -1,
-    '资料页应展示登陆方式为站点登陆'
+    container.querySelector('.user-profile').textContent.indexOf('站点登录') > -1,
+    '资料页应展示登录方式为站点登录'
   );
   t.is(
     container.querySelector('.user-profile #old_password'),

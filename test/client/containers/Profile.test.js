@@ -90,7 +90,7 @@ test.serial('本人访问渲染个人设置（头像上传、资料行、密码�
     'a@b.c',
     'Email 行应展示接口返回的邮箱'
   );
-  t.truthy(texts.some(text => text.indexOf('站点登陆') > -1), '登陆方式应展示站点登陆');
+  t.truthy(texts.some(text => text.indexOf('站点登录') > -1), '登录方式应展示站点登录');
   t.truthy(
     texts.some(
       text =>

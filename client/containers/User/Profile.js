@@ -429,8 +429,8 @@ const Profile = () => {
           justify="start"
         >
           <div className="maoboli" />
-          <Col span={6}>登陆方式</Col>
-          <Col span={18}>{userinfo.type === 'site' ? '站点登陆' : '第三方登陆'}</Col>
+          <Col span={6}>登录方式</Col>
+          <Col span={18}>{userinfo.type === 'site' ? '站点登录' : '第三方登录'}</Col>
         </Row>
         <Row className="user-item" type="flex" justify="start">
           <div className="maoboli" />

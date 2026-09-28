@@ -289,6 +289,17 @@ function ProjectMessage(props) {
     </RadioGroup>
   );
   const selectDisbaled = projectMsg.role === 'owner' || projectMsg.role === 'admin';
+  // site-admin 查看他人分组项目时, 项目所属分组不在当前用户 groupList 中,
+  // Select 无匹配 Option 会回显原始 id, 故在选项集中补入项目当前所属分组(currGroup)
+  const groupOptions = groupList.slice();
+  if (
+    projectMsg.group_id != null &&
+    currGroup &&
+    currGroup._id == projectMsg.group_id &&
+    !groupOptions.some((/** @type {any} */ item) => item._id == projectMsg.group_id)
+  ) {
+    groupOptions.push({ _id: currGroup._id, group_name: currGroup.group_name });
+  }
   return (
     <div>
       <div className="m-panel">
@@ -346,7 +357,7 @@ function ProjectMessage(props) {
             ]}
           >
             <Select disabled={!selectDisbaled}>
-              {groupList.map((/** @type {any} */ item, /** @type {number} */ index) => (
+              {groupOptions.map((/** @type {any} */ item, /** @type {number} */ index) => (
                 <Option value={item._id.toString()} key={index}>
                   {item.group_name}
                 </Option>
