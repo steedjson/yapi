@@ -158,7 +158,6 @@ const ProjectData = () => {
   const uploadChange = (/** @type {any} */ info) => {
     const status = info.file.status;
     if (status !== 'uploading') {
-      console.log(info.file, info.fileList);
     }
     if (status === 'done') {
       message.success(`${info.file.name} 文件上传成功`);

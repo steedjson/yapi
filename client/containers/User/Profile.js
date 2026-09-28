@@ -480,7 +480,7 @@ const AvatarUpload = ({ uid }) => {
         setImageUrl(basecode);
       })
       .catch((/** @type {any} */ e) => {
-        console.log(e);
+        console.error(e);
       });
   };
 

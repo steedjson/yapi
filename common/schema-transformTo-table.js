@@ -14,7 +14,7 @@ exports.schemaTransformToTable = schema => {
     result = Array.isArray(result) ? result : [result];
     return result;
   } catch (err) {
-    console.log(err);
+    console.error(err);
   }
 };
 

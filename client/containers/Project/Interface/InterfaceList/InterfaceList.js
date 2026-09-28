@@ -219,13 +219,6 @@ const InterfaceList = () => {
   // changePage = current => {
   //   if (this.state.current !== current) {
   //     this.setState(
-  //       {
-  //         current: current
-  //       },
-  //       () => this.handleRequest(this.props)
-  //     );
-  //   }
-  // };
 
   const tag = curProject.tag;
   const tagFilter = tag.map((/** @type {any} */ item) => {

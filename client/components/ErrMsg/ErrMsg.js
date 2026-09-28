@@ -75,7 +75,7 @@ function ErrMsg(props) {
         icon = 'meh-o';
         break;
       default:
-        console.log('default');
+        break;
     }
   }
   return (

@@ -282,7 +282,7 @@ function postman(importDataModule) {
         }
       }
     } catch (/** @type {any} */ err) {
-      console.log(err.message);
+      console.error(err.message);
       message.error(`${err.message}, 导入的postman格式有误`);
     }
     return res;

@@ -103,20 +103,6 @@ function postman(importDataModule) {
     }
     return res;
   }
-  // function handleReq_headers(headers){
-  //   let res = [];
-  //   if(headers&&headers.length){
-  //     for(let item in headers){
-  //       res.push({
-  //         name: headers[item].key,
-  //         desc: headers[item].description,
-  //         value: headers[item].value,
-  //         required: headers[item].enable
-  //       });
-  //     }
-  //   }
-  //   return res;
-  // }
 
   /**
    * @param {any} body_form

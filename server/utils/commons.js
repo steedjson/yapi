@@ -86,15 +86,6 @@ const defaultOptions = {
   requiredOnly: true
 };
 
-// formats.forEach(item => {
-//   item = item.name;
-//   jsf.format(item, () => {
-//     if (item === 'mobile') {
-//       return jsf.random.randexp('^[1][34578][0-9]{9}$');
-//     }
-//     return Mock.mock('@' + item);
-//   });
-// });
 
 /**
  * 按 JSON Schema 生成 mock 数据
@@ -499,11 +490,6 @@ exports.handleVarPath = (pathname, params) => {
  * @returns {boolean} 合法时返回 true
  */
 exports.verifyPath = path => {
-  // if (/^\/[a-zA-Z0-9\-\/_:!\.\{\}\=]*$/.test(path)) {
-  //   return true;
-  // } else {
-  //   return false;
-  // }
   return /^\/[a-zA-Z0-9\-/_:.!{}=]*$/.test(path);
 };
 

@@ -41,7 +41,7 @@ function preProcess(caseData) {
   try {
     caseData = JSON.parse(JSON.stringify(caseData));
   } catch (error) {
-    console.log(error);
+    console.error(error);
   }
 
   const initCaseData = {
@@ -163,7 +163,7 @@ function CaseDesForm(props) {
 
         keys = keys.concat(Object.keys(bodyObj));
       } catch (error) {
-        console.log(error);
+        console.error(error);
       }
     }
     return keys;
@@ -202,7 +202,7 @@ function CaseDesForm(props) {
       try {
         caseData.params = json5.parse(caseData.params);
       } catch (error) {
-        console.log(error);
+        console.error(error);
         message.error('请求参数 json 格式有误，请修改');
         return false;
       }

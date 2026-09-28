@@ -92,15 +92,6 @@ class baseController {
         tokenUid = tokens.uid;
       }
 
-      // if (this.$auth) {
-      //   ctx.params.project_id = await this.getProjectIdByToken(token);
-
-      //   if (!ctx.params.project_id) {
-      //     return (this.$tokenAuth = false);
-      //   }
-      //   return (this.$tokenAuth = true);
-      // }
-
       let checkId = await this.getProjectIdByToken(token);
       if(!checkId){
         ctx.body = yapi.commons.resReturn(null, 42014, 'token 无效');

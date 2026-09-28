@@ -91,11 +91,11 @@ export default function Srch() {
           searchIndexRef.current = searchIndex;
           setDataSource(options);
         } else {
-          console.log('查询项目或分组失败');
+          console.error('查询项目或分组失败');
         }
       })
       .catch((/** @type {any} */ err) => {
-        console.log(err);
+        console.error(err);
       });
   }
 
