@@ -116,7 +116,13 @@ const BasicSettingPanel = props => {
           }
         >
           <Space.Compact>
-            <Select value={method} onChange={onChangeMethod} style={{ width: '15%' }}>
+            {/* 下拉面板不随 15% 内联宽度收窄：按最长选项自适应，避免 OPTIONS/DELETE/PATCH 等文字被裁切 */}
+            <Select
+              value={method}
+              onChange={onChangeMethod}
+              popupMatchSelectWidth={false}
+              style={{ width: '15%' }}
+            >
               {HTTP_METHOD_KEYS.map(item => {
                 return (
                   <Option key={item} value={item}>

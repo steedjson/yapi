@@ -2,6 +2,13 @@
 
 条目由 /csl-buglog 或人工维护,供 coder/reviewer 动手前核对
 
+## [2026-09-29][client/InterfaceMenu] 渲染期 expandedKeys union 静默还原用户收起(接口树当前分类无法闭合)
+- 现象: 选中某接口后,其所在分类自动展开;点该分类收起开关,树瞬间恢复展开(实测 open 数 1→1),仅"当前分类"收不起来;未选中接口时收起正常
+- 根因: `defaultExpandedKeys()` 在每次渲染都返回 `expands: union(state.expands, activePath)`——onExpand 更新 state.expands 触发的重渲染里,activePath(选中接口的祖先分类链)把用户刚收起的分类又并回去。该 union 本是为"导航/深链接自动展开目标祖先链"服务,但无差别作用于每次渲染,劫持了用户对活跃分类的收起意图
+- 修法: 三 ref 记录用户收起意图——onExpand 对上一帧生效展开集(lastExpandsRef)做差集,被收起的 key 记入 userCollapsedRef,重展开则移除;defaultExpandedKeys 的 union 结果过滤掉 userCollapsedRef 中的 key;路由目标变化时清空 userCollapsedRef(保留导航自动展开语义);搜索过滤分支同步 lastExpandsRef 作差集基准。方法下拉裁切同批修:编辑页 15% 方法 Select 补 `popupMatchSelectWidth={false}`(antd5+ 现行名,旧 dropdownMatchSelectWidth 已移除),下拉 64px→93px,OPTIONS(需61px/原可视32px)等全部完整显示
+- 关联: client/containers/Project/Interface/InterfaceList/InterfaceMenu.js(defaultExpandedKeys/onExpand);InterfaceEditFormParts/BasicSettingPanel.js:119;test/client/containers/InterfaceMenuExpandedKeys.test.js(4 用例含变异验证)
+- 复发: 0 次 · 教训: 「受控 props + 渲染期重算函数」模式下,为导航便利做的 union 会与用户交互意图打架——受控状态被渲染函数覆盖时,用户操作必须落一个不被渲染函数还原的记忆;antd5+ Select 下拉默认跟随控件宽,窄控件(pct 宽度)里长选项必裁切,需 popupMatchSelectWidth=false
+
 ## [2026-09-29][exts/advanced-mock] 期望编辑弹窗 antd Row gutter 负边距造成 4px 幽灵横向滚动条
 - 现象: 「添加期望」弹窗(CaseDesModal)底部出现近满宽横向滚动条,弹窗体 scrollWidth 比 clientWidth 宽 4px
 - 根因: 弹窗内参数行用 antd Row gutter 布局,gutter 会让行容器带 -4px 左右外边距,在受限父容器(col-19)内右侧溢出 4px,把 body 撑出滚动条

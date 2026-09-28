@@ -193,6 +193,15 @@ const InterfaceMenu = (/** @type {any} */ props) => {
   const latestRef = useRef({});
   latestRef.current = { projectId, router, list, inter, curProject, params, state };
 
+  // 修复：选中接口/分类时其所在分类无法收起——渲染期 defaultExpandedKeys 每次都把
+  // activePath 并回 state.expands，用户的收起被静默还原。用三个 ref 协调：
+  // - userCollapsedRef：用户手动收起的分类 key，渲染期 union activePath 后统一剔除；
+  // - lastExpandsRef：最近一次渲染下发给 Tree 的展开集，供 onExpand 计算本次被收起的差集；
+  // - prevTargetRef：上一次路由目标，变化时清空收起记录，保留导航到新目标的自动展开。
+  const userCollapsedRef = useRef(/** @type {Set<any>} */ (new Set()));
+  const lastExpandsRef = useRef(/** @type {Array<string> | null} */ (null));
+  const prevTargetRef = useRef(/** @type {string | null} */ (null));
+
   const changeModal = (/** @type {any} */ key, /** @type {any} */ status) => {
     // visible add_cat_modal_visible change_cat_modal_visible del_cat_modal_visible
     patchState({ [key]: status });
@@ -409,9 +418,15 @@ const InterfaceMenu = (/** @type {any} */ props) => {
   };
 
   const onExpand = (/** @type {any} */ e) => {
-    patchState({
-      expands: e
+    // 以最近一次渲染下发的展开集为基准求差集，识别用户本次收起了哪些分类并记录；
+    // 渲染期 defaultExpandedKeys union activePath 时据此剔除，收起不再被静默还原
+    const prev = lastExpandsRef.current || state.expands || [];
+    const next = Array.from(e || []);
+    next.forEach(key => userCollapsedRef.current.delete(key));
+    prev.forEach(key => {
+      if (next.indexOf(key) === -1) userCollapsedRef.current.add(key);
     });
+    patchState({ expands: next });
   };
 
   const onDrop = async (/** @type {any} */ e) => {
@@ -691,7 +706,10 @@ const InterfaceMenu = (/** @type {any} */ props) => {
           return rNull;
         }
         const activePath = findCatPath(list, inter.catid) || ['cat_' + inter.catid];
-        const combinedExpands = Array.from(new Set([...(state.expands || []), ...activePath]));
+        const combinedExpands = Array.from(new Set([...(state.expands || []), ...activePath])).filter(
+          key => !userCollapsedRef.current.has(key)
+        );
+        lastExpandsRef.current = combinedExpands;
         return {
           expands: combinedExpands,
           selects: [inter._id + '']
@@ -699,15 +717,20 @@ const InterfaceMenu = (/** @type {any} */ props) => {
       } else {
         const catid = router.params.actionId.substr(4);
         const activePath = findCatPath(list, catid) || ['cat_' + catid];
-        const combinedExpands = Array.from(new Set([...(state.expands || []), ...activePath]));
+        const combinedExpands = Array.from(new Set([...(state.expands || []), ...activePath])).filter(
+          key => !userCollapsedRef.current.has(key)
+        );
+        lastExpandsRef.current = combinedExpands;
         return {
           expands: combinedExpands,
           selects: ['cat_' + catid]
         };
       }
     } else {
+      const expands = state.expands ? state.expands : ['cat_' + list[0]._id];
+      lastExpandsRef.current = expands;
       return {
-        expands: state.expands ? state.expands : ['cat_' + list[0]._id],
+        expands,
         selects: ['root']
       };
     }
@@ -763,12 +786,26 @@ const InterfaceMenu = (/** @type {any} */ props) => {
     };
   };
 
+  // 路由目标（接口/分类/根）变化时清空用户收起记录：导航到新目标后仍自动展开其祖先链，
+  // 手动收起记忆只对当前目标生效（router 判空随第 688 行 if (router) 先例）
+  const targetKey =
+    router && router.params && router.params.actionId != null
+      ? isNaN(router.params.actionId)
+        ? 'cat_' + router.params.actionId
+        : 'i_' + router.params.actionId
+      : 'root';
+  if (prevTargetRef.current !== targetKey) {
+    userCollapsedRef.current.clear();
+    prevTargetRef.current = targetKey;
+  }
+
   let currentKes = defaultExpandedKeys();
   let menuList;
   if (state.filter) {
     const res = filterList(state.list, state.filter);
     menuList = res.menuList;
     currentKes.expands = res.arr;
+    lastExpandsRef.current = res.arr;
   } else {
     menuList = state.list;
   }
