@@ -16,7 +16,6 @@
  *   - 不引入包装 DOM 元素：根节点即原 Fragment，三个分支的 <div> 层级不变。
  */
 import React from 'react';
-import PropTypes from 'prop-types';
 import { Button, Input, Checkbox, Tooltip, Space } from 'antd';
 import { EditOutlined, PlusOutlined, QuestionCircleOutlined } from '@ant-design/icons';
 import AceEditor from 'client/components/AceEditor/AceEditor';
@@ -134,21 +133,6 @@ const BodyPanel = props => {
         )}
     </>
   );
-};
-
-BodyPanel.propTypes = {
-  method: PropTypes.string,
-  req_body_type: PropTypes.string,
-  req_body_form: PropTypes.array,
-  req_body_other: PropTypes.string,
-  /** 父组件持有的 raw 编辑器实例 ref（showModal 读取光标偏移用） */
-  editorRef: PropTypes.any,
-  /** 打开高级参数插入弹窗（父 showModal(value, index, type)） */
-  onShowModal: PropTypes.func,
-  /** raw 编辑器内容变化（父 handleRequestBody，载荷为 { text }） */
-  onBodyChange: PropTypes.func,
-  /** form 行变化（父 changeBody(value, index, key)） */
-  onFormChange: PropTypes.func
 };
 
 export default BodyPanel;

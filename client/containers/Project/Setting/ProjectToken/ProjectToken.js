@@ -1,6 +1,5 @@
 // @ts-check
 import React, { useEffect } from 'react';
-import PropTypes from 'prop-types';
 import './ProjectToken.scss';
 // project 切片已迁至 Zustand（批次4），本组件的 redux 依赖随迁移全部移除
 import useProjectStore from '../../../../store/projectStore';
@@ -90,11 +89,6 @@ const ProjectToken = props => {
       </div>
     </div>
   );
-};
-
-ProjectToken.propTypes = {
-  projectId: PropTypes.number,
-  curProjectRole: PropTypes.string
 };
 
 export default ProjectToken;

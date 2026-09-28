@@ -1,6 +1,5 @@
 // @ts-check
 import React from 'react';
-import PropTypes from 'prop-types';
 import { Row, Col, Tabs } from 'antd';
 /**
  * @param {any} json
@@ -136,17 +135,6 @@ const CaseReport = function(props) {
       <Tabs defaultActiveKey="request" items={items} />
     </div>
   );
-};
-
-CaseReport.propTypes = {
-  url: PropTypes.string,
-  data: PropTypes.any,
-  headers: PropTypes.object,
-  res_header: PropTypes.object,
-  res_body: PropTypes.any,
-  query: PropTypes.string,
-  validRes: PropTypes.array,
-  status: PropTypes.number
 };
 
 export default CaseReport;

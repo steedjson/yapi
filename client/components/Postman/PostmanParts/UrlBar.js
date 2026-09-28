@@ -15,7 +15,6 @@
  *   - 不引入包装 DOM 元素：根节点即原 <div className="url">。
  */
 import React from 'react';
-import PropTypes from 'prop-types';
 import { Button, Input, Select, Tooltip, Space } from 'antd';
 import constants from '../../../constants/variable.js';
 
@@ -108,25 +107,6 @@ const UrlBar = props => {
       </Tooltip>
     </div>
   );
-};
-
-UrlBar.propTypes = {
-  method: PropTypes.string,
-  case_env: PropTypes.string,
-  env: PropTypes.array,
-  path: PropTypes.string,
-  hasPlugin: PropTypes.bool,
-  loading: PropTypes.bool,
-  /** enum[case, inter]，决定保存按钮文案 */
-  type: PropTypes.string,
-  /** 环境切换（父 selectDomain） */
-  onSelectDomain: PropTypes.func,
-  /** 打开环境设置弹窗（父 showEnvModal） */
-  onShowEnvModal: PropTypes.func,
-  /** 发送/取消（父 reqRealInterface，防双发语义在父组件） */
-  onSend: PropTypes.func,
-  /** 保存/更新（父 props.save，Run.js / InterfaceCaseContent 注入） */
-  onSave: PropTypes.func
 };
 
 export default UrlBar;

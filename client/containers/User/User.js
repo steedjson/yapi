@@ -3,7 +3,6 @@ import './index.scss';
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import List from './List.js';
-import PropTypes from 'prop-types';
 import Profile from './Profile.js';
 import withRouter from '../../withRouter';
 
@@ -26,10 +25,6 @@ const User = () => {
       </div>
     </div>
   );
-};
-
-User.propTypes = {
-  match: PropTypes.object
 };
 
 export default User;

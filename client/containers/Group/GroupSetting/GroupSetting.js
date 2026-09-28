@@ -1,7 +1,6 @@
 // @ts-check
 import React, { useEffect, useRef, useState } from 'react';
 import { SaveOutlined } from '@ant-design/icons';
-import PropTypes from 'prop-types';
 import { QuestionCircleOutlined, ExclamationCircleOutlined, UpOutlined, DownOutlined } from '@ant-design/icons';
 import { Input, Button, Card, Alert, Modal, Switch, Row, Col, Tooltip } from 'antd';
 import { message } from '../../../utils/message-bridge.js';
@@ -277,19 +276,6 @@ const GroupSetting = () => {
       ) : null}
     </div>
   );
-};
-
-GroupSetting.propTypes = {
-  currGroup: PropTypes.object,
-  curUserRole: PropTypes.string,
-  changeGroupMsg: PropTypes.func,
-  fetchGroupList: PropTypes.func,
-  setCurrGroup: PropTypes.func,
-  fetchGroupMsg: PropTypes.func,
-  fetchActivityData: PropTypes.func,
-  updateGroupList: PropTypes.func,
-  deleteGroup: PropTypes.func,
-  groupList: PropTypes.array
 };
 
 export default GroupSetting;

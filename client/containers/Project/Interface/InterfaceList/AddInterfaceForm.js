@@ -1,6 +1,5 @@
 // @ts-check
 import React, { useState } from 'react'
-import PropTypes from 'prop-types'
 import { Input, Select, Button, Form, TreeSelect, Space } from 'antd';
 
 import constants from '../../../../constants/variable.js'
@@ -132,13 +131,6 @@ function AddInterfaceForm(props) {
     </Form>
 
   );
-}
-
-AddInterfaceForm.propTypes = {
-  onSubmit: PropTypes.func,
-  onCancel: PropTypes.func,
-  catid: PropTypes.number,
-  catdata: PropTypes.array
 }
 
 export default AddInterfaceForm

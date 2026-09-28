@@ -1,7 +1,6 @@
 // @ts-check
 import React, { useEffect, useRef } from 'react';
 import './Follows.scss';
-import PropTypes from 'prop-types';
 import { Row, Col } from 'antd';
 // 关注列表（试点）与 user 切片（批次4）均已迁至 Zustand，本组件的 redux 依赖随迁移全部移除
 import useFollowStore from '../../store/followStore';
@@ -59,11 +58,6 @@ const Follows = () => {
       </div>
     </div>
   );
-};
-
-Follows.propTypes = {
-  getFollowList: PropTypes.func,
-  uid: PropTypes.number
 };
 
 export default Follows;

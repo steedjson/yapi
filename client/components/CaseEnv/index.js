@@ -2,7 +2,6 @@
 // 测试集合中的环境切换
 
 import React from 'react';
-import PropTypes from 'prop-types';
 import { Select, Row, Col, Collapse, Tooltip } from 'antd';
 import { QuestionCircleOutlined } from '@ant-design/icons';
 const Option = Select.Option;
@@ -95,11 +94,3 @@ export default function CaseEnv(props) {
     />
   );
 }
-
-CaseEnv.propTypes = {
-  envList: PropTypes.array,
-  currProjectEnvChange: PropTypes.func,
-  changeClose: PropTypes.func,
-  collapseKey: PropTypes.any,
-  envValue: PropTypes.object
-};

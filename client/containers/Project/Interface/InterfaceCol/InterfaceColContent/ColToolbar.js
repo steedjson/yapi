@@ -13,7 +13,6 @@
  *     currProjectEnvChange / envValue / collapseKey / changeClose）原样保留。
  */
 import React from 'react';
-import PropTypes from 'prop-types';
 import { Tooltip, Button, Row, Col } from 'antd';
 import { QuestionCircleOutlined } from '@ant-design/icons';
 import CaseEnv from 'client/components/CaseEnv';
@@ -110,20 +109,6 @@ const ColToolbar = props => {
       </Col>
     </Row>
   );
-};
-
-ColToolbar.propTypes = {
-  envList: PropTypes.array,
-  /** 每个项目 id → 已选环境名（原 state.currColEnvObj） */
-  envValue: PropTypes.object,
-  collapseKey: PropTypes.any,
-  onEnvChange: PropTypes.func,
-  onCollapseChange: PropTypes.func,
-  hasPlugin: PropTypes.bool,
-  curProjectRole: PropTypes.any,
-  onAutoTests: PropTypes.func,
-  onOpenCommonSetting: PropTypes.func,
-  onExecuteTests: PropTypes.func
 };
 
 export default ColToolbar;

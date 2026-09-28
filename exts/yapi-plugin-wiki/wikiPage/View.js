@@ -1,7 +1,6 @@
 // @ts-check
 import React from 'react';
 import { EditOutlined } from '@ant-design/icons';
-import PropTypes from 'prop-types';
 import { Button } from 'antd';
 import { Link } from 'react-router-dom';
 import sanitizeHtml from 'client/utils/sanitize.js';
@@ -35,15 +34,6 @@ const WikiView = props => {
       />
     </div>
   );
-};
-
-WikiView.propTypes = {
-  editorEable: PropTypes.bool,
-  onEditor: PropTypes.func,
-  uid: PropTypes.number,
-  username: PropTypes.string,
-  editorTime: PropTypes.string,
-  desc: PropTypes.string
 };
 
 export default WikiView;

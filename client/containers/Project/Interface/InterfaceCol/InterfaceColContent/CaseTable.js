@@ -18,7 +18,6 @@
  *   - 不引入任何包装 DOM 元素：根节点即原 DndContext（不产出 DOM）。
  */
 import React from 'react';
-import PropTypes from 'prop-types';
 import { Tooltip, Button, Spin, Table } from 'antd';
 import {
   CheckCircleFilled,
@@ -244,18 +243,6 @@ const CaseTable = props => {
       </SortableContextAny>
     </DndContext>
   );
-};
-
-CaseTable.propTypes = {
-  rows: PropTypes.array,
-  /** 用例 id → 测试报告对象（父组件 reportsRef.current） */
-  reportMap: PropTypes.object,
-  currProjectId: PropTypes.any,
-  onOpenReport: PropTypes.func,
-  /** 点击「自定义脚本」图标上抛用例 id（父组件 openScript） */
-  onOpenScript: PropTypes.func,
-  onDragOver: PropTypes.func,
-  onDragEnd: PropTypes.func
 };
 
 export default CaseTable;

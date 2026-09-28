@@ -1,7 +1,6 @@
 // @ts-check
 import './MockDoc.scss';
 import React from 'react';
-import PropTypes from 'prop-types';
 import sanitizeHtml from '../../utils/sanitize.js';
 
 // 组件用法 <MockDoc mock= mockData doc= docData />
@@ -87,11 +86,6 @@ function MockDoc({ mock = defaultMock, doc = defaultDoc }) {
     </div>
   );
 }
-
-MockDoc.propTypes = {
-  mock: PropTypes.object,
-  doc: PropTypes.array
-};
 
 /**
  * @param {number} count

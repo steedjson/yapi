@@ -2,7 +2,6 @@
 import './Subnav.scss';
 import React from 'react';
 import { Link } from 'react-router-dom';
-import PropTypes from 'prop-types';
 import { Menu } from 'antd';
 
 /**
@@ -30,10 +29,5 @@ function Subnav(props) {
     </div>
   );
 }
-
-Subnav.propTypes = {
-  data: PropTypes.array,
-  default: PropTypes.string
-};
 
 export default Subnav;

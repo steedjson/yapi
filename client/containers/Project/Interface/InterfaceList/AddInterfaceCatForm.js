@@ -1,6 +1,5 @@
 // @ts-check
 import React from 'react';
-import PropTypes from 'prop-types';
 import { Input, Button, Select, Form } from 'antd';
 const FormItem = Form.Item;
 const Option = Select.Option;
@@ -86,13 +85,5 @@ function AddInterfaceForm(props) {
     </Form>
   );
 }
-
-AddInterfaceForm.propTypes = {
-  onSubmit: PropTypes.func,
-  onCancel: PropTypes.func,
-  catdata: PropTypes.object,
-  categories: PropTypes.array,
-  parentId: PropTypes.number
-};
 
 export default AddInterfaceForm;

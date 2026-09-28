@@ -2,7 +2,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Timeline, Spin, Row, Col, Tag, Avatar, Button, Modal, AutoComplete } from 'antd';
 import { LoadingOutlined } from '@ant-design/icons';
-import PropTypes from 'prop-types';
 import { formatTime } from '../../common.js';
 import showDiffMsg from '../../../common/diff-view.js';
 import sanitizeHtml from '../../utils/sanitize.js';
@@ -40,12 +39,6 @@ const AddDiffView = props => {
       <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(content) }} />
     </div>
   );
-};
-
-AddDiffView.propTypes = {
-  title: PropTypes.string,
-  content: PropTypes.string,
-  className: PropTypes.string
 };
 
 // timeago(new Date().getTime() - 40);
@@ -283,8 +276,3 @@ export default function TimeTree(props) {
     </section>
   );
 }
-
-TimeTree.propTypes = {
-  typeid: PropTypes.number,
-  type: PropTypes.string
-};

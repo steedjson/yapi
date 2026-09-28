@@ -18,7 +18,6 @@
  *     三者在原父组件中的兄弟顺序保持），children 在 panel-sub 内原位渲染。
  */
 import React from 'react';
-import PropTypes from 'prop-types';
 import { Button, Row, Col, Radio, Form } from 'antd';
 import EasyDragSort from '../../../../../components/EasyDragSort/EasyDragSort.js';
 import { HTTP_METHOD } from '../interfaceEditFormUtils/formDefaults.js';
@@ -125,31 +124,6 @@ const RequestParamsSetting = props => {
       </div>
     </>
   );
-};
-
-RequestParamsSetting.propTypes = {
-  /** 当前方法（父 state.method，控制 Body 页签是否存在） */
-  method: PropTypes.string,
-  /** 选中的请求参数页签（父 state.req_radio_type，受控） */
-  req_radio_type: PropTypes.string,
-  /** 请求面板隐藏位（父 state.hideTabs.req：query / headers） */
-  reqHideTabs: PropTypes.object,
-  /** Query 行数据（父 state.req_query） */
-  req_query: PropTypes.array,
-  /** Headers 行数据（父 state.req_headers） */
-  req_headers: PropTypes.array,
-  /** 页签切换（父 changeRadioGroup） */
-  onRadioChange: PropTypes.func,
-  /** 添加一行参数（父 addParams） */
-  onAddParams: PropTypes.func,
-  /** 打开批量导入弹窗（父 showBulk） */
-  onShowBulk: PropTypes.func,
-  /** 行拖拽排序回调工厂（父 handleDragMove） */
-  onDragMove: PropTypes.func,
-  /** 删除行（父 delParams） */
-  onDelParams: PropTypes.func,
-  /** BODY 区块（父组件以 <RequestBodySetting /> 注入，渲染在 panel-sub 内 Headers 之后） */
-  children: PropTypes.node
 };
 
 export default RequestParamsSetting;

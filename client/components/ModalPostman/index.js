@@ -1,6 +1,5 @@
 // @ts-check
 import React, { useState, useEffect } from 'react';
-import PropTypes from 'prop-types';
 import './index.scss';
 import { Alert, Modal, Row, Col, Collapse, Input, Tooltip } from 'antd';
 import { EditOutlined, QuestionCircleOutlined } from '@ant-design/icons';
@@ -305,12 +304,3 @@ export default function ModalPostman(props) {
     </Modal>
   );
 }
-
-ModalPostman.propTypes = {
-  visible: PropTypes.bool,
-  handleCancel: PropTypes.func,
-  handleOk: PropTypes.func,
-  inputValue: PropTypes.any,
-  envType: PropTypes.string,
-  id: PropTypes.number
-};

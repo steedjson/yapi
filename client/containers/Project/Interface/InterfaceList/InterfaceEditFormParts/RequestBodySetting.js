@@ -23,7 +23,6 @@
  *     元素（<div> / <Row>）与抽取前一致。
  */
 import React from 'react';
-import PropTypes from 'prop-types';
 import { Input, Tooltip, Button, Row, Col, Radio, Switch, Form } from 'antd';
 import { QuestionCircleOutlined } from '@ant-design/icons';
 import AceEditor from 'client/components/AceEditor/AceEditor';
@@ -193,39 +192,6 @@ const RequestBodySetting = props => {
       ) : null}
     </>
   );
-};
-
-RequestBodySetting.propTypes = {
-  /** 当前方法（父 state.method，BODY 区仅在有请求体时渲染） */
-  method: PropTypes.string,
-  /** 经 useWatch 得到的请求体类型（父组件计算，含初始值回退语义） */
-  reqBodyType: PropTypes.any,
-  /** 经 useWatch 得到的「请求体为 json-schema」开关值（父组件计算，控制显隐） */
-  reqBodyIsJsonSchema: PropTypes.any,
-  /** 项目是否开启 json5（props.projectMsg.is_json5） */
-  isJson5: PropTypes.bool,
-  /** 请求体类型初值（父 state.req_body_type） */
-  req_body_type: PropTypes.string,
-  /** 请求体 raw 内容（父 state.req_body_other） */
-  req_body_other: PropTypes.string,
-  /** 请求体 form 行数据（父 state.req_body_form） */
-  req_body_form: PropTypes.array,
-  /** json-schema 开关初值来源（父 state.req_body_is_json_schema） */
-  req_body_is_json_schema: PropTypes.any,
-  /** BODY 面板隐藏位（父 state.hideTabs.req.body） */
-  bodyHideTab: PropTypes.string,
-  /** 添加一行 form 参数（父 addParams） */
-  onAddParams: PropTypes.func,
-  /** 打开批量导入弹窗（父 showBulk） */
-  onShowBulk: PropTypes.func,
-  /** 行拖拽排序回调工厂（父 handleDragMove） */
-  onDragMove: PropTypes.func,
-  /** 删除 form 行（父 delParams） */
-  onDelParams: PropTypes.func,
-  /** raw 编辑器内容变化（父 handleReqBody） */
-  onReqBodyChange: PropTypes.func,
-  /** schema 编辑器内容变化（父 handleReqBodySchemaChange） */
-  onReqBodySchemaChange: PropTypes.func
 };
 
 export default RequestBodySetting;

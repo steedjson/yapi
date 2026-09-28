@@ -1,6 +1,5 @@
 // @ts-check
 import React, { useState, useEffect } from 'react';
-import PropTypes from 'prop-types';
 import { formatTime } from 'client/common.js';
 import { Switch, Button, Tooltip, Input, Select, Form } from 'antd';
 import { message } from 'client/utils/message-bridge.js';
@@ -248,11 +247,5 @@ function ProjectInterfaceSync(props) {
     </div>
   );
 }
-
-ProjectInterfaceSync.propTypes = {
-  match: PropTypes.object,
-  projectId: PropTypes.number,
-  projectMsg: PropTypes.object
-};
 
 export default ProjectInterfaceSync;

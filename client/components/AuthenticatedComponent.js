@@ -1,7 +1,6 @@
 // @ts-check
 import React, { useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
-import PropTypes from 'prop-types';
 // menu 切片已迁至 Zustand（批次2）、user 切片已迁至 Zustand（批次4）
 import useMenuStore from '../store/menuStore';
 import useUserStore from '../store/userStore';
@@ -74,10 +73,6 @@ export function requireAuthentication(Component) {
       return <Navigate to={LOGIN_PATH} replace state={from ? { from } : undefined} />;
     }
     return <Component {...props} />;
-  };
-  AuthenticatedComponent.propTypes = {
-    location: PropTypes.object,
-    history: PropTypes.object
   };
   AuthenticatedComponent.displayName = `AuthenticatedComponent(${Component.displayName ||
     Component.name ||

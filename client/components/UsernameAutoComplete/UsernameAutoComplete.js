@@ -1,6 +1,5 @@
 // @ts-check
 import React, { useState } from 'react';
-import PropTypes from 'prop-types';
 import { Select } from 'antd';
 import axios from 'axios';
 
@@ -101,7 +100,3 @@ export default function UsernameAutoComplete(props) {
     </Select>
   );
 }
-
-UsernameAutoComplete.propTypes = {
-  callbackState: PropTypes.func
-};

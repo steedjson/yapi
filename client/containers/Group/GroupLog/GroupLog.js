@@ -3,7 +3,6 @@ import React from 'react';
 import TimeTree from '../../../components/TimeLine/TimeLine';
 // group 切片已迁至 Zustand（批次3）
 import useGroupStore from '../../../store/groupStore';
-import PropTypes from 'prop-types';
 
 const GroupLog = () => {
   const curGroupId = useGroupStore(state => state.currGroup._id);
@@ -15,10 +14,6 @@ const GroupLog = () => {
       </section>
     </div>
   );
-};
-
-GroupLog.propTypes = {
-  match: PropTypes.object
 };
 
 export default GroupLog;

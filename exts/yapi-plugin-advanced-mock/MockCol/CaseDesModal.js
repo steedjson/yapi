@@ -1,6 +1,5 @@
 // @ts-check
 import React, { useState } from 'react';
-import PropTypes from 'prop-types';
 import {
   Select,
   InputNumber,
@@ -488,13 +487,5 @@ function CaseDesForm(props) {
     </Modal>
   );
 }
-
-CaseDesForm.propTypes = {
-  caseData: PropTypes.object,
-  onOk: PropTypes.func,
-  onCancel: PropTypes.func,
-  isAdd: PropTypes.bool,
-  visible: PropTypes.bool
-};
 
 export default CaseDesForm;

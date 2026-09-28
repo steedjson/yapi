@@ -2,7 +2,6 @@
 import React from 'react';
 import { Table } from 'antd';
 import json5 from 'json5';
-import PropTypes from 'prop-types';
 import { schemaTransformToTable } from '../../../common/schema-transformTo-table.js';
 import './index.scss';
 
@@ -120,8 +119,5 @@ const SchemaTable = props => {
   let data = schemaTransformToTable(product);
   data = Array.isArray(data) ? data : [];
   return <Table bordered size="small" pagination={false} dataSource={data} columns={columns} />;
-};
-SchemaTable.propTypes = {
-  dataSource: PropTypes.string
 };
 export default SchemaTable;

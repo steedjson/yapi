@@ -1,6 +1,5 @@
 // @ts-check
 import React from 'react';
-import PropTypes from 'prop-types';
 import { Button } from 'antd';
 // user 切片已迁至 Zustand（批次4），本组件的 redux 依赖随迁移全部移除
 import useUserStore from '../../store/userStore';
@@ -48,9 +47,5 @@ function GuideBtns(props) {
     </div>
   );
 }
-
-GuideBtns.propTypes = {
-  isLast: PropTypes.bool
-};
 
 export default GuideBtns;

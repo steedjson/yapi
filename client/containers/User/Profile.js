@@ -5,7 +5,6 @@ import { Row, Col, Input, Button, Select, Upload, Tooltip, Space } from 'antd';
 import { message } from '../../utils/message-bridge.js';
 import axios from 'axios';
 import { formatTime } from '../../common.js';
-import PropTypes from 'prop-types';
 // user 切片已迁至 Zustand（批次4），本组件的 redux 依赖随迁移全部移除
 import useUserStore from '../../store/userStore';
 import { useParams } from 'react-router-dom';
@@ -45,13 +44,6 @@ const EditButton = props => {
   } else {
     return null;
   }
-};
-EditButton.propTypes = {
-  isAdmin: PropTypes.bool,
-  isOwner: PropTypes.bool,
-  onClick: PropTypes.func,
-  name: PropTypes.string,
-  admin: PropTypes.bool
 };
 
 /**
@@ -529,9 +521,6 @@ const AvatarUpload = ({ uid }) => {
       <span className="avatarChange" />
     </div>
   );
-};
-AvatarUpload.propTypes = {
-  uid: PropTypes.number
 };
 
 /**

@@ -1,6 +1,5 @@
 // @ts-check
 import React from 'react';
-import PropTypes from 'prop-types';
 
 /**
  * @param {any} props
@@ -67,10 +66,6 @@ const LogoSVG = props => {
       </g>
     </svg>
   );
-};
-
-LogoSVG.propTypes = {
-  length: PropTypes.any
 };
 
 export default LogoSVG;

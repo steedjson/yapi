@@ -1,7 +1,6 @@
 // @ts-check
 import './Header.scss';
 import React, { useState } from 'react';
-import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
 import { Layout, Dropdown, Tooltip, Popover, Tag } from 'antd';
 import { message } from '../../utils/message-bridge.js';
@@ -210,18 +209,6 @@ const ToolUser = props => {
       </li>
     </ul>
   );
-};
-ToolUser.propTypes = {
-  user: PropTypes.string,
-  role: PropTypes.string,
-  uid: PropTypes.number,
-  skin: PropTypes.string,
-  onSelectSkin: PropTypes.func,
-  relieveLink: PropTypes.func,
-  logout: PropTypes.func,
-  studyTip: PropTypes.number,
-  study: PropTypes.bool,
-  imageUrl: PropTypes.any
 };
 
 export default function HeaderCom() {

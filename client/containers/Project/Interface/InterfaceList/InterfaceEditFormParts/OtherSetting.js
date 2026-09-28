@@ -11,7 +11,6 @@
  *   - 不引入包装 DOM 元素：根节点为 Fragment（h2 + panel-sub 的兄弟顺序保持）。
  */
 import React from 'react';
-import PropTypes from 'prop-types';
 import { Tooltip, Switch, Form } from 'antd';
 import { QuestionCircleOutlined } from '@ant-design/icons';
 import { formItemLayout } from '../interfaceEditFormUtils/formDefaults.js';
@@ -65,13 +64,6 @@ const OtherSetting = props => {
       </div>
     </>
   );
-};
-
-OtherSetting.propTypes = {
-  /** 消息通知初值（props.noticed，来自项目 switch_notice 设置） */
-  noticed: PropTypes.bool,
-  /** 开放接口初值（父 state.api_opened） */
-  api_opened: PropTypes.any
 };
 
 export default OtherSetting;

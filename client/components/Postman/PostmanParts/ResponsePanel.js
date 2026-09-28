@@ -19,7 +19,6 @@
  *   - 不引入包装 DOM 元素：根节点即原 <Spin>（页签 children 的根）。
  */
 import React from 'react';
-import PropTypes from 'prop-types';
 import { Alert, Checkbox, Spin, Tooltip } from 'antd';
 import { QuestionCircleOutlined } from '@ant-design/icons';
 import AceEditor from 'client/components/AceEditor/AceEditor';
@@ -122,20 +121,6 @@ const ResponsePanel = props => {
       </div>
     </Spin>
   );
-};
-
-ResponsePanel.propTypes = {
-  loading: PropTypes.bool,
-  resStatusCode: PropTypes.any,
-  resStatusText: PropTypes.any,
-  /** 返回数据与定义结构不符时的校验信息（空串/缺省时不渲染告警） */
-  test_valid_msg: PropTypes.any,
-  autoPreviewHTML: PropTypes.bool,
-  test_res_header: PropTypes.any,
-  test_res_body: PropTypes.any,
-  /** 是否渲染 HTML 预览 iframe（父组件按响应头 Content-Type 计算） */
-  previewHtml: PropTypes.bool,
-  onAutoPreviewChange: PropTypes.func
 };
 
 export default ResponsePanel;

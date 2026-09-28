@@ -3,7 +3,6 @@ import React, { useEffect, useState } from 'react';
 import { Table, Select, Tooltip } from 'antd';
 import { QuestionCircleOutlined } from '@ant-design/icons';
 import variable from '../../../../constants/variable';
-import PropTypes from 'prop-types';
 const Option = Select.Option;
 // project 切片已迁至 Zustand（批次4）；interface 切片已迁至 Zustand（批次5）
 import useProjectStore from '../../../../store/projectStore';
@@ -244,11 +243,6 @@ const ImportInterface = (/** @type {any} */ props) => {
       <Table columns={columns} rowSelection={rowSelection} dataSource={data} pagination={false} />
     </div>
   );
-};
-
-ImportInterface.propTypes = {
-  selectInterface: PropTypes.func,
-  currProjectId: PropTypes.string
 };
 
 export default ImportInterface;

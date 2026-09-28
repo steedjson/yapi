@@ -21,7 +21,6 @@
  *   - 不引入包装 DOM 元素：根节点即原父组件中的 <Modal>。
  */
 import React, { useRef } from 'react';
-import PropTypes from 'prop-types';
 import { Input, Row, Col, Modal, Switch, Tooltip } from 'antd';
 import { QuestionCircleOutlined } from '@ant-design/icons';
 import AceEditor from 'client/components/AceEditor/AceEditor';
@@ -185,16 +184,6 @@ const CommonSettingModal = props => {
       </div>
     </Modal>
   );
-};
-
-CommonSettingModal.propTypes = {
-  visible: PropTypes.bool,
-  /** 通用规则配置对象（父组件 state.commonSetting） */
-  commonSetting: PropTypes.object,
-  /** 上抛 commonSetting 片段，由父组件浅合并 */
-  onChangeCommonSetting: PropTypes.func,
-  onOk: PropTypes.func,
-  onCancel: PropTypes.func
 };
 
 export default CommonSettingModal;

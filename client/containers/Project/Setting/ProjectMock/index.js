@@ -1,6 +1,5 @@
 // @ts-check
 import React, { useState } from 'react';
-import PropTypes from 'prop-types';
 import { Switch, Button, Tooltip, Form } from 'antd';
 import { message } from '../../../../utils/message-bridge.js';
 
@@ -119,10 +118,6 @@ const ProjectMock = props => {
       </Form>
     </div>
   );
-};
-
-ProjectMock.propTypes = {
-  projectId: PropTypes.number
 };
 
 export default ProjectMock;

@@ -1,6 +1,5 @@
 // @ts-check
 import React, { useEffect, useImperativeHandle, useState } from 'react';
-import PropTypes from 'prop-types';
 import { Row, Col, Input } from 'antd';
 import { DeleteOutlined } from '@ant-design/icons';
 import './ProjectTag.scss';
@@ -131,10 +130,5 @@ const ProjectTag = React.forwardRef((/** @type {any} */ props, /** @type {any} *
     </div>
   );
 });
-
-ProjectTag.propTypes = {
-  tagMsg: PropTypes.array,
-  tagSubmit: PropTypes.func
-};
 
 export default ProjectTag;

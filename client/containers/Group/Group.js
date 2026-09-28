@@ -5,7 +5,6 @@ import ProjectList from './ProjectList/ProjectList.js';
 import MemberList from './MemberList/MemberList.js';
 import GroupLog from './GroupLog/GroupLog.js';
 import GroupSetting from './GroupSetting/GroupSetting.js';
-import PropTypes from 'prop-types';
 // group 切片已迁至 Zustand（批次3）、user 切片已迁至 Zustand（批次4），
 // 本组件的 redux 依赖随迁移全部移除
 import useGroupStore from '../../store/groupStore';
@@ -114,13 +113,6 @@ const Group = () => {
     </Layout>
   );
   return <div className="projectGround">{GroupContent}</div>;
-};
-
-Group.propTypes = {
-  curGroupId: PropTypes.number,
-  curUserRole: PropTypes.string,
-  currGroup: PropTypes.object,
-  curUserRoleInGroup: PropTypes.string
 };
 
 export default Group;

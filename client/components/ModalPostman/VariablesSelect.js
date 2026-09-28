@@ -1,6 +1,5 @@
 // @ts-check
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import PropTypes from 'prop-types';
 import { Tree } from 'antd';
 // interfaceCol 切片已迁至 Zustand（批次3）
 import useInterfaceColStore from '../../store/interfaceColStore';
@@ -165,9 +164,3 @@ export default function VariablesSelect(props) {
     </div>
   );
 }
-
-VariablesSelect.propTypes = {
-  click: PropTypes.func,
-  clickValue: PropTypes.string,
-  id: PropTypes.number
-};

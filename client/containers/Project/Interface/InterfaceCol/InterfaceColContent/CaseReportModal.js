@@ -13,7 +13,6 @@
  *   - 不引入包装 DOM 元素：根节点即原父组件中的 <Modal>。
  */
 import React from 'react';
-import PropTypes from 'prop-types';
 import { Modal } from 'antd';
 import CaseReport from '../CaseReport.js';
 
@@ -37,13 +36,6 @@ const CaseReportModal = props => {
       <CaseReport {...report} />
     </Modal>
   );
-};
-
-CaseReportModal.propTypes = {
-  visible: PropTypes.bool,
-  /** 当前选中用例的测试报告（reportsRef.current[curCaseid]），缺省时渲染空报告 */
-  report: PropTypes.object,
-  onCancel: PropTypes.func
 };
 
 export default CaseReportModal;

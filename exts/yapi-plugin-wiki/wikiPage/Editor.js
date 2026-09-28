@@ -1,7 +1,6 @@
 // @ts-check
 import React, { useRef } from 'react';
 import { UploadOutlined } from '@ant-design/icons';
-import PropTypes from 'prop-types';
 import { Button, Checkbox } from 'antd';
 import MarkdownEditor from 'client/components/MarkdownEditor';
 import 'client/components/MarkdownEditor/contents.scss';
@@ -58,15 +57,6 @@ const WikiEditor = props => {
       </div>
     </div>
   );
-};
-
-WikiEditor.propTypes = {
-  isConflict: PropTypes.bool,
-  onUpload: PropTypes.func,
-  onCancel: PropTypes.func,
-  notice: PropTypes.bool,
-  onEmailNotice: PropTypes.func,
-  desc: PropTypes.string
 };
 
 export default WikiEditor;

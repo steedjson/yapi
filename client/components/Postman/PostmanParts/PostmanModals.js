@@ -16,7 +16,6 @@
  *     就地读 project_id，与抽取前「仅在弹窗可见时才求值」的惰性语义完全一致。
  */
 import React from 'react';
-import PropTypes from 'prop-types';
 import { Modal } from 'antd';
 import ModalPostman from '../../ModalPostman/index.js';
 import ProjectEnv from '../../../containers/Project/Setting/ProjectEnv/index.js';
@@ -69,26 +68,6 @@ const PostmanModals = props => {
       <CheckCrossInstall hasPlugin={hasPlugin} />
     </>
   );
-};
-
-PostmanModals.propTypes = {
-  /** 高级参数插入弹窗可见性（父 state.modalVisible） */
-  modalVisible: PropTypes.bool,
-  /** 环境设置弹窗可见性（父 state.envModalVisible） */
-  envModalVisible: PropTypes.bool,
-  /** 插入弹窗的输入初值（父 state.inputValue） */
-  inputValue: PropTypes.any,
-  /** 当前接口/用例 id（父 state._id），插入弹窗按旧写法取正号 */
-  dataId: PropTypes.any,
-  /** enum[case, inter]，透传为 ModalPostman 的 envType */
-  type: PropTypes.string,
-  /** 接口/用例渲染数据（环境弹窗正文的 project_id 在此就地读取，保持原 JSX 的惰性求值） */
-  data: PropTypes.object,
-  hasPlugin: PropTypes.bool,
-  onModalCancel: PropTypes.func,
-  onModalOk: PropTypes.func,
-  onEnvOk: PropTypes.func,
-  onEnvCancel: PropTypes.func
 };
 
 export default PostmanModals;

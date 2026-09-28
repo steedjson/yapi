@@ -9,7 +9,6 @@
  * 边界：无状态、无副作用、无包装 DOM（根节点即原 <div>）。
  */
 import React from 'react';
-import PropTypes from 'prop-types';
 import { Input, Tooltip } from 'antd';
 
 /**
@@ -46,12 +45,6 @@ const ParamsName = props => {
       )}
     </div>
   );
-};
-
-ParamsName.propTypes = {
-  example: PropTypes.string,
-  desc: PropTypes.string,
-  name: PropTypes.string
 };
 
 export default ParamsName;

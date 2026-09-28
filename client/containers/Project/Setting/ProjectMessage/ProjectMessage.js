@@ -19,7 +19,6 @@ import { message } from '../../../../utils/message-bridge.js';
 
 import { QuestionCircleOutlined, LockOutlined, UnlockOutlined, ExclamationCircleOutlined, UpOutlined, DownOutlined, SaveOutlined, DeleteOutlined } from '@ant-design/icons';
 import { getV4Icon } from '../../../../constants/v4IconMap';
-import PropTypes from 'prop-types';
 // group 切片已迁至 Zustand（批次3）；user/project 切片已迁至 Zustand（批次4），
 // 本组件的 redux 依赖随迁移全部移除
 import useGroupStore from '../../../../store/groupStore';
@@ -530,10 +529,5 @@ function ProjectMessage(props) {
     </div>
   );
 }
-
-ProjectMessage.propTypes = {
-  projectId: PropTypes.number,
-  history: PropTypes.object
-};
 
 export default withRouter(ProjectMessage);

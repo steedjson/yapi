@@ -5,7 +5,6 @@
 // 相同的 MyPopConfirm 确认框，确认后重放被阻止的导航。
 import React, { useEffect, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
-import PropTypes from 'prop-types';
 import MyPopConfirm from '../MyPopConfirm/MyPopConfirm';
 import history from '../../history';
 
@@ -78,8 +77,3 @@ export default function BlockPrompt({ when, message }) {
 
   return null;
 }
-
-BlockPrompt.propTypes = {
-  when: PropTypes.bool,
-  message: PropTypes.oneOfType([PropTypes.func, PropTypes.string])
-};

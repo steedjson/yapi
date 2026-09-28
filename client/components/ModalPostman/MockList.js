@@ -1,6 +1,5 @@
 // @ts-check
 import React, { useState } from 'react';
-import PropTypes from 'prop-types';
 import { Row, Input } from 'antd';
 import constants from '../../constants/variable.js';
 
@@ -45,8 +44,3 @@ export default function MockList(props) {
     </div>
   );
 }
-
-MockList.propTypes = {
-  click: PropTypes.func,
-  clickValue: PropTypes.string
-};

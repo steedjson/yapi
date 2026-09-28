@@ -4,8 +4,6 @@ import { formatTime } from '../../common.js';
 import { Link } from 'react-router-dom';
 // user 切片已迁至 Zustand（批次4），本组件的 redux 依赖随迁移全部移除
 import useUserStore from '../../store/userStore';
-//import PropTypes from 'prop-types'
-import PropTypes from 'prop-types';
 import { Table, Popconfirm, Input, Button, Modal, Select, Tag, Divider, Space } from 'antd';
 import { message } from '../../utils/message-bridge.js';
 import axios from 'axios';
@@ -582,11 +580,6 @@ const List = () => {
       </Modal>
     </section>
   );
-};
-
-List.propTypes = {
-  curUserRole: PropTypes.string,
-  curUid: PropTypes.oneOfType([PropTypes.number, PropTypes.string])
 };
 
 export default List;

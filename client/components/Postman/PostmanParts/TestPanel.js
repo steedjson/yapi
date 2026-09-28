@@ -16,7 +16,6 @@
  *   - 不引入包装 DOM 元素：根节点即原 React.Fragment。
  */
 import React from 'react';
-import PropTypes from 'prop-types';
 import { Row, Col, Switch } from 'antd';
 import AceEditor from 'client/components/AceEditor/AceEditor';
 import { InsertCodeMap } from './insertCodeMap.js';
@@ -76,18 +75,6 @@ const TestPanel = props => {
       </Row>
     </React.Fragment>
   );
-};
-
-TestPanel.propTypes = {
-  enable_script: PropTypes.bool,
-  test_script: PropTypes.string,
-  /** 父组件持有的脚本编辑器实例 ref（插入片段的写入目标） */
-  editorRef: PropTypes.any,
-  onEnableScriptChange: PropTypes.func,
-  /** 脚本内容变化（父 onOpenTest，载荷为 { text }） */
-  onScriptChange: PropTypes.func,
-  /** 插入代码片段（父 handleInsertCode，实参已含 '\n' 前缀） */
-  onInsertCode: PropTypes.func
 };
 
 export default TestPanel;

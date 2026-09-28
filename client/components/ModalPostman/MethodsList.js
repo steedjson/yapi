@@ -1,6 +1,5 @@
 // @ts-check
 import React, { useState, useEffect } from 'react';
-import PropTypes from 'prop-types';
 import { Row, Input, Select, Tooltip } from 'antd';
 import { DownOutlined } from '@ant-design/icons';
 const Option = Select.Option;
@@ -184,12 +183,3 @@ export default function MethodsList(props) {
     </div>
   );
 }
-
-MethodsList.propTypes = {
-  show: PropTypes.bool,
-  click: PropTypes.func,
-  clickValue: PropTypes.string,
-  paramsInput: PropTypes.func,
-  clickIndex: PropTypes.number,
-  params: PropTypes.array
-};

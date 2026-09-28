@@ -1,6 +1,5 @@
 // @ts-check
 import React from 'react';
-import PropTypes from 'prop-types';
 import { useNavigate } from 'react-router-dom';
 import { getV4Icon } from '../../constants/v4IconMap';
 import './ErrMsg.scss';
@@ -88,12 +87,5 @@ function ErrMsg(props) {
     </div>
   );
 }
-
-ErrMsg.propTypes = {
-  type: PropTypes.string,
-  title: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
-  desc: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
-  opration: PropTypes.oneOfType([PropTypes.string, PropTypes.object])
-};
 
 export default ErrMsg;

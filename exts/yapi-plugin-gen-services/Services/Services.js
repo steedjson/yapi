@@ -1,6 +1,5 @@
 // @ts-check
 import React, { useEffect } from 'react';
-import PropTypes from 'prop-types';
 // project 切片已迁至 Zustand（批次4）：store 引用走相对路径（exts 下无 'client/*' 别名映射）
 import useProjectStore from '../../../client/store/projectStore';
 
@@ -63,10 +62,6 @@ const Services = props => {
       </section>
     </div>
   );
-};
-
-Services.propTypes = {
-  projectId: PropTypes.string
 };
 
 export default Services;

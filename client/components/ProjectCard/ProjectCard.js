@@ -5,7 +5,6 @@ import { Card, Tooltip, Modal, Alert, Input } from 'antd';
 import { message } from '../../utils/message-bridge.js';
 import { CopyOutlined, StarFilled, StarOutlined } from '@ant-design/icons';
 import { getV4Icon } from '../../constants/v4IconMap';
-import PropTypes from 'prop-types';
 import { useNavigate } from 'react-router-dom';
 import { debounce } from '../../common';
 import constants from '../../constants/variable.js';
@@ -177,10 +176,3 @@ export default function ProjectCard(props) {
     </div>
   );
 }
-
-ProjectCard.propTypes = {
-  projectData: PropTypes.object,
-  inFollowPage: PropTypes.bool,
-  callbackResult: PropTypes.func,
-  isShow: PropTypes.bool
-};

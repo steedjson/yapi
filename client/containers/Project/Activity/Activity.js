@@ -5,7 +5,6 @@ import TimeTree from '../../../components/TimeLine/TimeLine';
 // project/user 切片已迁至 Zustand（批次4）；interface 切片历史遗留订阅（仅声明未消费）
 // 随批次5 迁移移除
 import { useParams } from 'react-router-dom';
-import PropTypes from 'prop-types';
 import { Button } from 'antd';
 import useProjectStore from '../../../store/projectStore';
 
@@ -38,10 +37,6 @@ const Activity = () => {
       </section>
     </div>
   );
-};
-
-Activity.propTypes = {
-  match: PropTypes.object
 };
 
 export default Activity;

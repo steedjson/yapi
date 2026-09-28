@@ -1,7 +1,6 @@
 // @ts-check
 import React from 'react';
 import { Alert } from 'antd';
-import PropTypes from 'prop-types';
 
 /**
  * @param {any} fn
@@ -21,10 +20,6 @@ export function initCrossRequest(fn) {
     }
   }, 500);
   return _crossRequest;
-};
-
-CheckCrossInstall.propTypes = {
-  hasPlugin: PropTypes.bool
 };
 
 /**

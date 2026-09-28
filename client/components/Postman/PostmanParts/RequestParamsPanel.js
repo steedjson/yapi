@@ -18,7 +18,6 @@
  *   - 不引入包装 DOM 元素：根节点即原 <Collapse>。
  */
 import React from 'react';
-import PropTypes from 'prop-types';
 import { Button, Input, Checkbox, Collapse, Tooltip, Space } from 'antd';
 import { EditOutlined, PlusOutlined } from '@ant-design/icons';
 import constants from '../../../constants/variable.js';
@@ -193,26 +192,6 @@ const RequestParamsPanel = props => {
       ]}
     />
   );
-};
-
-RequestParamsPanel.propTypes = {
-  method: PropTypes.string,
-  req_params: PropTypes.array,
-  req_query: PropTypes.array,
-  req_headers: PropTypes.array,
-  req_body_type: PropTypes.string,
-  req_body_form: PropTypes.array,
-  req_body_other: PropTypes.string,
-  /** 父组件持有的 raw 编辑器实例 ref（透传给 BodyPanel） */
-  editorRef: PropTypes.any,
-  /** 参数值/启用位变化（父 changeParam(name, value, index, key)） */
-  onChangeParam: PropTypes.func,
-  /** 打开高级参数插入弹窗（父 showModal(value, index, type)） */
-  onShowModal: PropTypes.func,
-  /** raw 编辑器内容变化（父 handleRequestBody，透传给 BodyPanel） */
-  onBodyChange: PropTypes.func,
-  /** form 行变化（父 changeBody，透传给 BodyPanel） */
-  onFormChange: PropTypes.func
 };
 
 export default RequestParamsPanel;

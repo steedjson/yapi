@@ -4,7 +4,6 @@
 // @ts-check
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import PropTypes from 'prop-types';
 import './index.scss';
 // import { withRouter } from 'react-router-dom';
 import { Row, Col, Tooltip } from 'antd';
@@ -61,10 +60,6 @@ const CountOverview = props => (
   </Row>
 );
 
-CountOverview.propTypes = {
-  date: PropTypes.object
-};
-
 /**
  * 系统状况概览行组件。
  * @param {any} props
@@ -114,10 +109,6 @@ const StatusOverview = props => (
     </Col>
   </Row>
 );
-
-StatusOverview.propTypes = {
-  data: PropTypes.object
-};
 
 /**
  * 系统信息统计页。原类组件经 Hooks 现代化迁移，渲染结构与行为保持一致：

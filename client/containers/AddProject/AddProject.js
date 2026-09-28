@@ -1,6 +1,5 @@
 // @ts-check
 import React, { useState, useEffect } from 'react';
-import PropTypes from 'prop-types';
 import { Button, Input, Tooltip, Select, Row, Col, Radio, Form } from 'antd';
 import { message } from '../../utils/message-bridge.js';
 
@@ -219,9 +218,5 @@ function ProjectList(props) {
     </div>
   );
 }
-
-ProjectList.propTypes = {
-  history: PropTypes.object
-};
 
 export default withRouter(ProjectList);

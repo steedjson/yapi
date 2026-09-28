@@ -1,8 +1,6 @@
 // @ts-check
 import React from 'react';
 
-import PropTypes from 'prop-types';
-
 /**
  * @author suxiaoxin
  * @demo
@@ -104,14 +102,6 @@ export default function EasyDragSort(props) {
     </div>
   );
 }
-
-EasyDragSort.propTypes = {
-  children: PropTypes.array,
-  onChange: PropTypes.func,
-  onDragEnd: PropTypes.func,
-  data: PropTypes.func,
-  onlyChild: PropTypes.string
-};
 
 /**
  * @param {any} arr

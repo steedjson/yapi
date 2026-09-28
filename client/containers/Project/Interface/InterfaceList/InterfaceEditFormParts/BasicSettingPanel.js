@@ -16,7 +16,6 @@
  *   - 不引入包装 DOM 元素：根节点为 Fragment（标题与表单区在原父组件中的兄弟顺序保持）。
  */
 import React from 'react';
-import PropTypes from 'prop-types';
 import { Select, TreeSelect, Input, Tooltip, Button, Row, Col, Form, Space } from 'antd';
 import { QuestionCircleOutlined } from '@ant-design/icons';
 import { nameLengthLimit } from '../../../../../common.js';
@@ -209,39 +208,6 @@ const BasicSettingPanel = props => {
       </div>
     </>
   );
-};
-
-BasicSettingPanel.propTypes = {
-  /** 项目基本路径（props.basepath，只读输入框的值） */
-  basepath: PropTypes.string,
-  /** 分类树数据（props.cat，经 formatCatTreeData 转换） */
-  cat: PropTypes.array,
-  /** 项目自定义字段配置（props.custom_field：enable / name） */
-  custom_field: PropTypes.object,
-  /** 项目 Tag 列表（props.projectMsg.tag） */
-  tags: PropTypes.array,
-  /** 接口名称初值（父 state.title） */
-  title: PropTypes.string,
-  /** 分类 id 初值（父 state.catid） */
-  catid: PropTypes.any,
-  /** 当前方法（父 state.method，方法选择器为受控） */
-  method: PropTypes.string,
-  /** 接口路径初值（父 state.path） */
-  path: PropTypes.string,
-  /** 已选 Tag（父 state.tag） */
-  tag: PropTypes.array,
-  /** 接口状态（父 state.status） */
-  status: PropTypes.string,
-  /** 自定义字段值（父 state.custom_field_value） */
-  custom_field_value: PropTypes.any,
-  /** 路径参数行数据（父 state.req_params） */
-  req_params: PropTypes.array,
-  /** 方法切换（父 onChangeMethod） */
-  onChangeMethod: PropTypes.func,
-  /** 路径输入（父 handlePath） */
-  onPathChange: PropTypes.func,
-  /** 打开 Tag 设置弹窗（props.onTagClick） */
-  onTagClick: PropTypes.func
 };
 
 export default BasicSettingPanel;

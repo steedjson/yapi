@@ -1,7 +1,6 @@
 // @ts-check
 import React, { useEffect, useState } from 'react';
 import { Modal, Button } from 'antd';
-import PropTypes from 'prop-types';
 
 // 嵌入到 BrowserRouter 内部，覆盖掉默认的 window.confirm
 // http://reacttraining.cn/web/api/BrowserRouter/getUserConfirmation-func
@@ -41,10 +40,5 @@ function MyPopConfirm(props) {
     <p>{props.msg}</p>
   </Modal>);
 }
-
-MyPopConfirm.propTypes = {
-  msg: PropTypes.string,
-  callback: PropTypes.func
-};
 
 export default MyPopConfirm;

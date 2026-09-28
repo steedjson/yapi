@@ -1,6 +1,5 @@
 // @ts-check
 import React, { useState } from 'react';
-import PropTypes from 'prop-types';
 import { Button, Form } from 'antd';
 import { message } from '../../../../utils/message-bridge.js';
 
@@ -95,10 +94,6 @@ const ProjectRequest = props => {
       </Form>
     </div>
   );
-};
-
-ProjectRequest.propTypes = {
-  projectId: PropTypes.number
 };
 
 export default ProjectRequest;

@@ -1,6 +1,5 @@
 // @ts-check
 import React, { useEffect, useRef, useState } from 'react';
-import PropTypes from 'prop-types';
 import './index.scss';
 import { Layout, Tooltip, Row, Popconfirm } from 'antd';
 import { message } from '../../../../utils/message-bridge.js';
@@ -263,11 +262,6 @@ const ProjectEnv = props => {
       </Layout>
     </div>
   );
-};
-
-ProjectEnv.propTypes = {
-  projectId: PropTypes.number,
-  onOk: PropTypes.func
 };
 
 export default ProjectEnv;

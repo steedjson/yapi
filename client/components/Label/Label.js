@@ -2,7 +2,6 @@
 import React, { useEffect, useState } from 'react';
 import { Input, Tooltip } from 'antd';
 import { EditOutlined, CheckOutlined, CloseOutlined } from '@ant-design/icons';
-import PropTypes from 'prop-types';
 import './Label.scss';
 
 /**
@@ -58,9 +57,3 @@ export default function Label(props) {
     </div>
   );
 }
-
-Label.propTypes = {
-  onChange: PropTypes.func,
-  desc: PropTypes.string,
-  cat_name: PropTypes.string
-};

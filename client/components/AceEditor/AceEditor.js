@@ -1,7 +1,6 @@
 // @ts-check
 import React, { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 import mockEditor from './mockEditor';
-import PropTypes from 'prop-types';
 import './AceEditor.scss';
 
 // mode 直接以字符串传给 CodeMirror 6 引擎（javascript/json/text/xml/html）
@@ -99,17 +98,5 @@ const AceEditor = forwardRef((props, ref) => {
 });
 
 AceEditor.displayName = 'AceEditor';
-
-AceEditor.propTypes = {
-  data: PropTypes.any,
-  onChange: PropTypes.func,
-  className: PropTypes.string,
-  mode: PropTypes.string, //enum[json, text, javascript], default is javascript
-  readOnly: PropTypes.bool,
-  callback: PropTypes.func,
-  style: PropTypes.object,
-  fullScreen: PropTypes.bool,
-  insertCode: PropTypes.func
-};
 
 export default AceEditor;

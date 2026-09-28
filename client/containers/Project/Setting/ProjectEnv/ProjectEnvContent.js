@@ -1,6 +1,5 @@
 // @ts-check
 import React, { useState, useEffect, useRef } from 'react';
-import PropTypes from 'prop-types';
 import './index.scss';
 import { Row, Col, Input, Select, Button, AutoComplete, Tooltip, Form, Space } from 'antd';
 
@@ -419,9 +418,4 @@ function ProjectEnvContent(props) {
   );
 }
 
-ProjectEnvContent.propTypes = {
-  projectMsg: PropTypes.object,
-  onSubmit: PropTypes.func,
-  handleEnvInput: PropTypes.func
-};
 export default ProjectEnvContent;

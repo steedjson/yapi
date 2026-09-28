@@ -14,7 +14,6 @@
  *   - 不引入包装 DOM 元素：根节点即原父组件中的 <Modal>。
  */
 import React from 'react';
-import PropTypes from 'prop-types';
 import { Tooltip, Button, Row, Col, Modal, Select, Switch } from 'antd';
 import { QuestionCircleOutlined } from '@ant-design/icons';
 import CaseEnv from 'client/components/CaseEnv';
@@ -151,29 +150,6 @@ const AutoTestModal = props => {
       </div>
     </Modal>
   );
-};
-
-AutoTestModal.propTypes = {
-  visible: PropTypes.bool,
-  envList: PropTypes.array,
-  /** 每个项目 id → 已选环境名（原 state.currColEnvObj） */
-  envValue: PropTypes.object,
-  collapseKey: PropTypes.any,
-  onEnvChange: PropTypes.func,
-  onCollapseChange: PropTypes.func,
-  /** 输出格式：html / json */
-  mode: PropTypes.string,
-  email: PropTypes.bool,
-  download: PropTypes.bool,
-  onModeChange: PropTypes.func,
-  onEmailChange: PropTypes.func,
-  onDownloadChange: PropTypes.func,
-  /** 自动化测试完整 URL（localUrl + autoTestsUrl），用于链接与复制 */
-  href: PropTypes.string,
-  /** URL 展示文本（autoTestsUrl，不含 localUrl 前缀） */
-  urlText: PropTypes.string,
-  onCopyUrl: PropTypes.func,
-  onCancel: PropTypes.func
 };
 
 export default AutoTestModal;

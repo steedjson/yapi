@@ -3,7 +3,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Modal, Collapse, Row, Col, Input, Button } from 'antd';
 import { message } from '../../../../../utils/message-bridge.js';
 import { FolderOpenOutlined } from '@ant-design/icons';
-import PropTypes from 'prop-types';
 import axios from 'axios';
 import { useParams } from 'react-router-dom';
 // interfaceCol 切片已迁至 Zustand（批次3）
@@ -169,13 +168,6 @@ const AddColModal = props => {
       />
     </Modal>
   );
-};
-
-AddColModal.propTypes = {
-  visible: PropTypes.bool,
-  onOk: PropTypes.func,
-  onCancel: PropTypes.func,
-  caseName: PropTypes.string
 };
 
 export default AddColModal;

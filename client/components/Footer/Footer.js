@@ -1,7 +1,6 @@
 // @ts-check
 import './Footer.scss';
 import React from 'react';
-import PropTypes from 'prop-types';
 import { Row, Col } from 'antd';
 import { getV4Icon } from '../../constants/v4IconMap';
 
@@ -83,12 +82,6 @@ function FootItem(props) {
   );
 }
 
-FootItem.propTypes = {
-  linkList: PropTypes.array,
-  title: PropTypes.string,
-  iconType: PropTypes.string
-};
-
 /**
  * @param {any} props
  */
@@ -114,9 +107,5 @@ function Footer(props) {
     </div>
   );
 }
-
-Footer.propTypes = {
-  footList: PropTypes.array
-};
 
 export default Footer;

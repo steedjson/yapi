@@ -1,6 +1,5 @@
 // @ts-check
 import React, { useEffect, useRef, useState } from 'react';
-import PropTypes from 'prop-types';
 import { Modal, Input, Spin, Row, Menu, Col, Popover, Tooltip } from 'antd';
 import { message } from '../../../utils/message-bridge.js';
 import { FolderAddOutlined, FolderOpenOutlined, UserOutlined } from '@ant-design/icons';
@@ -322,21 +321,6 @@ const GroupList = () => {
       )}
     </div>
   );
-};
-
-GroupList.propTypes = {
-  groupList: PropTypes.array,
-  currGroup: PropTypes.object,
-  fetchGroupList: PropTypes.func,
-  setCurrGroup: PropTypes.func,
-  match: PropTypes.object,
-  history: PropTypes.object,
-  curUserRole: PropTypes.string,
-  curUserRoleInGroup: PropTypes.string,
-  studyTip: PropTypes.number,
-  study: PropTypes.bool,
-  fetchActivityData: PropTypes.func,
-  fetchGroupMsg: PropTypes.func
 };
 
 export default GroupList;

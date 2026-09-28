@@ -2,7 +2,6 @@
 // 异常边界：兜住异步路由组件（React.lazy 分包）渲染/加载期的错误，
 // 避免单个路由异常导致 React 整树卸载白屏。
 import React from 'react';
-import PropTypes from 'prop-types';
 import { Result, Button } from 'antd';
 
 /**
@@ -25,11 +24,6 @@ function isChunkLoadError(error) {
 }
 
 export default class ErrorBoundary extends React.Component {
-  static propTypes = {
-    children: PropTypes.node,
-    // 自定义兜底 UI；不传时使用内置的 antd Result 提示卡片
-    fallback: PropTypes.element
-  };
 
   /**
    * @param {any} props

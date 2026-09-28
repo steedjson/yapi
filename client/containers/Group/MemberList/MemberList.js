@@ -1,7 +1,6 @@
 // @ts-check
 import React, { useEffect, useRef, useState } from 'react';
 import { DeleteOutlined } from '@ant-design/icons';
-import PropTypes from 'prop-types';
 import { Table, Select, Button, Modal, Row, Col, Popconfirm, Space, Divider } from 'antd';
 import { message } from '../../../utils/message-bridge.js';
 import { Link } from 'react-router-dom';
@@ -278,17 +277,6 @@ const MemberList = () => {
       />
     </div>
   );
-};
-
-MemberList.propTypes = {
-  currGroup: PropTypes.object,
-  uid: PropTypes.number,
-  fetchGroupMemberList: PropTypes.func,
-  fetchGroupMsg: PropTypes.func,
-  addMember: PropTypes.func,
-  delMember: PropTypes.func,
-  changeMemberRole: PropTypes.func,
-  role: PropTypes.string
 };
 
 export default MemberList;

@@ -13,7 +13,6 @@
  *   - 不引入包装 DOM 元素：根节点即原父组件中的 <Modal>。
  */
 import React from 'react';
-import PropTypes from 'prop-types';
 import { Modal, Switch } from 'antd';
 import AceEditor from 'client/components/AceEditor/AceEditor';
 
@@ -54,17 +53,6 @@ const CaseScriptModal = props => {
       />
     </Modal>
   );
-};
-
-CaseScriptModal.propTypes = {
-  visible: PropTypes.bool,
-  enableScript: PropTypes.bool,
-  curScript: PropTypes.string,
-  onEnableScriptChange: PropTypes.func,
-  /** 上抛编辑器文本（原 payload.text） */
-  onScriptChange: PropTypes.func,
-  onOk: PropTypes.func,
-  onCancel: PropTypes.func
 };
 
 export default CaseScriptModal;

@@ -1,6 +1,5 @@
 // @ts-check
 import React, { useState, useEffect, useRef } from 'react';
-import PropTypes from 'prop-types';
 import { handlePath as handlePathUtil } from '../../../../common.js';
 import useGroupStore from '../../../../store/groupStore';
 import useProjectStore from '../../../../store/projectStore';
@@ -628,15 +627,5 @@ function InterfaceEditForm(/** @type {any} */ props) {
     </div>
   );
 }
-
-InterfaceEditForm.propTypes = {
-  curdata: PropTypes.object,
-  mockUrl: PropTypes.string,
-  onSubmit: PropTypes.func,
-  basepath: PropTypes.string,
-  noticed: PropTypes.bool,
-  cat: PropTypes.array,
-  onTagClick: PropTypes.func
-};
 
 export default InterfaceEditForm;

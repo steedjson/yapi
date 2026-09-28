@@ -3,7 +3,6 @@
  */
 // @ts-check
 import React, { useEffect, useState } from 'react';
-// import PropTypes from 'prop-types'
 import axios from 'axios';
 import * as recharts from 'recharts';
 // recharts 2.15 自带 typings 基于旧版 @types/react 构建（类组件未声明 context），
@@ -81,7 +80,5 @@ const StatisChart = () => {
     </div>
   );
 };
-
-StatisChart.propTypes = {};
 
 export default StatisChart;

@@ -1,6 +1,5 @@
 // @ts-check
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
-import PropTypes from 'prop-types';
 import MDEditor from '@uiw/react-md-editor';
 import MarkdownIt from 'markdown-it';
 import '@uiw/react-md-editor/markdown-editor.css';
@@ -66,13 +65,5 @@ const MarkdownEditor = forwardRef((props, ref) => {
 });
 
 MarkdownEditor.displayName = 'MarkdownEditor';
-
-MarkdownEditor.propTypes = {
-  value: PropTypes.string,
-  onChange: PropTypes.func,
-  height: PropTypes.number,
-  preview: PropTypes.oneOf(['live', 'edit', 'preview']),
-  className: PropTypes.string
-};
 
 export default MarkdownEditor;

@@ -1,7 +1,6 @@
 // @ts-check
 import React from 'react';
 import { Table } from 'antd';
-import PropTypes from 'prop-types';
 
 const columns = [
   {
@@ -43,10 +42,6 @@ const StatisTable = props => {
       />
     </div>
   );
-};
-
-StatisTable.propTypes = {
-  dataSource: PropTypes.array
 };
 
 export default StatisTable;

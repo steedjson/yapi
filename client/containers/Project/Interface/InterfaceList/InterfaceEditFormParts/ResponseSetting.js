@@ -22,7 +22,6 @@
  *     三者在原父组件中的兄弟顺序保持）。
  */
 import React from 'react';
-import PropTypes from 'prop-types';
 import { Input, Tooltip, Row, Col, Radio, Switch, Tabs, Form } from 'antd';
 import { QuestionCircleOutlined } from '@ant-design/icons';
 import AceEditor from 'client/components/AceEditor/AceEditor';
@@ -170,31 +169,6 @@ const ResponseSetting = props => {
       </div>
     </>
   );
-};
-
-ResponseSetting.propTypes = {
-  /** 项目是否开启 json5（props.projectMsg.is_json5） */
-  isJson5: PropTypes.bool,
-  /** 经 useWatch 得到的返回体类型（父组件计算，控制两个编辑区的显隐） */
-  resBodyType: PropTypes.any,
-  /** 经 useWatch 得到的「返回体为 json-schema」开关值（父组件计算，控制显隐） */
-  resBodyIsJsonSchema: PropTypes.any,
-  /** 返回体类型初值（父 state.res_body_type） */
-  res_body_type: PropTypes.string,
-  /** 返回体 raw 内容（父 state.res_body） */
-  res_body: PropTypes.string,
-  /** json-schema 开关初值来源（父 state.res_body_is_json_schema） */
-  res_body_is_json_schema: PropTypes.any,
-  /** 模板/预览页签的选中值（父 state.jsonType） */
-  jsonType: PropTypes.string,
-  /** 模板/预览页签切换（父 handleJsonType，key === 'preview' 时附带触发 mock 预览） */
-  onJsonTypeChange: PropTypes.func,
-  /** 模板页 AceEditor 内容变化（父 handleResBody） */
-  onResBodyChange: PropTypes.func,
-  /** schema 编辑器内容变化（父 handleResBodySchemaChange） */
-  onResBodySchemaChange: PropTypes.func,
-  /** 父组件持有的模板页 AceEditor 实例 ref（handleMockPreview 经它读取 curData） */
-  editorRef: PropTypes.any
 };
 
 export default ResponseSetting;

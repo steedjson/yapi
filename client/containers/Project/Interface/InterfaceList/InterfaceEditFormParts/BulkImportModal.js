@@ -12,7 +12,6 @@
  *   - 不引入包装 DOM 元素：根节点即原 <Modal>。
  */
 import React from 'react';
-import PropTypes from 'prop-types';
 import { Input, Modal } from 'antd';
 
 const TextArea = Input.TextArea;
@@ -42,19 +41,6 @@ const BulkImportModal = props => {
       </div>
     </Modal>
   );
-};
-
-BulkImportModal.propTypes = {
-  /** 弹窗可见性（父 state.visible） */
-  visible: PropTypes.bool,
-  /** 文本域内容（父 state.bulkValue） */
-  value: PropTypes.any,
-  /** 文本域输入（父 handleBulkValueInput） */
-  onChange: PropTypes.func,
-  /** 导入（父 handleBulkOk） */
-  onOk: PropTypes.func,
-  /** 取消（父 handleBulkCancel） */
-  onCancel: PropTypes.func
 };
 
 export default BulkImportModal;

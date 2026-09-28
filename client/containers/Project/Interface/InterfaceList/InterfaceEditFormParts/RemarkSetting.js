@@ -13,7 +13,6 @@
  *   - 不引入包装 DOM 元素：根节点为 Fragment（h2 + panel-sub 的兄弟顺序保持）。
  */
 import React from 'react';
-import PropTypes from 'prop-types';
 import { Form } from 'antd';
 import MarkdownEditor from '../../../../../components/MarkdownEditor/index';
 
@@ -42,13 +41,6 @@ const RemarkSetting = props => {
       </div>
     </>
   );
-};
-
-RemarkSetting.propTypes = {
-  /** 父组件持有的 MarkdownEditor 实例 ref（提交时读取 html / markdown） */
-  editorRef: PropTypes.any,
-  /** 编辑器内容（父 state.markdown || state.desc） */
-  value: PropTypes.any
 };
 
 export default RemarkSetting;

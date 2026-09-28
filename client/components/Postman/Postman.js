@@ -1,6 +1,5 @@
 // @ts-check
 import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
-import PropTypes from 'prop-types';
 import { Tabs, Tooltip } from 'antd';
 import { isJson, deepCopyJson, json5_parse } from '../../common.js';
 import axios from 'axios';
@@ -739,14 +738,5 @@ const Run = forwardRef((props, ref) => {
 });
 
 Run.displayName = 'Run';
-
-Run.propTypes = {
-  data: PropTypes.object, //接口原有数据
-  save: PropTypes.func, //保存回调方法
-  type: PropTypes.string, //enum[case, inter], 判断是在接口页面使用还是在测试集
-  curUid: PropTypes.number.isRequired,
-  interfaceId: PropTypes.number.isRequired,
-  projectId: PropTypes.number.isRequired
-};
 
 export default Run;
