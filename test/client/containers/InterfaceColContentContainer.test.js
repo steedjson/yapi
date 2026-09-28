@@ -390,7 +390,7 @@ const EXPECTED_INITIAL_SNAPSHOT = `<div>
                   <tbody class="ant-table-tbody">
                     <tr aria-describedby="DndDescribedBy-N" aria-disabled="false" aria-roledescription="sortable" class="ant-table-row.ant-table-row-level-0" data-row-key="case-1" role="button" tabindex="0">
                       <td class="ant-table-cell">
-                        <a href="/project/12/interface/case/case-1">
+                        <a data-discover="true" href="/project/12/interface/case/case-1">
                           "超长用例名称用于验证二十字符截断行为的第..."
                       <td class="ant-table-cell">
                         "case-1"
@@ -400,7 +400,7 @@ const EXPECTED_INITIAL_SNAPSHOT = `<div>
                             <svg aria-hidden="true" data-icon="check-circle" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                               <path d="SVG_PATH">
                       <td class="ant-table-cell">
-                        <a href="/project/proj-1/interface/api/if-case-1">
+                        <a data-discover="true" href="/project/proj-1/interface/api/if-case-1">
                           "/api/base/very/long/..."
                       <td class="ant-table-cell">
                         <span aria-label="code" class="anticon.anticon-code" role="img" tabindex="-1">
@@ -410,7 +410,7 @@ const EXPECTED_INITIAL_SNAPSHOT = `<div>
                         <div class="interface-col-table-action">
                     <tr aria-describedby="DndDescribedBy-N" aria-disabled="false" aria-roledescription="sortable" class="ant-table-row.ant-table-row-level-0" data-row-key="case-2" role="button" tabindex="0">
                       <td class="ant-table-cell">
-                        <a href="/project/12/interface/case/case-2">
+                        <a data-discover="true" href="/project/12/interface/case/case-2">
                           "用例二"
                       <td class="ant-table-cell">
                         "case-2"
@@ -420,7 +420,7 @@ const EXPECTED_INITIAL_SNAPSHOT = `<div>
                             <svg aria-hidden="true" data-icon="check-circle" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                               <path d="SVG_PATH">
                       <td class="ant-table-cell">
-                        <a href="/project/proj-1/interface/api/if-case-2">
+                        <a data-discover="true" href="/project/proj-1/interface/api/if-case-2">
                           "/api/base/two"
                       <td class="ant-table-cell">
                         <span aria-label="code" class="anticon.anticon-code" role="img" tabindex="-1">
@@ -433,7 +433,7 @@ const EXPECTED_INITIAL_SNAPSHOT = `<div>
                               "测试报告"
                     <tr aria-describedby="DndDescribedBy-N" aria-disabled="false" aria-roledescription="sortable" class="ant-table-row.ant-table-row-level-0" data-row-key="case-3" role="button" tabindex="0">
                       <td class="ant-table-cell">
-                        <a href="/project/12/interface/case/case-3">
+                        <a data-discover="true" href="/project/12/interface/case/case-3">
                           "用例三"
                       <td class="ant-table-cell">
                         "case-3"
@@ -443,7 +443,7 @@ const EXPECTED_INITIAL_SNAPSHOT = `<div>
                             <svg aria-hidden="true" data-icon="info-circle" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                               <path d="SVG_PATH">
                       <td class="ant-table-cell">
-                        <a href="/project/proj-1/interface/api/if-case-3">
+                        <a data-discover="true" href="/project/proj-1/interface/api/if-case-3">
                           "/api/base/three"
                       <td class="ant-table-cell">
                         <span aria-label="code" class="anticon.anticon-code" role="img" tabindex="-1">
