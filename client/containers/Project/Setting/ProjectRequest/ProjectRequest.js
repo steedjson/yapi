@@ -1,7 +1,8 @@
 // @ts-check
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-import { Button, message, Form } from 'antd';
+import { Button, Form } from 'antd';
+import { message } from '../../../../utils/message-bridge.js';
 
 const FormItem = Form.Item;
 import './project-request.scss';

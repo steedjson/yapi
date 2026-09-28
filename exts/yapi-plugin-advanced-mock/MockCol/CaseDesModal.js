@@ -6,7 +6,6 @@ import {
   InputNumber,
   Switch,
   Col,
-  message,
   Row,
   Input,
   Button,
@@ -14,6 +13,7 @@ import {
   Modal,
   Form
 } from 'antd';
+import { message } from 'client/utils/message-bridge.js';
 import { PlusOutlined, MinusCircleOutlined } from '@ant-design/icons';
 const Option = Select.Option;
 const FormItem = Form.Item;

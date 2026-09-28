@@ -2,7 +2,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import { useParams } from 'react-router-dom';
-import { Switch, Button, message, Tooltip, Radio, Form } from 'antd';
+import { Switch, Button, Tooltip, Radio, Form } from 'antd';
+import { message } from 'client/utils/message-bridge.js';
 import { QuestionCircleOutlined } from '@ant-design/icons';
 import MockCol from './MockCol/MockCol.js';
 import mockEditor from 'client/components/AceEditor/mockEditor';

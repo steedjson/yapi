@@ -25,6 +25,8 @@ const React = require('react');
 const { render, act } = require('@testing-library/react');
 const { MemoryRouter, Routes, Route, useNavigate } = require('react-router-dom');
 const { StyleProvider } = require('@ant-design/cssinjs');
+const { App: AntdApp } = require('antd');
+const { MessageBridgeRegistrar } = require('../../client/utils/message-bridge.js');
 const { cleanupDom } = require('./jsdom-setup');
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
@@ -69,6 +71,14 @@ function renderWithProviders(ui, opts) {
     React.createElement(
       StyleProvider,
       { hashPriority: 'high' },
+      // message App 上下文批：AntdApp+桥注册器以「兄弟节点」挂载（component=false，
+      // Fragment 渲染零 DOM 变化）——桥为模块级全局注册，无需包裹被测子树；
+      // 不改动 element 子树形状，既有用例手工复刻包裹结构的 rerender 仍原位复用实例。
+      React.createElement(
+        AntdApp,
+        { component: false, key: 'message-app' },
+        React.createElement(MessageBridgeRegistrar, { key: 'message-bridge-registrar' })
+      ),
       React.createElement(
         MemoryRouter,
         routerProps,

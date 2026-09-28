@@ -1,5 +1,5 @@
 // @ts-check
-import { message } from 'antd';
+import { message } from 'client/utils/message-bridge.js';
 
 /**
  * 插件注册入口：由插件运行时以实例对象调用（this.bindHook）。

@@ -1,5 +1,5 @@
 // @ts-check
-import { message } from 'antd';
+import { message } from 'client/utils/message-bridge.js';
 
 /**
  * YApi json 数据导入插件（import_data 钩子实现）。

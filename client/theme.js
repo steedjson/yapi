@@ -12,7 +12,8 @@
  */
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import { message, theme as antdTheme } from 'antd';
+import { theme as antdTheme } from 'antd';
+import { message } from './utils/message-bridge.js';
 
 export const SKINS = [
   { name: 'enterprise', label: '默认' },

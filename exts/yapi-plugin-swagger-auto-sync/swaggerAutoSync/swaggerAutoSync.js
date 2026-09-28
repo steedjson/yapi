@@ -2,7 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { formatTime } from 'client/common.js';
-import { Switch, Button, Tooltip, message, Input, Select, Form } from 'antd';
+import { Switch, Button, Tooltip, Input, Select, Form } from 'antd';
+import { message } from 'client/utils/message-bridge.js';
 import { QuestionCircleOutlined, SaveOutlined } from '@ant-design/icons';
 // project 切片已迁至 Zustand（批次4）：store 引用走相对路径（exts 下无 'client/*' 别名映射）
 import useProjectStore from '../../../client/store/projectStore';

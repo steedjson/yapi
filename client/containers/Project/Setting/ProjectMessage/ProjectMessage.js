@@ -8,7 +8,6 @@ import {
   Button,
   Row,
   Col,
-  message,
   Card,
   Radio,
   Alert,
@@ -16,6 +15,7 @@ import {
   Popover,
   Form
 } from 'antd';
+import { message } from '../../../../utils/message-bridge.js';
 
 import { QuestionCircleOutlined, LockOutlined, UnlockOutlined, ExclamationCircleOutlined, UpOutlined, DownOutlined, SaveOutlined, DeleteOutlined } from '@ant-design/icons';
 import { getV4Icon } from '../../../../constants/v4IconMap';

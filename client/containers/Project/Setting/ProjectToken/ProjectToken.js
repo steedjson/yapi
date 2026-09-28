@@ -4,7 +4,8 @@ import PropTypes from 'prop-types';
 import './ProjectToken.scss';
 // project 切片已迁至 Zustand（批次4），本组件的 redux 依赖随迁移全部移除
 import useProjectStore from '../../../../store/projectStore';
-import { Tooltip, message, Modal } from 'antd';
+import { Tooltip, Modal } from 'antd';
+import { message } from '../../../../utils/message-bridge.js';
 import { CopyOutlined, ReloadOutlined } from '@ant-design/icons';
 import { copyText } from '../../../../common.js';
 const confirm = Modal.confirm;

@@ -1,6 +1,6 @@
 // @ts-check
 import React, { useEffect, useRef, useState } from 'react';
-import { message } from 'antd';
+import { message } from 'client/utils/message-bridge.js';
 // project 切片已迁至 Zustand（批次4），本组件的 redux 依赖随迁移全部移除
 import { Link, useParams } from 'react-router-dom';
 import axios from 'axios';

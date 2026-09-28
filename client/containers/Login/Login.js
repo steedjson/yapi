@@ -1,6 +1,7 @@
 // @ts-check
 import React, { useState } from 'react';
-import { Button, Input, message, Radio, Form } from 'antd';
+import { Button, Input, Radio, Form } from 'antd';
+import { message } from '../../utils/message-bridge.js';
 
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 // user 切片已迁至 Zustand（批次4），本组件的 redux 依赖随迁移全部移除

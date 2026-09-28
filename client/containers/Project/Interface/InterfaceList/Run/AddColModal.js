@@ -1,6 +1,7 @@
 // @ts-check
 import React, { useEffect, useRef, useState } from 'react';
-import { Modal, Collapse, Row, Col, Input, message, Button } from 'antd';
+import { Modal, Collapse, Row, Col, Input, Button } from 'antd';
+import { message } from '../../../../../utils/message-bridge.js';
 import { FolderOpenOutlined } from '@ant-design/icons';
 import PropTypes from 'prop-types';
 import axios from 'axios';

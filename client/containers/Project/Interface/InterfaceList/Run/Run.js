@@ -1,7 +1,7 @@
 // @ts-check
 import React, { useRef, useState } from 'react';
 import axios from 'axios';
-import { message } from 'antd';
+import { message } from '../../../../../utils/message-bridge.js';
 // user/project 切片已迁至 Zustand（批次4）；interface 切片已迁至 Zustand（批次5）
 import { useParams } from 'react-router-dom';
 import useUserStore from '../../../../../store/userStore';

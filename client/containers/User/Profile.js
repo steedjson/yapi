@@ -1,7 +1,8 @@
 // @ts-check
 import React, { useEffect, useRef, useState } from 'react';
 import { EditOutlined } from '@ant-design/icons';
-import { Row, Col, Input, Button, Select, message, Upload, Tooltip, Space } from 'antd';
+import { Row, Col, Input, Button, Select, Upload, Tooltip, Space } from 'antd';
+import { message } from '../../utils/message-bridge.js';
 import axios from 'axios';
 import { formatTime } from '../../common.js';
 import PropTypes from 'prop-types';

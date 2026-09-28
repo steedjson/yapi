@@ -1,6 +1,7 @@
 // @ts-check
 import React, { useEffect, useRef, useState } from 'react';
-import { Tabs, Modal, Button, Spin, message } from 'antd';
+import { Tabs, Modal, Button, Spin } from 'antd';
+import { message } from '../../../../utils/message-bridge.js';
 import { useParams } from 'react-router-dom';
 import Edit from './Edit.js';
 import View from './View.js';

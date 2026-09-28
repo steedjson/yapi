@@ -2,7 +2,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import './index.scss';
-import { Layout, Tooltip, message, Row, Popconfirm } from 'antd';
+import { Layout, Tooltip, Row, Popconfirm } from 'antd';
+import { message } from '../../../../utils/message-bridge.js';
 import { DeleteOutlined, PlusOutlined, QuestionCircleOutlined } from '@ant-design/icons';
 const { Content, Sider } = Layout;
 import ProjectEnvContent from './ProjectEnvContent.js';

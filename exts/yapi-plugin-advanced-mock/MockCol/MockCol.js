@@ -3,7 +3,8 @@ import React, { useEffect, useRef, useState } from 'react';
 // project 切片已迁至 Zustand（批次4）；interface 切片已迁至 Zustand（批次5）
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
-import { Table, Button, message, Popconfirm, Tooltip } from 'antd';
+import { Table, Button, Popconfirm, Tooltip } from 'antd';
+import { message } from 'client/utils/message-bridge.js';
 import { QuestionCircleOutlined } from '@ant-design/icons';
 // mockCol 切片已迁至 Zustand（批次2）；project 切片已迁至 Zustand（批次4）；
 // interface 切片已迁至 Zustand（批次5）。

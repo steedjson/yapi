@@ -10,11 +10,11 @@ import {
   Modal,
   Row,
   Col,
-  message,
   Popconfirm,
   Switch,
   Tooltip
 } from 'antd';
+import { message } from '../../../../utils/message-bridge.js';
 import { useParams } from 'react-router-dom';
 // group 切片已迁至 Zustand（批次3）；user/project 切片已迁至 Zustand（批次4），
 // 本组件的 redux 依赖随迁移全部移除

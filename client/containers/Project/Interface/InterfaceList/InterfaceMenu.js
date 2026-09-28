@@ -4,7 +4,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 // interface 切片已迁至 Zustand（批次5）：动作全部直调，不再经 redux dispatch
 import useInterfaceStore from '../../../../store/interfaceStore';
 import useProjectStore from '../../../../store/projectStore';
-import { Input, Button, Modal, message, Tree, Tooltip } from 'antd';
+import { Input, Button, Modal, Tree, Tooltip } from 'antd';
+import { message } from '../../../../utils/message-bridge.js';
 import {
   FolderOpenOutlined,
   FolderOutlined,

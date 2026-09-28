@@ -1,7 +1,8 @@
 // @ts-check
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-import { Switch, Button, Tooltip, message, Form } from 'antd';
+import { Switch, Button, Tooltip, Form } from 'antd';
+import { message } from '../../../../utils/message-bridge.js';
 
 import { QuestionCircleOutlined } from '@ant-design/icons';
 const FormItem = Form.Item;

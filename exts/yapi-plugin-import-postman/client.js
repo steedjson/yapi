@@ -1,5 +1,5 @@
 // @ts-check
-import { message } from 'antd';
+import { message } from 'client/utils/message-bridge.js';
 import URL from 'url';
 
 // 批次1（首屏性能优化，docs/first-paint-perf-plan.md）：common/utils.js 顶层挂有

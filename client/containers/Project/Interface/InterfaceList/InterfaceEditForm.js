@@ -7,7 +7,8 @@ import useProjectStore from '../../../../store/projectStore';
 // interface 切片已迁至 Zustand（批次5）：changeEditStatus 由 connect 注入改为 store 直调
 import useInterfaceStore from '../../../../store/interfaceStore';
 import json5 from 'json5';
-import { message, Affix, Form, Button } from 'antd';
+import { Affix, Form, Button } from 'antd';
+import { message } from '../../../../utils/message-bridge.js';
 import mockEditor from 'client/components/AceEditor/mockEditor';
 import axios from 'axios';
 import {

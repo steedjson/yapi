@@ -1,7 +1,7 @@
 // @ts-check
 import axios from 'axios'
 
-import {  message } from 'antd'
+import { message } from 'client/utils/message-bridge.js'
 
 // Actions
 const FETCH_MOCK_COL = 'yapi/mockCol/FETCH_MOCK_COL';

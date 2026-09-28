@@ -6,7 +6,8 @@ import { Link } from 'react-router-dom';
 import useUserStore from '../../store/userStore';
 //import PropTypes from 'prop-types'
 import PropTypes from 'prop-types';
-import { Table, Popconfirm, message, Input, Button, Modal, Select, Tag, Divider, Space } from 'antd';
+import { Table, Popconfirm, Input, Button, Modal, Select, Tag, Divider, Space } from 'antd';
+import { message } from '../../utils/message-bridge.js';
 import axios from 'axios';
 
 const Search = Input.Search;

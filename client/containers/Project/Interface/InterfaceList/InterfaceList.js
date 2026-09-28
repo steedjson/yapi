@@ -2,7 +2,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
-import { Table, Button, Modal, message, Tooltip, Select, TreeSelect } from 'antd';
+import { Table, Button, Modal, Tooltip, Select, TreeSelect } from 'antd';
+import { message } from '../../../../utils/message-bridge.js';
 import { EyeOutlined } from '@ant-design/icons';
 import AddInterfaceForm from './AddInterfaceForm';
 // interface 切片已迁至 Zustand（批次5）：动作全部直调

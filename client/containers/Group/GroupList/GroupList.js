@@ -1,7 +1,8 @@
 // @ts-check
 import React, { useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
-import { Modal, Input, message, Spin, Row, Menu, Col, Popover, Tooltip } from 'antd';
+import { Modal, Input, Spin, Row, Menu, Col, Popover, Tooltip } from 'antd';
+import { message } from '../../../utils/message-bridge.js';
 import { FolderAddOutlined, FolderOpenOutlined, UserOutlined } from '@ant-design/icons';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';

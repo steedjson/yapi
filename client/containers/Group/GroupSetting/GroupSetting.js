@@ -3,7 +3,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { SaveOutlined } from '@ant-design/icons';
 import PropTypes from 'prop-types';
 import { QuestionCircleOutlined, ExclamationCircleOutlined, UpOutlined, DownOutlined } from '@ant-design/icons';
-import { Input, Button, message, Card, Alert, Modal, Switch, Row, Col, Tooltip } from 'antd';
+import { Input, Button, Card, Alert, Modal, Switch, Row, Col, Tooltip } from 'antd';
+import { message } from '../../../utils/message-bridge.js';
 // news / group / user 切片均已迁至 Zustand（批次2 / 批次3 / 批次4），
 // 本组件的 redux 依赖随迁移全部移除
 import useActivityStore from '../../../store/activityStore';

@@ -206,6 +206,9 @@ declare module 'antd' {
   export const InputNumber: any;
   // client/theme.js 使用（P7d）：antd5 的 theme.darkAlgorithm（暗色皮肤算法）。
   export const theme: any;
+  // message App 上下文批：client/index.js 与 message-bridge.js 引用 App 组件
+  // （树内 message 实例提供者，useApp 消费入口）。
+  export const App: any;
 }
 
 // markdown-it 无内置类型且无 @types 包；插件（P8a export-data / gen-services）以
@@ -316,6 +319,14 @@ declare module 'client/components/MarkdownEditor' {
 declare module 'client/utils/sanitize.js' {
   function sanitizeHtml(dirty: any): any;
   export default sanitizeHtml;
+}
+
+// message App 上下文批：exts 插件经 client/ 别名引用 message 桥接模块
+// （client/utils/message-bridge.js 本体受 @ts-check 检视，client 内相对导入
+// 解析到真实文件；此处仅为 webpack 别名路径补等价声明）。
+declare module 'client/utils/message-bridge.js' {
+  export const message: any;
+  export function MessageBridgeRegistrar(): any;
 }
 
 declare module 'client/constants/variable.js' {

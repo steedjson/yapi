@@ -1,7 +1,8 @@
 // @ts-check
 import './ProjectCard.scss';
 import React, { useMemo, useRef } from 'react';
-import { Card, Tooltip, Modal, Alert, Input, message } from 'antd';
+import { Card, Tooltip, Modal, Alert, Input } from 'antd';
+import { message } from '../../utils/message-bridge.js';
 import { CopyOutlined, StarFilled, StarOutlined } from '@ant-design/icons';
 import { getV4Icon } from '../../constants/v4IconMap';
 import PropTypes from 'prop-types';

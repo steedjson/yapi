@@ -4,6 +4,7 @@ import test from 'ava';
 import React from 'react';
 import { render, fireEvent, cleanup, act } from '@testing-library/react';
 import { MemoryRouter, useLocation } from 'react-router-dom';
+import { App as AntdApp } from 'antd';
 import { cleanupDom } from '../../helpers/jsdom-setup';
 
 const axios = require('axios');
@@ -23,6 +24,10 @@ Module._resolveFilename = function(request, parent, isMain, options) {
 };
 
 const { default: HeaderCom } = require('../../../client/components/Header/Header.js');
+// message App 上下文批：renderHeader 挂 AntdApp + 桥注册器（component=false，
+// Fragment 渲染零 DOM 变化），使退出登录的 message.success 路由到树内实例，
+// 不再触发 antd 静态 message 的 "Static function can not consume context" 警告
+const { MessageBridgeRegistrar } = require('../../../client/utils/message-bridge.js');
 // user 切片已迁 Zustand（批次4）：Header/Breadcrumb 改经 useUserStore 读取，
 // Search 的 interface 动作亦已迁 store（批次5）——Redux 退役（收尾批）后 Provider 一并移除
 const { seedUserStore, resetUserProjectStores } = require('../../helpers/userProjectStores');
@@ -73,13 +78,20 @@ function renderHeader(userState, opts) {
     return null;
   }
   const utils = render(
-    <MemoryRouter
-      initialEntries={[options.initialPath || '/']}
-      future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
-    >
-      <LocationProbe />
-      <HeaderCom />
-    </MemoryRouter>
+    // AntdApp+桥注册器为兄弟节点（component=false）：只为 message-bridge 提供树内
+    // 实例（全局注册），不改变被测子树结构
+    <React.Fragment>
+      <AntdApp component={false}>
+        <MessageBridgeRegistrar />
+      </AntdApp>
+      <MemoryRouter
+        initialEntries={[options.initialPath || '/']}
+        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+      >
+        <LocationProbe />
+        <HeaderCom />
+      </MemoryRouter>
+    </React.Fragment>
   );
   return Object.assign({ getLocation: () => locationRef }, utils);
 }

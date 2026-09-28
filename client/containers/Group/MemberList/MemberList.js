@@ -2,7 +2,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { DeleteOutlined } from '@ant-design/icons';
 import PropTypes from 'prop-types';
-import { Table, Select, Button, Modal, Row, Col, message, Popconfirm, Space, Divider } from 'antd';
+import { Table, Select, Button, Modal, Row, Col, Popconfirm, Space, Divider } from 'antd';
+import { message } from '../../../utils/message-bridge.js';
 import { Link } from 'react-router-dom';
 import './MemberList.scss';
 // group 切片已迁至 Zustand（批次3）

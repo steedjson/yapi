@@ -2,7 +2,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Upload,
-  message,
   Select,
   TreeSelect,
   Tooltip,
@@ -14,6 +13,7 @@ import {
   Input,
   Checkbox
 } from 'antd';
+import { message } from '../../../../utils/message-bridge.js';
 import { QuestionCircleOutlined, InboxOutlined, ExclamationCircleFilled } from '@ant-design/icons';
 import { useParams } from 'react-router-dom';
 import './ProjectData.scss';

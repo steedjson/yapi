@@ -3,7 +3,8 @@ import './Header.scss';
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
-import { Layout, Dropdown, message, Tooltip, Popover, Tag } from 'antd';
+import { Layout, Dropdown, Tooltip, Popover, Tag } from 'antd';
+import { message } from '../../utils/message-bridge.js';
 import {
   SkinOutlined,
   CheckOutlined,

@@ -6,7 +6,8 @@ import useInterfaceColStore from '../../../../store/interfaceColStore';
 import useProjectStore from '../../../../store/projectStore';
 import axios from 'axios';
 import ImportInterface from './ImportInterface';
-import { Input, Button, Modal, message, Tooltip, Tree, Form } from 'antd';
+import { Input, Button, Modal, Tooltip, Tree, Form } from 'antd';
+import { message } from '../../../../utils/message-bridge.js';
 
 import {
   FolderOpenOutlined,

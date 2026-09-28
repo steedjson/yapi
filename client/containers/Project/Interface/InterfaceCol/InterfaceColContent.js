@@ -2,7 +2,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 //import constants from '../../../../constants/variable.js'
-import { message } from 'antd';
+import { message } from '../../../../utils/message-bridge.js';
 // interfaceCol 切片已迁至 Zustand（批次3）；project/user 切片已迁至 Zustand（批次4）
 import useInterfaceColStore from '../../../../store/interfaceColStore';
 import useUserStore from '../../../../store/userStore';

@@ -1,6 +1,7 @@
 // @ts-check
 import React, { useEffect, useRef, useState } from 'react';
-import { Button, message } from 'antd';
+import { Button } from 'antd';
+import { message } from '../../utils/message-bridge.js';
 import { PlusOutlined } from '@ant-design/icons';
 import {
   addProperty,

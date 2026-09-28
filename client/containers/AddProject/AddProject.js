@@ -1,7 +1,8 @@
 // @ts-check
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import { Button, Input, Tooltip, Select, message, Row, Col, Radio, Form } from 'antd';
+import { Button, Input, Tooltip, Select, Row, Col, Radio, Form } from 'antd';
+import { message } from '../../utils/message-bridge.js';
 
 import {
   QuestionCircleOutlined,
