@@ -21,7 +21,7 @@
     "npm-publish": "node ./npm-publish.js",
     "docs": "ydoc build",
     "dev-client-rsbuild": "npm run dev-copy-icon && NODE_ENV=development node build/rsbuild-dev.mjs",
-    "postinstall": "patch-package && simple-git-hooks"
+    "postinstall": "patch-package && simple-git-hooks || echo '[postinstall] dev tools skipped (production install)'"
   },
   "simple-git-hooks": {
     "pre-commit": "npm run lint",
