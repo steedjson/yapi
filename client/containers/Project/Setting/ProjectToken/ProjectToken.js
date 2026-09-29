@@ -84,9 +84,17 @@ const ProjectToken = props => {
           <li>/api/interface/get [获取接口]</li>
           <li>/api/interface/list [获取接口列表]</li>
           <li>/api/interface/list_menu [获取接口菜单]</li>
+          <li>/api/interface/get_cat_tree [获取接口分类树]</li>
           <li>/api/interface/add_cat [新增接口分类]</li>
           <li>/api/interface/getCatMenu [获取所有分类]</li>
+          <li>/api/interface/list_cat [获取某分类下接口列表]</li>
+          <li>/api/project/get [获取项目基本信息]</li>
+          <li>/api/plugin/export [导出数据]</li>
+          <li>/api/plugin/exportSwagger [导出Swagger，参数 type=OpenAPIV2]</li>
         </ul>
+      </div>
+      <div className="blockquote">
+        以上接口均通过 token 鉴权，仅对其所属项目有效（私有项目同样可调用）；项目配置修改（/api/project/up）需要登录态项目所有者或管理员权限，不支持 token 调用。
       </div>
       <Drawer
         title="详细接口文档"

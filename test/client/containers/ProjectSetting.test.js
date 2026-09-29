@@ -233,7 +233,32 @@ test.serial('ProjectToken dev 角色不渲染刷新入口', async t => {
   await flushEffects();
 
   t.is(container.querySelectorAll('.token-btn').length, 1, 'dev 角色仅渲染复制入口');
-  t.is(container.querySelectorAll('.open-api li').length, 10, 'open 接口清单完整渲染');
+  const openApiItems = Array.from(container.querySelectorAll('.open-api li')).map(li => li.textContent);
+  t.is(openApiItems.length, 15, 'open 接口清单完整渲染');
+  // 开放接口清单扩充批次新增的 5 条端点应随清单一起渲染
+  [
+    '/api/interface/get_cat_tree',
+    '/api/interface/list_cat',
+    '/api/project/get',
+    '/api/plugin/export',
+    '/api/plugin/exportSwagger'
+  ].forEach(endpoint => {
+    t.truthy(
+      openApiItems.some(text => text.indexOf(endpoint) > -1),
+      'open 接口清单应含 ' + endpoint
+    );
+  });
+  // 组件含两个 .blockquote: 首个为 token 安全提示, 第二个为本批新增的开放接口作用域说明
+  const blockquotes = Array.from(container.querySelectorAll('.blockquote')).map(el => el.textContent);
+  t.is(blockquotes.length, 2, '应渲染 token 安全提示与开放接口作用域两段 blockquote');
+  t.truthy(
+    blockquotes[1].indexOf('仅对其所属项目有效') > -1 && blockquotes[1].indexOf('私有项目') > -1,
+    '作用域 blockquote 应说明 token 仅对归属项目有效（含私有项目）'
+  );
+  t.truthy(
+    blockquotes[1].indexOf('/api/project/up') > -1,
+    '作用域 blockquote 应说明 project/up 不支持 token 调用'
+  );
 });
 
 test.serial('ProjectMock 首帧回填 mock 配置，切换开关并保存提交更新请求', async t => {

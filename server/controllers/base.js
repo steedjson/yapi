@@ -101,6 +101,7 @@ class baseController {
         ctx.query.pid = checkId; // 兼容：/api/plugin/export
         ctx.params.project_id = checkId;
         this.$tokenAuth = true;
+        this.$tokenProjectId = checkId;
         this.$uid = tokenUid;
         let result;
         if(tokenUid === oldTokenUid){
@@ -286,6 +287,16 @@ class baseController {
         }
         type = 'project';
         id = interfaceData.project_id;
+      }
+
+      // token 请求在其归属项目内视作开发者(数据面读写), 跨项目仍按普通成员判定
+      if (
+        this.$tokenAuth &&
+        this.$tokenProjectId != null &&
+        type !== 'group' &&
+        Number(id) === Number(this.$tokenProjectId)
+      ) {
+        return 'dev';
       }
 
       if (type === 'project') {

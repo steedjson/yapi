@@ -2,6 +2,13 @@
 
 条目由 /csl-buglog 或人工维护,供 coder/reviewer 动手前核对
 
+## [2026-09-29][server/base] 私有项目开放接口全量 406:token 身份过不了控制器私有校验(开放 API 名存实亡)
+- 现象: 私有项目上带 token 调开放接口大面积 `406 没有权限`——不只 get_cat_tree/project/get,连白名单里的 interface/get、list、getCatMenu 也 406;公开项目全通。逐端点实测另有发现: project/up(danger)不可用属设计应有, /api/open/project_interface_data 是空壳占位路由(仅 echo)
+- 根因: 控制器私有项目校验走 `checkAuth → getProjectRole`,其身份来自 `$user.role`/项目成员表,而纯 token(uid=999999,role=member)永远不是项目成员 → 406。`base.js init()` 其实已算出 token 归属项目 id 但未保存利用;interface/get 里既有 `$tokenAuth` 归属校验先例,证明设计意图是「token 读写自己项目」,只是角色判定没接上
+- 修法: init() token 分支保存 `this.$tokenProjectId`;getProjectRole 在 interface→project id 归一化后、project 分支前插入早退: `$tokenAuth && $tokenProjectId != null && type !== 'group' && Number(id) === Number($tokenProjectId)` → 返回 'dev'。对齐官方角色模型: token=归属项目内开发者(数据面 view/edit 放行,含 CI 自动同步的 add/save/up),danger(project/up/删除)仍拒,跨项目仍 406,登录态零影响。UI 侧 ProjectToken 清单 10→15 条并标注作用域与 exportSwagger 的 type=OpenAPIV2 参数
+- 关联: server/controllers/base.js:104,292-302;client/containers/Project/Setting/ProjectToken/ProjectToken.js;test/server/token-project-role.test.js(10 用例)
+- 复发: 0 次 · 教训: 「白名单放行 ≠ 端点可用」——路由白名单只过 init 关,控制器内层 checkAuth 还有一道身份关,鉴权问题必须打到端到端实测;为导航便利在渲染/判定函数里做 union 时必须给用户/调用方意图留记忆位(与 InterfaceMenu 收起还原同构)
+
 ## [2026-09-29][client/InterfaceMenu] 渲染期 expandedKeys union 静默还原用户收起(接口树当前分类无法闭合)
 - 现象: 选中某接口后,其所在分类自动展开;点该分类收起开关,树瞬间恢复展开(实测 open 数 1→1),仅"当前分类"收不起来;未选中接口时收起正常
 - 根因: `defaultExpandedKeys()` 在每次渲染都返回 `expands: union(state.expands, activePath)`——onExpand 更新 state.expands 触发的重渲染里,activePath(选中接口的祖先分类链)把用户刚收起的分类又并回去。该 union 本是为"导航/深链接自动展开目标祖先链"服务,但无差别作用于每次渲染,劫持了用户对活跃分类的收起意图
