@@ -86,9 +86,15 @@ const PRD_DIR = path.join(REPO_ROOT, 'static', 'prd');
 // （N-2 同款裁决，见文件内注释）→ project 哈希变化。antd6.6.5 依赖图变化使初始
 // chunk 'a' 更名 '0'（顺序不变，link 标签序列不受影响）。层 A/层 B 已按新产物重扫
 // （层 A candidates 1181，层 B confirmed-override 0，判定无漂移）。
+// Home 圆形图标居中批（2026-09-29）：Home.scss .section-item .img 与 .manage-word .icon
+// 两规则块补 display:inline-flex/align-items:center/justify-content:center（antd6 图标
+// 圆形背景居中修复）→ index 哈希轮换。新旧产物规则级 A/B 比对仅此 2 条规则各 +3 声明
+// （选择器零增减）；层 A 重扫 candidates 1194（上批 1194，无增减），层 B 全页面通过
+// （confirmed-override 0，unsupportedSelectors 全 0，ambiguous 3 条均为既有锚点/未变更
+// chunk），判定无漂移。初始 chunk 顺序不变。
 const BASELINE = {
   cssChunks: {
-    'index.js': 'index@df876fe14f0236e6.css',
+    'index.js': 'index@2ae417f08eaddf49.css',
     group: 'group@34fd44e5b9aff10e.css',
     project: 'project@5e18421e29477fec.css',
     user: 'user@57802eb279f54184.css',
