@@ -141,6 +141,10 @@
 - ~~**在册缺陷订正：handleTest 的 taskId 时序**~~（InterfaceColContent.js，crossRequest 之后才 `options.taskId = curUid`）→ **已裁决保持现状（低风险扫尾批）**：taskId 属结果元数据，`after_col_request` 钩子及下游（报告对象）可见，`before_col_request` 期无消费方；改动无可观察收益，不做。历史各批次「仍在册」清单中的 taskId 时序条目以此为准结案。
 - ~~**在册缺陷订正：MockCol saveFormRef**~~ → **结案无需修复（低风险扫尾批定性订正）**：原「表单校验不生效」表述有误——校验一直在 CaseDesModal 内部生效（旧 Form.create+validateFieldsAndScroll，现行 Form.useForm+form.submit+onFinish）；`saveFormRef` 系未定义且从未被消费的死引用，Hooks 迁移时已等价移除（MockCol.js:273 注释）。历史各批次「仍在册」清单中的 saveFormRef 条目以此为准结案。
 - ~~**CaseScriptModal 打开入口不可达**（render 子组件化批次 1 登记，openAdv 自上游 fork 起从未被调用，修复需产品决策）~~ → **已恢复入口（低风险扫尾批，产品决策：恢复）**：CaseTable 新增「自定义脚本」列（Tooltip + CodeOutlined 图标，上抛 record.id），父组件 `openScript(caseid)` 按行数据回填 `test_script`/`enable_script` 后打开弹窗（行数据源自 `/api/col/case_list` 全字段返回，无需懒拉详情）；补容器级链路用例（点击入口 → 弹窗打开且回填/缺省字段防御）与 CaseTable 入口上抛用例，容器 DOM 快照基线同步更新。
+- **教程文档 18 章截图为旧版 UI（2026-09-29 正式裁决：登记为低优先长期项）**：文字内容已逐章核对无与 v2.0.0 矛盾的事实（仅 qa.md 部署排障 node 版本与 project.md token 节两处已修正）；截图重拍需逐章构造数据态（antd6 新 UI），成本高收益低——旧截图仍能正确示意操作流程。触发条件：未来 UI 大改导致截图误导时再批量重拍。
+- **advanced-mock 插件 saveCase/delCase/hideCase/getCase 登录态无 checkAuth（上游遗留，2026-09-29 批3 登记）**：saveCase 的落库 project_id 已改为以接口真实归属为准（防 body 伪报），token 面已由归属守卫覆盖（纵深防御）；但登录态用户仍可对任意可见接口添加期望（无 view/edit 校验），delCase/hideCase/getCase 同类。待产品决策：登录态写面是否补 edit 校验（建议补，与 upMock 对齐）。
+- **open.js:244 runAutoTest「用例集 id 不存在」保留 40022**：与同函数鉴权失败 406 并存，语义为「资源不存在 ≠ 无权限」，非缺陷；export 两插件同类 `!pid` 分支已统一为 400 + return（2026-09-29 批1）。
+- ~~antd6 迁移遗留「message 静态警告 1 条（需 App 上下文批）」~~ → **已完成（message-bridge 批）**：client/utils/message-bridge.js 注册 App 实例方案落地，32 个业务文件走桥，client/index.js 挂 MessageBridgeRegistrar；仅剩 1 处直接 import message from 'antd' 待顺手迁移。
 
 ## 四、新发现技术债（2026-09-18 全仓扫描；2026-09 各批已消化大部分，逐条标注状态）
 

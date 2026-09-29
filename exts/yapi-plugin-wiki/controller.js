@@ -43,6 +43,10 @@ class wikiController extends baseController {
       if (!project_id) {
         return (ctx.body = yapi.commons.resReturn(null, 400, '项目id不能为空'));
       }
+      // token 请求仅允许读取归属项目的 wiki
+      if (this.$tokenAuth && Number(project_id) !== Number(this.$tokenProjectId)) {
+        return (ctx.body = yapi.commons.resReturn(null, 406, '没有权限'));
+      }
       let result = await this.Model.get(project_id);
       return (ctx.body = yapi.commons.resReturn(result));
     } catch (/** @type {any} */ err) {

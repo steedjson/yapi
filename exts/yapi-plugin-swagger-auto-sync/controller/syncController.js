@@ -56,6 +56,10 @@ class syncController extends baseController {
     if (!projectId) {
       return (ctx.body = yapi.commons.resReturn(null, 408, '缺少项目Id'));
     }
+    // token 请求仅允许读取归属项目的同步配置
+    if (this.$tokenAuth && Number(projectId) !== Number(this.$tokenProjectId)) {
+      return (ctx.body = yapi.commons.resReturn(null, 406, '没有权限'));
+    }
     let result = await this.syncModel.getByProjectId(projectId);
     return (ctx.body = yapi.commons.resReturn(result));
   }

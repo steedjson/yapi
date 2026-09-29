@@ -4,6 +4,7 @@ const advModel = require('./advMockModel.js');
 const yapi = require('yapi.js');
 const caseModel = require('./caseModel.js');
 const userModel = require('models/user.js');
+const interfaceModel = require('models/interface.js');
 const config = require('./index.js');
 
 class advMockController extends baseController {
@@ -15,6 +16,7 @@ class advMockController extends baseController {
     this.Model = yapi.getInst(advModel);
     this.caseModel = yapi.getInst(caseModel);
     this.userModel = yapi.getInst(userModel);
+    this.interfaceModel = yapi.getInst(interfaceModel);
   }
 
   /**
@@ -22,6 +24,14 @@ class advMockController extends baseController {
    */
   async getMock(ctx) {
     let id = ctx.query.interface_id;
+    // token 请求仅允许读取归属项目的接口配置
+    let interfaceData = await this.interfaceModel.get(id);
+    if (
+      !interfaceData ||
+      (this.$tokenAuth && Number(interfaceData.project_id) !== Number(this.$tokenProjectId))
+    ) {
+      return (ctx.body = yapi.commons.resReturn(null, 406, '没有权限'));
+    }
     let mockData = await this.Model.get(id);
     if (!mockData) {
       return (ctx.body = yapi.commons.resReturn(null, 408, 'mock脚本不存在'));
@@ -124,10 +134,19 @@ class advMockController extends baseController {
       return (ctx.body = yapi.commons.resReturn(null, 408, '请输入 Response Body'));
     }
 
+    // token 请求仅允许给归属项目的接口添加 Mock 期望
+    let interfaceData = await this.interfaceModel.get(params.interface_id);
+    if (
+      !interfaceData ||
+      (this.$tokenAuth && Number(interfaceData.project_id) !== Number(this.$tokenProjectId))
+    ) {
+      return (ctx.body = yapi.commons.resReturn(null, 406, '没有权限'));
+    }
+
     /** @type {any} */
     let data = {
       interface_id: params.interface_id,
-      project_id: params.project_id,
+      project_id: interfaceData.project_id,
       ip_enable: params.ip_enable,
       name: params.name,
       params: params.params || [],
