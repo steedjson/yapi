@@ -18,7 +18,7 @@
     "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s",
     "build-client": "npm run build-client:rsbuild",
     "build-client:rsbuild": "NODE_ENV=production node build/rsbuild-standalone.mjs",
-    "docs": "ydoc build",
+    "docs": "node scripts/build-docs-site.js",
     "dev-client-rsbuild": "npm run dev-copy-icon && NODE_ENV=development node build/rsbuild-dev.mjs",
     "postinstall": "patch-package && simple-git-hooks || echo '[postinstall] dev tools skipped (production install)'"
   },

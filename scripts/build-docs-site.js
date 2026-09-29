@@ -9,6 +9,8 @@
  *   章内锚点（两空格缩进子项），当前章节蓝色高亮，子锚点全量展开；
  * - 路由：`#/<页签key>`（切页签）、`#/<页签key>/<fileKey>`（章节）、
  *   `#/<页签key>/<fileKey>/<encodeURIComponent(锚点文字)>`（章内锚点）、`#/openapi`；
+ * - heading id：`<章节fileKey>-<slug>`（章内重名追加 -1/-2），防跨章同名标题 id 撞车，
+ *   页面内联脚本 resolveAnchor 按此前缀精确寻址，侧栏 data-route 第三段仍为锚点原文；
  * - md 中的图片（markdown 与内嵌 <img> 两种写法）复制到 static/docs/assets/
  *   （devops 书重名时加 devops- 前缀），引用改写为 ./assets/<文件名>；
  * - md 间互链（./xxx.md、xxx.md、documents/xxx.md #锚点）改写为对应书的站内路由，
@@ -26,8 +28,8 @@ const MarkdownIt = require('markdown-it');
 const ROOT = path.join(__dirname, '..');
 const OUT_DIR = path.join(ROOT, 'static', 'docs');
 const ASSETS_DIR = path.join(OUT_DIR, 'assets');
-// 版本号来源：package.json（当前 2.0.0），此处写死以保持产物稳定可 diff
-const SITE_VERSION = '2.0.0';
+// 版本号来源：package.json 的 version 字段（随发版自动同步，避免写死漂移）
+const SITE_VERSION = require('../package.json').version;
 
 /**
  * 书定义：key 即路由中的页签 key。
@@ -200,7 +202,14 @@ function resolveAssetSrc(src) {
  */
 function copyAsset(src, book) {
   const rel = resolveAssetSrc(src);
-  const abs = path.join(book.srcDir, rel);
+  const srcDir = path.resolve(book.srcDir);
+  const abs = path.resolve(book.srcDir, rel);
+  // 目录包含校验：解析后的绝对路径必须仍以源目录为前缀（带分隔符，防兄弟目录同名前缀绕过），
+  // 否则视为 `../` 逃逸引用，跳过该图片（不复制源目录之外的任意文件进产物）
+  if (!abs.startsWith(srcDir + path.sep)) {
+    console.warn('[build-docs-site] 跳过逃逸出源目录的图片引用: ' + src);
+    return null;
+  }
   if (!fs.existsSync(abs) || !fs.statSync(abs).isFile()) {
     return null;
   }
@@ -313,7 +322,8 @@ function createRenderer() {
     return defaultImage(tokens, idx, options, env, self);
   };
 
-  // 标题 slug：为章节内锚点生成稳定 id（重名追加 -1/-2）
+  // 标题 slug：为章节内锚点生成稳定 id——加章节 fileKey 前缀防跨章同名标题撞 id
+  // （章内重名仍追加 -1/-2；页面内联脚本的 resolveAnchor 按同一前缀寻址）
   md.renderer.rules.heading_open = function (tokens, idx, options, env, self) {
     const token = tokens[idx];
     const inline = tokens[idx + 1];
@@ -329,7 +339,7 @@ function createRenderer() {
     } else {
       used[slug] = 0;
     }
-    token.attrSet('id', slug);
+    token.attrSet('id', env.chapter + '-' + slug);
     return self.renderToken(tokens, idx, options);
   };
 
@@ -745,16 +755,18 @@ ${sections}
     return chapters[0] || null;
   }
 
-  // 章内锚点：先按 slug 找 heading id，找不到再按标题文字包含匹配
+  // 章内锚点：先按「章节 fileKey 前缀 + slug」找 heading id（id 带前缀，跨章同名
+  // 标题不会命中他章），找不到再按标题文字包含匹配
   // （SUMMARY 锚点文字与实际 heading 文字可能略有出入，如「mongodb集群」 vs「如何配置mongodb集群」）
   function resolveAnchor(section, text) {
     if (!section || !text) {
       return null;
     }
+    var fileKey = section.getAttribute('data-file');
     var slug = slugify(text);
-    if (slug && document.getElementById(slug) &&
-        section.contains(document.getElementById(slug))) {
-      return document.getElementById(slug);
+    var byId = slug && fileKey ? document.getElementById(fileKey + '-' + slug) : null;
+    if (byId && section.contains(byId)) {
+      return byId;
     }
     var headings = section.querySelectorAll('h1,h2,h3,h4,h5,h6');
     var needle = String(text).replace(/\\s+/g, '');

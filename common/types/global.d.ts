@@ -209,6 +209,9 @@ declare module 'antd' {
   // message App 上下文批：client/index.js 与 message-bridge.js 引用 App 组件
   // （树内 message 实例提供者，useApp 消费入口）。
   export const App: any;
+  // Drawer 抽屉组件：client/components/DocDrawer（open/onClose/width/styles/title
+  // 形态）与 ProjectToken.js 引用；与上方组件一致按 any 放宽，不校验属性。
+  export const Drawer: any;
 }
 
 // markdown-it 无内置类型且无 @types 包；插件（P8a export-data / gen-services）以

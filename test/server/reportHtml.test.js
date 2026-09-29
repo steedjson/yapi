@@ -46,7 +46,8 @@ test('failedNum 为 0 时输出 HTML5 文档并包含全部验证通过文案', 
 test('渲染结果始终包含页头导航与页脚信息', t => {
   const html = renderToHtml({ list: [], message: { failedNum: 0, successNum: 0, len: 0 } });
 
-  t.true(html.includes('https://hellosean1025.github.io/yapi'));
+  t.true(html.includes('<a href="/docs/index.html">YApi</a>'));
+  t.false(html.includes('hellosean1025'));
   t.true(html.includes('Build by'));
   t.true(html.includes('YMFE'));
 });

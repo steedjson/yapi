@@ -11,6 +11,7 @@ import DocDrawer from '../../components/DocDrawer/index.js';
 const plugin = require('client/plugin.js');
 
 const ThirdLogin = plugin.emitHook('third_login');
+/** @param {any} props */
 const HomeGuest = props => (
   <div className="g-body">
     <div className="m-bg">

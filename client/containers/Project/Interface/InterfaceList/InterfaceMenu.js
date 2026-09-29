@@ -423,7 +423,7 @@ const InterfaceMenu = (/** @type {any} */ props) => {
     const prev = lastExpandsRef.current || state.expands || [];
     const next = Array.from(e || []);
     next.forEach(key => userCollapsedRef.current.delete(key));
-    prev.forEach(key => {
+    prev.forEach((/** @type {any} */ key) => {
       if (next.indexOf(key) === -1) userCollapsedRef.current.add(key);
     });
     patchState({ expands: next });

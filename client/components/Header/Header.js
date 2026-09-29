@@ -175,7 +175,12 @@ const ToolUser = props => {
       >
         <Tooltip placement="bottom" title={'使用文档'}>
           <li className="toolbar-li">
-            <a style={{ cursor: 'pointer' }} onClick={props.openDoc}>
+            <a
+              style={{ cursor: 'pointer' }}
+              role="button"
+              tabIndex={0}
+              onClick={props.openDoc}
+            >
               <QuestionCircleOutlined className="dropdown-link" style={{ fontSize: 16 }} />
             </a>
           </li>

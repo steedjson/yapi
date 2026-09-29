@@ -112,9 +112,10 @@
 - ~~建议：迭代到对应 reducer 模块时以 Zustand（或 RTK）重写该模块，不整体大爆炸迁移。`redux-promise` 停更，但当前 15 个 reducer 模块均为薄封装，风险可控。~~ → **已实施完成（试点 + 批次 1–5）**：全部业务 reducer 模块迁至 Zustand，`combineReducers` 状态树清零（最后注册项 inter 于批次 5 注销，空模块走占位 reducer fallback）。
 - ~~**待收尾批次**：卸载 redux/react-redux/redux-promise（现仅剩 `client/index.js` Provider 挂载、ProjectCard 的 follow useDispatch、ProjectData 的 news dispatch 三处残留消费）；删除旧 reducer 模块文件（`client/reducer/modules/*.js` 及对应 `interfaceReducer.test.js` 护栏、reducer create/middleware）；`client/plugin.js` 的 add_reducer 钩子机制随卸载一并评估移除。~~ → **已完成（状态管理迁移收尾批；2026-09-26 复核订正）**：redux/react-redux/redux-promise 依赖已卸载，`client/index.js` 无 Provider、`combineReducers`/`createStore` 全仓零命中、reducer 模块文件已删——本节此前滞后于代码，现订正。
 
-### 5. 文档系统 ydoc → VitePress（暂缓，低优先）
+### 5. 文档系统 ydoc → VitePress（✅ 已完成，方案变更：自建轻量站替代）
 
-- `docs/` 为独立产物，不影响运行时；ydoc 在高版本 Node 下的兼容问题未阻塞开发。
+- ~~`docs/` 为独立产物，不影响运行时；ydoc 在高版本 Node 下的兼容问题未阻塞开发。~~ → **已完成（订正）**：ydoc 已不在依赖中，随 v2.0.0 移除 Node 兼容包袱的需求被替代——`scripts/build-docs-site.js`（基于 markdown-it 的单文件文档站，输出 `static/docs/`，被设置页 token 文档与页脚「使用文档」消费），`npm run docs` 即指向该脚本；VitePress 方案不再需要。
+- 若未来文档规模膨胀，可再评估 VitePress。
 
 ## 三、遗留观察项（MINOR，不阻塞）
 
