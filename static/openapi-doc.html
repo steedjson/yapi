@@ -376,11 +376,20 @@ body > pre {
 <a id=新增或者更新接口> </a></a></li><li><a href="#u83b7u53d6u63a5u53e3u5217u8868u6570u636e0a3ca20id3du83b7u53d6u63a5u53e3u5217u8868u6570u636e3e203ca3e">获取接口列表数据
 <a id=获取接口列表数据> </a></a></li><li><a href="#u66f4u65b0u63a5u53e30a3ca20id3du66f4u65b0u63a5u53e33e203ca3e">更新接口
 <a id=更新接口> </a></a></li><li><a href="#u83b7u53d6u63a5u53e3u83dcu5355u5217u88680a3ca20id3du83b7u53d6u63a5u53e3u83dcu5355u5217u88683e203ca3e">获取接口菜单列表
-<a id=获取接口菜单列表> </a></a></li></ul></li></ul></div>
+<a id=获取接口菜单列表> </a></a></li><li><a href="#u83b7u53d6u63a5u53e3u5206u7c7bu6811">获取接口分类树
+<a id=获取接口分类树> </a></a></li><li><a href="#u8fd0u884cu81eau52a8u5316u6d4bu8bd5">运行自动化测试
+<a id=运行自动化测试> </a></a></li><li><a href="#u5bfcu51fau6570u636e">导出数据
+<a id=导出数据> </a></a></li><li><a href="#u5bfcu51faswaggeru6570u636e">导出Swagger数据
+<a id=导出Swagger数据> </a></a></li></ul></li></ul></div>
           <div id="right" class="content-right">
            <h1 class="curproject-name"> yapi开放 api </h1> 
 <h1 id="u5f00u653eu63a5u53e3api">开放接口api</h1>
 <p></p>
+<blockquote>
+<p><strong>token 鉴权语义：</strong>token 等价于「归属项目内的一名开发者」。</p>
+<p>仅可用于本文所列的 15 个数据面读写端点，仅对其所属项目有效，私有项目同样可调用；项目配置修改（/api/project/up）与各类删除操作不支持 token 调用，需要登录态的项目所有者或管理员权限。</p>
+<p>项目设置页展示的 token 包装串绑定查看者身份，不继承其全局角色；被禁用或已删除账号的包装串立即失效。</p>
+</blockquote>
 <h2 id="u83b7u53d6u9879u76eeu57fau672cu4fe1u606f0a3ca20id3du83b7u53d6u9879u76eeu57fau672cu4fe1u606f3e203ca3e">获取项目基本信息
 <a id=获取项目基本信息> </a></h2>
 <p></p>
@@ -1485,6 +1494,192 @@ body > pre {
    ]
 }
 </code></pre>
+<h2 id="u83b7u53d6u63a5u53e3u5206u7c7bu6811">获取接口分类树
+<a id=获取接口分类树> </a></h2>
+<p></p>
+<h3 id="-29">基本信息</h3>
+<p><strong>Path：</strong> /api/interface/get_cat_tree</p>
+<p><strong>Method：</strong> GET</p>
+<p><strong>接口描述：</strong>以树形结构返回项目下全部分类及分类内的接口</p>
+<h3 id="-30">请求参数</h3>
+<p><strong>Query</strong></p>
+<table>
+<thead>
+<tr>
+<th>参数名称</th>
+<th>是否必须</th>
+<th>示例</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>token</td>
+<td>是</td>
+<td></td>
+<td>项目token</td>
+</tr>
+<tr>
+<td>project_id</td>
+<td>否</td>
+<td></td>
+<td>token 鉴权时自动取 token 归属项目</td>
+</tr>
+</tbody>
+</table>
+<h2 id="u8fd0u884cu81eau52a8u5316u6d4bu8bd5">运行自动化测试
+<a id=运行自动化测试> </a></h2>
+<p></p>
+<h3 id="-31">基本信息</h3>
+<p><strong>Path：</strong> /api/open/run_auto_test</p>
+<p><strong>Method：</strong> GET</p>
+<p><strong>接口描述：</strong>运行指定测试集合，返回测试报告；测试集合必须属于 token 归属项目</p>
+<h3 id="-32">请求参数</h3>
+<p><strong>Query</strong></p>
+<table>
+<thead>
+<tr>
+<th>参数名称</th>
+<th>是否必须</th>
+<th>示例</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>token</td>
+<td>是</td>
+<td></td>
+<td>项目token</td>
+</tr>
+<tr>
+<td>id</td>
+<td>是</td>
+<td></td>
+<td>测试集合id</td>
+</tr>
+<tr>
+<td>mode</td>
+<td>否</td>
+<td>json</td>
+<td>报告格式，json 或 html（默认 html）</td>
+</tr>
+<tr>
+<td>email</td>
+<td>否</td>
+<td>true</td>
+<td>为 true 且存在失败用例时发送邮件报告</td>
+</tr>
+<tr>
+<td>download</td>
+<td>否</td>
+<td>true</td>
+<td>为 true 时以下载文件方式返回报告</td>
+</tr>
+<tr>
+<td>env_&lt;项目id&gt;</td>
+<td>否</td>
+<td>env_11=local</td>
+<td>为指定项目设置运行环境</td>
+</tr>
+</tbody>
+</table>
+<h2 id="u5bfcu51fau6570u636e">导出数据
+<a id=导出数据> </a></h2>
+<p></p>
+<h3 id="-33">基本信息</h3>
+<p><strong>Path：</strong> /api/plugin/export</p>
+<p><strong>Method：</strong> GET</p>
+<p><strong>接口描述：</strong>导出项目接口数据</p>
+<h3 id="-34">请求参数</h3>
+<p><strong>Query</strong></p>
+<table>
+<thead>
+<tr>
+<th>参数名称</th>
+<th>是否必须</th>
+<th>示例</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>token</td>
+<td>是</td>
+<td></td>
+<td>项目token</td>
+</tr>
+<tr>
+<td>pid</td>
+<td>否</td>
+<td></td>
+<td>token 鉴权时自动取 token 归属项目</td>
+</tr>
+<tr>
+<td>type</td>
+<td>否</td>
+<td>markdown</td>
+<td>导出格式：markdown、json，默认 html</td>
+</tr>
+<tr>
+<td>status</td>
+<td>否</td>
+<td>undone</td>
+<td>接口状态过滤</td>
+</tr>
+<tr>
+<td>isWiki</td>
+<td>否</td>
+<td>true</td>
+<td>为 true 时附带 wiki 数据</td>
+</tr>
+</tbody>
+</table>
+<h2 id="u5bfcu51faswaggeru6570u636e">导出Swagger数据
+<a id=导出Swagger数据> </a></h2>
+<p></p>
+<h3 id="-35">基本信息</h3>
+<p><strong>Path：</strong> /api/plugin/exportSwagger</p>
+<p><strong>Method：</strong> GET</p>
+<p><strong>接口描述：</strong>导出项目接口为 Swagger/OpenAPI 描述文件</p>
+<h3 id="-36">请求参数</h3>
+<p><strong>Query</strong></p>
+<table>
+<thead>
+<tr>
+<th>参数名称</th>
+<th>是否必须</th>
+<th>示例</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>token</td>
+<td>是</td>
+<td></td>
+<td>项目token</td>
+</tr>
+<tr>
+<td>pid</td>
+<td>否</td>
+<td></td>
+<td>token 鉴权时自动取 token 归属项目</td>
+</tr>
+<tr>
+<td>type</td>
+<td>是</td>
+<td>OpenAPIV2</td>
+<td>导出格式，当前仅支持 OpenAPIV2（OpenAPI 2.0 / Swagger 规范）</td>
+</tr>
+<tr>
+<td>status</td>
+<td>否</td>
+<td>undone</td>
+<td>接口状态过滤</td>
+</tr>
+</tbody>
+</table>
 
             <footer class="m-footer">
               <p>Build by <a href="https://ymfe.org/">YMFE</a>.</p>

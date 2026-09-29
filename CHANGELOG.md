@@ -1,3 +1,16 @@
+## v2.0.0
+
+### Features
+
+* 运行环境要求提升：Node >= 22.12，MongoDB（mongoose 8 驱动）
+* 客户端技术栈现代化：antd v6、React 19、react-router v7，生产构建迁移至 rsbuild（产物输出 static/prd）
+* 编辑器引擎由 Ace 迁移至 CodeMirror 6（接口编辑/预览/Mock 脚本/测试脚本）
+* 密码散列升级为 scrypt，存量 sha1 口令登录时自动升级
+* 开放接口（openapi）token 语义明确为「归属项目内的开发者」：数据面读写（15 个端点）可用，私有项目同样可调用；项目配置修改（/api/project/up）与删除类操作不支持 token；包装串绑定查看者身份、不继承全局角色；被禁用/已删除账号的串立即失效
+* 接口导出 /api/plugin/exportSwagger 需参数 type=OpenAPIV2
+* 页脚「使用文档」改为站内展示，文档随部署提供，不再依赖外网文档站
+* UI 规范修复批：接口树收起意图保持、编辑器容器高度、弹窗按钮对齐等
+
 ## [1.10.2](https://github.com/YMFE/yapi/compare/v1.10.1...v1.10.2) (2021-10-13)
 
 ### Bug Fixes

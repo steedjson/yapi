@@ -1,60 +1,68 @@
 // @ts-check
 import './Footer.scss';
-import React from 'react';
-import { Row, Col } from 'antd';
+import React, { useState } from 'react';
+import { Row, Col, Drawer } from 'antd';
 import { getV4Icon } from '../../constants/v4IconMap';
 
 const version = process.env.version;
 
-const defaultFootList = [
-  {
-    title: 'GitHub',
-    iconType: 'github',
-    linkList: [
-      {
-        itemTitle: 'YApi 源码仓库',
-        itemLink: 'https://github.com/YMFE/yapi'
-      }
-    ]
-  },
-  {
-    title: '团队',
-    iconType: 'team',
-    linkList: [
-      {
-        itemTitle: 'YMFE',
-        itemLink: 'https://ymfe.org'
-      }
-    ]
-  },
-  {
-    title: '反馈',
-    iconType: 'aliwangwang-o',
-    linkList: [
-      {
-        itemTitle: 'Github Issues',
-        itemLink: 'https://github.com/YMFE/yapi/issues'
-      },
-      {
-        itemTitle: 'Github Pull Requests',
-        itemLink: 'https://github.com/YMFE/yapi/pulls'
-      }
-    ]
-  },
-  {
-    title: `Copyright © 2018-${new Date().getFullYear()} YMFE`,
-    linkList: [
-      {
-        itemTitle: `版本: ${version} `,
-        itemLink: 'https://github.com/YMFE/yapi/blob/master/CHANGELOG.md'
-      },
-      {
-        itemTitle: '使用文档',
-        itemLink: 'https://hellosean1025.github.io/yapi/'
-      }
-    ]
-  }
-];
+/**
+ * 默认页脚列表。「使用文档」为站内 Drawer 展示，项上挂 onClick 打开弹层；
+ * 「版本」链接指向站内文档的版本说明章节。
+ * @param {function} openDocs 打开使用文档 Drawer
+ * @returns {any[]}
+ */
+function buildDefaultFootList(openDocs) {
+  return [
+    {
+      title: 'GitHub',
+      iconType: 'github',
+      linkList: [
+        {
+          itemTitle: 'YApi 源码仓库',
+          itemLink: 'https://github.com/YMFE/yapi'
+        }
+      ]
+    },
+    {
+      title: '团队',
+      iconType: 'team',
+      linkList: [
+        {
+          itemTitle: 'YMFE',
+          itemLink: 'https://ymfe.org'
+        }
+      ]
+    },
+    {
+      title: '反馈',
+      iconType: 'aliwangwang-o',
+      linkList: [
+        {
+          itemTitle: 'Github Issues',
+          itemLink: 'https://github.com/YMFE/yapi/issues'
+        },
+        {
+          itemTitle: 'Github Pull Requests',
+          itemLink: 'https://github.com/YMFE/yapi/pulls'
+        }
+      ]
+    },
+    {
+      title: `Copyright © 2018-${new Date().getFullYear()} YMFE`,
+      linkList: [
+        {
+          itemTitle: `版本: ${version} `,
+          itemLink: '/docs/index.html#/version'
+        },
+        {
+          itemTitle: '使用文档',
+          onClick: openDocs
+        }
+      ]
+    }
+  ];
+}
 
 /**
  * @param {any} props
@@ -72,9 +80,15 @@ function FootItem(props) {
       ) {
         return (
           <p key={i}>
-            <a href={item.itemLink} className="link">
-              {item.itemTitle}
-            </a>
+            {item.onClick ? (
+              <a className="link" style={{ cursor: 'pointer' }} onClick={item.onClick}>
+                {item.itemTitle}
+              </a>
+            ) : (
+              <a href={item.itemLink} className="link">
+                {item.itemTitle}
+              </a>
+            )}
           </p>
         );
       })}
@@ -86,7 +100,10 @@ function FootItem(props) {
  * @param {any} props
  */
 function Footer(props) {
-  const footList = props.footList || defaultFootList;
+  const [docVisible, setDocVisible] = useState(false);
+  const footList = props.footList || buildDefaultFootList(function() {
+    setDocVisible(true);
+  });
   return (
     <div className="footer-wrapper">
       <Row className="footer-container">
@@ -104,6 +121,21 @@ function Footer(props) {
           );
         })}
       </Row>
+      <Drawer
+        title="使用文档"
+        width="80%"
+        open={docVisible}
+        onClose={function() {
+          setDocVisible(false);
+        }}
+        styles={{ body: { padding: 0, height: 'calc(100% - 55px)' } }}
+      >
+        <iframe
+          src="/docs/index.html"
+          title="使用文档"
+          style={{ width: '100%', height: '100%', border: 'none' }}
+        />
+      </Drawer>
     </div>
   );
 }
