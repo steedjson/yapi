@@ -32,8 +32,8 @@
 
 ## Q5 部署不成功怎么办？
 
-1. 确保 node 版本=> 7.6,请运行 node -v 查看版本号
-2. 确保 mongodb 版本 => 2.6，请运行 mongo --version 查看版本号
+1. 确保 node 版本 >= 22.12（本仓 .nvmrc 基线为 24.21.0 LTS），请运行 node -v 查看版本号
+2. 确保 mongodb 版本 >= 2.6，请运行 mongo --version 查看版本号
 3. 确保安装了 npm, 运行 npm -v 查看版本号
 4. 确保安装了 git,运行 git --version 查看版本号
 

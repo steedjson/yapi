@@ -660,8 +660,12 @@ console.log('decryptedData', decryptedData);
 <p>处理完成后，不要忘记 <code>resolve()</code>，不然会一直处于挂起状态</p>
 </blockquote>
 <h2 id="token">token</h2>
-<p>每个项目都有唯一的标识 token，用户可以使用这个 token 值来请求 openapi。</p>
-<p><a href="/openapi-doc.html" target="_blank" rel="noopener noreferrer">openapi 文档地址</a></p>
+<p>每个项目都有唯一的标识 token，用于以项目身份请求 openapi。</p>
+<ul>
+<li>token 代表「归属项目内的开发者」数据面权限：可调用 15 个开放端点（接口增改查、分类、数据导入导出、自动化测试等，完整清单见 token 配置页），<strong>私有项目同样可调用</strong>；项目配置修改（/api/project/up）与删除类操作不支持 token。</li>
+<li>项目设置页展示的 token 串与查看者身份绑定，仅继承该账号在本项目内的数据面权限；「刷新」后旧 token 立即失效；账号被禁用或删除后其 token 随之失效。</li>
+</ul>
+<p>详细接口文档见项目设置 - token 配置页，或直接访问 <a href="/openapi-doc.html">开放接口文档</a>。</p>
 <h2 id="全局mock">全局mock</h2>
 <p>v1.3.21 新增全局 mock 设置，方便用户在项目层面上全局设置公共的mock数据，具体 mock 脚本详细使用方法详见 <a href="#/教程/adv_mock/%E8%87%AA%E5%AE%9A%E4%B9%89-mock-%E8%84%9A%E6%9C%AC">自定义 Mock 脚本</a></p>
 <h3 id="mock-优先级说明">Mock 优先级说明</h3>
@@ -1578,8 +1582,8 @@ npm install  --registry https://registry.npm.taobao.org # 安装依赖
 <p>请反馈到 <a href="https://github.com/YMFE/yapi/issues" target="_blank" rel="noopener noreferrer">Github</a>，功能性的问题我们会在一周内修复，并在每周一发布新的版本 Tag.</p>
 <h2 id="q5-部署不成功怎么办">Q5 部署不成功怎么办？</h2>
 <ol>
-<li>确保 node 版本=&gt; 7.6,请运行 node -v 查看版本号</li>
-<li>确保 mongodb 版本 =&gt; 2.6，请运行 mongo --version 查看版本号</li>
+<li>确保 node 版本 &gt;= 22.12（本仓 .nvmrc 基线为 24.21.0 LTS），请运行 node -v 查看版本号</li>
+<li>确保 mongodb 版本 &gt;= 2.6，请运行 mongo --version 查看版本号</li>
 <li>确保安装了 npm, 运行 npm -v 查看版本号</li>
 <li>确保安装了 git,运行 git --version 查看版本号</li>
 </ol>

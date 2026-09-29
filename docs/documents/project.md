@@ -235,9 +235,12 @@ context.promise = new Promise(function(resolve) {
 
 ## token
 
-每个项目都有唯一的标识 token，用户可以使用这个 token 值来请求 openapi。
+每个项目都有唯一的标识 token，用于以项目身份请求 openapi。
 
-[openapi 文档地址](https://hellosean1025.github.io/yapi/openapi.html)
+- token 代表「归属项目内的开发者」数据面权限：可调用 15 个开放端点（接口增改查、分类、数据导入导出、自动化测试等，完整清单见 token 配置页），**私有项目同样可调用**；项目配置修改（/api/project/up）与删除类操作不支持 token。
+- 项目设置页展示的 token 串与查看者身份绑定，仅继承该账号在本项目内的数据面权限；「刷新」后旧 token 立即失效；账号被禁用或删除后其 token 随之失效。
+
+详细接口文档见项目设置 - token 配置页，或直接访问 [开放接口文档](/openapi-doc.html)。
 
 
 ## 全局mock
