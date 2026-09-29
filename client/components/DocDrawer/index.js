@@ -9,7 +9,7 @@ import { Drawer } from 'antd';
 const DocDrawer = props => (
   <Drawer
     title={props.title || '使用文档'}
-    width="80%"
+    size="80%"
     open={props.open}
     onClose={props.onClose}
     styles={{ body: { padding: 0, height: 'calc(100% - 55px)' } }}

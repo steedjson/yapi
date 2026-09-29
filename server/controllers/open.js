@@ -226,7 +226,7 @@ class openController extends baseController {
    */
   async runAutoTest(ctx) {
     if (!this.$tokenAuth) {
-      return (ctx.body = yapi.commons.resReturn(null, 40022, 'token 验证失败'));
+      return (ctx.body = yapi.commons.resReturn(null, 406, '没有权限'));
     }
     // console.log(1231312)
     const token = ctx.query.token;

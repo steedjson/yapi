@@ -9,8 +9,9 @@
  *   章内锚点（两空格缩进子项），当前章节蓝色高亮，子锚点全量展开；
  * - 路由：`#/<页签key>`（切页签）、`#/<页签key>/<fileKey>`（章节）、
  *   `#/<页签key>/<fileKey>/<encodeURIComponent(锚点文字)>`（章内锚点）、`#/openapi`；
- * - heading id：`<章节fileKey>-<slug>`（章内重名追加 -1/-2），防跨章同名标题 id 撞车，
- *   页面内联脚本 resolveAnchor 按此前缀精确寻址，侧栏 data-route 第三段仍为锚点原文；
+ * - heading id：`<书key>-<章节fileKey>-<slug>`（章内重名追加 -1/-2），防跨书/跨章同名
+ *   标题 id 撞车，页面内联脚本 resolveAnchor 按同一前缀精确寻址，
+ *   侧栏 data-route 三段式（书/章节/锚点原文）不变；
  * - md 中的图片（markdown 与内嵌 <img> 两种写法）复制到 static/docs/assets/
  *   （devops 书重名时加 devops- 前缀），引用改写为 ./assets/<文件名>；
  * - md 间互链（./xxx.md、xxx.md、documents/xxx.md #锚点）改写为对应书的站内路由，
@@ -322,8 +323,8 @@ function createRenderer() {
     return defaultImage(tokens, idx, options, env, self);
   };
 
-  // 标题 slug：为章节内锚点生成稳定 id——加章节 fileKey 前缀防跨章同名标题撞 id
-  // （章内重名仍追加 -1/-2；页面内联脚本的 resolveAnchor 按同一前缀寻址）
+  // 标题 slug：为章节内锚点生成稳定 id——加「书 key + 章节 fileKey」前缀防跨书/跨章
+  // 同名标题撞 id（章内重名仍追加 -1/-2；页面内联脚本的 resolveAnchor 按同一前缀寻址）
   md.renderer.rules.heading_open = function (tokens, idx, options, env, self) {
     const token = tokens[idx];
     const inline = tokens[idx + 1];
@@ -339,7 +340,7 @@ function createRenderer() {
     } else {
       used[slug] = 0;
     }
-    token.attrSet('id', env.chapter + '-' + slug);
+    token.attrSet('id', env.book.key + '-' + env.chapter + '-' + slug);
     return self.renderToken(tokens, idx, options);
   };
 
@@ -755,16 +756,18 @@ ${sections}
     return chapters[0] || null;
   }
 
-  // 章内锚点：先按「章节 fileKey 前缀 + slug」找 heading id（id 带前缀，跨章同名
-  // 标题不会命中他章），找不到再按标题文字包含匹配
+  // 章内锚点：先按「书 key + 章节 fileKey 前缀 + slug」找 heading id（id 带双重前缀，
+  // 跨书/跨章同名标题不会命中他书他章），找不到再按标题文字包含匹配
   // （SUMMARY 锚点文字与实际 heading 文字可能略有出入，如「mongodb集群」 vs「如何配置mongodb集群」）
   function resolveAnchor(section, text) {
     if (!section || !text) {
       return null;
     }
     var fileKey = section.getAttribute('data-file');
+    var bookKey = section.getAttribute('data-book');
     var slug = slugify(text);
-    var byId = slug && fileKey ? document.getElementById(fileKey + '-' + slug) : null;
+    var byId =
+      slug && fileKey && bookKey ? document.getElementById(bookKey + '-' + fileKey + '-' + slug) : null;
     if (byId && section.contains(byId)) {
       return byId;
     }

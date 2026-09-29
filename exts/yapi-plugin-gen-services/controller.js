@@ -108,7 +108,7 @@ class exportController extends baseController {
     let isWiki = ctx.request.query.isWiki;
 
     if (!pid) {
-      return ctx.body = yapi.commons.resReturn(null, 200, 'pid 不为空');
+      return ctx.body = yapi.commons.resReturn(null, 400, 'pid 不能为空');
     }
     /** @type {any} */
     let curProject;

@@ -49,6 +49,7 @@ function isHtmlFallbackCandidate(method, reqUrl) {
 }
 
 const mimeTypes = {
+  '.html': HTML_CONTENT_TYPE,
   '.woff': 'font/woff',
   '.woff2': 'font/woff2',
   '.ttf': 'font/ttf',
@@ -71,15 +72,22 @@ function applyDevResponseHeaders(res, contentType) {
   res.setHeader('Access-Control-Allow-Origin', '*');
 }
 
-// /iconfont/ 与 /image/ 静态目录：未命中（前缀不符或文件缺失）时交还给后续中间件，
-// 最终由 dev server 的 notFound 中间件返回真实 404（与旧链 isHtmlFallbackCandidate
-// 对这两类前缀的排除配合）。路径做了归一化防穿越（旧链未防，dev-only 收紧，合法路径不变）。
+// /iconfont/、/image/ 与 /docs/ 静态目录：未命中（前缀不符或文件缺失）时交还给后续中间件，
+// 最终由 dev server 的 notFound 中间件返回真实 404（/docs/ 缺失文件带已知扩展名，
+// 由 isHtmlFallbackCandidate 的扩展名规则保持 404，不被回退吞成 HTML）。
+// 路径做了归一化防穿越（旧链未防，dev-only 收紧，合法路径不变）。
+// /docs/ 为文档站抽屉 iframe（/docs/index.html 与 /docs/assets/**）服务，
+// html 走 mimeTypes 的 text/html，iframe 才能渲染。
 function createDevStaticMiddleware(options) {
   const staticRoot = (options && options.staticRoot) || DEFAULT_STATIC_ROOT;
 
   return (req, res, next) => {
     const reqUrl = (req.url || '').split('?')[0];
-    if (!reqUrl.startsWith('/iconfont/') && !reqUrl.startsWith('/image/')) {
+    if (
+      !reqUrl.startsWith('/iconfont/') &&
+      !reqUrl.startsWith('/image/') &&
+      !reqUrl.startsWith('/docs/')
+    ) {
       next();
       return;
     }

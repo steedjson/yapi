@@ -218,12 +218,12 @@ test('projectInterfaceData: 将响应体设置为占位字符串', async t => {
 
 // —— runAutoTest(ctx) 的 token 鉴权保护 ——
 
-test('runAutoTest: $tokenAuth 为 falsy 时直接返回 40022 token 验证失败', async t => {
+test('runAutoTest: $tokenAuth 为 falsy 时直接返回 406 没有权限', async t => {
   const inst = new openController({});
   inst.$tokenAuth = false;
   const ctx = {};
   await inst.runAutoTest(ctx);
-  t.deepEqual(ctx.body, { errcode: 40022, errmsg: 'token 验证失败', data: null });
+  t.deepEqual(ctx.body, { errcode: 406, errmsg: '没有权限', data: null });
 });
 
 test('runAutoTest: $tokenAuth 未初始化(undefined)时同样被拦截', async t => {
@@ -231,6 +231,6 @@ test('runAutoTest: $tokenAuth 未初始化(undefined)时同样被拦截', async 
   t.falsy(inst.$tokenAuth);
   const ctx = {};
   await inst.runAutoTest(ctx);
-  t.is(ctx.body.errcode, 40022);
-  t.is(ctx.body.errmsg, 'token 验证失败');
+  t.is(ctx.body.errcode, 406);
+  t.is(ctx.body.errmsg, '没有权限');
 });

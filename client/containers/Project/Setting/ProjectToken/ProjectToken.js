@@ -98,7 +98,7 @@ const ProjectToken = props => {
       </div>
       <Drawer
         title="详细接口文档"
-        width="72%"
+        size="72%"
         open={docVisible}
         onClose={() => setDocVisible(false)}
         styles={{ body: { padding: 0, height: 'calc(100% - 55px)' } }}
