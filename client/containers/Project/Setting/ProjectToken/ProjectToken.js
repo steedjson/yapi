@@ -1,9 +1,9 @@
 // @ts-check
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import './ProjectToken.scss';
 // project 切片已迁至 Zustand（批次4），本组件的 redux 依赖随迁移全部移除
 import useProjectStore from '../../../../store/projectStore';
-import { Tooltip, Modal } from 'antd';
+import { Tooltip, Modal, Drawer } from 'antd';
 import { message } from '../../../../utils/message-bridge.js';
 import { CopyOutlined, ReloadOutlined } from '@ant-design/icons';
 import { copyText } from '../../../../common.js';
@@ -21,6 +21,7 @@ const confirm = Modal.confirm;
  */
 const ProjectToken = props => {
   const { projectId, curProjectRole } = props;
+  const [docVisible, setDocVisible] = useState(false);
   const token = useProjectStore(state => state.token);
   const getToken = useProjectStore(state => state.getToken);
   const updateToken = useProjectStore(state => state.updateToken);
@@ -72,7 +73,7 @@ const ProjectToken = props => {
       </div>
       <br />
       <h2  className="token-title">open接口：</h2>
-      <p><a target="_blank" rel="noopener noreferrer"   href="https://hellosean1025.github.io/yapi/openapi.html">详细接口文档</a></p>
+      <p><a style={{ cursor: 'pointer' }} onClick={() => setDocVisible(true)}>详细接口文档</a></p>
       <div>
         <ul className="open-api">
           <li>/api/open/run_auto_test [运行自动化测试]</li>
@@ -87,6 +88,19 @@ const ProjectToken = props => {
           <li>/api/interface/getCatMenu [获取所有分类]</li>
         </ul>
       </div>
+      <Drawer
+        title="详细接口文档"
+        width="72%"
+        open={docVisible}
+        onClose={() => setDocVisible(false)}
+        styles={{ body: { padding: 0, height: 'calc(100% - 55px)' } }}
+      >
+        <iframe
+          src="/openapi-doc.html"
+          title="详细接口文档"
+          style={{ width: '100%', height: '100%', border: 'none' }}
+        />
+      </Drawer>
     </div>
   );
 };
