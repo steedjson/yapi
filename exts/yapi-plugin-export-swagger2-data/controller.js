@@ -97,6 +97,10 @@ class exportSwaggerController extends baseController {
         let tp = '';
         try {
             curProject = await this.projectModel.get(pid);
+            // 私有项目非成员禁止导出; token 请求 pid 已被 init 改写为归属项目, view 恒通过
+            if (curProject.project_type === 'private' && (await this.checkAuth(pid, 'project', 'view')) !== true) {
+                return (ctx.body = yapi.commons.resReturn(null, 406, '没有权限'));
+            }
             ctx.set('Content-Type', 'application/octet-stream');
             const list = await this.handleListClass(pid, status);
 

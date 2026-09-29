@@ -294,14 +294,16 @@ class baseController {
         id = interfaceData.project_id;
       }
 
-      // token 请求在其归属项目内视作开发者(数据面读写), 跨项目仍按普通成员判定
-      if (
-        this.$tokenAuth &&
-        this.$tokenProjectId != null &&
-        type !== 'group' &&
-        Number(id) === Number(this.$tokenProjectId)
-      ) {
-        return 'dev';
+      // token 请求严格收敛为「归属项目内开发者」: 不继承绑定账号的创建者/成员/全局角色
+      if (this.$tokenAuth) {
+        if (
+          this.$tokenProjectId != null &&
+          type !== 'group' &&
+          Number(id) === Number(this.$tokenProjectId)
+        ) {
+          return 'dev';
+        }
+        return 'member';
       }
 
       if (type === 'project') {

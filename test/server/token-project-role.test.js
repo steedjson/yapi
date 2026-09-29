@@ -54,7 +54,7 @@ function installModelStubs(opts) {
   return calls;
 }
 
-// 构造"项目创建者 uid=1、无成员、属分组 9"的项目数据: token 分支若失效会落到原逻辑并返回 member
+// 构造"项目创建者 uid=1、无成员、属分组 9"的项目数据: 登录态用例走原判定链落分组, token 用例作严格域短路桩
 const nonMemberProject = { uid: 1, members: [], group_id: 9 };
 const nonMemberGroup = { uid: 1, members: [] };
 // 模拟旧版 token 路径写入的系统用户(init 中 tokenUid === '999999' 分支)
@@ -134,9 +134,9 @@ test.serial('token 请求不继承使用者全局 admin 角色: 归属项目返�
   t.deepEqual(calls.projectGets, []);
 });
 
-test.serial('token 请求绑定全局 admin 用户查询非归属项目时不再命中 admin 早退, 落回原逻辑 member', async t => {
+test.serial('token 请求绑定全局 admin 用户查询非归属项目时不再命中 admin 早退, 严格项目域直接 member', async t => {
   const calls = installModelStubs({ project: nonMemberProject, group: nonMemberGroup, interfaceData: null });
-  // _id=42 避开 nonMemberProject 创建者 uid=1, 排除 owner 分支干扰
+  // 严格项目域: 非命中直接 member, 不触达项目查询; _id=42 避开 fixture 创建者 uid=1, 若短路失效也不应借 owner 分支越权
   const inst = createInst({
     $tokenAuth: true,
     $tokenProjectId: 123,
@@ -147,7 +147,7 @@ test.serial('token 请求绑定全局 admin 用户查询非归属项目时不再
   const role = await inst.getProjectRole(456, 'project');
 
   t.is(role, 'member');
-  t.deepEqual(calls.projectGets, [456]);
+  t.deepEqual(calls.projectGets, []);
 });
 
 test.serial('登录态(无 $tokenAuth)全局超管仍返回 admin(回归)', async t => {
@@ -162,9 +162,9 @@ test.serial('登录态(无 $tokenAuth)全局超管仍返回 admin(回归)', asyn
   t.is(role, 'admin');
 });
 
-// ---------- ② $tokenAuth + 非归属项目 id → 走原逻辑 ----------
+// ---------- ② $tokenAuth + 非归属项目 id → 严格项目域: 非命中直接 member, 不触达项目查询 ----------
 
-test.serial('token 请求查询非归属项目不命中 dev, 按原逻辑返回 member', async t => {
+test.serial('token 请求查询非归属项目不命中 dev, 严格项目域直接返回 member', async t => {
   const calls = installModelStubs({ project: nonMemberProject, group: nonMemberGroup, interfaceData: null });
   const inst = createInst({
     $tokenAuth: true,
@@ -176,8 +176,49 @@ test.serial('token 请求查询非归属项目不命中 dev, 按原逻辑返回 
   const role = await inst.getProjectRole(456, 'project');
 
   t.is(role, 'member');
-  // 证明确实落入原 project/group 判定链而非 token 分支
-  t.deepEqual(calls.projectGets, [456]);
+  // 严格项目域: 非命中在 token 分支短路返回 member, 不再落入原 project/group 判定链
+  t.deepEqual(calls.projectGets, []);
+});
+
+test.serial('token 绑定账号是其它项目创建者时, 仍返回 member 不获得 owner', async t => {
+  // 456 号项目创建者恰为 token 绑定账号(uid=42): 旧判定链会在此返回 owner, 新语义必须短路收敛为 member
+  const calls = installModelStubs({
+    project: { _id: 456, uid: 42, members: [], group_id: 9 },
+    group: null,
+    interfaceData: null
+  });
+  const inst = createInst({
+    $tokenAuth: true,
+    $tokenProjectId: 123,
+    $uid: '42',
+    $user: { _id: 42, role: 'member', username: 'creator42' }
+  });
+
+  const role = await inst.getProjectRole(456, 'project');
+
+  t.is(role, 'member');
+  // 严格域短路生效时 project.get 不会被触达; 若断言失败说明回落了旧判定链(将错误返回 owner)
+  t.deepEqual(calls.projectGets, []);
+});
+
+test.serial('token 绑定账号是其它项目成员时, 私有项目 view 仍拒', async t => {
+  // 绑定账号(uid=42)在 456 号项目 members 中持 dev 角色: 旧判定链会返回 dev, 新语义必须收敛为 member(无 dev 特权)
+  const calls = installModelStubs({
+    project: { _id: 456, uid: 1, members: [{ uid: 42, role: 'dev' }], group_id: 9 },
+    group: null,
+    interfaceData: null
+  });
+  const inst = createInst({
+    $tokenAuth: true,
+    $tokenProjectId: 123,
+    $uid: '42',
+    $user: { _id: 42, role: 'member', username: 'member42' }
+  });
+
+  const role = await inst.getProjectRole(456, 'project');
+
+  t.is(role, 'member');
+  t.deepEqual(calls.projectGets, []);
 });
 
 // ---------- ③ 无 $tokenAuth(登录态) → 原逻辑不受影响 ----------
@@ -231,7 +272,8 @@ test.serial('$tokenAuth 为 true 但 $tokenProjectId 未挂载时不误判 dev',
   const role = await inst.getProjectRole(123, 'project');
 
   t.is(role, 'member');
-  t.deepEqual(calls.projectGets, [123]);
+  // $tokenProjectId 缺失同样走严格项目域短路: 非命中直接 member, 不触达项目查询
+  t.deepEqual(calls.projectGets, []);
 });
 
 test.serial('$tokenAuth 与 $tokenProjectId 均未挂载(token 无效提前返回)时不误判', async t => {
