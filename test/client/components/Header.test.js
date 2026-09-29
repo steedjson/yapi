@@ -117,14 +117,91 @@ test.serial('登录态渲染搜索框、导航入口与用户头像', t => {
   );
   t.truthy(links.indexOf('/follow') > -1, '应渲染我的关注入口');
   t.truthy(links.indexOf('/add-project') > -1, '应渲染新建项目入口');
-  t.truthy(
-    links.indexOf('https://hellosean1025.github.io/yapi') > -1,
-    '应渲染使用文档外链'
+  // 「使用文档」已站内化：问号图标不再是外链，改为 onClick 打开站内文档抽屉
+  const docsTrigger = Array.from(container.querySelectorAll('.user-toolbar a')).find(a =>
+    a.querySelector('.anticon-question-circle')
   );
+  t.truthy(docsTrigger, '应渲染使用文档问号入口');
+  t.is(
+    docsTrigger.getAttribute('href'),
+    null,
+    '使用文档入口不应再是外链, 实际 DOM: ' + container.innerHTML.slice(0, 600)
+  );
+  t.is(docsTrigger.style.cursor, 'pointer', '站内入口应有 pointer 光标提示可点击');
 
   const avatar = container.querySelector('.avatar-image img');
   t.truthy(avatar, '应渲染用户头像');
   t.is(avatar.getAttribute('src'), '/api/user/avatar?uid=11', '头像默认取用户 uid 对应地址');
+});
+
+test.serial('点击工具栏问号图标打开站内文档抽屉', async t => {
+  axios.get = () => Promise.resolve({ data: { errcode: 0, data: {} } });
+  const { container } = renderHeader();
+
+  const docsTrigger = Array.from(container.querySelectorAll('.user-toolbar a')).find(a =>
+    a.querySelector('.anticon-question-circle')
+  );
+  t.truthy(docsTrigger, '使用文档问号入口应存在');
+
+  // 打开前 Drawer 未渲染（antd 懒渲染）
+  t.falsy(container.ownerDocument.querySelector('.ant-drawer'), '初始不应渲染 Drawer');
+
+  fireEvent.click(docsTrigger);
+  await act(async () => {
+    await sleep(50);
+  });
+
+  const drawer = container.ownerDocument.querySelector('.ant-drawer');
+  t.truthy(drawer, '点击后应渲染 Drawer, 实际 DOM: ' + container.ownerDocument.body.innerHTML.slice(0, 800));
+
+  const iframe = container.ownerDocument.querySelector('.ant-drawer iframe[title="使用文档"]');
+  t.truthy(iframe, 'Drawer 内应渲染使用文档 iframe');
+  t.is(iframe.getAttribute('src'), '/docs/index.html', 'iframe 应加载站内文档首页');
+
+  fireEvent.click(container.ownerDocument.querySelector('.ant-drawer-close'));
+  await act(async () => {
+    await sleep(100);
+  });
+  t.falsy(
+    container.ownerDocument.querySelector('.ant-drawer-open'),
+    '点击关闭后 Drawer 应退出 open 状态'
+  );
+});
+
+test.serial('新手引导「使用文档」气泡内链接指向站内文档且新窗口安全打开', async t => {
+  axios.get = () => Promise.resolve({ data: { errcode: 0, data: {} } });
+  // studyTip=3 且未完成引导(study=false)时,第三个受控 Popover(使用文档)展开
+  const { container } = renderHeader({ studyTip: 3, study: false });
+
+  // Popover 内容经 portal 挂在 body,等待 rc-motion 弹层挂载
+  await act(async () => {
+    await sleep(250);
+  });
+
+  const document = container.ownerDocument;
+  const popovers = Array.from(document.querySelectorAll('.popover-index'));
+  t.truthy(
+    popovers.length > 0,
+    '引导气泡应展开, 实际 DOM: ' + document.body.innerHTML.slice(0, 800)
+  );
+
+  const docLink = popovers
+    .reduce((acc, p) => acc.concat(Array.from(p.querySelectorAll('a'))), [])
+    .find(a => a.textContent === '使用文档');
+  t.truthy(docLink, '气泡标题内应渲染「使用文档」文本链接');
+
+  t.is(
+    docLink.getAttribute('href'),
+    '/docs/index.html#/quickstart',
+    '「使用文档」链接必须站内化为 /docs/index.html#/quickstart, 不允许回退外链, 实际: ' +
+      docLink.outerHTML
+  );
+  t.is(docLink.getAttribute('target'), '_blank', '站内文档应在新窗口打开');
+  t.is(
+    docLink.getAttribute('rel'),
+    'noopener noreferrer',
+    'target=_blank 必须携带 noopener noreferrer 防 reverse tabnabbing'
+  );
 });
 
 test.serial('imageUrl 存在时头像优先使用自定义地址', t => {

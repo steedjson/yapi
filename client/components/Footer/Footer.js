@@ -1,8 +1,9 @@
 // @ts-check
 import './Footer.scss';
 import React, { useState } from 'react';
-import { Row, Col, Drawer } from 'antd';
+import { Row, Col } from 'antd';
 import { getV4Icon } from '../../constants/v4IconMap';
+import DocDrawer from '../DocDrawer/index.js';
 
 const version = process.env.version;
 
@@ -121,21 +122,7 @@ function Footer(props) {
           );
         })}
       </Row>
-      <Drawer
-        title="使用文档"
-        width="80%"
-        open={docVisible}
-        onClose={function() {
-          setDocVisible(false);
-        }}
-        styles={{ body: { padding: 0, height: 'calc(100% - 55px)' } }}
-      >
-        <iframe
-          src="/docs/index.html"
-          title="使用文档"
-          style={{ width: '100%', height: '100%', border: 'none' }}
-        />
-      </Drawer>
+      <DocDrawer open={docVisible} onClose={() => setDocVisible(false)} />
     </div>
   );
 }

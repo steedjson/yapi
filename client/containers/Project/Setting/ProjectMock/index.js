@@ -86,7 +86,7 @@ const ProjectMock = props => {
               是否开启&nbsp;<a
                 target="_blank"
                 rel="noopener noreferrer"
-                href="https://hellosean1025.github.io/yapi/documents/project.html#%E5%85%A8%E5%B1%80mock"
+                href="/docs/index.html#/project"
               >
                 <Tooltip title="点击查看文档">
                   <QuestionCircleOutlined />

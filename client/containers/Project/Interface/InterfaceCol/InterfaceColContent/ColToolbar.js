@@ -47,7 +47,7 @@ const ColToolbar = props => {
           测试集合&nbsp;<a
             target="_blank"
             rel="noopener noreferrer"
-            href="https://hellosean1025.github.io/yapi/documents/case.html"
+            href="/docs/index.html#/case"
           >
             <Tooltip title="点击查看文档">
               <QuestionCircleOutlined />

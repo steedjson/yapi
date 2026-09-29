@@ -74,8 +74,8 @@ test.serial('受控渲染：标题文档入口 + 环境选择 + 有插件时的�
   t.is(container.querySelector('h2.interface-title').textContent.indexOf('测试集合'), 0, '标题应含「测试集合」');
   t.is(
     container.querySelector('h2.interface-title a').getAttribute('href'),
-    'https://hellosean1025.github.io/yapi/documents/case.html',
-    '标题应保留文档入口链接'
+    '/docs/index.html#/case',
+    '标题文档入口应指向站内文档 case 章节'
   );
   t.truthy(container.querySelector('.case-env'), '应渲染环境选择器');
 

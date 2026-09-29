@@ -25,6 +25,7 @@ const { Header } = Layout;
 import LogoSVG from '../LogoSVG/index.js';
 import Breadcrumb from '../Breadcrumb/Breadcrumb.js';
 import GuideBtns from '../GuideBtns/GuideBtns.js';
+import DocDrawer from '../DocDrawer/index.js';
 const plugin = require('client/plugin.js');
 
 /**
@@ -114,7 +115,7 @@ const tipDoc = (
     </h3>
     <p>
       初次使用 YApi，强烈建议你阅读{' '}
-      <a target="_blank" href="https://hellosean1025.github.io/yapi/" rel="noopener noreferrer">
+      <a target="_blank" rel="noopener noreferrer" href="/docs/index.html#/quickstart">
         使用文档
       </a>
       ，我们为你提供了通俗易懂的快速入门教程，更有详细的使用说明，欢迎阅读！{' '}
@@ -174,7 +175,7 @@ const ToolUser = props => {
       >
         <Tooltip placement="bottom" title={'使用文档'}>
           <li className="toolbar-li">
-            <a target="_blank" href="https://hellosean1025.github.io/yapi" rel="noopener noreferrer">
+            <a style={{ cursor: 'pointer' }} onClick={props.openDoc}>
               <QuestionCircleOutlined className="dropdown-link" style={{ fontSize: 16 }} />
             </a>
           </li>
@@ -223,6 +224,7 @@ export default function HeaderCom() {
   const imageUrl = useUserStore(state => state.imageUrl);
   const logoutAction = useUserStore(state => state.logoutActions);
   const [skin, setSkinState] = useState(getSkin());
+  const [docVisible, setDocVisible] = useState(false);
 
   /**
    * @param {string} name
@@ -276,12 +278,14 @@ export default function HeaderCom() {
               onSelectSkin={selectSkin}
               relieveLink={relieveLink}
               logout={logout}
+              openDoc={() => setDocVisible(true)}
             />
           ) : (
             ''
           )}
         </div>
       </div>
+      <DocDrawer open={docVisible} onClose={() => setDocVisible(false)} />
     </Header>
   );
 }

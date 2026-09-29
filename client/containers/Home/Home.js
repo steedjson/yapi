@@ -1,16 +1,17 @@
 // @ts-check
 import './Home.scss';
-import React from 'react';
+import React, { useState } from 'react';
 // user 切片已迁至 Zustand（批次4），本组件的 redux 依赖随迁移全部移除
 import useUserStore from '../../store/userStore';
 import { Link, Navigate } from 'react-router-dom';
 import { Row, Col, Button, Card } from 'antd';
 import { AppstoreOutlined, ApiOutlined, DatabaseOutlined, TeamOutlined } from '@ant-design/icons';
 import LogoSVG from '../../components/LogoSVG/index.js';
+import DocDrawer from '../../components/DocDrawer/index.js';
 const plugin = require('client/plugin.js');
 
 const ThirdLogin = plugin.emitHook('third_login');
-const HomeGuest = () => (
+const HomeGuest = props => (
   <div className="g-body">
     <div className="m-bg">
       <div className="m-bg-mask m-bg-mask0" />
@@ -26,12 +27,7 @@ const HomeGuest = () => (
               <a href="#" className="item">
                 YAPI
               </a>
-              <a
-                target="_blank"
-                rel="noopener noreferrer"
-                href="https://hellosean1025.github.io/yapi"
-                className="item"
-              >
+              <a className="item" style={{ cursor: 'pointer' }} onClick={props.openDoc}>
                 使用文档
               </a>
             </div>
@@ -330,13 +326,14 @@ const HomeGuest = () => (
 const Home = () => {
   // user 切片已迁至 Zustand（批次4）
   const login = useUserStore(state => state.isLogin);
+  const [docVisible, setDocVisible] = useState(false);
   // 登录态由 /api/user/status 异步获取，到达后也应立即离开游客落地页
   if (login) {
     return <Navigate to="/group" replace />;
   }
   return (
     <div className="home-main">
-      <HomeGuest />
+      <HomeGuest openDoc={() => setDocVisible(true)} />
       <div className="row-tip">
         <div className="container">
           <div className="tip-title">
@@ -350,15 +347,14 @@ const Home = () => {
                   登录 / 注册
                 </Button>
               </Link>
-              <Button className="btn-home btn-home-normal">
-                <a target="_blank" rel="noopener noreferrer" href="https://hellosean1025.github.io/yapi">
-                  使用文档
-                </a>
+              <Button className="btn-home btn-home-normal" onClick={() => setDocVisible(true)}>
+                使用文档
               </Button>
             </div>
           </div>
         </div>
       </div>
+      <DocDrawer open={docVisible} onClose={() => setDocVisible(false)} />
     </div>
   );
 };

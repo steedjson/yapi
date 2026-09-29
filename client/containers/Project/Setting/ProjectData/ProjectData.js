@@ -382,7 +382,7 @@ const ProjectData = () => {
                 <a
                   target="_blank"
                   rel="noopener noreferrer"
-                  href="https://hellosean1025.github.io/yapi/documents/data.html"
+                  href="/docs/index.html#/data"
                 >
                   <Tooltip title="点击查看文档">
                     <QuestionCircleOutlined />
