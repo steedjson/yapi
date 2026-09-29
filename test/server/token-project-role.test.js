@@ -118,6 +118,28 @@ test.serial('token 请求查询归属项目下的接口时归一化到项目 id 
   t.is(role, 'dev');
 });
 
+test.serial('token 请求绑定账号恰为接口创建者时, 创建者早退被 !tokenAuth 守卫拦截, 严格域返回 member 而非 owner', async t => {
+  // 接口创建者 uid=42 恰为 token 绑定账号: 无守卫时旧判定链在此返回 owner(越权)。
+  // 接口挂 456 号项目(非 token 归属项目 123): 归一化后 token 分支非命中, 严格域直接 member
+  const calls = installModelStubs({
+    project: { _id: 456, uid: 1, members: [], group_id: 9 },
+    group: null,
+    interfaceData: { _id: 77, uid: 42, project_id: 456 }
+  });
+  const inst = createInst({
+    $tokenAuth: true,
+    $tokenProjectId: 123,
+    $uid: '42',
+    $user: { _id: 42, role: 'member', username: 'creator42' }
+  });
+
+  const role = await inst.getProjectRole(77, 'interface');
+
+  t.is(role, 'member');
+  // 严格域短路生效时 project.get 不会被触达; 若失败说明 !tokenAuth 守卫失效回落旧判定链(将错误返回 owner)
+  t.deepEqual(calls.projectGets, []);
+});
+
 test.serial('token 请求不继承使用者全局 admin 角色: 归属项目返回 dev 而非 admin', async t => {
   const calls = installModelStubs({ project: nonMemberProject, group: nonMemberGroup, interfaceData: null });
   const inst = createInst({
@@ -243,6 +265,25 @@ test.serial('登录态项目创建者返回 owner', async t => {
   });
 
   const role = await inst.getProjectRole(8, 'project');
+
+  t.is(role, 'owner');
+});
+
+test.serial('登录态(无 $tokenAuth)接口创建者仍返回 owner(!tokenAuth 守卫回归)', async t => {
+  // 登录态接口创建者 uid=42 与登录 uid 一致: 新守卫不得误伤原 owner 早退。
+  // project/group 桩刻意用 uid=1(非登录者): 若守卫误伤漏过 owner 早退, 将落入后续判定链
+  // 返回 member(兜底), 断言即失败, 保证失败模式可归因
+  installModelStubs({
+    project: nonMemberProject,
+    group: nonMemberGroup,
+    interfaceData: { _id: 77, uid: 42, project_id: 123 }
+  });
+  const inst = createInst({
+    $uid: '42',
+    $user: { _id: 42, role: 'member', username: 'creator42' }
+  });
+
+  const role = await inst.getProjectRole(77, 'interface');
 
   t.is(role, 'owner');
 });

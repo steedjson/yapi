@@ -180,6 +180,12 @@ const ToolUser = props => {
               role="button"
               tabIndex={0}
               onClick={props.openDoc}
+              onKeyDown={e => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  props.openDoc();
+                }
+              }}
             >
               <QuestionCircleOutlined className="dropdown-link" style={{ fontSize: 16 }} />
             </a>

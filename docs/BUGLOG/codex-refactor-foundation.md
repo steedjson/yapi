@@ -2,6 +2,13 @@
 
 条目由 /csl-buglog 或人工维护,供 coder/reviewer 动手前核对
 
+## [2026-09-29][server/base] interface 创建者早退被 token 域收敛漏掉(同函数多早退分支的守卫覆盖问题)
+- 现象: 上一轮 token 严格域收敛只给 admin 早退加了 `!$tokenAuth` 守卫,但 `getProjectRole` 的 `type==='interface'` 分支里还有一处创建者早退(`interfaceData.uid === getUid() → 'owner'`)位于 token 分支之前——包装串绑定账号若恰为其它项目某接口的创建者,经 `checkAuth(interfaceId,'interface')` 仍可得 owner(danger 放行)。静态复核为潜伏路径:全仓无 'interface' 类型调用点,生产不可达
+- 根因: 同一函数内有多个按 uid 判定的早退分支(admin/创建者/成员),收敛时只处理了显眼的那一个——「遍历角色早退全集」没做
+- 修法: 创建者早退补 `!this.$tokenAuth` 守卫(token 请求一律落严格域分支: 归属项目 dev / 非归属 member);配套 2 条单测(绑定账号=接口创建者 → member 而非 owner;登录态创建者 → 仍 owner 回归)
+- 关联: server/controllers/base.js:289-291;test/server/token-project-role.test.js
+- 复发: 0 次 · 教训: token 域收敛必须遍历角色早退全集,admin 一处不够——同一函数内每个按 uid 判定的早退分支都要逐个过守卫;每收敛一处就 rg 同函数内其余 uid 判定点
+
 ## [2026-09-29][server] token 语义收紧三连:超管包装串不限项目/禁用账号包装串可调用/interface/up 跨项目越权写
 - 现象: ①超管账号在设置页拿到的包装串(页面展示的是 `AES(uid|rawToken, passsalt)` 包装,不是库里原始 20 位串)可对**任意**项目以 admin 身份调接口;②被禁用账号的包装串仍可调用;③任一自己项目的 token 可篡改**任意**项目接口(/api/interface/up 按 params.id 反查直接落库,token 路径整体跳过 checkAuth 且不校验归属);附带核实 runAutoTest 按用例集 id 执行也不校验归属(A 项目 token 可跑 B 项目用例集)
 - 根因: getProjectRole 的 admin 早退(全局角色)位于项目域判定之前,包装串解出的真实用户角色被全量继承;init 的 token 分支不查 disabled;upMethods 的 $tokenAuth 分支只"跳过 checkAuth"没补归属比对;open 控制器两方法同理。另注意 init 会把 `ctx.params.project_id` 强制改写为 token 归属项目——importData 类"读 body 里 project_id"的写点因此天然免疫跨项目,真正缺口在"按 id 反查数据"型写点(up/runAutoTest)

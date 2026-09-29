@@ -286,8 +286,8 @@ class baseController {
         let interfaceInst = yapi.getInst(interfaceModel);
         let interfaceData = await interfaceInst.get(id);
         result.interfaceData = interfaceData;
-        // 项目创建者相当于 owner
-        if (interfaceData.uid === this.getUid()) {
+        // 项目创建者相当于 owner（token 请求不继承: 严格收敛为归属项目内开发者）
+        if (!this.$tokenAuth && interfaceData.uid === this.getUid()) {
           return 'owner';
         }
         type = 'project';

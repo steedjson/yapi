@@ -141,8 +141,7 @@
     "rewire": "^2.5.2",
     "sass": "1.104.1",
     "simple-git-hooks": "^2.14.0",
-    "typescript": "7.0.2",
-    "ydoc-plugin-img-view": "^1.0.1"
+    "typescript": "7.0.2"
   },
   "engines": {
     "node": ">=22.12",

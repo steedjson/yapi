@@ -90,7 +90,8 @@ class exportSwaggerController extends baseController {
         let status = ctx.request.query.status;
 
         if (!pid) {
-            ctx.body = yapi.commons.resReturn(null, 200, 'pid 不为空');
+            ctx.body = yapi.commons.resReturn(null, 400, 'pid 不能为空');
+            return;
         }
         /** @type {any} */
         let curProject;
