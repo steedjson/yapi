@@ -47,7 +47,7 @@ const ColToolbar = props => {
           测试集合&nbsp;<a
             target="_blank"
             rel="noopener noreferrer"
-            href="/docs/index.html#/case"
+            href="/docs/index.html#/教程/case"
           >
             <Tooltip title="点击查看文档">
               <QuestionCircleOutlined />

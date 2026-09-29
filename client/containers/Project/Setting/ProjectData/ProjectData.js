@@ -382,7 +382,7 @@ const ProjectData = () => {
                 <a
                   target="_blank"
                   rel="noopener noreferrer"
-                  href="/docs/index.html#/data"
+                  href="/docs/index.html#/教程/data"
                 >
                   <Tooltip title="点击查看文档">
                     <QuestionCircleOutlined />

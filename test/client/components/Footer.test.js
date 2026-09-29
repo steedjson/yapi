@@ -49,10 +49,10 @@ test.serial('默认 footList 渲染各栏目链接及 href', t => {
   const docsTrigger = Array.from(links).find(a => a.textContent === '使用文档');
   t.truthy(docsTrigger, '使用文档入口应渲染为链接');
   t.is(docsTrigger.style.cursor, 'pointer', '站内入口应有 pointer 光标提示可点击');
-  // 版本链接已指向站内文档的版本说明章节
+  // 版本链接已指向站内文档「教程」书的版本说明章节
   t.is(
     hrefMap[`版本: ${process.env.version} `],
-    '/docs/index.html#/version',
+    '/docs/index.html#/教程/version',
     '版本链接应指向站内版本说明'
   );
 });

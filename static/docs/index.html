@@ -19,21 +19,23 @@ body {
   top: 0;
   left: 0;
   right: 0;
+  z-index: 10;
+  background: #fff;
+  border-bottom: 1px solid #e8e8e8;
+}
+.site-titlebar {
   height: 56px;
   display: flex;
   align-items: center;
   padding: 0 24px;
-  background: #fff;
-  border-bottom: 1px solid #e8e8e8;
-  z-index: 10;
 }
-.site-header .site-title {
+.site-titlebar .site-title {
   margin: 0;
   font-size: 18px;
   font-weight: 600;
   color: #1f2329;
 }
-.site-header .site-version {
+.site-titlebar .site-version {
   margin-left: 12px;
   padding: 1px 10px;
   font-size: 12px;
@@ -43,18 +45,47 @@ body {
   border: 1px solid #c6dcfb;
   border-radius: 10px;
 }
-.site-body { display: flex; padding-top: 56px; height: 100%; }
+.site-tabs {
+  display: flex;
+  align-items: center;
+  height: 46px;
+  padding: 0 24px;
+}
+.site-tab {
+  margin-right: 40px;
+  line-height: 43px;
+  font-size: 15px;
+  color: #666;
+  text-decoration: none;
+  border-bottom: 3px solid transparent;
+}
+.site-tab:hover { color: #3782eb; }
+.site-tab.active {
+  color: #3782eb;
+  font-weight: 600;
+  border-bottom-color: #3782eb;
+}
+.site-body { display: flex; height: 100%; padding-top: 103px; }
 .site-nav {
-  width: 240px;
+  width: 280px;
   flex: none;
   border-right: 1px solid #e8e8e8;
   overflow-y: auto;
   padding: 16px 0 32px;
   background: #fafafa;
 }
+.site-nav.hidden { display: none; }
+.book-nav[hidden] { display: none; }
+.nav-group-title {
+  padding: 12px 24px 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #999;
+  letter-spacing: 1px;
+}
 .nav-item {
   display: block;
-  padding: 7px 24px;
+  padding: 6px 24px 6px 24px;
   color: #4a4a4a;
   text-decoration: none;
   line-height: 22px;
@@ -63,15 +94,28 @@ body {
 .nav-item:hover { color: #3782eb; }
 .nav-item.active {
   color: #3782eb;
-  background: #fff;
   border-left-color: #3782eb;
   font-weight: 600;
 }
+.nav-sub {
+  padding-left: 44px;
+  font-size: 13px;
+  color: #7a7a7a;
+}
+.nav-sub.active { background: #fff; }
 .site-content {
   flex: 1;
   overflow-y: auto;
   padding: 24px 32px 64px;
 }
+.site-content.hidden { display: none; }
+.openapi-frame {
+  flex: 1;
+  height: 100%;
+  border: none;
+}
+.openapi-frame[hidden] { display: none; }
+.openapi-frame iframe { width: 100%; height: 100%; border: none; display: block; }
 .chapter { max-width: 820px; margin: 0 auto; }
 .chapter img { max-width: 100%; height: auto; }
 .chapter h1, .chapter h2, .chapter h3, .chapter h4 {
@@ -118,33 +162,84 @@ body {
 </head>
 <body>
 <header class="site-header">
-  <h1 class="site-title">YApi 使用文档</h1>
-  <!-- 版本号来源：package.json（当前 2.0.0） -->
-  <span class="site-version">2.0.0</span>
+  <div class="site-titlebar">
+    <h1 class="site-title">YApi 使用文档</h1>
+    <!-- 版本号来源：package.json（当前 2.0.0） -->
+    <span class="site-version">2.0.0</span>
+  </div>
+  <nav class="site-tabs">
+<a class="site-tab" href="#/%E6%95%99%E7%A8%8B" data-tab="教程">教程</a>
+<a class="site-tab" href="#/%E5%86%85%E7%BD%91%E9%83%A8%E7%BD%B2" data-tab="内网部署">内网部署</a>
+<a class="site-tab" href="#/openapi" data-tab="openapi">开放Api</a>
+  </nav>
 </header>
 <div class="site-body">
-  <nav class="site-nav">
-<a class="nav-item" href="#/version" data-chapter="version">版本说明</a>
-<a class="nav-item" href="#/index" data-chapter="index">认识YApi</a>
-<a class="nav-item" href="#/quickstart" data-chapter="quickstart">创建第一个API</a>
-<a class="nav-item" href="#/manage" data-chapter="manage">权限</a>
-<a class="nav-item" href="#/project" data-chapter="project">项目操作</a>
-<a class="nav-item" href="#/api" data-chapter="api">接口操作</a>
-<a class="nav-item" href="#/case" data-chapter="case">自动化测试</a>
-<a class="nav-item" href="#/adv_mock" data-chapter="adv_mock">高级Mock</a>
-<a class="nav-item" href="#/mock" data-chapter="mock">数据Mock</a>
-<a class="nav-item" href="#/data" data-chapter="data">数据导入</a>
-<a class="nav-item" href="#/export-data" data-chapter="export-data">数据导出</a>
-<a class="nav-item" href="#/plugin-index" data-chapter="plugin-index">插件</a>
-<a class="nav-item" href="#/plugin-dev" data-chapter="plugin-dev">插件开发</a>
-<a class="nav-item" href="#/plugin-hooks" data-chapter="plugin-hooks">钩子</a>
-<a class="nav-item" href="#/plugin-list" data-chapter="plugin-list">插件列表</a>
-<a class="nav-item" href="#/qa" data-chapter="qa">常见问题解答</a>
-<a class="nav-item" href="#/redev" data-chapter="redev">二次开发</a>
-<a class="nav-item" href="#/CHANGELOG" data-chapter="CHANGELOG">版本记录</a>
-  </nav>
+  <aside class="site-nav" id="siteNav">
+<nav class="book-nav" data-book="教程">
+<div class="nav-group-title">版本说明</div>
+<a class="nav-item" href="#/%E6%95%99%E7%A8%8B/version" data-route="教程/version">版本说明（v2.0.0）</a>
+<div class="nav-group-title">快速上手</div>
+<a class="nav-item" href="#/%E6%95%99%E7%A8%8B/index" data-route="教程/index">认识YApi</a>
+<a class="nav-item" href="#/%E6%95%99%E7%A8%8B/quickstart" data-route="教程/quickstart">创建第一个API</a>
+<div class="nav-group-title">进阶篇</div>
+<a class="nav-item" href="#/%E6%95%99%E7%A8%8B/manage" data-route="教程/manage">权限</a>
+<a class="nav-item" href="#/%E6%95%99%E7%A8%8B/project" data-route="教程/project">项目操作</a>
+<a class="nav-item nav-sub" href="#/%E6%95%99%E7%A8%8B/project/%E5%9F%BA%E6%9C%AC%E8%AE%BE%E7%BD%AE" data-route="教程/project/基本设置">基本设置</a>
+<a class="nav-item nav-sub" href="#/%E6%95%99%E7%A8%8B/project/%E6%96%B0%E5%BB%BA%E9%A1%B9%E7%9B%AE" data-route="教程/project/新建项目">新建项目</a>
+<a class="nav-item nav-sub" href="#/%E6%95%99%E7%A8%8B/project/%E4%BF%AE%E6%94%B9%E9%A1%B9%E7%9B%AE" data-route="教程/project/修改项目">修改项目</a>
+<a class="nav-item nav-sub" href="#/%E6%95%99%E7%A8%8B/project/%E9%A1%B9%E7%9B%AE%E8%BF%81%E7%A7%BB" data-route="教程/project/项目迁移">项目迁移</a>
+<a class="nav-item nav-sub" href="#/%E6%95%99%E7%A8%8B/project/%E9%A1%B9%E7%9B%AE%E6%8B%B7%E8%B4%9D" data-route="教程/project/项目拷贝">项目拷贝</a>
+<a class="nav-item nav-sub" href="#/%E6%95%99%E7%A8%8B/project/%E9%85%8D%E7%BD%AE%E7%8E%AF%E5%A2%83" data-route="教程/project/配置环境">配置环境</a>
+<a class="nav-item nav-sub" href="#/%E6%95%99%E7%A8%8B/project/%E8%AF%B7%E6%B1%82%E9%85%8D%E7%BD%AE" data-route="教程/project/请求配置">请求配置</a>
+<a class="nav-item nav-sub" href="#/%E6%95%99%E7%A8%8B/project/token" data-route="教程/project/token">token配置</a>
+<a class="nav-item nav-sub" href="#/%E6%95%99%E7%A8%8B/project/%E5%85%A8%E5%B1%80mock" data-route="教程/project/全局mock">全局mock</a>
+<a class="nav-item" href="#/%E6%95%99%E7%A8%8B/api" data-route="教程/api">接口操作</a>
+<a class="nav-item nav-sub" href="#/%E6%95%99%E7%A8%8B/api/%E6%8E%A5%E5%8F%A3%E9%85%8D%E7%BD%AE" data-route="教程/api/接口配置">接口设置</a>
+<a class="nav-item nav-sub" href="#/%E6%95%99%E7%A8%8B/api/%E6%8E%A5%E5%8F%A3%E8%BF%90%E8%A1%8C" data-route="教程/api/接口运行">接口运行</a>
+<a class="nav-item" href="#/%E6%95%99%E7%A8%8B/mock" data-route="教程/mock">数据Mock</a>
+<a class="nav-item nav-sub" href="#/%E6%95%99%E7%A8%8B/mock/%E6%96%B9%E5%BC%8F1.%20mockjs" data-route="教程/mock/方式1. mockjs">方式1. mockjs</a>
+<a class="nav-item nav-sub" href="#/%E6%95%99%E7%A8%8B/mock/%E6%96%B9%E5%BC%8F2.%20json-schema" data-route="教程/mock/方式2. json-schema">方式2. json-schema</a>
+<a class="nav-item nav-sub" href="#/%E6%95%99%E7%A8%8B/mock/%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8%20Mock" data-route="教程/mock/如何使用 Mock">如何使用</a>
+<a class="nav-item nav-sub" href="#/%E6%95%99%E7%A8%8B/mock/mock%E8%AF%B7%E6%B1%82%E4%B8%A5%E6%A0%BC%E6%A8%A1%E5%BC%8F" data-route="教程/mock/mock请求严格模式">严格模式</a>
+<a class="nav-item" href="#/%E6%95%99%E7%A8%8B/adv_mock" data-route="教程/adv_mock">高级Mock</a>
+<a class="nav-item nav-sub" href="#/%E6%95%99%E7%A8%8B/adv_mock/Mock%20%E6%9C%9F%E6%9C%9B" data-route="教程/adv_mock/Mock 期望">Mock 期望</a>
+<a class="nav-item nav-sub" href="#/%E6%95%99%E7%A8%8B/adv_mock/%E8%87%AA%E5%AE%9A%E4%B9%89%20Mock%20%E8%84%9A%E6%9C%AC" data-route="教程/adv_mock/自定义 Mock 脚本">自定义脚本</a>
+<a class="nav-item" href="#/%E6%95%99%E7%A8%8B/case" data-route="教程/case">自动化测试</a>
+<a class="nav-item nav-sub" href="#/%E6%95%99%E7%A8%8B/case/%E7%AC%AC%E4%B8%80%E6%AD%A5%EF%BC%8C%E6%B5%8B%E8%AF%95%E9%9B%86%E5%90%88" data-route="教程/case/第一步，测试集合">第一步，测试集合</a>
+<a class="nav-item nav-sub" href="#/%E6%95%99%E7%A8%8B/case/%E7%AC%AC%E4%BA%8C%E6%AD%A5%EF%BC%8C%E7%BC%96%E8%BE%91%E6%B5%8B%E8%AF%95%E7%94%A8%E4%BE%8B" data-route="教程/case/第二步，编辑测试用例">第二步，编辑测试用例</a>
+<a class="nav-item nav-sub" href="#/%E6%95%99%E7%A8%8B/case/%E7%AC%AC%E4%B8%89%E6%AD%A5%EF%BC%8C%E8%BF%90%E8%A1%8C%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95" data-route="教程/case/第三步，运行自动化测试">第三步，运行自动化测试</a>
+<a class="nav-item nav-sub" href="#/%E6%95%99%E7%A8%8B/case/%E6%96%AD%E8%A8%80%E8%84%9A%E6%9C%AC%E5%85%AC%E5%85%B1%E5%8F%98%E9%87%8F" data-route="教程/case/断言脚本公共变量">断言脚本公共变量</a>
+<a class="nav-item nav-sub" href="#/%E6%95%99%E7%A8%8B/case/%E6%9C%8D%E5%8A%A1%E7%AB%AF%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95" data-route="教程/case/服务端自动化测试">服务端自动化测试</a>
+<a class="nav-item" href="#/%E6%95%99%E7%A8%8B/data" data-route="教程/data">数据导入</a>
+<a class="nav-item nav-sub" href="#/%E6%95%99%E7%A8%8B/data/Postman%20%E6%95%B0%E6%8D%AE%E5%AF%BC%E5%85%A5" data-route="教程/data/Postman 数据导入">Postman 数据导入</a>
+<a class="nav-item nav-sub" href="#/%E6%95%99%E7%A8%8B/data/HAR%08%08%20%E6%95%B0%E6%8D%AE%E5%AF%BC%E5%85%A5" data-route="教程/data/HAR 数据导入">HAR 数据导入</a>
+<a class="nav-item nav-sub" href="#/%E6%95%99%E7%A8%8B/data/Swagger%20%E6%95%B0%E6%8D%AE%E5%AF%BC%E5%85%A5" data-route="教程/data/Swagger 数据导入">Swagger 数据导入</a>
+<a class="nav-item nav-sub" href="#/%E6%95%99%E7%A8%8B/data/YApi%E6%8E%A5%E5%8F%A3JSON%E6%95%B0%E6%8D%AE%E5%AF%BC%E5%85%A5" data-route="教程/data/YApi接口JSON数据导入">JSON 数据导入</a>
+<a class="nav-item nav-sub" href="#/%E6%95%99%E7%A8%8B/data/%E9%80%9A%E8%BF%87%E5%91%BD%E4%BB%A4%E8%A1%8C%E5%AF%BC%E5%85%A5%E6%8E%A5%E5%8F%A3%E6%95%B0%E6%8D%AE" data-route="教程/data/通过命令行导入接口数据">通过命令行导入接口数据</a>
+<a class="nav-item" href="#/%E6%95%99%E7%A8%8B/export-data" data-route="教程/export-data">数据导出</a>
+<div class="nav-group-title">自定义</div>
+<a class="nav-item" href="#/%E6%95%99%E7%A8%8B/plugin-index" data-route="教程/plugin-index">插件</a>
+<a class="nav-item nav-sub" href="#/%E6%95%99%E7%A8%8B/plugin-dev" data-route="教程/plugin-dev">插件开发</a>
+<a class="nav-item nav-sub" href="#/%E6%95%99%E7%A8%8B/plugin-list" data-route="教程/plugin-list">插件列表</a>
+<a class="nav-item nav-sub" href="#/%E6%95%99%E7%A8%8B/plugin-hooks" data-route="教程/plugin-hooks">钩子</a>
+<a class="nav-item" href="#/%E6%95%99%E7%A8%8B/redev" data-route="教程/redev">二次开发</a>
+<a class="nav-item" href="#/%E6%95%99%E7%A8%8B/qa" data-route="教程/qa">常见问题解答</a>
+<a class="nav-item" href="#/%E6%95%99%E7%A8%8B/CHANGELOG" data-route="教程/CHANGELOG">版本记录</a>
+</nav>
+<nav class="book-nav" data-book="内网部署">
+<a class="nav-item" href="#/%E5%86%85%E7%BD%91%E9%83%A8%E7%BD%B2/index/%E5%AE%89%E8%A3%85" data-route="内网部署/index/安装">安装</a>
+<a class="nav-item" href="#/%E5%86%85%E7%BD%91%E9%83%A8%E7%BD%B2/index/%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%AE%A1%E7%90%86" data-route="内网部署/index/服务器管理">服务器管理</a>
+<a class="nav-item" href="#/%E5%86%85%E7%BD%91%E9%83%A8%E7%BD%B2/index/%E5%8D%87%E7%BA%A7" data-route="内网部署/index/升级">升级</a>
+<a class="nav-item" href="#/%E5%86%85%E7%BD%91%E9%83%A8%E7%BD%B2/index/mongodb%E9%9B%86%E7%BE%A4" data-route="内网部署/index/mongodb集群">mongodb集群</a>
+<a class="nav-item" href="#/%E5%86%85%E7%BD%91%E9%83%A8%E7%BD%B2/index/%E9%85%8D%E7%BD%AE%E9%82%AE%E7%AE%B1" data-route="内网部署/index/配置邮箱">配置邮箱</a>
+<a class="nav-item" href="#/%E5%86%85%E7%BD%91%E9%83%A8%E7%BD%B2/index/%E9%85%8D%E7%BD%AELDAP%E7%99%BB%E5%BD%95" data-route="内网部署/index/配置LDAP登录">配置LDAP登录</a>
+<a class="nav-item" href="#/%E5%86%85%E7%BD%91%E9%83%A8%E7%BD%B2/index/%E7%A6%81%E6%AD%A2%E6%B3%A8%E5%86%8C" data-route="内网部署/index/禁止注册">禁止注册</a>
+<a class="nav-item" href="#/%E5%86%85%E7%BD%91%E9%83%A8%E7%BD%B2/index/%E7%89%88%E6%9C%AC%E9%80%9A%E7%9F%A5" data-route="内网部署/index/版本通知">版本通知</a>
+<a class="nav-item" href="#/%E5%86%85%E7%BD%91%E9%83%A8%E7%BD%B2/interface-category-migration" data-route="内网部署/interface-category-migration">接口分类层级升级迁移</a>
+</nav>
+  </aside>
   <main class="site-content" id="siteContent">
-<section class="chapter" data-chapter="version" hidden><h1 id="版本说明-v2-0-0">版本说明（v2.0.0）</h1>
+<section class="chapter" data-book="教程" data-file="version" hidden><h1 id="版本说明-v2-0-0">版本说明（v2.0.0）</h1>
 <p>v2.0.0 是一次以现代化地基为主的大版本升级，涉及运行环境、前端技术栈与安全基线，升级前请先阅读以下变更说明。</p>
 <h2 id="运行环境要求">运行环境要求</h2>
 <ul>
@@ -184,7 +279,7 @@ body {
 <h2 id="更多细节">更多细节</h2>
 <p>详细变更见仓库 docs/BUGLOG/ 与 git 提交史。</p>
 </section>
-<section class="chapter" data-chapter="index" hidden><h1 id="yapi">YApi</h1>
+<section class="chapter" data-book="教程" data-file="index" hidden><h1 id="yapi">YApi</h1>
 <p>在开始使用 YApi 之前，我们先来熟悉一下 YApi 的网站结构，这将让你快速了解YApi。</p>
 <h2 id="登录与注册">登录与注册</h2>
 <p>想要使用 YApi ，首先要注册账号。</p>
@@ -202,7 +297,7 @@ body {
 <p>此时你作为新用户，只能浏览接口信息，不可以编辑项目或接口，如果需要编辑，请联系管理员将你加入该项目。</p>
 <p><strong>1.</strong> 项目页左侧的 “接口列表” 展示了该项目下的所有接口，右侧默认显示该项目下所有接口的列表。</p>
 <p><strong>2.</strong> 点击左侧的某个接口，右侧会出现“预览”、“编辑”和“运行”。</p>
-<p><strong>3.</strong> 点击左侧的 “测试集合” 使用<a href="#/case">测试集</a>功能。</p>
+<p><strong>3.</strong> 点击左侧的 “测试集合” 使用<a href="#/教程/case">测试集</a>功能。</p>
 <p><strong>4.</strong> 点击二级导航的“设置”，项目组长即可编辑项目信息和管理成员列表。</p>
 <p><strong>5.</strong> 点击二级导航的“动态”，即可查看项目的操作日志。</p>
 <p><img src="./assets/project.png" alt=""></p>
@@ -212,27 +307,27 @@ body {
 <p>在个人信息页面可以查看并修改自己的用户名、密码等信息。</p>
 <p><img src="./assets/user.png" alt=""></p>
 </section>
-<section class="chapter" data-chapter="quickstart" hidden><h1 id="如何创建接口">如何创建接口？</h1>
+<section class="chapter" data-book="教程" data-file="quickstart" hidden><h1 id="如何创建接口">如何创建接口？</h1>
 <p>把大象装进冰箱分几步？三步：把冰箱门打开，把大象装进去，关门，搞定~</p>
 <p>新建接口分几步？也是三步：</p>
 <ul>
-<li><a href="#/quickstart/获取权限">获取权限</a></li>
-<li><a href="#/quickstart/选择项目">找到一个项目</a></li>
-<li><a href="#/quickstart/新建接口">新建接口</a></li>
+<li><a href="#/教程/quickstart/%E8%8E%B7%E5%8F%96%E6%9D%83%E9%99%90">获取权限</a></li>
+<li><a href="#/教程/quickstart/%E9%80%89%E6%8B%A9%E9%A1%B9%E7%9B%AE">找到一个项目</a></li>
+<li><a href="#/教程/quickstart/%E6%96%B0%E5%BB%BA%E6%8E%A5%E5%8F%A3">新建接口</a></li>
 </ul>
 <p>搞定~</p>
 <h2 id="获取权限">获取权限</h2>
 <p>新用户登录拥有 <code>个人空间</code> 分组下的全部权限，个人空间分组仅自己可见，因此可以在这里任意试用 YApi 的功能。</p>
 <p>除此以外没有任何项目或分组的权限，只能浏览已存在分组下面的公开项目。</p>
 <p>如果找不到想找的项目，可能是尚未成为项目成员，此时应联系 <code>项目组长</code> 将你加入该项目。</p>
-<p><a href="#/qa/q-怎样联系组长">怎样联系组长？</a></p>
+<p><a href="#/教程/qa/Q__%E6%80%8E%E6%A0%B7%E8%81%94%E7%B3%BB%E7%BB%84%E9%95%BF%EF%BC%9F">怎样联系组长？</a></p>
 <p><img src="./assets/manage_ask.png" alt=""></p>
 <ul>
-<li>想创建分组，请看: <a href="#/manage/创建分组">创建分组</a></li>
-<li>想创建项目，请看: <a href="#/manage/创建项目">创建项目</a></li>
+<li>想创建分组，请看: <a href="#/教程/manage/%E5%88%9B%E5%BB%BA%E5%88%86%E7%BB%84">创建分组</a></li>
+<li>想创建项目，请看: <a href="#/教程/manage/%E5%88%9B%E5%BB%BA%E9%A1%B9%E7%9B%AE">创建项目</a></li>
 </ul>
 <blockquote>
-<p>想了解更多权限信息，请查看<a href="#/manage/权限列表">权限列表</a></p>
+<p>想了解更多权限信息，请查看<a href="#/教程/manage/%E6%9D%83%E9%99%90%E5%88%97%E8%A1%A8">权限列表</a></p>
 </blockquote>
 <h2 id="选择项目">选择项目</h2>
 <ul>
@@ -258,7 +353,7 @@ body {
 </ul>
 <p><img src="./assets/api_res.png" alt=""></p>
 </section>
-<section class="chapter" data-chapter="manage" hidden><h1 id="权限权利">权限权利</h1>
+<section class="chapter" data-book="教程" data-file="manage" hidden><h1 id="权限权利">权限权利</h1>
 <p>接口管理的逻辑较为复杂，操作频率高，层层审批将严重拖慢生产效率，因此传统的金字塔管理模式并不适用。</p>
 <p>YApi 将扁平化管理模式的思想引入到产品的权限管理中，<code>超级管理员</code> 拥有最高的权限，并将权限分配给若干 <code>组长</code>，<code>超级管理员</code> 只需管理<code>组长</code> 即可，实际上管理YAPI各大分组与项目的是“<code>组长</code>”。<code>组长</code>对分组或项目负责，一般由BU负责人/项目负责人担任。</p>
 <h2 id="认识组长">认识组长</h2>
@@ -275,7 +370,7 @@ body {
 <blockquote>
 <p>想成为 <code>分组组长</code> ，在分组成员列表中找到 <code>分组组长</code>，联系 <code>分组组长</code> 将你设置为分组组长。</p>
 </blockquote>
-<p><a href="#/qa/q1-怎样联系组长">怎样联系组长？</a></p>
+<p><a href="#/教程/qa/q1-%E6%80%8E%E6%A0%B7%E8%81%94%E7%B3%BB%E7%BB%84%E9%95%BF%EF%BC%9F">怎样联系组长？</a></p>
 <h2 id="权限列表">权限列表</h2>
 <p>新用户未加入项目或分组时，我们称为 <code>“游客”</code>。</p>
 <h3 id="项目权限">项目权限</h3>
@@ -391,7 +486,7 @@ body {
 </tbody>
 </table>
 </section>
-<section class="chapter" data-chapter="project" hidden><h1 id="项目操作">项目操作</h1>
+<section class="chapter" data-book="教程" data-file="project" hidden><h1 id="项目操作">项目操作</h1>
 <h2 id="基本设置">基本设置</h2>
 <ul>
 <li>tag 信息：可自定义tag名称和tag描述，tag信息可用在接口tag标识中;</li>
@@ -440,7 +535,7 @@ body {
 <p>删除项目是高风险操作，因此 YApi 对这个操作进行了特别的约束。</p>
 </blockquote>
 <h2 id="配置环境">配置环境</h2>
-<p><code>环境配置</code> 一项可以添加该项目下接口的实际环境，供 <a href="#/case">接口测试</a> 使用，这里增加了全局 header，可以在项目中设置全局 header 值。在接口运行页面的选择环境 select 中也增加<code>环境配置</code>弹层。</p>
+<p><code>环境配置</code> 一项可以添加该项目下接口的实际环境，供 <a href="#/教程/case">接口测试</a> 使用，这里增加了全局 header，可以在项目中设置全局 header 值。在接口运行页面的选择环境 select 中也增加<code>环境配置</code>弹层。</p>
 <p><img src="./assets/project_setting_env.png" alt=""></p>
 <p>v1.3.21 新增全局变量，用户可以在环境列表中定义全局变量的名称和值, 接口运行或者测试集合里面可以通过 {{ global.err }} 来访问当前环境变量下定义的全局变量</p>
 <p><img src="./assets/project_setting_global.png" alt=""></p>
@@ -568,19 +663,19 @@ console.log('decryptedData', decryptedData);
 <p>每个项目都有唯一的标识 token，用户可以使用这个 token 值来请求 openapi。</p>
 <p><a href="/openapi-doc.html" target="_blank" rel="noopener noreferrer">openapi 文档地址</a></p>
 <h2 id="全局mock">全局mock</h2>
-<p>v1.3.21 新增全局 mock 设置，方便用户在项目层面上全局设置公共的mock数据，具体 mock 脚本详细使用方法详见 <a href="#/adv_mock/自定义-mock-脚本">自定义 Mock 脚本</a></p>
+<p>v1.3.21 新增全局 mock 设置，方便用户在项目层面上全局设置公共的mock数据，具体 mock 脚本详细使用方法详见 <a href="#/教程/adv_mock/%E8%87%AA%E5%AE%9A%E4%B9%89-mock-%E8%84%9A%E6%9C%AC">自定义 Mock 脚本</a></p>
 <h3 id="mock-优先级说明">Mock 优先级说明</h3>
 <p>请求 Mock 数据时，规则匹配优先级：Mock 期望 &gt; 自定义 Mock 脚本 &gt; 项目全局 mock 脚本 &gt; 普通 Mock。</p>
 <p>如果前面匹配到 Mock 数据，后面 Mock 则不返回。</p>
 </section>
-<section class="chapter" data-chapter="api" hidden><h1 id="接口设置">接口设置</h1>
+<section class="chapter" data-book="教程" data-file="api" hidden><h1 id="接口设置">接口设置</h1>
 <p>进入项目页，可以看到项目下的所有接口，需要注意的是，YApi有 <code>接口集合</code> 和 <code>测试集合</code> 两个概念。</p>
 <ul>
 <li><code>接口集合</code> 将接口进行分类，使接口结构更清晰，一个接口只能属于一个集合，且不允许与其他接口重名。</li>
 <li><code>测试集合</code> 为了方便我们测试接口，<code>测试集合</code> 将若干接口组合在一起，在这里一个接口可以属于不同集合。</li>
 </ul>
 <h2 id="接口配置">接口配置</h2>
-<p><a href="#/quickstart/新建接口">新建接口</a> 后，点击新添加的接口，右侧可以看到接口的预览信息，点击右侧的 <code>编辑</code> Tab项进入编辑面板。</p>
+<p><a href="#/教程/quickstart/%E6%96%B0%E5%BB%BA%E6%8E%A5%E5%8F%A3">新建接口</a> 后，点击新添加的接口，右侧可以看到接口的预览信息，点击右侧的 <code>编辑</code> Tab项进入编辑面板。</p>
 <p>在该面板中你可以看到接口的基本信息(接口名称、分类、路径)，除此以外，你还可以完善以下接口信息：</p>
 <h3 id="基本设置">基本设置</h3>
 <ul>
@@ -599,7 +694,7 @@ console.log('decryptedData', decryptedData);
 <p><img src="./assets/requestSet.png" alt=""></p>
 <h3 id="返回数据设置">返回数据设置</h3>
 <ul>
-<li>返回数据分为 <code>json</code> &amp; <code>raw</code> 两种形式。基于 mockjs （具体使用方法详见<a href="#/mock">Mock 介绍</a>）和 json5，使用注释方式写参数说明。 为了方便数据编写可以按F9来使用全局编辑</li>
+<li>返回数据分为 <code>json</code> &amp; <code>raw</code> 两种形式。基于 mockjs （具体使用方法详见<a href="#/教程/mock">Mock 介绍</a>）和 json5，使用注释方式写参数说明。 为了方便数据编写可以按F9来使用全局编辑</li>
 <li>选择json-schema 则进入了 json 结构可视化编辑器形式, 数据以 json schema 格式解析 <a href="https://www.jianshu.com/p/8278eb2458c4?winzoom=1" target="_blank" rel="noopener noreferrer">快速入门 Json Schema</a>。</li>
 </ul>
 <p><img src="./assets/jsonSchema.png" alt=""></p>
@@ -621,7 +716,209 @@ console.log('decryptedData', decryptedData);
 <p>版本 v1.3.22 新增返回数据验证功能， 如果接口的返回数据格式为json schema 在接口运行时会对接口返回数据和定义数据格式进行校验</p>
 <p><img src="./assets/interface_run_valid.png" alt=""></p>
 </section>
-<section class="chapter" data-chapter="case" hidden><h1 id="自动化测试">自动化测试</h1>
+<section class="chapter" data-book="教程" data-file="mock" hidden><h1 id="mock介绍">Mock介绍</h1>
+<p>YApi的 Mock 功能可以根据用户的输入接口信息如协议、URL、接口名、请求头、请求参数、返回数据（<a href="#/教程/mock/mock">返回数据</a>）生成 Mock 接口，这些接口会自动生成模拟数据，创建者可以自由构造需要的数据。</p>
+<p><strong>mock地址解析</strong>：<code>YApi平台网址 + mock + 您的项目id + 接口实际请求path</code></p>
+<p>假设你 YApi 的部署地址为：http://yapi.xxx.com 然后用这个地址作为示例</p>
+<pre><code>mockd 地址： http://yapi.xxx.com/mock/29/api/hackathon/login
+</code></pre>
+<blockquote>
+<p>注：项目 id 可以在项目设置里查看到</p>
+</blockquote>
+<h2 id="定义-mock-数据示例">定义 mock 数据示例</h2>
+<p>项目 -&gt; 接口编辑 -&gt; 返回数据设置</p>
+<p>返回数据设置有两种方式，最新版本默认是基于 <code>json+注释</code> 的方式，另外一种是基于 <code>json-schema</code> 定义数据结构,请根据实际情况灵活选择使用。</p>
+<h2 id="方式1-mockjs">方式1. mockjs</h2>
+<p><img src="./assets/mock-demo.jpg" alt=""></p>
+<h3 id="原理">原理</h3>
+<p>基于 <a href="http://mockjs.com" target="_blank" rel="noopener noreferrer">mockjs</a>，跟 Mockjs 区别是 yapi 基于 json + 注释 定义 mock 数据，无法使用 mockjs 原有的函数功能。</p>
+<ol>
+<li>正则表达式需要基于 rule 书写，示例如下：</li>
+</ol>
+<pre><code>{
+  &quot;name|regexp&quot;: &quot;[a-z0-9_]+?&quot;,
+  &quot;type|regexp&quot;: &quot;json|text|xml&quot;
+}
+
+</code></pre>
+<ol start="2">
+<li>支持替换请求的 query, body 参数</li>
+</ol>
+<pre><code>{
+  &quot;name&quot;: &quot;${query.name}&quot;, //请求的url是/path?name=xiaoming, 返回的name字段是xiaoming
+  &quot;type&quot;: &quot;${body.type}&quot;,   //请求的requestBody type=1,返回的type字段是1
+  
+}
+
+</code></pre>
+<ol start="3">
+<li>示例</li>
+</ol>
+<pre><code>/**
+ * 这是一个接口返回数据示例
+ */
+
+{
+    &quot;errcode&quot;: 0,
+    &quot;errmsg&quot;: &quot;@word&quot;,
+    &quot;data&quot;: {
+        &quot;id&quot;: &quot;@id&quot;, //@id 随机生成 id
+        &quot;name&quot;: &quot;@name&quot; //@name 随机生成用户名
+    }
+}
+
+</code></pre>
+<p>详细使用文档请查看：<a href="http://mockjs.com/examples.html" target="_blank" rel="noopener noreferrer">Mockjs 官网</a></p>
+<h2 id="方式2-json-schema">方式2. json-schema</h2>
+<p><img src="./assets/json-schema-demo.jpg" alt=""></p>
+<p>开启 json-schema 功能后，根据 json-schema 定义的数据结构，生成随机数据。</p>
+<h3 id="如何生成随机的邮箱或-ip-该方法在v1-3-22之后不再适用">如何生成随机的邮箱或 ip(该方法在v1.3.22之后不再适用)？</h3>
+<p><img src="./assets/json-schema-mock.jpg" alt=""></p>
+<p>点击高级设置，选择 <code>format</code> 选项，比如选择 <code>email</code> 则该字段生成随机邮箱字符串。</p>
+<h3 id="集成-mockjs">集成 mockjs</h3>
+<p>基本书写方式为 mock 的数据占位符@xxx, 具体字段详见<a href="http://mockjs.com/examples.html" target="_blank" rel="noopener noreferrer">Mockjs 官网</a>
+<img src="./assets/schema-mock-2.png" alt="">
+<img src="./assets/schema-mock-1.png" alt=""></p>
+<blockquote>
+<p>如果不是以@字符开头的话或者匹配不到Mockjs中的占位符就会直接生成输入的值</p>
+</blockquote>
+<h2 id="如何使用-mock">如何使用 Mock</h2>
+<h3 id="1-在-js-代码直接请求yapi提供的-mock-地址-不用担心跨域问题">1 在 js 代码直接请求yapi提供的 mock 地址（不用担心跨域问题）</h3>
+<p>在代码直接请求 yapi 提供的 mock 地址，以 jQuery 为例：</p>
+<pre><code class="language-javascript">let prefix = 'http://yapi.xxx.com/mock/2817'
+$.post(prefix+'/baseapi/path', {username: 'xxx'}, function(res){
+    console.log(res) //返回上图预览部分的数据
+})
+</code></pre>
+<h3 id="2-基于本地服务器反向代理">2 基于本地服务器反向代理</h3>
+<p>优点:不用修改项目代码</p>
+<h4 id="2-1-基于-nginx-反向代理">2.1 基于 nginx 反向代理</h4>
+<pre><code class="language-nginx">location /baseapi
+{
+proxy_pass   http://yapi.xxx.com/mock/2817/baseapi; #baseapi后面没有&quot;/&quot;
+}
+</code></pre>
+<h4 id="2-1-基于-charles-代理">2.1 基于 Charles 代理</h4>
+<p>点击 Charles 工具栏下的 tools &gt;&gt; Rewrite Settings 填写如下信息：</p>
+<p><img src="./assets/charles.png" alt=""></p>
+<h2 id="mock请求严格模式">mock请求严格模式</h2>
+<p>版本 v1.3.22 新增 mock 接口请求字段参数验证功能，具体使用方法如下：</p>
+<ol>
+<li>
+<p>打开 项目 -&gt; 设置 开启 mock 严格模式</p>
+</li>
+<li>
+<p>针对 query, form 中设置的必须字段会进行必填校验
+<img src="./assets/mock-strice.png" alt=""></p>
+</li>
+<li>
+<p>针对 req_body_type 是json schema 格式的数据进行校验</p>
+</li>
+</ol>
+<p><img src="./assets/mock-strice3.png" alt="">
+<img src="./assets/mock-strice2.png" alt=""></p>
+</section>
+<section class="chapter" data-book="教程" data-file="adv_mock" hidden><h1 id="高级mock">高级Mock</h1>
+<p>高级 Mock 分为<code>Mock 期望</code>和<code>自定义 Mock 脚本</code>两种方式。</p>
+<h2 id="mock-期望">Mock 期望</h2>
+<p>在测试时，很多时候需要根据不同的请求参数、IP 返回不同的 HTTP Code、HTTP 头和 JSON 数据。</p>
+<p>Mock 期望就是根据设置的请求过滤规则，返回期望数据。</p>
+<h3 id="使用方法">使用方法</h3>
+<ol>
+<li>进入接口详情页，点击『高级 Mock』选项。
+<img src="./assets/adv-mock-case1.png" alt=""></li>
+<li>点击『添加期望』，填写过滤规则以及期望返回数据，点击『确定』保存。
+<img src="./assets/adv-mock-case3.png" alt="">
+<img src="./assets/adv-mock-case4-new.png" alt=""></li>
+<li>然后尝试在浏览器里发送符合规则的请求，查看返回的数据是否符合期望。
+<img src="./assets/adv-mock-case5-new.png" alt=""></li>
+</ol>
+<h3 id="期望填写">期望填写</h3>
+<p>基本信息</p>
+<ul>
+<li>期望名称：给此条期望命名</li>
+<li>IP 过滤：请求的 IP 是设置的地址才可能返回期望。默认 IP 过滤关闭，任何 IP 地址都可能返回期望。</li>
+<li>参数过滤：请求必须包含设置的参数，并且值相等才可能返回期望。参数可以在 Body 或 Query 中。</li>
+</ul>
+<p>响应</p>
+<ul>
+<li>HTTP Code：期望响应的 HTTP 状态码</li>
+<li>延时：期望响应的延迟时间</li>
+<li>HTTP 头：期望响应带有的 HTTP 头</li>
+<li>返回 JSON：期望返回的 JSON 数据</li>
+</ul>
+<h2 id="自定义-mock-脚本">自定义 Mock 脚本</h2>
+<p>在前端开发阶段，对于某些接口，业务相对复杂，而 UI 端也需要根据接口返回的不同内容去做相应的处理。</p>
+<p>YApi 提供了写 JS 脚本方式处理这一问题，可以根据用户请求的参数修改返回内容。</p>
+<h3 id="全局变量">全局变量</h3>
+<p>请求</p>
+<ul>
+<li><code>header</code> 请求的 HTTP 头</li>
+<li><code>params</code> 请求参数，包括 Body、Query 中所有参数</li>
+<li><code>cookie</code> 请求带的 Cookies</li>
+</ul>
+<p>响应</p>
+<ul>
+<li>
+<p><code>mockJson</code>
+接口定义的响应数据 Mock 模板</p>
+</li>
+<li>
+<p><code>resHeader</code>
+响应的 HTTP 头</p>
+</li>
+<li>
+<p><code>httpCode</code>
+响应的 HTTP 状态码</p>
+</li>
+<li>
+<p><code>delay</code>
+Mock 响应延时，单位为 ms</p>
+</li>
+<li>
+<p><code>Random</code>
+Mock.Random 方法，可以添加自定义占位符,详细使用方法请查看 <a href="https://github.com/nuysoft/Mock/wiki/Mock.Random" target="_blank" rel="noopener noreferrer">Wiki</a></p>
+</li>
+</ul>
+<h3 id="使用方法-1">使用方法</h3>
+<ol>
+<li>首先开启此功能</li>
+<li>Mock 脚本就是用 JavaScript 对 <code>mockJson</code> 变量修改,请避免被全局变量(httpCode, resHeader, delay)的修改</li>
+</ol>
+<h3 id="示例1-根据请求参数重写-mockjson">示例1, 根据请求参数重写 mockJson</h3>
+<pre><code>if(params.type == 1){
+  mockJson.errcode = 400;
+  mockJson.errmsg = 'error';
+}
+
+if(header.token == 't'){
+  mockJson.errcode = 300;
+  mockJson.errmsg = 'error';
+}
+
+if(cookie.type == 'a'){
+  mockJson.errcode = 500;
+  mockJson.errmsg = 'error';
+}
+
+</code></pre>
+<h3 id="示例2-生成高度自定义数据内容">示例2, 生成高度自定义数据内容</h3>
+<pre><code>var a = [1,1,1,1,1,1,1,1,1,1]
+
+mockJson = {
+    errcode: 0,
+    email: Random.email('qq.com'),
+    data: a.map(function(item){
+        return Random.city() + '银行'
+    })
+}
+
+</code></pre>
+<h2 id="mock-优先级说明">Mock 优先级说明</h2>
+<p>请求 Mock 数据时，规则匹配优先级：Mock 期望 &gt; 自定义 Mock 脚本 &gt; 项目全局 mock 脚本 &gt; 普通 Mock。</p>
+<p>如果前面匹配到 Mock 数据，后面 Mock 则不返回。</p>
+</section>
+<section class="chapter" data-book="教程" data-file="case" hidden><h1 id="自动化测试">自动化测试</h1>
 <p>传统的接口自动化测试成本高，大量的项目没有使用自动化测试保证接口的质量，仅仅依靠手动测试，是非常不可靠和容易出错的。</p>
 <p>YApi 为了解决这个问题，开发了可视化接口自动化测试功能，只需要配置每个接口的入参和对 RESPONSE 断言，即可实现对接口的自动化测试，大大提升了接口测试的效率。</p>
 <h2 id="第一步-测试集合">第一步，测试集合</h2>
@@ -734,209 +1031,7 @@ assert.equal(status, 200)
 <p><img src="./assets/2019-01-15-14-05-46.png" alt=""></p>
 <p>配置通用规则能够使自动化测试，可以基于通用的规则去控制，无需手动一个一个维护case.</p>
 </section>
-<section class="chapter" data-chapter="adv_mock" hidden><h1 id="高级mock">高级Mock</h1>
-<p>高级 Mock 分为<code>Mock 期望</code>和<code>自定义 Mock 脚本</code>两种方式。</p>
-<h2 id="mock-期望">Mock 期望</h2>
-<p>在测试时，很多时候需要根据不同的请求参数、IP 返回不同的 HTTP Code、HTTP 头和 JSON 数据。</p>
-<p>Mock 期望就是根据设置的请求过滤规则，返回期望数据。</p>
-<h3 id="使用方法">使用方法</h3>
-<ol>
-<li>进入接口详情页，点击『高级 Mock』选项。
-<img src="./assets/adv-mock-case1.png" alt=""></li>
-<li>点击『添加期望』，填写过滤规则以及期望返回数据，点击『确定』保存。
-<img src="./assets/adv-mock-case3.png" alt="">
-<img src="./assets/adv-mock-case4-new.png" alt=""></li>
-<li>然后尝试在浏览器里发送符合规则的请求，查看返回的数据是否符合期望。
-<img src="./assets/adv-mock-case5-new.png" alt=""></li>
-</ol>
-<h3 id="期望填写">期望填写</h3>
-<p>基本信息</p>
-<ul>
-<li>期望名称：给此条期望命名</li>
-<li>IP 过滤：请求的 IP 是设置的地址才可能返回期望。默认 IP 过滤关闭，任何 IP 地址都可能返回期望。</li>
-<li>参数过滤：请求必须包含设置的参数，并且值相等才可能返回期望。参数可以在 Body 或 Query 中。</li>
-</ul>
-<p>响应</p>
-<ul>
-<li>HTTP Code：期望响应的 HTTP 状态码</li>
-<li>延时：期望响应的延迟时间</li>
-<li>HTTP 头：期望响应带有的 HTTP 头</li>
-<li>返回 JSON：期望返回的 JSON 数据</li>
-</ul>
-<h2 id="自定义-mock-脚本">自定义 Mock 脚本</h2>
-<p>在前端开发阶段，对于某些接口，业务相对复杂，而 UI 端也需要根据接口返回的不同内容去做相应的处理。</p>
-<p>YApi 提供了写 JS 脚本方式处理这一问题，可以根据用户请求的参数修改返回内容。</p>
-<h3 id="全局变量">全局变量</h3>
-<p>请求</p>
-<ul>
-<li><code>header</code> 请求的 HTTP 头</li>
-<li><code>params</code> 请求参数，包括 Body、Query 中所有参数</li>
-<li><code>cookie</code> 请求带的 Cookies</li>
-</ul>
-<p>响应</p>
-<ul>
-<li>
-<p><code>mockJson</code>
-接口定义的响应数据 Mock 模板</p>
-</li>
-<li>
-<p><code>resHeader</code>
-响应的 HTTP 头</p>
-</li>
-<li>
-<p><code>httpCode</code>
-响应的 HTTP 状态码</p>
-</li>
-<li>
-<p><code>delay</code>
-Mock 响应延时，单位为 ms</p>
-</li>
-<li>
-<p><code>Random</code>
-Mock.Random 方法，可以添加自定义占位符,详细使用方法请查看 <a href="https://github.com/nuysoft/Mock/wiki/Mock.Random" target="_blank" rel="noopener noreferrer">Wiki</a></p>
-</li>
-</ul>
-<h3 id="使用方法-1">使用方法</h3>
-<ol>
-<li>首先开启此功能</li>
-<li>Mock 脚本就是用 JavaScript 对 <code>mockJson</code> 变量修改,请避免被全局变量(httpCode, resHeader, delay)的修改</li>
-</ol>
-<h3 id="示例1-根据请求参数重写-mockjson">示例1, 根据请求参数重写 mockJson</h3>
-<pre><code>if(params.type == 1){
-  mockJson.errcode = 400;
-  mockJson.errmsg = 'error';
-}
-
-if(header.token == 't'){
-  mockJson.errcode = 300;
-  mockJson.errmsg = 'error';
-}
-
-if(cookie.type == 'a'){
-  mockJson.errcode = 500;
-  mockJson.errmsg = 'error';
-}
-
-</code></pre>
-<h3 id="示例2-生成高度自定义数据内容">示例2, 生成高度自定义数据内容</h3>
-<pre><code>var a = [1,1,1,1,1,1,1,1,1,1]
-
-mockJson = {
-    errcode: 0,
-    email: Random.email('qq.com'),
-    data: a.map(function(item){
-        return Random.city() + '银行'
-    })
-}
-
-</code></pre>
-<h2 id="mock-优先级说明">Mock 优先级说明</h2>
-<p>请求 Mock 数据时，规则匹配优先级：Mock 期望 &gt; 自定义 Mock 脚本 &gt; 项目全局 mock 脚本 &gt; 普通 Mock。</p>
-<p>如果前面匹配到 Mock 数据，后面 Mock 则不返回。</p>
-</section>
-<section class="chapter" data-chapter="mock" hidden><h1 id="mock介绍">Mock介绍</h1>
-<p>YApi的 Mock 功能可以根据用户的输入接口信息如协议、URL、接口名、请求头、请求参数、返回数据（<a href="#/mock/mock">返回数据</a>）生成 Mock 接口，这些接口会自动生成模拟数据，创建者可以自由构造需要的数据。</p>
-<p><strong>mock地址解析</strong>：<code>YApi平台网址 + mock + 您的项目id + 接口实际请求path</code></p>
-<p>假设你 YApi 的部署地址为：http://yapi.xxx.com 然后用这个地址作为示例</p>
-<pre><code>mockd 地址： http://yapi.xxx.com/mock/29/api/hackathon/login
-</code></pre>
-<blockquote>
-<p>注：项目 id 可以在项目设置里查看到</p>
-</blockquote>
-<h2 id="定义-mock-数据示例">定义 mock 数据示例</h2>
-<p>项目 -&gt; 接口编辑 -&gt; 返回数据设置</p>
-<p>返回数据设置有两种方式，最新版本默认是基于 <code>json+注释</code> 的方式，另外一种是基于 <code>json-schema</code> 定义数据结构,请根据实际情况灵活选择使用。</p>
-<h2 id="方式1-mockjs">方式1. mockjs</h2>
-<p><img src="./assets/mock-demo.jpg" alt=""></p>
-<h3 id="原理">原理</h3>
-<p>基于 <a href="http://mockjs.com" target="_blank" rel="noopener noreferrer">mockjs</a>，跟 Mockjs 区别是 yapi 基于 json + 注释 定义 mock 数据，无法使用 mockjs 原有的函数功能。</p>
-<ol>
-<li>正则表达式需要基于 rule 书写，示例如下：</li>
-</ol>
-<pre><code>{
-  &quot;name|regexp&quot;: &quot;[a-z0-9_]+?&quot;,
-  &quot;type|regexp&quot;: &quot;json|text|xml&quot;
-}
-
-</code></pre>
-<ol start="2">
-<li>支持替换请求的 query, body 参数</li>
-</ol>
-<pre><code>{
-  &quot;name&quot;: &quot;${query.name}&quot;, //请求的url是/path?name=xiaoming, 返回的name字段是xiaoming
-  &quot;type&quot;: &quot;${body.type}&quot;,   //请求的requestBody type=1,返回的type字段是1
-  
-}
-
-</code></pre>
-<ol start="3">
-<li>示例</li>
-</ol>
-<pre><code>/**
- * 这是一个接口返回数据示例
- */
-
-{
-    &quot;errcode&quot;: 0,
-    &quot;errmsg&quot;: &quot;@word&quot;,
-    &quot;data&quot;: {
-        &quot;id&quot;: &quot;@id&quot;, //@id 随机生成 id
-        &quot;name&quot;: &quot;@name&quot; //@name 随机生成用户名
-    }
-}
-
-</code></pre>
-<p>详细使用文档请查看：<a href="http://mockjs.com/examples.html" target="_blank" rel="noopener noreferrer">Mockjs 官网</a></p>
-<h2 id="方式2-json-schema">方式2. json-schema</h2>
-<p><img src="./assets/json-schema-demo.jpg" alt=""></p>
-<p>开启 json-schema 功能后，根据 json-schema 定义的数据结构，生成随机数据。</p>
-<h3 id="如何生成随机的邮箱或-ip-该方法在v1-3-22之后不再适用">如何生成随机的邮箱或 ip(该方法在v1.3.22之后不再适用)？</h3>
-<p><img src="./assets/json-schema-mock.jpg" alt=""></p>
-<p>点击高级设置，选择 <code>format</code> 选项，比如选择 <code>email</code> 则该字段生成随机邮箱字符串。</p>
-<h3 id="集成-mockjs">集成 mockjs</h3>
-<p>基本书写方式为 mock 的数据占位符@xxx, 具体字段详见<a href="http://mockjs.com/examples.html" target="_blank" rel="noopener noreferrer">Mockjs 官网</a>
-<img src="./assets/schema-mock-2.png" alt="">
-<img src="./assets/schema-mock-1.png" alt=""></p>
-<blockquote>
-<p>如果不是以@字符开头的话或者匹配不到Mockjs中的占位符就会直接生成输入的值</p>
-</blockquote>
-<h2 id="如何使用-mock">如何使用 Mock</h2>
-<h3 id="1-在-js-代码直接请求yapi提供的-mock-地址-不用担心跨域问题">1 在 js 代码直接请求yapi提供的 mock 地址（不用担心跨域问题）</h3>
-<p>在代码直接请求 yapi 提供的 mock 地址，以 jQuery 为例：</p>
-<pre><code class="language-javascript">let prefix = 'http://yapi.xxx.com/mock/2817'
-$.post(prefix+'/baseapi/path', {username: 'xxx'}, function(res){
-    console.log(res) //返回上图预览部分的数据
-})
-</code></pre>
-<h3 id="2-基于本地服务器反向代理">2 基于本地服务器反向代理</h3>
-<p>优点:不用修改项目代码</p>
-<h4 id="2-1-基于-nginx-反向代理">2.1 基于 nginx 反向代理</h4>
-<pre><code class="language-nginx">location /baseapi
-{
-proxy_pass   http://yapi.xxx.com/mock/2817/baseapi; #baseapi后面没有&quot;/&quot;
-}
-</code></pre>
-<h4 id="2-1-基于-charles-代理">2.1 基于 Charles 代理</h4>
-<p>点击 Charles 工具栏下的 tools &gt;&gt; Rewrite Settings 填写如下信息：</p>
-<p><img src="./assets/charles.png" alt=""></p>
-<h2 id="mock请求严格模式">mock请求严格模式</h2>
-<p>版本 v1.3.22 新增 mock 接口请求字段参数验证功能，具体使用方法如下：</p>
-<ol>
-<li>
-<p>打开 项目 -&gt; 设置 开启 mock 严格模式</p>
-</li>
-<li>
-<p>针对 query, form 中设置的必须字段会进行必填校验
-<img src="./assets/mock-strice.png" alt=""></p>
-</li>
-<li>
-<p>针对 req_body_type 是json schema 格式的数据进行校验</p>
-</li>
-</ol>
-<p><img src="./assets/mock-strice3.png" alt="">
-<img src="./assets/mock-strice2.png" alt=""></p>
-</section>
-<section class="chapter" data-chapter="data" hidden><h1 id="数据导入">数据导入</h1>
+<section class="chapter" data-book="教程" data-file="data" hidden><h1 id="数据导入">数据导入</h1>
 <p>在数据管理可快速导入其他格式的接口数据，方便快速添加接口。YApi 目前支持 postman, swagger, har 数据导入。</p>
 <p>v1.3.23+ 增加数据导入的3种同步方式  normal, good, mergin</p>
 <ol>
@@ -1005,13 +1100,13 @@ proxy_pass   http://yapi.xxx.com/mock/2817/baseapi; #baseapi后面没有&quot;/&
 <pre><code>yapi import
 </code></pre>
 </section>
-<section class="chapter" data-chapter="export-data" hidden><h1 id="数据导出">数据导出</h1>
+<section class="chapter" data-book="教程" data-file="export-data" hidden><h1 id="数据导出">数据导出</h1>
 <p>为了方便开发者将接口数据分析给第三方或其他使用者，YApi 内置了方便易用的接口数据导出功能。</p>
 <h2 id="使用教程">使用教程</h2>
 <p>在 项目 -&gt; 数据管理，选择需要导出的数据方式，一共有三种导出方式，html,markdown,json。然后点击导出按钮，将会下载数据文件。</p>
 <p><img src="./assets/export-data.png" alt=""></p>
 </section>
-<section class="chapter" data-chapter="plugin-index" hidden><h2 id="安装">安装</h2>
+<section class="chapter" data-book="教程" data-file="plugin-index" hidden><h2 id="安装">安装</h2>
 <p>假设插件名为：yapi-plugin-demo,安装方法如下：</p>
 <pre><code>cd {项目目录}
 yapi plugin yapi-plugin-demo
@@ -1022,7 +1117,7 @@ yapi plugin yapi-plugin-demo
 yapi unplugin yapi-plugin-demo
 </code></pre>
 </section>
-<section class="chapter" data-chapter="plugin-dev" hidden><h2 id="运行开发服务器">运行开发服务器</h2>
+<section class="chapter" data-book="教程" data-file="plugin-dev" hidden><h2 id="运行开发服务器">运行开发服务器</h2>
 <pre><code class="language-bash">npm install
 npm install -g ykit #依赖 ykit 
 npm run dev #启动开发服务器
@@ -1076,7 +1171,19 @@ hookname //钩子名
 listener //监听函数，可以是普通函数，也可以是 asyncFunction
 </code></pre>
 </section>
-<section class="chapter" data-chapter="plugin-hooks" hidden><h2 id="后端-hooklist">后端 hookList</h2>
+<section class="chapter" data-book="教程" data-file="plugin-list" hidden><h2 id="怎么分享我的插件">怎么分享我的插件？</h2>
+<p>Fork <a href="https://github.com/YMFE/yapi" target="_blank" rel="noopener noreferrer">yapi</a>, 然后修改 docs/documents/plugin-list.md, 修改完成后请 Pull-Request.</p>
+<h2 id="插件列表">插件列表</h2>
+<ul>
+<li><a href="https://github.com/zgs225/yapi-plugin-dding" target="_blank" rel="noopener noreferrer">dingding</a> 钉钉机器人推送插件</li>
+<li><a href="https://github.com/ymfe/yapi-plugin-qsso" target="_blank" rel="noopener noreferrer">qsso</a> sso 第三方登录</li>
+<li><a href="https://github.com/wxxcarl/yapi-plugin-import-rap" target="_blank" rel="noopener noreferrer">import-rap</a> 从rap中导入项目</li>
+<li><a href="https://github.com/inceptiongt/Yapi-plugin-export-docx-data" target="_blank" rel="noopener noreferrer">export-docx-data</a> 数据导出docx文档</li>
+<li><a href="https://github.com/follow-my-heart/yapi-plugin-import-swagger-customize" target="_blank" rel="noopener noreferrer">import-swagger-customize</a> 导入指定swagger接口</li>
+<li><a href="https://github.com/duicym/yapi-plugin-autotest" target="_blank" rel="noopener noreferrer">autotest</a> 定时自动测试发送钉钉插件</li>
+</ul>
+</section>
+<section class="chapter" data-book="教程" data-file="plugin-hooks" hidden><h2 id="后端-hooklist">后端 hookList</h2>
 <p>目前 hooksList 只有下面列出的部分，如果您有其他的需求，可提建议到 github 或者 qq 群</p>
 <pre><code>/**
  * 钩子配置
@@ -1361,53 +1468,7 @@ hooks = {
 };
 </code></pre>
 </section>
-<section class="chapter" data-chapter="plugin-list" hidden><h2 id="怎么分享我的插件">怎么分享我的插件？</h2>
-<p>Fork <a href="https://github.com/YMFE/yapi" target="_blank" rel="noopener noreferrer">yapi</a>, 然后修改 docs/documents/plugin-list.md, 修改完成后请 Pull-Request.</p>
-<h2 id="插件列表">插件列表</h2>
-<ul>
-<li><a href="https://github.com/zgs225/yapi-plugin-dding" target="_blank" rel="noopener noreferrer">dingding</a> 钉钉机器人推送插件</li>
-<li><a href="https://github.com/ymfe/yapi-plugin-qsso" target="_blank" rel="noopener noreferrer">qsso</a> sso 第三方登录</li>
-<li><a href="https://github.com/wxxcarl/yapi-plugin-import-rap" target="_blank" rel="noopener noreferrer">import-rap</a> 从rap中导入项目</li>
-<li><a href="https://github.com/inceptiongt/Yapi-plugin-export-docx-data" target="_blank" rel="noopener noreferrer">export-docx-data</a> 数据导出docx文档</li>
-<li><a href="https://github.com/follow-my-heart/yapi-plugin-import-swagger-customize" target="_blank" rel="noopener noreferrer">import-swagger-customize</a> 导入指定swagger接口</li>
-<li><a href="https://github.com/duicym/yapi-plugin-autotest" target="_blank" rel="noopener noreferrer">autotest</a> 定时自动测试发送钉钉插件</li>
-</ul>
-</section>
-<section class="chapter" data-chapter="qa" hidden><h1 id="常见问题解答">常见问题解答</h1>
-<p>本页面罗列了大家使用 YApi 时遇到的常见问题.</p>
-<p>如果没有找到您要的答案，请联系管理员.</p>
-<h2 id="q1-怎样联系组长">Q1 怎样联系组长？</h2>
-<p>组长分为 <code>分组组长</code> 和 <code>项目组长</code>:</p>
-<ul>
-<li>分组组长：选择首页左侧的分组，点击右侧面板的 <code>成员列表</code>，成员右侧显示着 <code>组长/开发者</code> 的权限信息。
-<img src="./assets/manage_find_manager.png" alt=""></li>
-<li>项目组长: 点击项目页的 <code>设置</code> - <code>成员列表</code>，成员右侧显示着 <code>组长/开发者</code> 的权限信息。
-<img src="./assets/manage_find_project_owner.png" alt=""></li>
-</ul>
-<h2 id="q2-怎么快速迁移旧项目">Q2 怎么快速迁移旧项目？</h2>
-<p>第一步. 使用 Chrome 浏览器开发者工具录制功能</p>
-<p>第二步 录制当前项目所有请求，导出到 har 文件</p>
-<p>第三步 将Har数据导入到 YApi 平台</p>
-<p>具体使用方法请参考 YApi [文档](./data.md#har-数据导入)</p>
-<h2 id="q3-忘记密码怎么办">Q3 忘记密码怎么办？</h2>
-<p>请联系 <code>超级管理员</code> ，只有超级管理员能重置密码。</p>
-<h2 id="q4-发现了-bug-怎么办">Q4 发现了 Bug 怎么办？</h2>
-<p>请反馈到 <a href="https://github.com/YMFE/yapi/issues" target="_blank" rel="noopener noreferrer">Github</a>，功能性的问题我们会在一周内修复，并在每周一发布新的版本 Tag.</p>
-<h2 id="q5-部署不成功怎么办">Q5 部署不成功怎么办？</h2>
-<ol>
-<li>确保 node 版本=&gt; 7.6,请运行 node -v 查看版本号</li>
-<li>确保 mongodb 版本 =&gt; 2.6，请运行 mongo --version 查看版本号</li>
-<li>确保安装了 npm, 运行 npm -v 查看版本号</li>
-<li>确保安装了 git,运行 git --version 查看版本号</li>
-</ol>
-<p>确认版本号没问题，请删除原有的安装文件和数据库，重新安装。
-如果还是无法安装，请不要选择最新的版本，可选择上一个版本或上上一个版本等，最新版本出问题的概率会比较大。</p>
-<h2 id="q6-部署yapi遇到mongodb认证问题">Q6 部署YApi遇到mongodb认证问题？</h2>
-<ul>
-<li><a href="http://blog.csdn.net/ll657418802/article/details/50846313?locationNum=7" target="_blank" rel="noopener noreferrer">mongodb3.03以上开启认证,解决程序认证连接报错以及第三方客户端无法认证问题</a></li>
-</ul>
-</section>
-<section class="chapter" data-chapter="redev" hidden><h2 id="安装yapi">安装YApi</h2>
+<section class="chapter" data-book="教程" data-file="redev" hidden><h2 id="安装yapi">安装YApi</h2>
 <p>1.创建工程目录</p>
 <pre><code class="language-bash">mkdir yapi &amp;&amp; cd yapi
 git clone https://github.com/YMFE/yapi.git vendors --depth=1 # 或者下载 zip 包解压到 vendors 目录
@@ -1495,7 +1556,41 @@ npm install  --registry https://registry.npm.taobao.org # 安装依赖
   node server/app.js
 </code></pre>
 </section>
-<section class="chapter" data-chapter="CHANGELOG" hidden><h2 id="v2-0-0">v2.0.0</h2>
+<section class="chapter" data-book="教程" data-file="qa" hidden><h1 id="常见问题解答">常见问题解答</h1>
+<p>本页面罗列了大家使用 YApi 时遇到的常见问题.</p>
+<p>如果没有找到您要的答案，请联系管理员.</p>
+<h2 id="q1-怎样联系组长">Q1 怎样联系组长？</h2>
+<p>组长分为 <code>分组组长</code> 和 <code>项目组长</code>:</p>
+<ul>
+<li>分组组长：选择首页左侧的分组，点击右侧面板的 <code>成员列表</code>，成员右侧显示着 <code>组长/开发者</code> 的权限信息。
+<img src="./assets/manage_find_manager.png" alt=""></li>
+<li>项目组长: 点击项目页的 <code>设置</code> - <code>成员列表</code>，成员右侧显示着 <code>组长/开发者</code> 的权限信息。
+<img src="./assets/manage_find_project_owner.png" alt=""></li>
+</ul>
+<h2 id="q2-怎么快速迁移旧项目">Q2 怎么快速迁移旧项目？</h2>
+<p>第一步. 使用 Chrome 浏览器开发者工具录制功能</p>
+<p>第二步 录制当前项目所有请求，导出到 har 文件</p>
+<p>第三步 将Har数据导入到 YApi 平台</p>
+<p>具体使用方法请参考 YApi [文档](./data.md#har-数据导入)</p>
+<h2 id="q3-忘记密码怎么办">Q3 忘记密码怎么办？</h2>
+<p>请联系 <code>超级管理员</code> ，只有超级管理员能重置密码。</p>
+<h2 id="q4-发现了-bug-怎么办">Q4 发现了 Bug 怎么办？</h2>
+<p>请反馈到 <a href="https://github.com/YMFE/yapi/issues" target="_blank" rel="noopener noreferrer">Github</a>，功能性的问题我们会在一周内修复，并在每周一发布新的版本 Tag.</p>
+<h2 id="q5-部署不成功怎么办">Q5 部署不成功怎么办？</h2>
+<ol>
+<li>确保 node 版本=&gt; 7.6,请运行 node -v 查看版本号</li>
+<li>确保 mongodb 版本 =&gt; 2.6，请运行 mongo --version 查看版本号</li>
+<li>确保安装了 npm, 运行 npm -v 查看版本号</li>
+<li>确保安装了 git,运行 git --version 查看版本号</li>
+</ol>
+<p>确认版本号没问题，请删除原有的安装文件和数据库，重新安装。
+如果还是无法安装，请不要选择最新的版本，可选择上一个版本或上上一个版本等，最新版本出问题的概率会比较大。</p>
+<h2 id="q6-部署yapi遇到mongodb认证问题">Q6 部署YApi遇到mongodb认证问题？</h2>
+<ul>
+<li><a href="http://blog.csdn.net/ll657418802/article/details/50846313?locationNum=7" target="_blank" rel="noopener noreferrer">mongodb3.03以上开启认证,解决程序认证连接报错以及第三方客户端无法认证问题</a></li>
+</ul>
+</section>
+<section class="chapter" data-book="教程" data-file="CHANGELOG" hidden><h2 id="v2-0-0">v2.0.0</h2>
 <h3 id="features">Features</h3>
 <ul>
 <li>运行环境要求提升：Node &gt;= 22.12，MongoDB（mongoose 8 驱动）</li>
@@ -2147,46 +2242,436 @@ npm install  --registry https://registry.npm.taobao.org # 安装依赖
 <p>todo:
 新增 crypto 加密函数</p>
 </section>
+<section class="chapter" data-book="内网部署" data-file="index" hidden><h1 id="内网部署">内网部署</h1>
+<p>使用我们提供的 yapi-cli 工具，部署 YApi 平台是非常容易的。建议部署成 http 站点，因 chrome 浏览器安全限制，部署成 https 会导致测试功能在请求 http 站点时文件上传功能异常。</p>
+<p>如果您是将服务器代理到 nginx 服务器，请配置 nginx 支持 websocket。</p>
+<pre><code>在location /添加
+proxy_http_version 1.1;
+proxy_set_header Upgrade $http_upgrade;
+proxy_set_header Connection &quot;upgrade&quot;;
+</code></pre>
+<h2 id="环境要求">环境要求</h2>
+<ul>
+<li>Node.js（<strong>生产部署硬性要求 ≥ 22.12</strong>：jsondiffpatch 0.7 为 ESM-only，经 require(esm) 加载，低于 22.12 启动即 ERR_REQUIRE_ESM；本项目默认开发环境使用 24.21.0 LTS，历史回滚环境保留 10.24.1）</li>
+<li>npm（随 Node.js 24.21.0 LTS 安装，使用与 Node.js 兼容的 npm 版本）</li>
+<li>MongoDB（2.6+；本地开发可使用 Docker 启动 MongoDB 4.4）</li>
+</ul>
+<h2 id="安装">安装</h2>
+<h3 id="方式一-可视化部署-推荐">方式一. 可视化部署[推荐]</h3>
+<p>执行 yapi server 启动可视化部署程序，输入相应的配置和点击开始部署，就能完成整个网站的部署。部署完成之后，可按照提示信息，执行 node/{网站路径/server/app.js} 启动服务器。在浏览器打开指定url, 点击登录输入您刚才设置的管理员邮箱，默认密码(ymfe.org) 登录系统（默认密码可在个人中心修改）。</p>
+<pre><code class="language-bash">npm install -g yapi-cli --registry https://registry.npmmirror.com
+yapi server
+</code></pre>
+<h3 id="方式二-命令行部署">方式二. 命令行部署</h3>
+<p>如果 github 压缩文件无法下载，或需要部署到一些特殊的服务器，可尝试此方法</p>
+<pre><code class="language-bash">mkdir yapi
+cd yapi
+git clone https://github.com/YMFE/yapi.git vendors //或者下载 zip 包解压到 vendors 目录（clone 整个仓库大概 140+ M，可以通过 `git clone --depth=1 https://github.com/YMFE/yapi.git vendors` 命令减少，大概 10+ M）
+cp vendors/config_example.json ./config.json //复制完成后请修改相关配置
+cd vendors
+npm install --production --registry https://registry.npmmirror.com
+npm run install-server //安装程序会初始化数据库索引和管理员账号，管理员账号名可在 config.json 配置
+node server/app.js //启动服务器后，请访问 127.0.0.1:{config.json配置的端口}，初次运行会有个编译的过程，请耐心等候
+</code></pre>
+<p>安装后的目录结构如下：</p>
+<pre><code>|-- config.json
+|-- init.lock
+|-- log
+`-- vendors
+    |-- CHANGELOG.md
+    |-- LICENSE
+    |-- README.md
+    |-- client
+    |-- common
+    |-- config_example.json
+    |-- doc
+    |-- exts
+    |-- nodemon.json
+    |-- npm-debug.log
+    |-- package.json
+    |-- plugin.json
+    |-- server
+    |-- static
+    |-- test
+    |-- webpack.alias.js
+    |-- yapi-base-flow.jpg
+    |-- ydocfile.js
+    `-- ykit.config.js
+</code></pre>
+<h2 id="本地开发启动">本地开发启动</h2>
+<p>以下步骤适用于直接在本仓库中进行开发。项目使用根目录下的 <code>config.json</code>，该文件包含本地数据库配置，不要提交到 Git。</p>
+<h3 id="1-准备-node-js-环境">1. 准备 Node.js 环境</h3>
+<p>项目依赖较旧，建议使用 <code>nvm</code> 切换到项目指定版本：</p>
+<pre><code class="language-bash">source ~/.nvm/nvm.sh
+nvm install
+nvm use
+node -v   # v24.21.0
+npm -v    # 随 Node.js 24.21.0 安装的版本
+</code></pre>
+<blockquote>
+<p>如果需要复现历史运行环境，可执行 <code>nvm use 10.24.1</code>；该版本仅用于回滚和兼容性排查，日常开发优先使用 Node.js 24.21.0 LTS。</p>
+</blockquote>
+<h3 id="2-启动本地-mongodb">2. 启动本地 MongoDB</h3>
+<p>已安装 Docker 时，可以使用以下命令启动无认证的本地 MongoDB：</p>
+<pre><code class="language-bash">docker volume create yapi-mongodb-data
+docker run -d --name yapi-mongodb \
+  -p 127.0.0.1:27017:27017 \
+  -v yapi-mongodb-data:/data/db \
+  mongo:4.4
+</code></pre>
+<p>如果容器已经存在，使用：</p>
+<pre><code class="language-bash">docker start yapi-mongodb
+</code></pre>
+<h3 id="3-安装依赖并创建配置">3. 安装依赖并创建配置</h3>
+<p>在项目根目录执行：</p>
+<pre><code class="language-bash">npm install
+cp config_example.json config.json
+</code></pre>
+<p>确认 <code>config.json</code> 中的数据库配置与本地 MongoDB 一致。无认证 MongoDB 使用空的 <code>user</code>、<code>pass</code> 和 <code>authSource</code>：</p>
+<pre><code class="language-json">{
+  &quot;db&quot;: {
+    &quot;servername&quot;: &quot;127.0.0.1&quot;,
+    &quot;DATABASE&quot;: &quot;yapi&quot;,
+    &quot;port&quot;: 27017,
+    &quot;user&quot;: &quot;&quot;,
+    &quot;pass&quot;: &quot;&quot;,
+    &quot;authSource&quot;: &quot;&quot;
+  }
+}
+</code></pre>
+<h3 id="4-初始化数据库">4. 初始化数据库</h3>
+<p>首次运行或数据库为空时执行：</p>
+<pre><code class="language-bash">npm run install-server
+</code></pre>
+<p>初始化成功后会生成根目录下的 <code>init.lock</code>。该文件只是本机初始化标记，不要提交到 Git。</p>
+<p>默认管理员账号为：</p>
+<pre><code class="language-text">账号：admin@admin.com
+密码：ymfe.org
+</code></pre>
+<h3 id="5-启动开发服务">5. 启动开发服务</h3>
+<pre><code class="language-bash">npm run dev
+</code></pre>
+<p>启动后访问：</p>
+<pre><code class="language-text">http://127.0.0.1:3000
+</code></pre>
+<p>开发模式下：</p>
+<ul>
+<li><code>3000</code> 是 YApi 后端和系统页面入口；</li>
+<li><code>4000</code> 是前端开发资源服务，直接访问可能显示目录列表，不是系统页面。</li>
+</ul>
+<p>也可以分别启动前后端：</p>
+<pre><code class="language-bash">npm run dev-server
+npm run dev-client
+</code></pre>
+<p>停止服务可在对应终端按 <code>Ctrl+C</code>。修改 <code>config.json</code> 或数据库配置后，需要重启后端服务。</p>
+<h2 id="服务器管理">服务器管理</h2>
+<p>推荐使用 pm2 管理 node 服务器启动，停止，具体使用方法可参考下面的教程：</p>
+<ul>
+<li><a href="http://pm2.keymetrics.io/docs/usage/quick-start/" target="_blank" rel="noopener noreferrer">官网文档</a></li>
+<li><a href="http://imweb.io/topic/57c8cbb27f226f687b365636" target="_blank" rel="noopener noreferrer">PM2实用入门指南</a></li>
+</ul>
+<h2 id="升级">升级</h2>
+<p>升级项目版本是非常容易的，并且不会影响已有的项目数据，只会同步 vendors 目录下的源码文件。</p>
+<pre><code>cd  {项目目录}
+yapi ls //查看版本号列表
+yapi update //升级到最新版本
+yapi update -v v1.1.0 //升级到指定版本
+</code></pre>
+<h2 id="配置邮箱">配置邮箱</h2>
+<p>打开项目目录 config.json 文件，新增 mail 配置， 替换默认的邮箱配置</p>
+<pre><code class="language-json">{
+  &quot;port&quot;: &quot;*****&quot;,
+  &quot;adminAccount&quot;: &quot;********&quot;,
+  &quot;db&quot;: {...},
+  &quot;mail&quot;: {
+    &quot;enable&quot;: true,
+    &quot;host&quot;: &quot;smtp.163.com&quot;,    //邮箱服务器
+    &quot;port&quot;: 465,               //端口
+    &quot;from&quot;: &quot;***@163.com&quot;,     //发送人邮箱
+    &quot;auth&quot;: {
+        &quot;user&quot;: &quot;***@163.com&quot;, //邮箱服务器账号
+        &quot;pass&quot;: &quot;*****&quot;        //邮箱服务器密码
+    }
+  }
+}
+</code></pre>
+<p>如何申请STMP服务器账号和密码可以参考下面的教程：<a href="https://jingyan.baidu.com/article/fdbd42771da9b0b89e3f48a8.html" target="_blank" rel="noopener noreferrer">如何开通电子邮箱的SMTP功能</a></p>
+<h2 id="配置ldap登录">配置LDAP登录</h2>
+<p>打开项目目录 config.json 文件，添加如下字段：</p>
+<pre><code class="language-json">{
+  &quot;port&quot;: &quot;*****&quot;,
+  &quot;adminAccount&quot;: &quot;********&quot;,
+  &quot;db&quot;: {...},
+  &quot;mail&quot;: {...},
+  &quot;ldapLogin&quot;: {
+      &quot;enable&quot;: true,
+      &quot;server&quot;: &quot;ldap://l-ldapt1.com&quot;,
+      &quot;baseDn&quot;: &quot;CN=Admin,CN=Users,DC=test,DC=com&quot;,
+      &quot;bindPassword&quot;: &quot;password123&quot;,
+      &quot;searchDn&quot;: &quot;OU=UserContainer,DC=test,DC=com&quot;,
+      &quot;searchStandard&quot;: &quot;mail&quot;,    // 自定义格式： &quot;searchStandard&quot;: &quot;&amp;(objectClass=user)(cn=%s)&quot;
+      &quot;emailPostfix&quot;: &quot;@163.com&quot;,
+      &quot;emailKey&quot;: &quot;mail&quot;,
+      &quot;usernameKey&quot;: &quot;name&quot;
+   }
+}
+
+</code></pre>
+<p>这里面的配置项含义如下：</p>
+<ul>
+<li><code>enable</code> 表示是否配置 LDAP 登录，true(支持 LDAP登录 )/false(不支持LDAP登录);</li>
+<li><code>server </code> LDAP 服务器地址，前面需要加上 ldap:// 前缀，也可以是 ldaps:// 表示是通过 SSL 连接;</li>
+<li><code>baseDn</code> LDAP 服务器的登录用户名，必须是从根结点到用户节点的全路径(非必须);</li>
+<li><code>bindPassword</code> 登录该 LDAP 服务器的密码(非必须);</li>
+<li><code>searchDn</code> 查询用户数据的路径，类似数据库中的一张表的地址，注意这里也必须是全路径;</li>
+<li><code>searchStandard</code> 查询条件，这里是 mail 表示查询用户信息是通过邮箱信息来查询的。注意，该字段信息与LDAP数据库存储数据的字段相对应，如果如果存储用户邮箱信息的字段是 email,  这里就需要修改成 email.（1.3.18+支持）自定义filter表达式，基本形式为：&amp;(objectClass=user)(cn=%s), 其中%s会被username替换</li>
+<li><code>emailPostfix</code> 登陆邮箱后缀（非必须）</li>
+<li><code>emailKey</code>: ldap数据库存放邮箱信息的字段（v1.3.21 新增 非必须）</li>
+<li><code>usernameKey</code>: ldap数据库存放用户名信息的字段（v1.3.21 新增 非必须）</li>
+</ul>
+<p>重启服务器后，可以在登录页看到如下画面，说明 ldap 配置成功</p>
+<p><img src="./assets/ldap.png" alt=""></p>
+<h2 id="禁止注册">禁止注册</h2>
+<p>在 config.json 添加 <code>closeRegister:true</code> 配置项,就可以禁止用户注册 yapi 平台，修改完成后，请重启 yapi 服务器。</p>
+<pre><code class="language-json">{
+  &quot;port&quot;: &quot;*****&quot;,
+  &quot;closeRegister&quot;:true
+}
+
+</code></pre>
+<h2 id="版本通知">版本通知</h2>
+<p>（v1.3.19+ 增加）在 config.json 添加 <code>&quot;versionNotify&quot;: true</code> 配置项，就可以开启版本通知功能，默认为 <code>false</code>，修改完成后，请重启 yapi 服务器。</p>
+<pre><code class="language-json">{
+  &quot;port&quot;: &quot;******&quot;,
+  &quot;adminAccount&quot;: &quot;*****&quot;,
+  &quot;versionNotify&quot;: true
+}
+
+</code></pre>
+<h3 id="如何配置mongodb集群">如何配置mongodb集群</h3>
+<p>请升级到 yapi &gt;= <strong>1.4.0</strong>以上版本，然后在 config.json db项，配置 connectString:</p>
+<pre><code class="language-json">
+{
+  &quot;port&quot;: &quot;***&quot;,
+  &quot;db&quot;: {
+    &quot;connectString&quot;: &quot;mongodb://127.0.0.100:8418,127.0.0.101:8418,127.0.0.102:8418/yapidb?slaveOk=true&quot;,
+    &quot;user&quot;: &quot;******&quot;,
+    &quot;pass&quot;: &quot;******&quot;
+  },
+}
+
+</code></pre>
+<p>详细配置参考： <a href="https://mongoosejs.com/docs/connections.html#multiple_connections" target="_blank" rel="noopener noreferrer">wiki</a></p>
+</section>
+<section class="chapter" data-book="内网部署" data-file="interface-category-migration" hidden><h1 id="接口分类层级升级迁移">接口分类层级升级迁移</h1>
+<p>适用于支持接口分类无限层级的版本。升级后分类新增 <code>parent_id</code> 字段：</p>
+<ul>
+<li><code>parent_id: 0</code>：顶级分类</li>
+<li><code>parent_id: &lt;分类ID&gt;</code>：子分类</li>
+</ul>
+<p>历史接口的 <code>catid</code> 不变，历史分类没有 <code>parent_id</code> 时会按顶级分类兼容。迁移脚本不是必需的，但建议在升级窗口执行，以便将历史数据显式补齐。</p>
+<h2 id="升级前准备">升级前准备</h2>
+<ol>
+<li>确认当前 YApi 已停止写入，至少停止应用进程或安排维护窗口。</li>
+<li>备份 YApi 使用的 MongoDB 数据库。备份必须能够恢复 <code>interface_cat</code> 和 <code>interface</code> 两个集合。</li>
+<li>记录当前版本、MongoDB 连接地址、数据库名和应用配置。</li>
+<li>先在测试环境完成一次升级和页面验证，再处理生产环境。</li>
+</ol>
+<p>示例备份命令（请替换连接地址和数据库名）：</p>
+<pre><code class="language-bash">mongodump --uri=&quot;mongodb://127.0.0.1:27017/yapi&quot; --out=&quot;./backup-before-category-migration&quot;
+</code></pre>
+<h2 id="发布新版本">发布新版本</h2>
+<pre><code class="language-bash">git pull
+npm install --production
+</code></pre>
+<p>如果使用 <code>yapi-cli</code> 管理安装目录，请先使用原来的发布方式同步新版本，不要删除现有数据库或运行目录。</p>
+<h2 id="执行分类数据迁移">执行分类数据迁移</h2>
+<p>将下面命令中的 <code>yapi</code> 替换为实际数据库名。<code>updateMany</code> 是幂等操作，重复执行不会改变已经存在的 <code>parent_id</code>。</p>
+<pre><code class="language-bash">mongosh &quot;mongodb://127.0.0.1:27017/yapi&quot; --eval '
+  db.interface_cat.updateMany(
+    { parent_id: { $exists: false } },
+    { $set: { parent_id: 0 } }
+  );
+  db.interface_cat.createIndex({ project_id: 1, parent_id: 1 });
+'
+</code></pre>
+<p>旧版 MongoDB 没有 <code>mongosh</code> 时使用 <code>mongo</code>，命令内容相同。</p>
+<h2 id="启动和验证">启动和验证</h2>
+<pre><code class="language-bash">npm start
+</code></pre>
+<p>验证以下内容：</p>
+<ol>
+<li>原有项目可以打开，原有接口数量和接口详情不变。</li>
+<li><code>/api/interface/getCatMenu?project_id=&lt;项目ID&gt;</code> 仍返回扁平分类数组，旧插件和旧导入流程可继续使用。</li>
+<li><code>/api/interface/list_menu?project_id=&lt;项目ID&gt;</code> 仍返回原有分类及接口列表结构。</li>
+<li><code>/api/interface/get_cat_tree?project_id=&lt;项目ID&gt;</code> 返回 <code>children</code> 树形结构。</li>
+<li>在已有分类下新增子分类，再新增接口，确认接口出现在子分类中。</li>
+<li>新建三级及以上分类，刷新页面后层级仍然存在。</li>
+<li>删除包含子分类的父分类，确认子分类、接口和接口测试用例按预期删除。</li>
+<li>使用历史 Swagger/OpenAPI 或 YApi JSON 导入一次，确认导入分类和接口正常。</li>
+</ol>
+<h2 id="回滚">回滚</h2>
+<p>如果升级后出现问题：</p>
+<ol>
+<li>停止新版本应用。</li>
+<li>恢复升级前代码和依赖。</li>
+<li>如果只执行了本迁移脚本，旧版本通常会忽略 <code>parent_id</code> 字段，无需恢复数据库。</li>
+<li>如果已经创建了子分类，旧版本不会展示层级关系；需要恢复完整数据库备份才能撤销这些分类关系和新增数据。</li>
+<li>启动旧版本并验证原有接口访问。</li>
+</ol>
+<pre><code class="language-bash">mongorestore --drop --uri=&quot;mongodb://127.0.0.1:27017/yapi&quot; &quot;./backup-before-category-migration/yapi&quot;
+</code></pre>
+<h2 id="注意事项">注意事项</h2>
+<p>不要直接把旧版 <code>/api/interface/getCatMenu</code> 的返回值改成树形结构。该接口保持扁平返回，树形菜单使用新增的 <code>/api/interface/get_cat_tree</code>，这样可以兼容历史数据、旧客户端和已有导入插件。</p>
+</section>
   </main>
+  <div class="openapi-frame" id="openapiFrame" hidden>
+    <iframe title="开放Api" src="about:blank"></iframe>
+  </div>
 </div>
 <script>
 (function () {
+  var TABS = ["教程","内网部署","openapi"];
   var chapters = [].slice.call(document.querySelectorAll('.chapter'));
   var navItems = [].slice.call(document.querySelectorAll('.nav-item'));
+  var tabs = [].slice.call(document.querySelectorAll('.site-tab'));
+  var bookNavs = [].slice.call(document.querySelectorAll('.book-nav'));
+  var siteNav = document.getElementById('siteNav');
   var content = document.getElementById('siteContent');
+  var frameWrap = document.getElementById('openapiFrame');
+  var frame = frameWrap ? frameWrap.querySelector('iframe') : null;
 
-  function activate(id, anchor) {
-    var found = false;
-    chapters.forEach(function (sec) {
-      var match = sec.getAttribute('data-chapter') === id;
-      sec.hidden = !match;
-      if (match) {
-        found = true;
+  function slugify(text) {
+    return String(text)
+      .trim()
+      .toLowerCase()
+      .replace(/[^\p{L}\p{N}-]+/gu, '-')
+      .replace(/^-+|-+$/g, '');
+  }
+
+  function findSection(bookKey, fileKey) {
+    for (var i = 0; i < chapters.length; i++) {
+      var sec = chapters[i];
+      if (sec.getAttribute('data-book') === bookKey &&
+          sec.getAttribute('data-file') === fileKey) {
+        return sec;
       }
-    });
-    if (!found && chapters.length) {
-      chapters[0].hidden = false;
-      id = chapters[0].getAttribute('data-chapter');
     }
-    navItems.forEach(function (item) {
-      item.classList.toggle('active', item.getAttribute('data-chapter') === id);
+    return null;
+  }
+
+  function defaultSection(bookKey) {
+    for (var i = 0; i < chapters.length; i++) {
+      if (chapters[i].getAttribute('data-book') === bookKey) {
+        return chapters[i];
+      }
+    }
+    return chapters[0] || null;
+  }
+
+  // 章内锚点：先按 slug 找 heading id，找不到再按标题文字包含匹配
+  // （SUMMARY 锚点文字与实际 heading 文字可能略有出入，如「mongodb集群」 vs「如何配置mongodb集群」）
+  function resolveAnchor(section, text) {
+    if (!section || !text) {
+      return null;
+    }
+    var slug = slugify(text);
+    if (slug && document.getElementById(slug) &&
+        section.contains(document.getElementById(slug))) {
+      return document.getElementById(slug);
+    }
+    var headings = section.querySelectorAll('h1,h2,h3,h4,h5,h6');
+    var needle = String(text).replace(/\s+/g, '');
+    if (!needle) {
+      return null;
+    }
+    for (var i = 0; i < headings.length; i++) {
+      // SUMMARY 锚点与实际标题可能仅空格差异（如「YApi接口JSON数据导入」vs「YApi 接口 JSON 数据导入」）
+      if (headings[i].textContent.replace(/\s+/g, '').indexOf(needle) > -1) {
+        return headings[i];
+      }
+    }
+    return null;
+  }
+
+  function activate(tab, file, anchor) {
+    var known = TABS.indexOf(tab) > -1;
+    if (!known) {
+      // 旧版 #/章节 兼容：fileKey 落在教程书时按教程章节处理，否则回首页签
+      if (findSection('教程', tab)) {
+        anchor = file || '';
+        file = tab;
+        tab = '教程';
+      } else {
+        tab = TABS[0];
+        file = '';
+        anchor = '';
+      }
+    }
+    var isFrame = tab === 'openapi';
+    tabs.forEach(function (t) {
+      t.classList.toggle('active', t.getAttribute('data-tab') === tab);
     });
-    content.scrollTop = 0;
-    if (anchor) {
-      var target = document.getElementById(anchor);
-      if (target && target.scrollIntoView) {
-        target.scrollIntoView();
+    if (isFrame) {
+      // 开放Api：侧栏与章节隐藏，iframe 整页占满内容区（懒加载）
+      siteNav.classList.add('hidden');
+      bookNavs.forEach(function (n) { n.hidden = true; });
+      chapters.forEach(function (sec) { sec.hidden = true; });
+      content.classList.add('hidden');
+      frameWrap.hidden = false;
+      if (frame && frame.getAttribute('src') === 'about:blank') {
+        frame.setAttribute('src', '/openapi-doc.html');
+      }
+      return;
+    }
+    frameWrap.hidden = true;
+    if (frame && frame.getAttribute('src') !== 'about:blank') {
+      frame.setAttribute('src', 'about:blank');
+    }
+    siteNav.classList.remove('hidden');
+    content.classList.remove('hidden');
+    bookNavs.forEach(function (n) {
+      n.hidden = n.getAttribute('data-book') !== tab;
+    });
+    var sec = (file && findSection(tab, file)) || defaultSection(tab);
+    chapters.forEach(function (s) {
+      s.hidden = s !== sec;
+    });
+    if (sec) {
+      var effFile = sec.getAttribute('data-file');
+      var fullRoute = tab + '/' + effFile + (anchor ? '/' + anchor : '');
+      var baseRoute = tab + '/' + effFile;
+      navItems.forEach(function (item) {
+        var r = item.getAttribute('data-route');
+        var isSub = item.classList.contains('nav-sub');
+        var isActive = r === fullRoute ||
+          (anchor && !isSub && r === baseRoute) ||
+          (!anchor && r === baseRoute);
+        item.classList.toggle('active', isActive);
+      });
+      content.scrollTop = 0;
+      if (anchor) {
+        var target = resolveAnchor(sec, anchor);
+        if (target && target.scrollIntoView) {
+          target.scrollIntoView();
+        }
       }
     }
   }
 
   function route() {
-    var hash = decodeURIComponent(location.hash || '');
-    var m = hash.match(/^#\/([\w-]+)(?:\/([^/]+))?$/);
+    var raw = location.hash || '';
+    var decoded = raw;
+    try {
+      decoded = decodeURIComponent(raw);
+    } catch (e) {
+      /* 保留原文 */
+    }
+    var m = decoded.match(/^#\/([^\/]+)(?:\/([^\/]+))?(?:\/(.+))?$/);
     if (m) {
-      activate(m[1], m[2] || '');
+      activate(m[1], m[2] || '', m[3] || '');
     } else {
-      activate(chapters.length ? chapters[0].getAttribute('data-chapter') : '', '');
+      activate(TABS[0], '', '');
     }
   }
 

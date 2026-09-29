@@ -192,8 +192,8 @@ test.serial('新手引导「使用文档」气泡内链接指向站内文档且�
 
   t.is(
     docLink.getAttribute('href'),
-    '/docs/index.html#/quickstart',
-    '「使用文档」链接必须站内化为 /docs/index.html#/quickstart, 不允许回退外链, 实际: ' +
+    '/docs/index.html#/教程/quickstart',
+    '「使用文档」链接必须站内化为 /docs/index.html#/教程/quickstart, 不允许回退外链, 实际: ' +
       docLink.outerHTML
   );
   t.is(docLink.getAttribute('target'), '_blank', '站内文档应在新窗口打开');

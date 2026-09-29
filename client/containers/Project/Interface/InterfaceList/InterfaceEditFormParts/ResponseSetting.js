@@ -111,7 +111,7 @@ const ResponseSetting = props => {
                     ,具体使用方法请{' '}
                     <span
                       className="href"
-                      onClick={() => window.open('/docs/index.html#/mock', '_blank')}
+                      onClick={() => window.open('/docs/index.html#/教程/mock', '_blank')}
                     >
                       查看文档
                     </span>

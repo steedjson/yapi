@@ -391,7 +391,7 @@ function ProjectEnvContent(props) {
           <a
             target="_blank"
             rel="noopener noreferrer"
-            href="/docs/index.html#/project"
+            href="/docs/index.html#/教程/project"
             style={{ marginLeft: 8 }}
           >
             <Tooltip title="点击查看文档">

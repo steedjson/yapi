@@ -2,12 +2,17 @@
 /**
  * 站内使用文档生成脚本（替代已移除的 ydoc `npm run docs`）。
  *
- * 读取 docs/documents/*.md，用 markdown-it 渲染为单个 static/docs/index.html：
- * - 顶部标题栏（「YApi 使用文档」+ 版本徽标）+ 左侧章节导航 + 右侧正文；
- * - 纯原生 JS hash 路由切换章节（#/章节 或 #/章节/锚点），无任何外网资源；
- * - md 中的图片（markdown 与内嵌 <img> 两种写法）复制到 static/docs/assets/，
- *   引用改写为 ./assets/<文件名>；
- * - md 间互链（./xxx.md、./xxx.md#锚点）改写为站内章节锚点，外链保留并加 target=_blank；
+ * 按 docs/NAV.md 的原版结构生成 static/docs/index.html：
+ * - 顶部页签栏 3 个：教程（documents 书）/ 内网部署（devops 书）/ 开放Api（iframe 整页
+ *   嵌入站内 /openapi-doc.html）；
+ * - 侧栏三级层级：组（SUMMARY `### 组名`，加粗小标题）→ 章节（顶层列表项）→
+ *   章内锚点（两空格缩进子项），当前章节蓝色高亮，子锚点全量展开；
+ * - 路由：`#/<页签key>`（切页签）、`#/<页签key>/<fileKey>`（章节）、
+ *   `#/<页签key>/<fileKey>/<encodeURIComponent(锚点文字)>`（章内锚点）、`#/openapi`；
+ * - md 中的图片（markdown 与内嵌 <img> 两种写法）复制到 static/docs/assets/
+ *   （devops 书重名时加 devops- 前缀），引用改写为 ./assets/<文件名>；
+ * - md 间互链（./xxx.md、xxx.md、documents/xxx.md #锚点）改写为对应书的站内路由，
+ *   外链保留并加 target=_blank；
  * - 安全策略：markdown-it 保持 html:false（默认），md 内嵌的原生 HTML 仅按
  *   div/span/p/br/a/img 白名单预处理转成 markdown 语法，其余一律被转义，
  *   不开启 html:true，防 md 内嵌脚本。
@@ -19,55 +24,41 @@ const path = require('path');
 const MarkdownIt = require('markdown-it');
 
 const ROOT = path.join(__dirname, '..');
-const SRC_DIR = path.join(ROOT, 'docs', 'documents');
 const OUT_DIR = path.join(ROOT, 'static', 'docs');
 const ASSETS_DIR = path.join(OUT_DIR, 'assets');
 // 版本号来源：package.json（当前 2.0.0），此处写死以保持产物稳定可 diff
 const SITE_VERSION = '2.0.0';
 
-// 章节顺序：version 置顶，其余沿用实施计划既定顺序（与 SUMMARY.md 目录兼容）
-const CHAPTERS = [
-  'version',
-  'index',
-  'quickstart',
-  'manage',
-  'project',
-  'api',
-  'case',
-  'adv_mock',
-  'mock',
-  'data',
-  'export-data',
-  'plugin-index',
-  'plugin-dev',
-  'plugin-hooks',
-  'plugin-list',
-  'qa',
-  'redev',
-  'CHANGELOG'
+/**
+ * 书定义：key 即路由中的页签 key。
+ * 教程书置顶插入「版本说明」组（version.md 不在 SUMMARY 内，标题带版本号）。
+ */
+const BOOKS = [
+  {
+    key: '教程',
+    label: '教程',
+    summary: path.join(ROOT, 'docs', 'documents', 'SUMMARY.md'),
+    srcDir: path.join(ROOT, 'docs', 'documents'),
+    assetPrefix: '',
+    prependGroups: [
+      {
+        title: '版本说明',
+        items: [{ title: '版本说明（v2.0.0）', file: 'version.md', anchor: '', children: [] }]
+      }
+    ]
+  },
+  {
+    key: '内网部署',
+    label: '内网部署',
+    summary: path.join(ROOT, 'docs', 'devops', 'SUMMARY.md'),
+    srcDir: path.join(ROOT, 'docs', 'devops'),
+    assetPrefix: 'devops-',
+    prependGroups: []
+  }
 ];
 
-// SUMMARY.md 未覆盖时的章节标题兜底
-const FALLBACK_TITLES = {
-  version: '版本说明',
-  index: '认识YApi',
-  quickstart: '创建第一个API',
-  manage: '权限',
-  project: '项目操作',
-  api: '接口操作',
-  case: '自动化测试',
-  adv_mock: '高级Mock',
-  mock: '数据Mock',
-  data: '数据导入',
-  'export-data': '数据导出',
-  'plugin-index': '插件',
-  'plugin-dev': '插件开发',
-  'plugin-hooks': '钩子',
-  'plugin-list': '插件列表',
-  qa: '常见问题解答',
-  redev: '二次开发',
-  CHANGELOG: '版本记录'
-};
+// 第三个页签：开放Api（不渲染章节，点击后正文区 iframe 整页加载 /openapi-doc.html）
+const OPENAPI_TAB = { key: 'openapi', label: '开放Api' };
 
 /** @type {Record<string, string>} */
 const assetNameBySrc = {};
@@ -75,48 +66,116 @@ const assetNameBySrc = {};
 const assetNameTaken = {};
 
 /**
- * 解析 SUMMARY.md 中的「* [标题](文件.md...)」得到既定中文标题。
- * @returns {Record<string, string>}
+ * SUMMARY 条目（标题 + 目标 md + 章内锚点）。
+ * @param {string} title
+ * @param {string} target 形如 `project.md` / `project.md#基本设置` / `index.md#安装`
+ * @returns {{title: string, file: string, anchor: string, children: Array<object>}}
  */
-function readSummaryTitles() {
-  /** @type {Record<string, string>} */
-  const titles = {};
-  const summaryPath = path.join(SRC_DIR, 'SUMMARY.md');
-  if (!fs.existsSync(summaryPath)) {
-    return titles;
+function parseEntry(title, target) {
+  const parts = String(target).split('#');
+  const file = parts[0].trim();
+  let anchor = '';
+  if (parts.length > 1) {
+    try {
+      anchor = decodeURI(parts.slice(1).join('#'));
+    } catch (e) {
+      anchor = parts.slice(1).join('#');
+    }
   }
-  const lines = fs.readFileSync(summaryPath, 'utf8').split(/\r?\n/);
-  lines.forEach(function (line) {
-    const m = line.match(/^\s*\*\s*\[(.+?)\]\(([^)]+?)\)/);
-    if (!m) {
-      return;
-    }
-    const file = m[2].split('#')[0].trim();
-    const name = file.replace(/\.md$/i, '');
-    if (name && !titles[name]) {
-      titles[name] = m[1];
-    }
-  });
-  return titles;
+  return { title, file, anchor, children: [] };
 }
 
 /**
- * 章节标题：优先 SUMMARY.md 中文标题，缺失时用兜底表，再缺失用文件名。
- * @param {string} chapter
- * @param {Record<string, string>} summaryTitles
+ * 解析 SUMMARY 为「组 → 章节项 → 章内锚点」三级树。
+ * 规则：`### X` 开新组；无缩进 `* [t](f#a)` 为章节项；两空格缩进为上一章节项的子锚点；
+ * `---` 结束当前组，其后无组名的顶层列表归入无名组（组名空字符串）。
+ * @param {string} summaryPath
+ * @returns {Array<{title: string, items: Array<object>}>}
+ */
+function parseSummary(summaryPath) {
+  /** @type {Array<{title: string, items: Array<object>}>} */
+  const groups = [];
+  let current = null;
+  let lastItem = null;
+  const lines = fs.readFileSync(summaryPath, 'utf8').split(/\r?\n/);
+  lines.forEach(function (line) {
+    const groupMatch = line.match(/^###\s+(.+?)\s*$/);
+    if (groupMatch) {
+      current = { title: groupMatch[1], items: [] };
+      groups.push(current);
+      lastItem = null;
+      return;
+    }
+    if (/^---\s*$/.test(line)) {
+      current = null;
+      lastItem = null;
+      return;
+    }
+    const childMatch = line.match(/^ {2,}\*\s*\[(.+?)\]\(([^)]+?)\)/);
+    if (childMatch && lastItem) {
+      lastItem.children.push(parseEntry(childMatch[1], childMatch[2]));
+      return;
+    }
+    const topMatch = line.match(/^\*\s*\[(.+?)\]\(([^)]+?)\)/);
+    if (topMatch) {
+      if (!current) {
+        // `---` 之后的无名组
+        current = { title: '', items: [] };
+        groups.push(current);
+      }
+      lastItem = parseEntry(topMatch[1], topMatch[2]);
+      current.items.push(lastItem);
+    }
+  });
+  return groups;
+}
+
+/**
+ * 从树收集渲染用章节（fileKey 去重、保持树序）。
+ * @param {Array<object>} groups
+ * @returns {Array<{fileKey: string, title: string}>}
+ */
+function collectChapters(groups) {
+  /** @type {Record<string, boolean>} */
+  const seen = {};
+  /** @type {Array<{fileKey: string, title: string}>} */
+  const chapters = [];
+  groups.forEach(function (group) {
+    group.items.forEach(function (item) {
+      const key = fileKeyOf(item.file);
+      if (!seen[key]) {
+        seen[key] = true;
+        chapters.push({ fileKey: key, title: item.title });
+      }
+      item.children.forEach(function (child) {
+        const childKey = fileKeyOf(child.file);
+        if (!seen[childKey]) {
+          seen[childKey] = true;
+          chapters.push({ fileKey: childKey, title: child.title });
+        }
+      });
+    });
+  });
+  return chapters;
+}
+
+/**
+ * md 文件名 → 路由 fileKey（去目录前缀与扩展名）。
+ * @param {string} file
  * @returns {string}
  */
-function chapterTitle(chapter, summaryTitles) {
-  return summaryTitles[chapter] || FALLBACK_TITLES[chapter] || chapter;
+function fileKeyOf(file) {
+  return path.basename(String(file).replace(/\\/g, '/')).replace(/\.md$/i, '');
 }
 
 /**
  * 标题 slug（供锚点）：小写、中文/字母/数字/连字符保留，其余折叠为 -。
+ * 与页面内联脚本中的 slugify 保持一致。
  * @param {string} text
  * @returns {string}
  */
 function slugify(text) {
-  return text
+  return String(text)
     .trim()
     .toLowerCase()
     .replace(/[^\p{L}\p{N}-]+/gu, '-')
@@ -124,7 +183,7 @@ function slugify(text) {
 }
 
 /**
- * 解析图片相对路径：相对 docs/documents/ 目录。
+ * 解析图片相对路径：相对书源目录。
  * @param {string} src
  * @returns {string}
  */
@@ -134,12 +193,14 @@ function resolveAssetSrc(src) {
 
 /**
  * 复制被引用图片到 assets/，返回改写后的引用名（防重名冲突）。
+ * devops 书重名时加书配置的 assetPrefix 前缀（devops-）。
  * @param {string} src md 中的原始引用
+ * @param {{srcDir: string, assetPrefix: string}} book
  * @returns {string|null} 改写后的 ./assets/<文件名>，文件不存在时返回 null
  */
-function copyAsset(src) {
+function copyAsset(src, book) {
   const rel = resolveAssetSrc(src);
-  const abs = path.join(SRC_DIR, rel);
+  const abs = path.join(book.srcDir, rel);
   if (!fs.existsSync(abs) || !fs.statSync(abs).isFile()) {
     return null;
   }
@@ -148,12 +209,12 @@ function copyAsset(src) {
   }
   let name = path.basename(rel);
   if (assetNameTaken[name]) {
-    // 不同目录同名文件：以父目录名做前缀避免覆盖
-    const prefix = path.basename(path.dirname(rel));
-    name = prefix + '-' + name;
+    // 跨书/跨目录同名文件：优先用书前缀（devops-），再退回父目录名前缀
+    const prefix = book.assetPrefix || path.basename(path.dirname(rel));
+    name = prefix + name;
     let i = 1;
     while (assetNameTaken[name]) {
-      name = prefix + '-' + i + '-' + path.basename(rel);
+      name = prefix + i + '-' + path.basename(rel);
       i++;
     }
   }
@@ -224,13 +285,13 @@ function createRenderer() {
       return self.renderToken(tokens, idx, options);
     };
 
-  // 链接改写：站内 md 互链 -> #/章节(锚点)；外链 -> 补 target=_blank
+  // 链接改写：站内 md 互链 -> #/<书>/<章节>(/锚点文字)；外链 -> 补 target=_blank
   md.renderer.rules.link_open = function (tokens, idx, options, env, self) {
     const token = tokens[idx];
     const hrefIndex = token.attrIndex('href');
     if (hrefIndex >= 0) {
       const href = String(token.attrs[hrefIndex][1]);
-      const rewritten = rewriteLink(href, env.chapter);
+      const rewritten = rewriteLink(href, env.book, env.chapter);
       token.attrs[hrefIndex][1] = rewritten.url;
       if (rewritten.external) {
         token.attrSet('target', '_blank');
@@ -244,9 +305,9 @@ function createRenderer() {
   md.renderer.rules.image = function (tokens, idx, options, env, self) {
     const token = tokens[idx];
     const srcIndex = token.attrIndex('src');
-    if (srcIndex >= 0) {
+    if (srcIndex >= 0 && env.book) {
       const src = String(token.attrs[srcIndex][1]);
-      const copied = copyAsset(src);
+      const copied = copyAsset(src, env.book);
       token.attrs[srcIndex][1] = copied || src;
     }
     return defaultImage(tokens, idx, options, env, self);
@@ -276,22 +337,58 @@ function createRenderer() {
 }
 
 /**
- * md 互链改写规则。
+ * 还原 markdown-it 解析期 normalizeLink（encodeURI）造成的锚点转义，
+ * 再由调用方按路由格式统一 encodeURIComponent。
+ * @param {string} anchor
+ * @returns {string}
+ */
+function decodeLinkAnchor(anchor) {
+  try {
+    return decodeURI(anchor);
+  } catch (e) {
+    return anchor;
+  }
+}
+
+/**
+ * md 互链改写规则：`documents/X.md#锚` / `X.md#锚` / `./X.md` → 对应书路由；
+ * 本章锚点 `#xxx` → 当前书当前章节路由；外链照旧（含旧外网 openapi 收敛）。
  * @param {string} href
- * @param {string} chapter 当前章节 id
+ * @param {object} book 当前章节所属书
+ * @param {string} chapter 当前章节 fileKey
  * @returns {{url: string, external: boolean}}
  */
-function rewriteLink(href, chapter) {
-  // 站内 md 互链：./xxx.md / ./xxx.md#锚点 / xxx.md
-  const mdLink = href.match(/^\.?\/?([\w-]+)\.md(?:#(.*))?$/i);
-  if (mdLink && CHAPTERS.indexOf(mdLink[1]) > -1) {
-    const target = mdLink[1];
-    const anchor = mdLink[2] ? '/' + slugify(decodeURI(mdLink[2])) : '';
-    return { url: '#/' + target + anchor, external: false };
+function rewriteLink(href, book, chapter) {
+  // 站内 md 互链：./xxx.md / xxx.md / documents/xxx.md / devops/xxx.md（可带 #锚点）
+  const mdLink = href.match(
+    /^\.?\/?(?:(?:\.\.\/)?(?:documents|devops)\/)?([\w-]+)\.md(?:#(.*))?$/i
+  );
+  if (mdLink) {
+    const targetFile = mdLink[1];
+    // 先按当前书解析（devops 书内的 index.md 应落在内网部署），再全局查书
+    let targetBook = null;
+    if (book && book.chapters.some(function (c) { return c.fileKey === targetFile; })) {
+      targetBook = book;
+    } else {
+      targetBook = BOOKS.find(function (b) {
+        return b.chapters.some(function (c) { return c.fileKey === targetFile; });
+      }) || null;
+    }
+    if (targetBook) {
+      let url = '#/' + targetBook.key + '/' + targetFile;
+      if (mdLink[2]) {
+        url += '/' + encodeURIComponent(decodeLinkAnchor(mdLink[2]));
+      }
+      return { url: url, external: false };
+    }
   }
-  // 本章锚点：#xxx -> #/当前章节/xxx（避免污染顶层路由 hash）
+  // 本章锚点：#xxx -> #/当前书/当前章节/xxx（避免污染顶层路由 hash）
   if (/^#[^/]/.test(href)) {
-    return { url: '#/' + chapter + '/' + slugify(decodeURI(href.slice(1))), external: false };
+    const key = book ? book.key : BOOKS[0].key;
+    return {
+      url: '#/' + key + '/' + chapter + '/' + encodeURIComponent(decodeLinkAnchor(href.slice(1))),
+      external: false
+    };
   }
   // 旧外网文档站的 openapi 文档链接收敛为本仓内置的同源页面（md 源不动，构建期改写）
   if (/^https?:\/\/hellosean1025\.github\.io\/yapi\/openapi\.html\/?$/i.test(href)) {
@@ -303,14 +400,15 @@ function rewriteLink(href, chapter) {
 
 /**
  * 渲染单章 HTML。
- * @param {string} chapter
+ * @param {object} book
+ * @param {string} fileKey
  * @param {import('markdown-it')} md
  * @returns {string}
  */
-function renderChapter(chapter, md) {
-  const file = path.join(SRC_DIR, chapter + '.md');
+function renderChapter(book, fileKey, md) {
+  const file = path.join(book.srcDir, fileKey + '.md');
   const raw = fs.readFileSync(file, 'utf8');
-  const env = { chapter: chapter };
+  const env = { book: book, chapter: fileKey };
   return md.render(preprocessMarkdown(raw), env);
 }
 
@@ -328,31 +426,99 @@ function escapeHtml(s) {
 }
 
 /**
- * 组装最终单文件站点。
- * @param {Record<string, string>} summaryTitles
- * @param {string[]} chapterHtmls
+ * 侧栏单个导航项（章节项或章内锚点子项）。
+ * @param {object} book
+ * @param {{title: string, file: string, anchor: string}} item
+ * @param {boolean} isSub
  * @returns {string}
  */
-function buildSiteHtml(summaryTitles, chapterHtmls) {
-  const navItems = CHAPTERS.map(function (chapter) {
+function navItemHtml(book, item, isSub) {
+  let route = book.key + '/' + fileKeyOf(item.file);
+  if (item.anchor) {
+    route += '/' + item.anchor;
+  }
+  const href = '#/' + route.split('/').map(encodeURIComponent).join('/');
+  return (
+    '<a class="nav-item' + (isSub ? ' nav-sub' : '') + '" href="' +
+    escapeHtml(href) +
+    '" data-route="' +
+    escapeHtml(route) +
+    '">' +
+    escapeHtml(item.title) +
+    '</a>'
+  );
+}
+
+/**
+ * 单本书的侧栏树（组 → 章节 → 章内锚点）。
+ * @param {object} book
+ * @returns {string}
+ */
+function sidebarHtml(book) {
+  return book.groups
+    .map(function (group) {
+      const items = group.items
+        .map(function (item) {
+          const children = item.children
+            .map(function (child) {
+              return navItemHtml(book, child, true);
+            })
+            .join('\n');
+          return navItemHtml(book, item, false) + (children ? '\n' + children : '');
+        })
+        .join('\n');
+      return (
+        (group.title
+          ? '<div class="nav-group-title">' + escapeHtml(group.title) + '</div>\n'
+          : '') + items
+      );
+    })
+    .join('\n');
+}
+
+/**
+ * 组装最终单文件站点。
+ * @returns {string}
+ */
+function buildSiteHtml() {
+  const tabs = BOOKS.concat([OPENAPI_TAB])
+    .map(function (tab) {
+      return (
+        '<a class="site-tab" href="#/' +
+        encodeURIComponent(tab.key) +
+        '" data-tab="' +
+        escapeHtml(tab.key) +
+        '">' +
+        escapeHtml(tab.label) +
+        '</a>'
+      );
+    })
+    .join('\n');
+
+  const navs = BOOKS.map(function (book) {
     return (
-      '<a class="nav-item" href="#/' +
-      chapter +
-      '" data-chapter="' +
-      chapter +
-      '">' +
-      escapeHtml(chapterTitle(chapter, summaryTitles)) +
-      '</a>'
+      '<nav class="book-nav" data-book="' +
+      escapeHtml(book.key) +
+      '">\n' +
+      sidebarHtml(book) +
+      '\n</nav>'
     );
   }).join('\n');
-  const sections = CHAPTERS.map(function (chapter, i) {
-    return (
-      '<section class="chapter" data-chapter="' +
-      chapter +
-      '" hidden>' +
-      chapterHtmls[i] +
-      '</section>'
-    );
+
+  const sections = BOOKS.map(function (book) {
+    return book.chapters
+      .map(function (chapter) {
+        return (
+          '<section class="chapter" data-book="' +
+          escapeHtml(book.key) +
+          '" data-file="' +
+          escapeHtml(chapter.fileKey) +
+          '" hidden>' +
+          chapter.html +
+          '</section>'
+        );
+      })
+      .join('\n');
   }).join('\n');
 
   const shell = `<!DOCTYPE html>
@@ -376,21 +542,23 @@ body {
   top: 0;
   left: 0;
   right: 0;
+  z-index: 10;
+  background: #fff;
+  border-bottom: 1px solid #e8e8e8;
+}
+.site-titlebar {
   height: 56px;
   display: flex;
   align-items: center;
   padding: 0 24px;
-  background: #fff;
-  border-bottom: 1px solid #e8e8e8;
-  z-index: 10;
 }
-.site-header .site-title {
+.site-titlebar .site-title {
   margin: 0;
   font-size: 18px;
   font-weight: 600;
   color: #1f2329;
 }
-.site-header .site-version {
+.site-titlebar .site-version {
   margin-left: 12px;
   padding: 1px 10px;
   font-size: 12px;
@@ -400,18 +568,47 @@ body {
   border: 1px solid #c6dcfb;
   border-radius: 10px;
 }
-.site-body { display: flex; padding-top: 56px; height: 100%; }
+.site-tabs {
+  display: flex;
+  align-items: center;
+  height: 46px;
+  padding: 0 24px;
+}
+.site-tab {
+  margin-right: 40px;
+  line-height: 43px;
+  font-size: 15px;
+  color: #666;
+  text-decoration: none;
+  border-bottom: 3px solid transparent;
+}
+.site-tab:hover { color: #3782eb; }
+.site-tab.active {
+  color: #3782eb;
+  font-weight: 600;
+  border-bottom-color: #3782eb;
+}
+.site-body { display: flex; height: 100%; padding-top: 103px; }
 .site-nav {
-  width: 240px;
+  width: 280px;
   flex: none;
   border-right: 1px solid #e8e8e8;
   overflow-y: auto;
   padding: 16px 0 32px;
   background: #fafafa;
 }
+.site-nav.hidden { display: none; }
+.book-nav[hidden] { display: none; }
+.nav-group-title {
+  padding: 12px 24px 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #999;
+  letter-spacing: 1px;
+}
 .nav-item {
   display: block;
-  padding: 7px 24px;
+  padding: 6px 24px 6px 24px;
   color: #4a4a4a;
   text-decoration: none;
   line-height: 22px;
@@ -420,15 +617,28 @@ body {
 .nav-item:hover { color: #3782eb; }
 .nav-item.active {
   color: #3782eb;
-  background: #fff;
   border-left-color: #3782eb;
   font-weight: 600;
 }
+.nav-sub {
+  padding-left: 44px;
+  font-size: 13px;
+  color: #7a7a7a;
+}
+.nav-sub.active { background: #fff; }
 .site-content {
   flex: 1;
   overflow-y: auto;
   padding: 24px 32px 64px;
 }
+.site-content.hidden { display: none; }
+.openapi-frame {
+  flex: 1;
+  height: 100%;
+  border: none;
+}
+.openapi-frame[hidden] { display: none; }
+.openapi-frame iframe { width: 100%; height: 100%; border: none; display: block; }
 .chapter { max-width: 820px; margin: 0 auto; }
 .chapter img { max-width: 100%; height: auto; }
 .chapter h1, .chapter h2, .chapter h3, .chapter h4 {
@@ -475,56 +685,169 @@ body {
 </head>
 <body>
 <header class="site-header">
-  <h1 class="site-title">YApi 使用文档</h1>
-  <!-- 版本号来源：package.json（当前 ${SITE_VERSION}） -->
-  <span class="site-version">${SITE_VERSION}</span>
+  <div class="site-titlebar">
+    <h1 class="site-title">YApi 使用文档</h1>
+    <!-- 版本号来源：package.json（当前 ${SITE_VERSION}） -->
+    <span class="site-version">${SITE_VERSION}</span>
+  </div>
+  <nav class="site-tabs">
+${tabs}
+  </nav>
 </header>
 <div class="site-body">
-  <nav class="site-nav">
-${navItems}
-  </nav>
+  <aside class="site-nav" id="siteNav">
+${navs}
+  </aside>
   <main class="site-content" id="siteContent">
 ${sections}
   </main>
+  <div class="openapi-frame" id="openapiFrame" hidden>
+    <iframe title="开放Api" src="about:blank"></iframe>
+  </div>
 </div>
 <script>
 (function () {
+  var TABS = ${JSON.stringify(BOOKS.concat([OPENAPI_TAB]).map(function (t) { return t.key; }))};
   var chapters = [].slice.call(document.querySelectorAll('.chapter'));
   var navItems = [].slice.call(document.querySelectorAll('.nav-item'));
+  var tabs = [].slice.call(document.querySelectorAll('.site-tab'));
+  var bookNavs = [].slice.call(document.querySelectorAll('.book-nav'));
+  var siteNav = document.getElementById('siteNav');
   var content = document.getElementById('siteContent');
+  var frameWrap = document.getElementById('openapiFrame');
+  var frame = frameWrap ? frameWrap.querySelector('iframe') : null;
 
-  function activate(id, anchor) {
-    var found = false;
-    chapters.forEach(function (sec) {
-      var match = sec.getAttribute('data-chapter') === id;
-      sec.hidden = !match;
-      if (match) {
-        found = true;
+  function slugify(text) {
+    return String(text)
+      .trim()
+      .toLowerCase()
+      .replace(/[^\\p{L}\\p{N}-]+/gu, '-')
+      .replace(/^-+|-+$/g, '');
+  }
+
+  function findSection(bookKey, fileKey) {
+    for (var i = 0; i < chapters.length; i++) {
+      var sec = chapters[i];
+      if (sec.getAttribute('data-book') === bookKey &&
+          sec.getAttribute('data-file') === fileKey) {
+        return sec;
       }
-    });
-    if (!found && chapters.length) {
-      chapters[0].hidden = false;
-      id = chapters[0].getAttribute('data-chapter');
     }
-    navItems.forEach(function (item) {
-      item.classList.toggle('active', item.getAttribute('data-chapter') === id);
+    return null;
+  }
+
+  function defaultSection(bookKey) {
+    for (var i = 0; i < chapters.length; i++) {
+      if (chapters[i].getAttribute('data-book') === bookKey) {
+        return chapters[i];
+      }
+    }
+    return chapters[0] || null;
+  }
+
+  // 章内锚点：先按 slug 找 heading id，找不到再按标题文字包含匹配
+  // （SUMMARY 锚点文字与实际 heading 文字可能略有出入，如「mongodb集群」 vs「如何配置mongodb集群」）
+  function resolveAnchor(section, text) {
+    if (!section || !text) {
+      return null;
+    }
+    var slug = slugify(text);
+    if (slug && document.getElementById(slug) &&
+        section.contains(document.getElementById(slug))) {
+      return document.getElementById(slug);
+    }
+    var headings = section.querySelectorAll('h1,h2,h3,h4,h5,h6');
+    var needle = String(text).replace(/\\s+/g, '');
+    if (!needle) {
+      return null;
+    }
+    for (var i = 0; i < headings.length; i++) {
+      // SUMMARY 锚点与实际标题可能仅空格差异（如「YApi接口JSON数据导入」vs「YApi 接口 JSON 数据导入」）
+      if (headings[i].textContent.replace(/\\s+/g, '').indexOf(needle) > -1) {
+        return headings[i];
+      }
+    }
+    return null;
+  }
+
+  function activate(tab, file, anchor) {
+    var known = TABS.indexOf(tab) > -1;
+    if (!known) {
+      // 旧版 #/章节 兼容：fileKey 落在教程书时按教程章节处理，否则回首页签
+      if (findSection('${BOOKS[0].key}', tab)) {
+        anchor = file || '';
+        file = tab;
+        tab = '${BOOKS[0].key}';
+      } else {
+        tab = TABS[0];
+        file = '';
+        anchor = '';
+      }
+    }
+    var isFrame = tab === '${OPENAPI_TAB.key}';
+    tabs.forEach(function (t) {
+      t.classList.toggle('active', t.getAttribute('data-tab') === tab);
     });
-    content.scrollTop = 0;
-    if (anchor) {
-      var target = document.getElementById(anchor);
-      if (target && target.scrollIntoView) {
-        target.scrollIntoView();
+    if (isFrame) {
+      // 开放Api：侧栏与章节隐藏，iframe 整页占满内容区（懒加载）
+      siteNav.classList.add('hidden');
+      bookNavs.forEach(function (n) { n.hidden = true; });
+      chapters.forEach(function (sec) { sec.hidden = true; });
+      content.classList.add('hidden');
+      frameWrap.hidden = false;
+      if (frame && frame.getAttribute('src') === 'about:blank') {
+        frame.setAttribute('src', '/openapi-doc.html');
+      }
+      return;
+    }
+    frameWrap.hidden = true;
+    if (frame && frame.getAttribute('src') !== 'about:blank') {
+      frame.setAttribute('src', 'about:blank');
+    }
+    siteNav.classList.remove('hidden');
+    content.classList.remove('hidden');
+    bookNavs.forEach(function (n) {
+      n.hidden = n.getAttribute('data-book') !== tab;
+    });
+    var sec = (file && findSection(tab, file)) || defaultSection(tab);
+    chapters.forEach(function (s) {
+      s.hidden = s !== sec;
+    });
+    if (sec) {
+      var effFile = sec.getAttribute('data-file');
+      var fullRoute = tab + '/' + effFile + (anchor ? '/' + anchor : '');
+      var baseRoute = tab + '/' + effFile;
+      navItems.forEach(function (item) {
+        var r = item.getAttribute('data-route');
+        var isSub = item.classList.contains('nav-sub');
+        var isActive = r === fullRoute ||
+          (anchor && !isSub && r === baseRoute) ||
+          (!anchor && r === baseRoute);
+        item.classList.toggle('active', isActive);
+      });
+      content.scrollTop = 0;
+      if (anchor) {
+        var target = resolveAnchor(sec, anchor);
+        if (target && target.scrollIntoView) {
+          target.scrollIntoView();
+        }
       }
     }
   }
 
   function route() {
-    var hash = decodeURIComponent(location.hash || '');
-    var m = hash.match(/^#\\/([\\w-]+)(?:\\/([^/]+))?$/);
+    var raw = location.hash || '';
+    var decoded = raw;
+    try {
+      decoded = decodeURIComponent(raw);
+    } catch (e) {
+      /* 保留原文 */
+    }
+    var m = decoded.match(/^#\\/([^\\/]+)(?:\\/([^\\/]+))?(?:\\/(.+))?$/);
     if (m) {
-      activate(m[1], m[2] || '');
+      activate(m[1], m[2] || '', m[3] || '');
     } else {
-      activate(chapters.length ? chapters[0].getAttribute('data-chapter') : '', '');
+      activate(TABS[0], '', '');
     }
   }
 
@@ -539,26 +862,63 @@ ${sections}
 }
 
 function main() {
-  const summaryTitles = readSummaryTitles();
   // 幂等：先清空输出目录再生成
   fs.rmSync(OUT_DIR, { recursive: true, force: true });
   fs.mkdirSync(ASSETS_DIR, { recursive: true });
 
-  const md = createRenderer();
-  const chapterHtmls = CHAPTERS.map(function (chapter) {
-    return renderChapter(chapter, md);
+  // 解析两本书的 SUMMARY 树并收集章节
+  BOOKS.forEach(function (book) {
+    const summaryGroups = parseSummary(book.summary);
+    book.groups = book.prependGroups.concat(summaryGroups);
+    book.chapters = collectChapters(book.groups);
   });
-  const html = buildSiteHtml(summaryTitles, chapterHtmls);
+
+  const md = createRenderer();
+  /** @type {string[]} */
+  const missing = [];
+  BOOKS.forEach(function (book) {
+    book.chapters.forEach(function (chapter) {
+      const file = path.join(book.srcDir, chapter.fileKey + '.md');
+      if (!fs.existsSync(file)) {
+        missing.push(book.key + '/' + chapter.fileKey);
+        chapter.html = '';
+        return;
+      }
+      chapter.html = renderChapter(book, chapter.fileKey, md);
+    });
+  });
+
+  const html = buildSiteHtml();
   fs.writeFileSync(path.join(OUT_DIR, 'index.html'), html);
 
+  // 统计与报告
+  BOOKS.forEach(function (book) {
+    const anchorCount = book.groups.reduce(function (sum, group) {
+      return (
+        sum +
+        group.items.reduce(function (s, item) {
+          return s + (item.anchor ? 1 : 0) + item.children.length;
+        }, 0)
+      );
+    }, 0);
+    console.log(
+      '[build-docs-site] 书「' + book.key + '」: 组=' + book.groups.length +
+        ' 章节文件=' + book.chapters.length +
+        ' 锚点子项=' + anchorCount
+    );
+    book.groups.forEach(function (group) {
+      const titles = group.items.map(function (item) {
+        return item.title + (item.children.length ? '(' + item.children.length + '锚点)' : '');
+      });
+      console.log('    组[' + (group.title || '(无名)') + ']: ' + titles.join(' / '));
+    });
+  });
   const assetCount = Object.keys(assetNameBySrc).length;
   const size = fs.statSync(path.join(OUT_DIR, 'index.html')).size;
-  console.log('[build-docs-site] 章节数:', CHAPTERS.length);
+  console.log('[build-docs-site] 页签数:', BOOKS.length + 1, '(' + BOOKS.map(function (b) { return b.key; }).join('/') + '/' + OPENAPI_TAB.key + ')');
   console.log('[build-docs-site] 复制图片数:', assetCount);
   console.log('[build-docs-site] 输出:', path.join(OUT_DIR, 'index.html'), '(' + size + ' bytes)');
-  const missing = CHAPTERS.filter(function (c) {
-    return !fs.existsSync(path.join(SRC_DIR, c + '.md'));
-  });
+
   if (missing.length) {
     console.error('[build-docs-site] 缺失章节源文件:', missing.join(', '));
     process.exitCode = 1;

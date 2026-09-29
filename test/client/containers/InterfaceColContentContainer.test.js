@@ -307,7 +307,7 @@ const EXPECTED_INITIAL_SNAPSHOT = `<div>
       <div class="ant-col.ant-col-5.CSSHASH.css-var-root">
         <h2 class="interface-title" style="display:inline-block">
           "测试集合"
-          <a href="/docs/index.html#/case" rel="noopener noreferrer" target="_blank">
+          <a href="/docs/index.html#/教程/case" rel="noopener noreferrer" target="_blank">
             <span aria-label="question-circle" class="anticon.anticon-question-circle" role="img">
               <svg aria-hidden="true" data-icon="question-circle" fill="currentColor" focusable="false" height="1em" viewBox="64 64 896 896" width="1em">
                 <path d="SVG_PATH">

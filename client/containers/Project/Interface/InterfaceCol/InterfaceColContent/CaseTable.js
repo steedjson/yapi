@@ -99,7 +99,7 @@ const CaseTable = props => {
               <a
                 target="_blank"
                 rel="noopener noreferrer"
-                href="/docs/index.html#/case"
+                href="/docs/index.html#/教程/case"
                 className="link-tooltip"
               >
                 {' '}

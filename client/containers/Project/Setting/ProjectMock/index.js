@@ -86,7 +86,7 @@ const ProjectMock = props => {
               是否开启&nbsp;<a
                 target="_blank"
                 rel="noopener noreferrer"
-                href="/docs/index.html#/project"
+                href="/docs/index.html#/教程/project"
               >
                 <Tooltip title="点击查看文档">
                   <QuestionCircleOutlined />

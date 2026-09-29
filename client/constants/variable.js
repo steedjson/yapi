@@ -168,7 +168,7 @@ module.exports = {
   ],
   IP_REGEXP: /^(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])(\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])){3}$/,
   docHref: {
-    adv_mock_case: '/docs/index.html#/case',
-    adv_mock_script: '/docs/index.html#/adv_mock'
+    adv_mock_case: '/docs/index.html#/教程/case',
+    adv_mock_script: '/docs/index.html#/教程/adv_mock'
   }
 };

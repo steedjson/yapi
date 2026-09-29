@@ -54,7 +54,7 @@ function buildDefaultFootList(openDocs) {
       linkList: [
         {
           itemTitle: `版本: ${version} `,
-          itemLink: '/docs/index.html#/version'
+          itemLink: '/docs/index.html#/教程/version'
         },
         {
           itemTitle: '使用文档',

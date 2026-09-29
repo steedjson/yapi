@@ -115,7 +115,7 @@ const tipDoc = (
     </h3>
     <p>
       初次使用 YApi，强烈建议你阅读{' '}
-      <a target="_blank" rel="noopener noreferrer" href="/docs/index.html#/quickstart">
+      <a target="_blank" rel="noopener noreferrer" href="/docs/index.html#/教程/quickstart">
         使用文档
       </a>
       ，我们为你提供了通俗易懂的快速入门教程，更有详细的使用说明，欢迎阅读！{' '}
