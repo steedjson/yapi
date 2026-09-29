@@ -87,6 +87,10 @@ let diffCssCache = null;
         return (ctx.body = yapi.commons.resReturn(null, 400, '没有权限'));
       }
     }
+    // token 请求只允许更新归属项目的接口
+    if (this.$tokenAuth && Number(interfaceData.project_id) !== Number(this.$tokenProjectId)) {
+      return (ctx.body = yapi.commons.resReturn(null, 406, '没有权限'));
+    }
 
     let data = Object.assign(
       {

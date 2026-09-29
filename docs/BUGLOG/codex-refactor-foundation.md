@@ -2,6 +2,13 @@
 
 条目由 /csl-buglog 或人工维护,供 coder/reviewer 动手前核对
 
+## [2026-09-29][server] token 语义收紧三连:超管包装串不限项目/禁用账号包装串可调用/interface/up 跨项目越权写
+- 现象: ①超管账号在设置页拿到的包装串(页面展示的是 `AES(uid|rawToken, passsalt)` 包装,不是库里原始 20 位串)可对**任意**项目以 admin 身份调接口;②被禁用账号的包装串仍可调用;③任一自己项目的 token 可篡改**任意**项目接口(/api/interface/up 按 params.id 反查直接落库,token 路径整体跳过 checkAuth 且不校验归属);附带核实 runAutoTest 按用例集 id 执行也不校验归属(A 项目 token 可跑 B 项目用例集)
+- 根因: getProjectRole 的 admin 早退(全局角色)位于项目域判定之前,包装串解出的真实用户角色被全量继承;init 的 token 分支不查 disabled;upMethods 的 $tokenAuth 分支只"跳过 checkAuth"没补归属比对;open 控制器两方法同理。另注意 init 会把 `ctx.params.project_id` 强制改写为 token 归属项目——importData 类"读 body 里 project_id"的写点因此天然免疫跨项目,真正缺口在"按 id 反查数据"型写点(up/runAutoTest)
+- 修法: ①getProjectRole admin 早退加 `!$tokenAuth` 守卫(token 请求一律收敛为归属项目 dev,不继承使用者全局角色) ②init token 分支 findById 后 `!result || result.disabled===true` 即 return,且**整组置位($tokenAuth/$tokenProjectId/$uid/$user/$auth/ctx 两兼容字段)后移**到判断之后(消灭禁用早退的状态残留组合态) ③upMethods 补归属 406 ④open.js importData/runAutoTest 补归属 406(importData 为纵深防御)
+- 关联: server/controllers/base.js:111-123,281-283;server/controllers/interface/upMethods.js:90-93;server/controllers/open.js:92-95,246-249;test/server/token-project-role.test.js(17 例)/up-token-scope.test.js(5 例)
+- 复发: 0 次 · 教训: 「包装串绑人」语义下,人的全局角色会经既有早退分支泄漏进项目域——项目域判定必须先于全局角色早退;同类写点要按"数据获取方式"分型治理:body 传 project_id 型被 init 改写天然免疫,"按 id 反查"型必须逐个补归属比对;reviewer 对白名单逐端点核对是本轮 Blocker 的发现路径
+
 ## [2026-09-29][server/base] 私有项目开放接口全量 406:token 身份过不了控制器私有校验(开放 API 名存实亡)
 - 现象: 私有项目上带 token 调开放接口大面积 `406 没有权限`——不只 get_cat_tree/project/get,连白名单里的 interface/get、list、getCatMenu 也 406;公开项目全通。逐端点实测另有发现: project/up(danger)不可用属设计应有, /api/open/project_interface_data 是空壳占位路由(仅 echo)
 - 根因: 控制器私有项目校验走 `checkAuth → getProjectRole`,其身份来自 `$user.role`/项目成员表,而纯 token(uid=999999,role=member)永远不是项目成员 → 406。`base.js init()` 其实已算出 token 归属项目 id 但未保存利用;interface/get 里既有 `$tokenAuth` 归属校验先例,证明设计意图是「token 读写自己项目」,只是角色判定没接上

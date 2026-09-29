@@ -89,6 +89,10 @@ class openController extends baseController {
     let type = ctx.params.type;
     let content = ctx.params.json;
     let project_id = ctx.params.project_id;
+    // 导入目标必须为 token 归属项目, 防跨项目写入
+    if (!this.$tokenAuth || Number(project_id) !== Number(this.$tokenProjectId)) {
+      return (ctx.body = yapi.commons.resReturn(null, 406, '没有权限'));
+    }
     let dataSync = ctx.params.merge;
 
     let warnMessage = ''
@@ -238,6 +242,10 @@ class openController extends baseController {
     let colData = await this.interfaceColModel.get(id);
     if (!colData) {
       return (ctx.body = yapi.commons.resReturn(null, 40022, 'id值不存在'));
+    }
+    // 用例集必须属于 token 归属项目, 防跨项目执行
+    if (Number(colData.project_id) !== Number(this.$tokenProjectId)) {
+      return (ctx.body = yapi.commons.resReturn(null, 406, '没有权限'));
     }
 
     let projectData = await this.projectModel.get(projectId);

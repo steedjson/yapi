@@ -6,6 +6,9 @@ const commons = require('../../server/utils/commons.js');
 const projectModel = require('../../server/models/project.js');
 const interfaceModel = require('../../server/models/interface.js');
 const groupModel = require('../../server/models/group.js');
+const tokenModel = require('../../server/models/token.js');
+const userModel = require('../../server/models/user.js');
+const { getToken } = require('../../server/utils/token.js');
 
 test.before('挂载真实 commons 到 yapi 单例', () => {
   // getProjectRole 异常兜底依赖 yapi.commons.log, 测试环境手动挂载
@@ -115,8 +118,8 @@ test.serial('token 请求查询归属项目下的接口时归一化到项目 id 
   t.is(role, 'dev');
 });
 
-test.serial('token 命中归属项目但用户为全局 admin 时保持 admin 优先', async t => {
-  installModelStubs({ project: nonMemberProject, group: nonMemberGroup, interfaceData: null });
+test.serial('token 请求不继承使用者全局 admin 角色: 归属项目返回 dev 而非 admin', async t => {
+  const calls = installModelStubs({ project: nonMemberProject, group: nonMemberGroup, interfaceData: null });
   const inst = createInst({
     $tokenAuth: true,
     $tokenProjectId: 123,
@@ -125,6 +128,36 @@ test.serial('token 命中归属项目但用户为全局 admin 时保持 admin �
   });
 
   const role = await inst.getProjectRole(123, 'project');
+
+  t.is(role, 'dev');
+  // admin 早退被 !this.$tokenAuth 守卫短路, 走 token 归属分支且不触达 project 查询
+  t.deepEqual(calls.projectGets, []);
+});
+
+test.serial('token 请求绑定全局 admin 用户查询非归属项目时不再命中 admin 早退, 落回原逻辑 member', async t => {
+  const calls = installModelStubs({ project: nonMemberProject, group: nonMemberGroup, interfaceData: null });
+  // _id=42 避开 nonMemberProject 创建者 uid=1, 排除 owner 分支干扰
+  const inst = createInst({
+    $tokenAuth: true,
+    $tokenProjectId: 123,
+    $uid: '42',
+    $user: { _id: 42, role: 'admin', username: 'root2' }
+  });
+
+  const role = await inst.getProjectRole(456, 'project');
+
+  t.is(role, 'member');
+  t.deepEqual(calls.projectGets, [456]);
+});
+
+test.serial('登录态(无 $tokenAuth)全局超管仍返回 admin(回归)', async t => {
+  installModelStubs({ project: nonMemberProject, group: nonMemberGroup, interfaceData: null });
+  const inst = createInst({
+    $uid: '1',
+    $user: { _id: 1, role: 'admin', username: 'root' }
+  });
+
+  const role = await inst.getProjectRole(456, 'project');
 
   t.is(role, 'admin');
 });
@@ -211,6 +244,120 @@ test.serial('$tokenAuth 与 $tokenProjectId 均未挂载(token 无效提前返�
   const role = await inst.getProjectRole(123, 'project');
 
   t.is(role, 'member');
+});
+
+// ---------- ⑤ token 上下文绑定账号异常语义($user=null / disabled) ----------
+
+test.serial('token 上下文 $user 为 null 时 getProjectRole 不抛错且不返回 admin(守卫短路口径)', async t => {
+  installModelStubs({ project: nonMemberProject, group: nonMemberGroup, interfaceData: null });
+  // 生产链路中该状态不可达: init 对绑定账号缺失提前 return, createAction 以 $auth!==true 拦截,
+  // 此处钉死 `!this.$tokenAuth && this.getRole()` 的短路顺序, 防止条件换序后解引用 null
+  const owned = createInst({ $tokenAuth: true, $tokenProjectId: 123, $uid: '999999', $user: null });
+  t.is(await owned.getProjectRole(123, 'project'), 'dev');
+
+  const foreign = createInst({ $tokenAuth: true, $tokenProjectId: 123, $uid: '999999', $user: null });
+  t.is(await foreign.getProjectRole(456, 'project'), 'member');
+});
+
+test.serial('getProjectRole 不消费 disabled 字段, 禁用拦截由 init 提前返回承担', async t => {
+  installModelStubs({ project: nonMemberProject, group: nonMemberGroup, interfaceData: null });
+  const inst = createInst({
+    $tokenAuth: true,
+    $tokenProjectId: 123,
+    $uid: '999999',
+    $user: { _id: '999999', role: 'member', username: 'system', disabled: true }
+  });
+
+  t.is(await inst.getProjectRole(123, 'project'), 'dev');
+});
+
+// ---------- ⑥ init() 直测: 包装串绑定账号禁用/删除时不授予鉴权 ----------
+
+/**
+ * 构造 openapi 请求上下文桩(无 cookie 登录态, checkLogin 直接返回 false)。
+ * @param {string} token 包装串或原始 token
+ * @returns {any} ctx 桩
+ */
+function createOpenCtx(token) {
+  return {
+    path: '/api/open/import_data',
+    query: { token },
+    request: { body: {} },
+    cookies: { get: () => undefined },
+    params: {}
+  };
+}
+
+/**
+ * 注入 token/user model 桩, 服务于 init() 包装串分支。
+ * @param {any} opts tokenRow 为 tokenModel.findId 返回值, user 为 userModel.findById 返回值
+ * @returns {void}
+ */
+function installUserTokenStubs(opts) {
+  yapi.getInsts.set(tokenModel, {
+    findId: async () => opts.tokenRow
+  });
+  yapi.getInsts.set(userModel, {
+    findById: async () => opts.user
+  });
+}
+
+test.serial('init: 包装串绑定账号被禁用时提前返回, 不写入任何鉴权置位', async t => {
+  installModelStubs({ project: { _id: 123 }, group: null, interfaceData: null });
+  installUserTokenStubs({
+    tokenRow: { toObject: () => ({ project_id: 123 }) },
+    user: { _id: 7, role: 'member', username: 'bob', disabled: true }
+  });
+  const wrapped = getToken('project-token-123', '7');
+  const ctx = createOpenCtx(wrapped);
+  const inst = new baseController(ctx);
+
+  await inst.init(ctx);
+
+  // 全部置位($tokenAuth/$tokenProjectId/$uid/$user/$auth 及 ctx 兼容字段)均已前移到禁用判断之后,
+  // 早退不得残留任何鉴权状态
+  t.falsy(inst.$tokenAuth);
+  t.is(inst.$tokenProjectId, undefined);
+  t.is(inst.$uid, undefined);
+  t.is(inst.$user, null);
+  // createAction 依赖 $auth === true 放行, 未置位时统一回 40011 请登录
+  t.falsy(inst.$auth);
+  t.is(ctx.query.pid, undefined);
+  t.is(ctx.params.project_id, undefined);
+});
+
+test.serial('init: 包装串绑定账号已被删除(findById 为 null)时同样提前返回', async t => {
+  installModelStubs({ project: { _id: 123 }, group: null, interfaceData: null });
+  installUserTokenStubs({
+    tokenRow: { toObject: () => ({ project_id: 123 }) },
+    user: null
+  });
+  const wrapped = getToken('project-token-123', '7');
+  const inst = new baseController(createOpenCtx(wrapped));
+
+  await inst.init(createOpenCtx(wrapped));
+
+  // 与禁用分支同一语义: 删除账号同样在任何置位之前早退, 不得残留 $tokenAuth/$tokenProjectId
+  t.falsy(inst.$tokenAuth);
+  t.is(inst.$tokenProjectId, undefined);
+  t.is(inst.$user, null);
+  t.falsy(inst.$auth);
+});
+
+test.serial('init: 包装串绑定账号正常启用时照常授予 $auth(回归)', async t => {
+  installModelStubs({ project: { _id: 123 }, group: null, interfaceData: null });
+  installUserTokenStubs({
+    tokenRow: { toObject: () => ({ project_id: 123 }) },
+    user: { _id: 7, role: 'member', username: 'bob', disabled: false }
+  });
+  const wrapped = getToken('project-token-123', '7');
+  const inst = new baseController(createOpenCtx(wrapped));
+
+  await inst.init(createOpenCtx(wrapped));
+
+  t.true(inst.$auth);
+  t.is(inst.$uid, '7');
+  t.is(inst.$user.username, 'bob');
 });
 
 // 收尾兜底: 本文件不触发真实 mongoose 连接, 此处仅防御性清理常驻句柄

@@ -98,11 +98,6 @@ class baseController {
       }
       let projectData = await this.projectModel.get(checkId);
       if (projectData) {
-        ctx.query.pid = checkId; // 兼容：/api/plugin/export
-        ctx.params.project_id = checkId;
-        this.$tokenAuth = true;
-        this.$tokenProjectId = checkId;
-        this.$uid = tokenUid;
         let result;
         if(tokenUid === oldTokenUid){
           result = {
@@ -113,8 +108,17 @@ class baseController {
         }else{
           let userInst = yapi.getInst(userModel); //创建user实体
           result = await userInst.findById(tokenUid);
+          // 包装串绑定的账号被禁用或已删除时, 不授予该次鉴权(与 checkLogin 的禁用拦截语义一致)
+          if (!result || result.disabled === true) {
+            return;
+          }
         }
 
+        ctx.query.pid = checkId; // 兼容：/api/plugin/export
+        ctx.params.project_id = checkId;
+        this.$tokenAuth = true;
+        this.$tokenProjectId = checkId;
+        this.$uid = tokenUid;
         this.$user = result;
         this.$auth = true;
       }
@@ -274,7 +278,8 @@ class baseController {
     /** @type {any} */
     let result = {};
     try {
-      if (this.getRole() === 'admin') {
+      // token 请求不继承使用者全局角色(含 admin): 权限收敛为归属项目内开发者
+      if (!this.$tokenAuth && this.getRole() === 'admin') {
         return 'admin';
       }
       if (type === 'interface') {
