@@ -60,6 +60,15 @@ Consult `config_example.json` and `docs/devops/` for setup. Never commit credent
 
 实施完成 →（csl-tester）→ VERIFIED / BLOCKED；VERIFIED 后，若变更文件清单含 UI 相关改动（如 `client/**`、页面渲染/交互逻辑），先由主 Agent 亲自执行 UI 验证（浏览器自动化为主 Agent 专属，不派子 Agent），产出 UI_VERIFIED / UI_BLOCKED；随后进入 csl-reviewer 审查 → PASS / FAIL；PASS 后主 Agent 终审、合并、提交。csl-coder 报告计划与实际代码冲突（CONFLICT）时暂停流水线，回主 Agent 重新裁决。BLOCKED/UI_BLOCKED/FAIL 须附缺陷定位与根因（或 Blocker 清单）打回 csl-coder 定向修复、不得扩大范围，修复后重过 tester、（如涉及）UI 验证及 reviewer；打回修复总轮次上限 3 轮（UI_BLOCKED 计入同一计数器），达到即熔断挂起、升级人工裁决。
 
+### 鉴权/权限面改动强制纪律
+
+凡改动涉及鉴权、权限、token、角色判定（含 `server/controllers/base.js`、各控制器 checkAuth/归属校验、路由白名单、会话与登录态），在状态门禁之上追加以下强制项，缺一不得判 VERIFIED / PASS：
+
+- **tester 必须补负向用例**：越权身份（拿 A 项目凭证打 B 项目/资源）、禁用与已删除账号、无效/过期凭据、字符串与数字 id 双形态等，至少各一条断言；仅正向用例不得通过验证；
+- **reviewer 必须逐端点核对归属**：对受影响面的每个端点给出「归属校验 + 角色早退顺序」核对清单（先例：`/api/interface/up` 曾在 token 路径整体跳过 checkAuth 且不校验归属，属跨项目越权写——白名单放行 ≠ 端点可用，项目域判定必须先于全局角色早退）；
+- **主 Agent 实测必须含负向 HTTP 用例**（A 凭证打 B 项目、禁用账号、无效凭据、回归三连），实测矩阵随交付报告留档；
+- 修复确认根因后按 BUGLOG 纪律追加条目，教训行需提炼可复用的判定口诀（先例：「白名单放行 ≠ 端点可用」「项目域判定先于全局角色早退」）。
+
 ### 委派前必须先完成
 
 主 Agent 必须先给出可执行边界，再委派：
