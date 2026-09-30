@@ -24,12 +24,20 @@ class advMockController extends baseController {
    */
   async getMock(ctx) {
     let id = ctx.query.interface_id;
+    if (!id) {
+      return (ctx.body = yapi.commons.resReturn(null, 408, '缺少interface_id'));
+    }
     // token 请求仅允许读取归属项目的接口配置
     let interfaceData = await this.interfaceModel.get(id);
     if (
       !interfaceData ||
       (this.$tokenAuth && Number(interfaceData.project_id) !== Number(this.$tokenProjectId))
     ) {
+      return (ctx.body = yapi.commons.resReturn(null, 406, '没有权限'));
+    }
+    // 登录态需要项目 view 权限; token 请求经严格域已是归属项目 dev
+    let auth = await this.checkAuth(interfaceData.project_id, 'project', 'view');
+    if (!auth) {
       return (ctx.body = yapi.commons.resReturn(null, 406, '没有权限'));
     }
     let mockData = await this.Model.get(id);
@@ -45,23 +53,27 @@ class advMockController extends baseController {
   async upMock(ctx) {
     let params = ctx.request.body;
     try {
-      let auth = await this.checkAuth(params.project_id, 'project', 'edit');
-
-      if (!auth) {
-        return (ctx.body = yapi.commons.resReturn(null, 40033, '没有权限'));
-      }
-
       if (!params.interface_id) {
         return (ctx.body = yapi.commons.resReturn(null, 408, '缺少interface_id'));
       }
       if (!params.project_id) {
         return (ctx.body = yapi.commons.resReturn(null, 408, '缺少project_id'));
       }
+      // 落库与鉴权均以接口真实归属为准, 防止伪报 project_id 跨项目写
+      let interfaceData = await this.interfaceModel.get(params.interface_id);
+      if (!interfaceData) {
+        return (ctx.body = yapi.commons.resReturn(null, 408, '接口不存在'));
+      }
+      let auth = await this.checkAuth(interfaceData.project_id, 'project', 'edit');
+
+      if (!auth) {
+        return (ctx.body = yapi.commons.resReturn(null, 40033, '没有权限'));
+      }
 
       let data = {
         interface_id: params.interface_id,
         mock_script: params.mock_script || '',
-        project_id: params.project_id,
+        project_id: interfaceData.project_id,
         uid: this.getUid(),
         enable: params.enable === true ? true : false
       };
@@ -86,6 +98,14 @@ class advMockController extends baseController {
       let id = ctx.query.interface_id;
       if (!id) {
         return (ctx.body = yapi.commons.resReturn(null, 400, '缺少 interface_id'));
+      }
+      let interfaceData = await this.interfaceModel.get(id);
+      if (!interfaceData) {
+        return (ctx.body = yapi.commons.resReturn(null, 408, '接口不存在'));
+      }
+      let auth = await this.checkAuth(interfaceData.project_id, 'project', 'view');
+      if (!auth) {
+        return (ctx.body = yapi.commons.resReturn(null, 406, '没有权限'));
       }
       let result = await this.caseModel.list(id);
       for (let i = 0, len = result.length; i < len; i++) {
@@ -113,6 +133,18 @@ class advMockController extends baseController {
     let result = await this.caseModel.get({
       _id: id
     });
+    if (!result) {
+      return (ctx.body = yapi.commons.resReturn(null, 408, '期望不存在'));
+    }
+    let interfaceData = await this.interfaceModel.get(result.interface_id);
+    if (!interfaceData) {
+      return (ctx.body = yapi.commons.resReturn(null, 408, '接口不存在'));
+    }
+    // 登录态需要项目 view 权限; token 请求经严格域已是归属项目 dev
+    let auth = await this.checkAuth(interfaceData.project_id, 'project', 'view');
+    if (!auth) {
+      return (ctx.body = yapi.commons.resReturn(null, 406, '没有权限'));
+    }
 
     ctx.body = yapi.commons.resReturn(result);
   }
@@ -140,6 +172,12 @@ class advMockController extends baseController {
       !interfaceData ||
       (this.$tokenAuth && Number(interfaceData.project_id) !== Number(this.$tokenProjectId))
     ) {
+      return (ctx.body = yapi.commons.resReturn(null, 406, '没有权限'));
+    }
+
+    // 登录态需要项目 edit 权限(与 upMock 对齐); token 请求经严格域已是归属项目 dev
+    let auth = await this.checkAuth(interfaceData.project_id, 'project', 'edit');
+    if (!auth) {
       return (ctx.body = yapi.commons.resReturn(null, 406, '没有权限'));
     }
 
@@ -208,6 +246,21 @@ class advMockController extends baseController {
     if (!id) {
       return (ctx.body = yapi.commons.resReturn(null, 408, '缺少 id'));
     }
+    let caseData = await this.caseModel.get({
+      _id: id
+    });
+    if (!caseData) {
+      return (ctx.body = yapi.commons.resReturn(null, 408, '期望不存在'));
+    }
+    let interfaceData = await this.interfaceModel.get(caseData.interface_id);
+    if (!interfaceData) {
+      return (ctx.body = yapi.commons.resReturn(null, 408, '接口不存在'));
+    }
+    // 登录态需要项目 edit 权限; token 请求经严格域已是归属项目 dev
+    let auth = await this.checkAuth(interfaceData.project_id, 'project', 'edit');
+    if (!auth) {
+      return (ctx.body = yapi.commons.resReturn(null, 406, '没有权限'));
+    }
     let result = await this.caseModel.del(id);
     return (ctx.body = yapi.commons.resReturn(result));
   }
@@ -220,6 +273,21 @@ class advMockController extends baseController {
     let enable = ctx.request.body.enable;
     if (!id) {
       return (ctx.body = yapi.commons.resReturn(null, 408, '缺少 id'));
+    }
+    let caseData = await this.caseModel.get({
+      _id: id
+    });
+    if (!caseData) {
+      return (ctx.body = yapi.commons.resReturn(null, 408, '期望不存在'));
+    }
+    let interfaceData = await this.interfaceModel.get(caseData.interface_id);
+    if (!interfaceData) {
+      return (ctx.body = yapi.commons.resReturn(null, 408, '接口不存在'));
+    }
+    // 登录态需要项目 edit 权限; token 请求经严格域已是归属项目 dev
+    let auth = await this.checkAuth(interfaceData.project_id, 'project', 'edit');
+    if (!auth) {
+      return (ctx.body = yapi.commons.resReturn(null, 406, '没有权限'));
     }
     let data = {
       id,

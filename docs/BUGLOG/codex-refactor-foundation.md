@@ -2,6 +2,13 @@
 
 条目由 /csl-buglog 或人工维护,供 coder/reviewer 动手前核对
 
+## [2026-09-29][exts/advanced-mock] Mock 期望读写全链无归属校验(登录态横向越权)与 upMock 伪报 project_id
+- 现象: 同插件 upMock 有 edit 校验而 saveCase/delCase/hideCase/getCase/getMock/list 六端点全裸——登录用户可给**其它项目**接口挂/删/隐 Mock 期望、读其期望与脚本;且 upMock/saveCase 以 body 伪报 project_id 落库(账目错乱),upMock 还可为不存在的 interface_id upsert 孤儿文档
+- 根因: 上游实现不一致——同文件 upMock 有 checkAuth 而期望族方法全部缺失;与已修的 /api/interface/up 同型(按 id 反查型写点不校验归属)
+- 修法: 七端点统一「按 id 反查接口 → checkAuth(接口真实归属, 写面 edit/读面 view)」;落库 project_id 一律取接口真实归属(不采信 body 自述);token 面由严格域守卫覆盖(纵深防御,该插件路由实际挂 /api/plugin/ 前缀,token 不解析)
+- 关联: exts/yapi-plugin-advanced-mock/controller.js;test/server/advmock-auth-scope.test.js(34 例)/plugin-open-scope.test.js
+- 复发: 0 次 · 教训: 同插件内「一个方法有校验≠全家都有」,鉴权收紧必须按控制器全方法枚举(rg async 逐个过),不能只修报错/显眼的那个;判定域与落库归属一律取数据表真实归属,不采信请求自述
+
 ## [2026-09-29][server/base] interface 创建者早退被 token 域收敛漏掉(同函数多早退分支的守卫覆盖问题)
 - 现象: 上一轮 token 严格域收敛只给 admin 早退加了 `!$tokenAuth` 守卫,但 `getProjectRole` 的 `type==='interface'` 分支里还有一处创建者早退(`interfaceData.uid === getUid() → 'owner'`)位于 token 分支之前——包装串绑定账号若恰为其它项目某接口的创建者,经 `checkAuth(interfaceId,'interface')` 仍可得 owner(danger 放行)。静态复核为潜伏路径:全仓无 'interface' 类型调用点,生产不可达
 - 根因: 同一函数内有多个按 uid 判定的早退分支(admin/创建者/成员),收敛时只处理了显眼的那一个——「遍历角色早退全集」没做

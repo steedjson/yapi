@@ -21,6 +21,7 @@ yapi.emitHook =
 const userModel = require('../../server/models/user.js');
 const interfaceModel = require('../../server/models/interface.js');
 const projectModel = require('../../server/models/project.js');
+const groupModel = require('../../server/models/group.js');
 const advModel = require('../../exts/yapi-plugin-advanced-mock/advMockModel.js');
 const caseModel = require('../../exts/yapi-plugin-advanced-mock/caseModel.js');
 const advMockController = require('../../exts/yapi-plugin-advanced-mock/controller.js');
@@ -37,6 +38,9 @@ test.before('挂载真实 commons 到 yapi 单例', () => {
 
 // 批3 语义背景: 三个插件控制器均为 /api/plugin/* 路由, 控制器内守卫只对
 // $tokenAuth=true 的请求(token 域)收紧归属校验; 非 token(登录态)请求必须维持原逻辑。
+// 批4 语义升级(advanced-mock 专属): getMock/getCase 补 view、saveCase/delCase/hideCase 补 edit
+// 门禁, 判定域取接口表真实归属; 登录态请求改走真实 checkAuth 链(wiki/autoSync 不受影响),
+// 相关登录态用例已同步注入可判定身份(见各用例注释)。
 // 控制器方法级桩测, $tokenAuth/$tokenProjectId 按语义直接注入(同 up-token-scope.test.js)。
 
 // ---------- fixtures ----------
@@ -194,11 +198,21 @@ test.serial('advmock getMock: interface 不存在时无论是否 token 一律 40
   t.is(withToken.calls.advModelGets.length, 0);
 });
 
-test.serial('advmock getMock: 非 token 请求不受新守卫影响, 维持原读取链放行', async t => {
+test.serial('advmock getMock: 非 token 登录态请求走真实权限链, dev 成员维持原读取链放行', async t => {
+  // 批4 语义升级: 登录态请求现需 view 权限; 注入 dev 成员身份使真实 checkAuth 放行,
+  // 保留「登录态请求走原读取链」的回归价值(原用例断言"不触发权限判定"已随门禁引入过期)
+  yapi.getInsts.set(projectModel, {
+    get: async () => ({ _id: 12, uid: 1, members: [{ uid: 5, role: 'dev' }], group_id: 9 })
+  });
+  yapi.getInsts.set(groupModel, {
+    get: async () => ({ uid: 1, members: [] })
+  });
   const { inst, calls } = createAdvMockInst({
     tokenAuth: false,
     interfaceData: { _id: 77, project_id: 12 }
   });
+  inst.$uid = '5';
+  inst.$user = { _id: 5, role: 'member', username: 'alice' };
   const ctx = { query: { interface_id: 77 }, body: null };
 
   await inst.getMock(ctx);
@@ -267,11 +281,22 @@ test.serial('advmock saveCase: token 请求 body 伪报 project_id 时, 落库�
   t.is(calls.caseSaves[0].project_id, 12);
 });
 
-test.serial('advmock saveCase: 非 token 请求 body 伪报 project_id 同样以接口真实归属落库', async t => {
+test.serial('advmock saveCase: 非 token 登录态请求走真实权限链, body 伪报 project_id 同样以接口真实归属落库', async t => {
+  // 批4 语义升级: 登录态请求现需 edit 权限; 注入 dev 成员身份使真实 checkAuth 放行,
+  // 保留「落库归属以接口表为准」的核心断言(原用例身份桩随门禁引入过期)
+  yapi.getInsts.set(projectModel, {
+    get: async () => ({ _id: 12, uid: 1, members: [{ uid: 5, role: 'dev' }], group_id: 9 })
+  });
+  yapi.getInsts.set(groupModel, {
+    get: async () => ({ uid: 1, members: [] })
+  });
   const { inst, calls } = createAdvMockInst({
     tokenAuth: false,
     interfaceData: { _id: 77, project_id: 12 }
   });
+  inst.$uid = '5';
+  inst.$user = { _id: 5, role: 'member', username: 'alice' };
+  // 归属项目的接口, 但 body 把 project_id 伪报成 99: 落库值必须被归一回 12
   const ctx = createSaveCaseCtx({ project_id: 99 });
 
   await inst.saveCase(ctx);
