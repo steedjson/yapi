@@ -5,7 +5,7 @@
 /**
  * migrate-precheck —— v2.0.0 换库/升级场景的迁移前检查与修复脚本
  *
- * 使用时机：mongorestore 之后、首次启动 v2.0.0 之前（见 docs/upgrade-migration-guide.md
+ * 使用时机：mongorestore 之后、首次启动 v2.0.0 之前（见 docs/devops/upgrade-migration-guide.md
  * 「主线路径：MongoDB 大版本升级」第三节）。默认只读报告，不带 --fix 不做任何写操作。
  *
  * 连接：读取仓库根 config.json，连接串构建逻辑与 server/utils/db.js connect() 逐分支一致
@@ -120,7 +120,7 @@ function loadConfig(configPath) {
 }
 
 /**
- * Node 版本是否满足部署硬性要求（engines 口径：>= 22.12，jsondiffpatch 0.7 require(esm) 下限）。
+ * Node 版本是否满足部署硬性要求（engines 声明的下限：>= 22.12，jsondiffpatch 0.7 require(esm) 下限）。
  * @param {string} versionString 形如 v24.21.0 的版本串
  * @returns {boolean} 是否满足
  */
@@ -167,7 +167,7 @@ function idSortKey(id) {
 /**
  * 去重计划纯函数：按 {model, field} 分组，对文档数 > 1 的组给出保留与删除方案。
  *
- * 规则（与 mongosh 手工片段语义一致，见 docs/upgrade-migration-guide.md）：
+ * 规则（与 mongosh 手工片段语义一致，见 docs/devops/upgrade-migration-guide.md）：
  *   - 每组保留 count 最大的一条（自增计数取最大保证不回退）；
  *   - count 并列时保留 _id 字符串序最小的一条（即最早创建的 ObjectId），行为确定性已声明；
  *   - count 缺失/非数值按 0 参与排序；model/field 缺失归入同一空键组；非对象元素跳过；
@@ -451,12 +451,13 @@ async function main() {
   const configPath = DEFAULT_CONFIG_PATH;
   const config = loadConfig(configPath);
 
-  // Node 版本检查：部署硬性要求（engines 口径），但脚本本身低版本也能跑，仅警告不阻断
+  // Node 版本检查：部署硬性要求（engines 声明的下限，npm 仅告警不拦截），但脚本本身低版本也能跑，仅警告不阻断
   const nodeOk = nodeMeetsRequirement(process.version);
   if (!nodeOk) {
     process.stderr.write(
       `[migrate-precheck] 警告：当前 Node 版本 ${process.version} 低于 v2.0.0 部署硬性要求 ` +
-        `>= ${MIN_NODE_MAJOR}.${MIN_NODE_MINOR}（jsondiffpatch 0.7 require(esm) 下限，engines 已强制）。` +
+        `>= ${MIN_NODE_MAJOR}.${MIN_NODE_MINOR}（jsondiffpatch 0.7 require(esm) 下限；npm 的 engines 检查只告警不拦截，` +
+        `低于此版本启动会 ERR_REQUIRE_ESM）。` +
         `本脚本不受影响继续运行，但请在部署 v2.0.0 前升级 Node。\n`
     );
   }
