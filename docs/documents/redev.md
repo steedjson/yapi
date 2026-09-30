@@ -1,20 +1,16 @@
 ## 安装YApi
 
-1.创建工程目录
+本仓是**根目录 npm 工程**（v2.0.0 起不再使用老版本的 `vendors/` 嵌套目录结构），完整部署步骤见 `docs/devops/index.md`（文档站「内网部署」页签）。快速起步：
 
 ```bash
-mkdir yapi && cd yapi
-git clone https://github.com/YMFE/yapi.git vendors --depth=1 # 或者下载 zip 包解压到 vendors 目录
+git clone --depth=1 https://github.com/YMFE/yapi.git yapi && cd yapi
+cp config_example.json ./config.json   # 复制完成后请修改相关配置
+npm install                            # 二次开发需要完整依赖（含前端构建链）
+npm run install-server                 # 仅全新空库执行一次
+npm run dev                            # 开发模式启动
 ```
 
-2.修改配置
-
-```bash
-cp vendors/config_example.json ./config.json # 复制完成后请修改相关配置
-vi ./config.json
-```
-
-配置如下，主要配置 MongoDB 数据库，以及 Admin 账号。
+配置文件主要配置 MongoDB 数据库与 Admin 账号。
 
 ```json
 {
@@ -41,77 +37,43 @@ vi ./config.json
 ```
 > db.user 和 db.pass 是 mongodb 的用户名和密码，如果没有开启 mongo 认证功能，请删除这两个选项。
 
-3.安装依赖
-
-```bash
-cd vendors
-npm install  --registry https://registry.npm.taobao.org # 安装依赖
-```
-
-4.初始化
-
-```bash
-npm run install-server  # 安装程序会初始化数据库索引和管理员账号，管理员账号名可在 config.json 配置
-# 默认输出
-# 初始化管理员账号成功,账号名："admin@admin.com"，密码："ymfe.org"
-```
-
-5.启动开发机
-
-```bash
-npm run dev
-# 启动服务器后，请访问 127.0.0.1:{config.json配置的端口}，初次运行会有个编译的过程，请耐心等候
-# 127.0.0.1:3011
-```
-
-目录结构
+目录结构（仅列主要部分）
 
 ```
 |-- config.json
 |-- init.lock
 |-- log
-`-- vendors
-    |-- CHANGELOG.md
-    |-- LICENSE
-    |-- README.md
-    |-- client
-    |-- common
-    |-- config_example.json
-    |-- doc
-    |-- exts
-    |-- nodemon.json
-    |-- npm-debug.log
-    |-- package.json
-    |-- plugin.json
-    |-- server
-    |-- static
-    |-- test
-    |-- webpack.alias.js
-    |-- yapi-base-flow.jpg
-    |-- ydocfile.js
-    `-- ykit.config.js
+|-- client/          # 前端源码
+|-- common/          # 前后端共享代码
+|-- exts/            # 内置插件（yapi-plugin-*）
+|-- scripts/         # 构建与运维脚本
+|-- server/          # 后端源码
+|-- static/          # 静态资源与生产前端产物（static/prd）
+|-- test/            # 自动化测试
+|-- package.json
+`-- rsbuild.config.mjs
 ```
-
-
 
 ## 技术栈说明
 
 后端： koa mongoose
 
-前端： react redux
+前端： react + zustand（状态管理，由 redux 迁移而来；迁移模式与语义差异见仓库内 `docs/zustand-migration-pattern.md`）
 
 ## 启动开发环境服务器
 
 ```bash
-  cd vendors
   npm run dev
-  # 启动服务器后，请访问 127.0.0.1:{config.json配置的端口}，初次运行会有个编译的过程，请耐心等候
+  # 启动后请访问 127.0.0.1:{config.json配置的端口}
+  # 3000 为后端与系统页面入口，4000 为前端开发资源服务
 ```
 
 ## 启动生产环境服务器
 
 ```bash
-  cd vendors
-  ykit pack -m
-  node server/app.js
+  npm ci --omit=dev         # 生产依赖
+  node server/app.js        # 生产前端产物 static/prd 随仓库提供，无需构建
 ```
+
+修改前端源码后需重新构建产物：`npm run build-client`（需完整依赖）。
+

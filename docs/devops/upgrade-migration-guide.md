@@ -7,6 +7,8 @@
 > - **次路径（第四节）：原地升级（不换库）**——MongoDB 不动，直接把 v2.0.0 代码挂到老库上。
 >
 > 唯一的回滚陷阱见第七节，务必先读。
+>
+> 本文是[内网部署](index.md)的迁移分册：全新空库部署见部署正文，这里只讲老库怎么上来。
 
 ## 一、兼容性结论（models diff 实证）
 
@@ -37,7 +39,7 @@
 | ① | 老库全量备份：`mongodump` | 工具版本**不低于目标新库版本**（官方工具向前兼容老版本服务器：新版本 mongodump/mongorestore 可以对老版本 mongod 操作，同一套工具就能完成 dump 与 restore）。同时备份 `config.json`。这是回滚锚点 |
 | ② | 部署新 mongod（7/8）+ `mongorestore` | 恢复**业务集合**即可。身份认证数据（admin/system 的用户与角色）默认不在业务 dump 中，**不要依赖 restore 迁移账号体系**，见下方注意事项；restore 会按 dump 里的规格重建索引，YApi 的索引均为简单复合索引，跨版本规格无风险 |
 | ③ | 迁移前检查/修复：`node scripts/migrate-precheck.js` | 只读报告四项检查；发现 identitycounters 重复时 `--fix` 一次性清洗（详见第五节）。必须在首次启动 v2.0.0 之前完成 |
-| ④ | 部署 v2.0.0 代码（git checkout v2.0.0 或对应部署包） | `npm install --production`——engines 强制校验 Node >= 22.12（jsondiffpatch 0.7 为 ESM-only，低于此版本启动即 ERR_REQUIRE_ESM） |
+| ④ | 部署 v2.0.0 代码（git checkout v2.0.0 或对应部署包） | `npm ci --omit=dev`——**先自行核对 Node >= 22.12**：jsondiffpatch 0.7 为 ESM-only，低于此版本启动即 ERR_REQUIRE_ESM（package.json 的 engines 只产生 EBADENGINE 警告，装依赖阶段不会拦截） |
 | ⑤ | 启动：`node server/app.js` | 启动任务自动创建业务复合索引与 identitycounters 唯一索引（幂等，重复执行无副作用）。**勿跑 install-server**——那是全新安装用的，会初始化管理员账号 |
 | ⑥ | 验证 | 按第六节验证清单逐项过 |
 
@@ -62,7 +64,7 @@ cp config.json /backup/config.json.bak
 # 1. 停掉所有老版本实例（多实例并行 + 新版本启动建唯一索引会竞争，见第五节）
 
 # 2. 部署 v2.0.0 代码（git checkout v2.0.0 或对应部署包）
-npm install --production   # engines 会强制校验 Node >= 22.12
+npm ci --omit=dev   # 先自行核对 Node >= 22.12（engines 只警告不拦截）
 
 # 3. 启动（勿跑 install-server —— 那是全新安装用的，会初始化管理员账号）
 node server/app.js
@@ -70,7 +72,7 @@ node server/app.js
 
 **前置检查清单**：
 
-- Node ≥ 22.12（jsondiffpatch 0.7 为 ESM-only，低于此版本启动即 ERR_REQUIRE_ESM——engines 已强制）；
+- Node ≥ 22.12（jsondiffpatch 0.7 为 ESM-only，低于此版本启动即 ERR_REQUIRE_ESM——npm 的 engines 检查只警告不拦截，需自行核对 `node -v`）；
 - config.json 与老版本同形态即可（db 连接/端口/adminAccount/mail；mail 若启用需含 host/port/from/auth 完整形态）；
 - MongoDB 4.4+（本地实测 4.4 与 8.0 均正常，CI 使用 mongo:7）。
 

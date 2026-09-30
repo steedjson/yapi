@@ -29,33 +29,34 @@ YApi 是<strong>高效</strong>、<strong>易用</strong>、<strong>功能强大
 
 ### 内网部署
 #### 环境要求
-* nodejs（7.6+)
-* mongodb（2.6+）
+* nodejs（>= 22.12，硬性下限；推荐 24.21.0 LTS）
+* mongodb（4.2+，推荐 4.4+）
 * git
 #### 安装
-使用我们提供的 yapi-cli 工具，部署 YApi 平台是非常容易的。执行 yapi server 启动可视化部署程序，输入相应的配置和点击开始部署，就能完成整个网站的部署。部署完成之后，可按照提示信息，执行 node/{网站路径/server/app.js} 启动服务器。在浏览器打开指定url, 点击登录输入您刚才设置的管理员邮箱，默认密码为 ymfe.org 登录系统（默认密码可在个人中心修改）。
+本仓是根目录 npm 工程，把代码放到部署目录即可部署，完整步骤（初始化、pm2 常驻、部署验证、配置项）见 [内网部署文档](docs/devops/index.md)。
 
-    npm install -g yapi-cli --registry https://registry.npm.taobao.org
-    yapi server 
-    
+    git clone --depth=1 <仓库地址> yapi && cd yapi
+    cp config_example.json config.json   # 修改 db 与 adminAccount
+    npm ci --omit=dev                    # 生产依赖（前端产物 static/prd 随仓库提供，无需构建）
+    npm run install-server               # 仅全新空库执行一次，创建管理员账号与索引
+    node server/app.js                   # 启动后访问 http://127.0.0.1:{config.json 的 port}
+
+默认管理员为 config.json 中 `adminAccount` 配置的邮箱，默认密码 `ymfe.org`，登录后请立即修改。
+
 #### 服务管理
 利用pm2方便服务管理维护。
 
     npm install pm2 -g  //安装pm2
     cd  {项目目录}
-    pm2 start "vendors/server/app.js" --name yapi //pm2管理yapi服务
+    pm2 start server/app.js --name yapi //pm2管理yapi服务
     pm2 info yapi //查看服务信息
     pm2 stop yapi //停止服务
     pm2 restart yapi //重启服务
 
 #### 升级
-升级项目版本是非常容易的，并且不会影响已有的项目数据，只会同步 vendors 目录下的源码文件。
-    
-    cd  {项目目录}
-    yapi ls //查看版本号列表
-    yapi update //更新到最新版本
-    yapi update -v {Version} //更新到指定版本
-    
+已有 v2.0.0 版本升级：拉取新代码后 `npm ci --omit=dev` 并重启即可，数据无需迁移。
+
+老版本（v1.x）数据升级到 v2.0.0 请走迁移指南：[v1.x → v2.0.0 数据迁移指南](docs/devops/upgrade-migration-guide.md)（含 MongoDB 大版本换库迁移、原地升级两条路径与回滚密码陷阱）。
 ### 教程
 * [使用 YApi 管理 API 文档，测试， mock](https://juejin.im/post/5acc879f6fb9a028c42e8822)
 * [自动更新 Swagger 接口数据到 YApi 平台](https://juejin.im/post/5af500e251882567096140dd)
