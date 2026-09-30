@@ -42,7 +42,7 @@ Keep commits focused. PR descriptions should explain the problem, link relevant 
 
 ## Configuration & Local Files
 
-Consult `config_example.json` and `docs/devops/` for setup. Never commit credentials or production connection details. Preserve local backups and caches. `AGENTS.md` is currently ignored by Git; changing that policy requires an explicit request.
+Consult `config_example.json` and `docs/devops/` for setup. Never commit credentials or production connection details. Preserve local backups and caches. `gui-test-screenshots/` is a local-only QA evidence directory; keep it untracked.
 
 ## 委派流程
 
@@ -106,3 +106,12 @@ Consult `config_example.json` and `docs/devops/` for setup. Never commit credent
 
 - **脱敏红线**:禁止客户名/真实姓名/内网地址/凭证,用 `<占位符>` 替代
 - 文件不存在则先创建标准头;条目只追加不删改
+
+## 浏览器自动化与工具通道纪律(UI 验证适用)
+
+QA/UI 验证会话中已实证的四类工具限制与对应守则;违反任一条都可能产出假结论:
+
+1. **输出可信性**:Bash/浏览器工具通道偶发返回与所发命令不符的伪造输出(跨会话复发)。关键查询用带标记前缀的输出(如 `PROBE_MATH=...`、`BASELINE_USERS=...`),输出与命令结构不符立即弃用当次结果;弃用后以最小确定性命令探测,单次干净探测不足以认证通道,重要结论必须双通道交叉(截图 vs DOM 回读 vs 服务端);确认伪造的会话窗口内冻结全部写操作(文件修改、git 提交、数据变更)。
+2. **点击**:本应用下 Playwright locator 点击超时是间歇性的(fill/waitFor 可用,坐标与 dom_cua 节点路径可用);UI 自动化首选 `dom_cua` 节点点击或 `cua` 坐标点击,Playwright 点击仅作对照。坐标点击前先核对该轮视口内的实际 rect(截图定位),滚动/跳转后坐标失效。
+3. **键入**:`cua.type` 长文本偶发丢尾部字符;键入后必须 DOM 回读逐字校验,发现缺尾分段补输,长文本分段键入。
+4. **滚动**:`cua.scroll`/`dom_cua.scroll` 命令常报超时但实际生效;超时 ≠ 失败,先截图确认实际滚动位置再决定是否重试,避免重复滚动。
