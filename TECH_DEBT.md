@@ -144,21 +144,21 @@
 - **教程文档 18 章截图为旧版 UI（2026-09-29 正式裁决：登记为低优先长期项）**：文字内容已逐章核对无与 v2.0.0 矛盾的事实（仅 qa.md 部署排障 node 版本与 project.md token 节两处已修正）；截图重拍需逐章构造数据态（antd6 新 UI），成本高收益低——旧截图仍能正确示意操作流程。触发条件：未来 UI 大改导致截图误导时再批量重拍。
 - ~~**advanced-mock 插件 saveCase/delCase/hideCase/getCase 登录态无 checkAuth（上游遗留，2026-09-29 批3 登记）**~~ → **已完成（2026-09-29 收紧批，产品决策：最小权限）**：七端点（saveCase/delCase/hideCase/getCase/getMock/upMock/list）统一「按 id 反查接口 → checkAuth(接口真实归属, 写面 edit/读面 view)」，落库 project_id 一律取接口真实归属（防 body 伪报），upMock 孤儿 upsert 路径消灭；token 面由严格域守卫覆盖。负向矩阵（成员放行/非成员406/guest 写拒/跨项目 token 406）26+8+4 例单测 + HTTP 实测留档。
 - **open.js:244 runAutoTest「用例集 id 不存在」保留 40022**：与同函数鉴权失败 406 并存，语义为「资源不存在 ≠ 无权限」，非缺陷；export 两插件同类 `!pid` 分支已统一为 400 + return（2026-09-29 批1）。
-- ~~antd6 迁移遗留「message 静态警告 1 条（需 App 上下文批）」~~ → **已完成（message-bridge 批）**：client/utils/message-bridge.js 注册 App 实例方案落地，32 个业务文件走桥，client/index.js 挂 MessageBridgeRegistrar；仅剩 1 处直接 import message from 'antd' 待顺手迁移。
+- ~~antd6 迁移遗留「message 静态警告 1 条（需 App 上下文批）」~~ → **已完成（message-bridge 批 + 2026-09-30 扫尾订正）**：client/utils/message-bridge.js 注册 App 实例方案落地，32 个业务文件走桥，client/index.js 挂 MessageBridgeRegistrar；「仅剩 1 处直接 import」经全仓复核为死注释（export-data/client.js），已删除，message 消费面零残留。
 
 ## 四、新发现技术债（2026-09-18 全仓扫描；2026-09 各批已消化大部分，逐条标注状态）
 
 > 来源：对依赖安全、CI、目录结构、同步 I/O 的补充扫描；均未纳入此前各批次范围。优先级建议见本节末。
 
-### 1. 依赖安全（npm audit）→ **已降至 2 项 moderate（2026-09-25 低风险扫尾批；此前 2026-09-22 依赖治理批降至 5 项）**
+### 1. 依赖安全（npm audit）→ **已降至 0 项（2026-09-30 扫尾批归零；此前 2026-09-25 低风险扫尾批降至 2 项 moderate）**
 
 - **扫描方法**：`npm audit --registry=https://registry.npmjs.org`（已固化为 `npm run audit`）。默认 npmmirror 源未实现 audit 接口（`NOT_IMPLEMENTED`），此前安全扫描实际处于盲区。
-- **进展**：45 → 35 → 34 → 23 → 18 → 9 → 5 → **2 项**（critical 0、high 0、moderate 2、low 0）。
+- **进展**：45 → 35 → 34 → 23 → 18 → 9 → 5 → 2 → **0 项**（critical 0、high 0、moderate 0、low 0）。
 - **已消除的关键项（历史口径留档）**：`handlebars@4.7.9`（critical）；`jsrsasign 8→11.1.5`（critical，沙箱仅透传零 API 调用）；`loader-utils`（随 Rsbuild 阶段四删 style-loader 链清零）；`markdown-it 8→15`/`anchor 4→10`/`toc`、`koa-websocket 4→7`、`jsondiffpatch 0.3.11→0.7.6`、`json-schema-faker rc16→0.5.9`；`json-schema-editor-visual` 链（自研编辑器批次 4，消失 9 项 high）；brace-expansion/glob/ini/semver 4 项 high（依赖治理批 overrides）；~~`conventional-changelog-cli@2.1.1` 停更链（`tempfile`→`uuid`）~~ → **已随 conventional-changelog-cli 2→5 major 升级消除（低风险扫尾批）**，v5 链新报的 `@conventional-changelog/git-client` Argument Injection（GHSA-vh25-5764-9wcr）经非破坏 `npm audit fix`（git-raw-commits→5.0.1、git-semver-tags→8.0.1、git-client→2.7.0，仅 lock 层传递依赖）一并消除。
-~~**剩余 2 项 moderate**：react-router/react-router-dom@6.30.6 开放重定向~~ → **已清零（2026-09-29）**：router v7 迁移批顺带消除该 advisory，`npm audit` 实测 **0 vulnerabilities**，audit 基线已下调至全零（audit:ci 门禁继续拦截新增）。
+~~**剩余 2 项 moderate**：react-router/react-router-dom@6.30.6 开放重定向~~ → **已清零（2026-09-29）**：router v7 迁移批顺带消除该 advisory；其后新披露的 `fast-uri` moderate（GHSA-hrr3-gc8f-f4qj，CWE-178，ajv 传递依赖）经 `npm audit fix` 升级 3.1.7→3.1.8 归零（2026-09-30 扫尾批，`npm audit` 实测 **0 vulnerabilities**）。注：f465443e 当时的基线「全零」实际 total 残留 2（笔误），已随本批订正为真全零。
 - **观察项**：~~`@scarf/scarf@1.4.0` 随 swagger-client 进入依赖树（install 时上报遥测，可用 `SCARF_ANALYTICS=false` 关闭）——建议在 CI/构建环境禁用~~ → **已在 CI 禁用（低风险扫尾批：ci.yml job 级 `SCARF_ANALYTICS: false`）**；~~`json-schema-faker 0.6` 升级被 ESM-only 阻塞~~ → **已消除（B1 批，2026-09-25）**：全量 ESM 化不做（[docs/server-esm-evaluation.md](docs/server-esm-evaluation.md) 裁决），走惰性 import 窄方案落地——`schemaToJson` 惰性 `import()` + async 化、0.5.9 → 0.6.3、5 调用点 await 适配，探针 14/14（0.5.9 基线 12/12），语义差异已登记（见批次行与 `test/server/schemaToJson-equivalence.test.js` 文件头）。
-- **门禁（已完成）**：`npm run audit:ci` 基线差分（`scripts/audit-check.js`，仅对新增漏洞失败，退出码 0/1/2/3 有离线回归测试）；基线 `scripts/audit-baseline.json` 现为 0/0/2/0/2。
-- 推进路径：剩余 moderate 按「react-router v7 专项（含 API 迁移）」评估（等 React 19 一并跳 v8，见第四阶段评估行）；新漏洞由 audit:ci 门禁拦截。
+- **门禁（已完成）**：`npm run audit:ci` 基线差分（`scripts/audit-check.js`，仅对新增漏洞失败，退出码 0/1/2/3 有离线回归测试）；基线 `scripts/audit-baseline.json` 现为 0/0/0/0/0（真全零）。
+- 推进路径：当前零漏洞，无剩余评估项；新漏洞由 audit:ci 门禁拦截（发现即按「npm audit fix 或 overrides 修复 → 实测归零 → 下调基线」流程处置）。
 
 ### 2. 无 CI（门禁仅本地生效）→ 已完成（commit ff37aebe）
 
@@ -221,7 +221,7 @@
 ## 五、验证基线
 
 - Node：`.nvmrc` 24.21.0（engines `>=22.12`——jsondiffpatch 0.7 require(esm) 的硬性下限，npm `>=8`；生产部署按 engines 强制检查）。版本锚点：**v2.0.0**（2026-09-26 打标，技术债治理收官基线）。老版本（v1.x/master）数据迁移指南：[docs/upgrade-migration-guide.md](docs/upgrade-migration-guide.md)（主线=**MongoDB 大版本升级+换库迁移**、次路径=原地升级，均已脚本化：`scripts/migrate-precheck.js` 迁移前检查/清洗；含 schema 兼容实证/密码自动升级/identitycounters 清洗/回滚密码陷阱）。
-- 门禁：`npm run lint`（覆盖全仓含 test/，0 error 0 warning，pre-commit 卡点）、`npm test`（**1057**）、`npm run typecheck`（0 错）、`npm run build-client`（0 error）、`npm run audit`（官方 registry 安全扫描，当前 2 项 moderate）、`npm run audit:ci`（基线差分门禁 0/0/2/0/2，仅对新增漏洞失败）。
+- 门禁：`npm run lint`（覆盖全仓含 test/，0 error 0 warning，pre-commit 卡点）、`npm test`（**1209**，2026-09-30 实测口径）、`npm run typecheck`（0 错）、`npm run build-client`（0 error）、`npm run audit`（官方 registry 安全扫描，当前 **0 项**）、`npm run audit:ci`（基线差分门禁 0/0/0/0/0，仅对新增漏洞失败）。
 - CI：`.github/workflows/ci.yml`（push/PR 触发；mongo:7 service + 上述门禁全跑）。**首次真跑全绿：run 35341995159（3m44s）**，可用 `gh run list --repo steedjson/yapi` 查看（注意本仓库有两个 remote，`gh` 需显式 `--repo steedjson/yapi`，否则会解析到 upstream）。本地等价验证方式：`docker run -d --rm -p <空闲端口>:27017 mongo:7` + 按 workflow heredoc 写 config.json（改端口）+ `npm test`。
 - **测试验证必须用冷库**（每轮前 drop `yapi_test`）：温库会掩盖启动期 DB 工作的时序问题（冷库 teardown flake 曾在温库下"通过"、在冷库必现）。
 - **临时替换 config.json 的纪律**：先 `cp config.json /tmp/<name>.bak` 并记录 sha256（原始值 `6dc9b4c27137702233d03a4d1cdb619a622dd4180ab4044b16316114ed4864a9`），结束前恢复并校验；用户容器 27017（mongo:4.4）/27018（mongo:8.0）禁止触碰。

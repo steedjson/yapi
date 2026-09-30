@@ -1,6 +1,4 @@
 // @ts-check
-// import {message} from 'antd'
-
 /**
  * 导出数据插件（export_data 钩子实现）。
  * @param {any} exportDataModule

@@ -2,6 +2,20 @@
 
 条目由 /csl-buglog 或人工维护,供 coder/reviewer 动手前核对
 
+## [2026-09-30][exts/build] exts 插件 client.js 会进浏览器 bundle,「插件服务端文件不进产物」口径不成立
+- 现象: 审查批核对产物一致性时,实施计划断言「exts 插件的 client.js 是插件服务端注册文件,不进浏览器 bundle,改动无需重建产物」;reviewer 实证推翻——bundle 内存在该文件特有字符串(「导出项目接口文档为 html」,全仓唯一来源即 export-data/client.js)
+- 根因: 构建链 `build/clientPluginModule.js` 对 `plugin.client && enable` 的插件生成 `require('exts/yapi-plugin-*/client.js')` 写入 client/plugin-module.js(gitignored 生成物)→ rsbuild alias `exts` 放行 → 打进 index chunk。插件 client.js 与服务端 controller 同名分身,形态像服务端文件,实际是浏览器端代码
+- 修法: 口径订正(本批删的是纯注释,转译剥离,产物哈希不变属正确结果,无实际影响);今后凡改动任何 exts/yapi-plugin-*/client.js 的活代码,一律视为浏览器端改动:需重建产物并预期 index chunk 哈希变化
+- 关联: build/clientPluginModule.js;client/plugin-module.js(gitignored);static/prd/index@*.js;2026-09-30 扫尾批审查报告 P3
+- 复发: 0 次 · 教训: 「按文件路径猜打包归属」不可靠,产物一致性判断以 bundle 内容探针(文件内全仓唯一字符串)实证为准;同名分身文件(client.js/controller.js)的部署面必须看消费链(谁 require 了它)而非文件位置
+
+## [2026-09-30][scripts/audit] f465443e「基线下调全零」实际 total 残留 2(提交信息与文件账实不符)
+- 现象: router v7 批提交信息宣称「audit基线下调全零」,但 scripts/audit-baseline.json 只把 moderate 2→0,total 残留 2,note 仍写「剩余 2 项 moderate 为 react-router」且被写成 \u 转义形态;TECH_DEBT 多处现行口径(2 项 moderate / 0/0/2/0/2)随之失真
+- 根因: 下调基线时只改了报错的 severity 计数,漏了 total 与 note——「total 应等于四个 severity 之和」的文件内自检规则没被执行;note 是长文本,变更者未通读
+- 修法: 2026-09-30 扫尾批订正为真全零(0/0/0/0/0)+note 重写(含笔误留痕);其后新披露的 fast-uri moderate(GHSA-hrr3-gc8f-f4qj,ajv 传递)经 npm audit fix 3.1.7→3.1.8 归零,npm audit 实测 0 vulnerabilities
+- 关联: scripts/audit-baseline.json;TECH_DEBT.md §四.1/§五;f465443e(笔误源头)
+- 复发: 0 次 · 教训: 改基线先跑 `npm run audit:ci` 看五项 delta 全 0 再提交——total≠severity 之和时脚本输出会暴露不一致;「计数+说明文本」成对维护的字段,改计数必须同步改说明,否则说明变谎言
+
 ## [2026-09-29][exts/advanced-mock] Mock 期望读写全链无归属校验(登录态横向越权)与 upMock 伪报 project_id
 - 现象: 同插件 upMock 有 edit 校验而 saveCase/delCase/hideCase/getCase/getMock/list 六端点全裸——登录用户可给**其它项目**接口挂/删/隐 Mock 期望、读其期望与脚本;且 upMock/saveCase 以 body 伪报 project_id 落库(账目错乱),upMock 还可为不存在的 interface_id upsert 孤儿文档
 - 根因: 上游实现不一致——同文件 upMock 有 checkAuth 而期望族方法全部缺失;与已修的 /api/interface/up 同型(按 id 反查型写点不校验归属)
