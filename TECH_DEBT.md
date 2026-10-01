@@ -102,7 +102,7 @@
 
 ### 3. TypeScript 健全化（持续进行；存量欠账已清零）
 
-- 现状：`tsconfig.json` 按文件白名单 + `checkJs: false`（**仅有 `// @ts-check` 指令的文件被检查**）。白名单 **2026-10-01 实测为 260 个条目**（client/ 121、exts/ 63、server/ 61、common/ 15；含 `common/types/**/*.d.ts` 一条 glob；原述「client/ 133、exts/ 64、server/ 61、common/ 16」系 J 批时点值，此后随文件增删变化，现按 `tsc --showConfig` 实测订正），`npm run typecheck` 0 错误；其中 4 条已指向被删文件（见「四、8」），另有 1 个带 pragma 的孤儿 store 未受检（同见「四、8」）。此前登记的「开启 checkJs 后 containers 1183 / components 550 错误」基线已随 P7d/P8b 收官清零，不再适用。
+- 现状：`tsconfig.json` 按文件白名单 + `checkJs: false`（**仅有 `// @ts-check` 指令的文件被检查**）。白名单 **2026-10-01 实测为 257 个条目**（client/ 119、exts/ 63、server/ 60、common/ 15；含 `common/types/**/*.d.ts` 一条 glob；原述「client/ 133、exts/ 64、server/ 61、common/ 16」系 J 批时点值，此后随文件增删变化，现按 `tsc --showConfig` 实测订正），`npm run typecheck` 0 错误；失效条目已清零、pragma 落空项已补齐（见「四、8」）。此前登记的「开启 checkJs 后 containers 1183 / components 550 错误」基线已随 P7d/P8b 收官清零，不再适用。
 - 已完成的现代化：Node API 类型改由显式 `@types/node@^24`（与 .nvmrc 一致）提供，删除了 `global.d.ts` 中手写且与真实类型冲突的 Buffer/process/require/crypto 垫片。
 - 推进路径：每次触碰未纳入文件时顺手加 `// @ts-check` + 纳入 include 并清零错误。~~**当前未纳入清单**：client/ 4 个（`constants/variable.js`、`history.js`、`reducer/modules/reducer.js`、`utils/sanitize.js`）、exts/ 14 个插件入口 `index.js`/`defaultTheme.js`（清单/主题数据文件）。~~ → **已全部纳入（J 批）**：18 个文件补 `// @ts-check` 后入白名单，实测 0 错；至此 client/exts/common 下 JS 文件零遗漏。
 - 遗留技术细节：① `json5@2` 自带类型只导出 `{parse, stringify}` 无 default，而项目内 CJS/ESM 两种用法并存，故仍保留等价声明——若统一改命名导入即可删除；② `mockjs` 无自带类型，仍需声明（`json-schema-editor-visual` 已随自研编辑器批次 4 删除，其声明已无消费方）；③ ~~`common/lib.js` 的 `Compare*` 三个函数 `@param {*} flag` 尚可收紧为 `boolean`~~ → **已收紧（K 批：CompareArray/CompareObj 的 flag 改 boolean，调用点均传字面量 true）**。
@@ -214,10 +214,10 @@
 
 > 起因：核对「二、3」的「client/exts/common 下 JS 文件零遗漏」口径。以脚本枚举三目录全部 `.js/.jsx`、比对 tsconfig include 与 `tsc --showConfig` 的实际解析面，并用**注入负向对照**（向文件追加 `/** @type {number} */ const x = "str"` 后跑 typecheck）逐个验证是否真受检。
 
-- **tsconfig include 存在 4 条指向已删文件的失效条目**（`tsc --showConfig` 实测，不影响 typecheck 通过，但会让白名单口径失真）：
-  `server/utils/initConfig.js`、`client/containers/News/News.js`、`client/containers/News/NewsList/NewsList.js`、`client/containers/News/NewsTimeline/NewsTimeline.js` —— 后三者随孤儿 News 组件群删除（492081ec），前者为更早的孤立文件清理残留。**处置建议**：随手清理即可（纯删 4 行，无行为影响）。
-- **`client/store/addInterfaceStore.js` 带 `@ts-check` 但实际未受检**：该文件有 `// @ts-check` 头、且不在 tsconfig include，负向对照实测**未被捕获**（注入类型错误后 typecheck 仍 0 错）。同目录其余 10 个带 pragma 的 store/工具文件（userStore/projectStore/interfaceColStore/menuStore/mockColStore/followStore/groupStore/activityStore/message-bridge/DocDrawer）经同法实测**均被传递性受检**（各自注入后均报错），仅此一例落空。**根因**：其生产消费方随「状态管理迁移批次 3」引入后又被后续批次移除，该文件成为仅测试引用的孤儿 store（`test/client/store/addInterfaceStore.test.js` 是唯一引用方），既无人 import 到受检图内、自身又未列入 include。**处置建议**：二选一——① 若确认 store 已无生产消费方（待产品/开发确认，勿径行删除），连同单测一并清理；② 否则加入 tsconfig include 使其真受检（一行改动）。
-- **口径订正**：上述两处意味着「client/exts/common 下 JS 文件零遗漏」的表述不严谨——准确说法是「除 `client/store/addInterfaceStore.js` 与 4 条失效条目外，其余文件均已处于类型门禁之下」。本条为口径订正而非新增缺陷（两处均不影响运行时与既有门禁结果）。
+- ~~**tsconfig include 存在 4 条指向已删文件的失效条目**（`tsc --showConfig` 实测，不影响 typecheck 通过，但会让白名单口径失真）：
+  `server/utils/initConfig.js`、`client/containers/News/News.js`、`client/containers/News/NewsList/NewsList.js`、`client/containers/News/NewsTimeline/NewsTimeline.js` —— 后三者随孤儿 News 组件群删除（492081ec），前者为更早的孤立文件清理残留。~~ → **已清理（2026-10-01，本批）**：4 条纯删（include 260→256），清理后失效条目归零、`tsc --showConfig` 的 files 集合与 typecheck 结果均不变（干跑与正式各验证一次）。
+- **`client/store/addInterfaceStore.js` 带 `@ts-check` 但实际未受检**：该文件有 `// @ts-check` 头、且不在 tsconfig include，负向对照实测**未被捕获**（注入类型错误后 typecheck 仍 0 错）。同目录其余 10 个带 pragma 的 store/工具文件（userStore/projectStore/interfaceColStore/menuStore/mockColStore/followStore/groupStore/activityStore/message-bridge/DocDrawer）经同法实测**均被传递性受检**（各自注入后均报错），仅此一例落空。**根因**：该 store 系「状态管理迁移批次 3」从旧 Redux reducer 1:1 迁来，而旧 reducer 虽注册进根 reducer（`reducer.js` 有 `addInterface` 项）却从未被任何组件消费——全历史检索（`git grep` 迁移前快照 + `git log -S` 全分支）证实容器/组件目录零引用，迁移后同样仅存测试引用（`test/client/store/addInterfaceStore.test.js` 是唯一引用方）。**已处置（2026-10-01，本批，取保守方案）**：加入 tsconfig include 使其真受检（试纳入实测存量错误 0，负向对照确认已可捕获类型错误）；**未删除**——「是否清理这个从未被消费的 store 及其 111 行单测」涉及产品判断（可能是有意保留的待用脚手架），留待裁决。
+- **口径订正（已随上述两项收口）**：`client/exts/common` 下 JS 文件现已全部处于类型门禁之下（`@ts-check` 与 include 一致，无落空项）；白名单条数 257。本条为口径订正而非新增缺陷（两处均不影响运行时与既有门禁结果）。
 
 ### 建议优先级（供裁决）
 
@@ -226,7 +226,7 @@
 3. ~~类组件迁移优先 containers 并同步补 containers 测试~~ → **已完成**（client/exts 类组件清零，containers 测试成体系）；
 4. ~~同步 I/O 收口与 god file 拆分随改造进行~~ → **已完成**（同步 I/O 仅剩 interface.js:580 边缘读取；god file 全部拆分）；
 5. major 升级：markdown-it/jsondiffpatch/koa-websocket 已完成；~~剩余 react-router v7、antd6、react19 单独排期~~——**react19 已完成迁移（2026-09-27 批次）**：react 19.3.0 + @ant-design/v5-patch-for-react-19 双装载（生产入口 + 测试装载器 setupDom() 之后，根因见 docs/BUGLOG/codex-react19.md）、类型 13 错清零、handleCurrDomain 竞态守卫（附 8 例回归）、四门禁全绿（终审独立复跑 1090/1090）+ 主 Agent 真机 UI 验证 11 页面×三皮肤 0 JS error；评估文档 [docs/react19-upgrade-assessment.md](docs/react19-upgrade-assessment.md)。**antd6 已完成迁移（2026-09-27 批次）**：antd 6.6.5 + cssinjs 2.1.2 + v5-patch 退役；实际破坏面 3 类（Select DOM 重构/Tabs 类更名/Timeline Steps 化），14 测试文件适配 + 8 类新弃用 prop 清扫（deprecated 179→0）+ D-1 指纹基线重登记；四门禁 1096 全绿 + 四皮肤真机验证（css-var 模式 token 映射未破坏）；评估文档 [docs/antd6-upgrade-assessment.md](docs/antd6-upgrade-assessment.md)；遗留 message 静态警告 1 条（清法需 App 上下文批，动 client/index.js + 159 调用点）。**react-router v7 已完成迁移（2026-09-28，6.30.6→7.18.4）**：此前「暂缓」所依据的 32 文件 v6 API 面经实证不构成 v7 障碍（v7 对 SPA 声明式路由完全向后兼容），唯一 DOM 漂移 = Link 新增 data-discover 标记（快照 6 行）+ 异步 vendor 重编号（D-1 重登记）；v6 future flag 警告消失；见 [docs/router-v7-migration.md](docs/router-v7-migration.md)。major 升级至此全部完成（React 19 / antd 6 / router 7 / Node ≥22.12）。
-6. **（2026-10-01 新增）第 8 节两项收尾**：① 清理 tsconfig 4 条失效白名单条目（纯删 4 行，干跑实测 `tsc --showConfig` 的 files 集合与 typecheck 结果均不变）；② 处置 `client/store/addInterfaceStore.js`——确认无生产消费方后连同单测清理，或加入 include 使其真受检（二选一，需一次裁决）。两项均为一行级改动、零行为风险。
+6. ~~**（2026-10-01 新增）第 8 节两项收尾**：① 清理 tsconfig 4 条失效白名单条目（纯删 4 行，干跑实测 `tsc --showConfig` 的 files 集合与 typecheck 结果均不变）；② 处置 `client/store/addInterfaceStore.js`——确认无生产消费方后连同单测清理，或加入 include 使其真受检（二选一，需一次裁决）。两项均为一行级改动、零行为风险。~~ → **两项均已完成（2026-10-01，本批）**：① 4 条失效条目已删（260→256，失效归零）；② 孤儿 store 取保守方案加入 include 使其真受检（257，试纳入存量错误 0 + 负向对照确认可捕获）。**遗留待裁决**：该 store 及其 111 行单测从未被生产代码消费（全历史检索证实），是否清理留待产品判断。门禁：lint 0/0、typecheck 0 错、**npm test 1209** 全绿。
 
 ## 五、验证基线
 
