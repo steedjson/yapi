@@ -2,6 +2,13 @@
 
 条目由 /csl-buglog 或人工维护,供 coder/reviewer 动手前核对
 
+## [2026-10-01][依赖安全/dompurify] XSS 防护库命中新 advisory,且修复必须重建前端产物才算落地
+- 现象: 例行跑 `npm run audit` 时发现 1 项 low(GHSA-p98j-92pf-mc4p,DOMPurify IN_PLACE 模式下 afterSanitize 钩子移除节点后残留子树的事件处理器仍armed,可致 DOM XSS),影响 3.4.13–3.4.15,本仓实装恰为 3.4.15;而 `scripts/audit-baseline.json` 是 0/0/0/0/0 的真全零基线——按门禁设计,任何新增漏洞都会让 CI 的 `audit:ci` 变红
+- 根因: 上游新披露 advisory,非本仓改动引入。关键在于影响面判断:`dompurify` 是本仓 XSS 防护的**实际执行者**(`client/utils/sanitize.js` 唯一消费方,白名单清洗接口备注等富文本,属生产 dependencies),不是无关传递依赖;且它被打进前端产物 `static/prd`——只改 package.json 不重建产物,线上跑的仍是含漏洞的旧 bundle
+- 修法: `3.4.15 → 3.4.16`(补丁级,沿用仓库 caret 惯例声明 `^3.4.16`,lock 实装精确 3.4.16);① 8 例行为探针(script 标签/onerror/onclick/javascript: URL/data-* 属性/iframe 全拦截 + 白名单 b/a 保留)全通过;② `npm audit` 与 `npm run audit:ci` 双双归零;③ **`npm run build-client` 重建产物**——产物内版本标记实测 3.4.15→3.4.16,变动面仅 t9 chunk + manifest + assets.js,manifest 39 项资产与 WEBPACK_INITIAL_CHUNKS 逐项核对无缺失;④ 浏览器实测首页正常渲染、无 JS 错误、旧 chunk 正确 404
+- 关联: package.json(dompurify 3.4.16)/package-lock.json、static/prd/(t9 chunk 与 manifest 换名)、client/utils/sanitize.js、scripts/audit-baseline.json(维持 0 不变)、TECH_DEBT.md §四.1
+- 复发: 0 次 · 教训: 依赖含前端代码时,「升版本」不等于「修复上线」——必须连带重建并提交 `static/prd`,否则线上仍跑旧 bundle(本仓 static/prd 受 Git 跟踪,提交产物即为发布动作);此外零基线安全门禁的价值正在于此:基线为零时任何新 advisory 都会显式暴露,处置时先判断该包是「本仓功能的关键执行者」还是「无关传递依赖」,前者(如 XSS 防护库)应当立即处置而非按低危搁置
+
 ## [2026-10-01][TECH_DEBT] 台账多处状态滞后于代码,且「类型门禁零遗漏」口径不成立
 - 现象: 排查剩余技术债时逐条对代码核实,发现台账 9 处描述与实况不符:① §三「Compare* flag 尚可收紧」与 §二.3「K 批已收紧」自相矛盾(实况已收紧,§三 未同步);② §四.2 item7 称 CI action「SHA 固定属低优先开放项」(实况 0d8b4f0a 已完成,ci.yml 两处 uses 均为 40 位 SHA);③ §四.2 audit 基线残留 0/0/5/0/5(实况 0/0/0/0/0,与同节 §四.1 冲突);④ P6「Postman cWRP 等价 effect 待补回归用例」(实况 a8715839 已补 4 条);⑤ P7b「NewsList.js:37-40 遗留待查」(文件已随孤儿 News 组件群删除);⑥ P7d「exts/* 通配待删 / 生成器待补 @ts-check 头」(两项均已落地);⑦ §二.3 白名单条数 133/64/61/16(实况 260 条,分布 121/63/61/15);⑧ §三超 100 列「约 11 行/文件」(实况全 test/ 2324 行,集中分布);⑨ §二.3 交叉引用「InterfaceEditForm 永久门禁见§三」指向不存在的条目(悬空引用)
 - 根因: 台账为滚动追加式(append-only 语义下的批次行只增不改),批次完成后未回头同步早前条目;而 §三/§四 是「现状描述」区,与「一、已完成」的批次表性质不同——批次表可以只追加,现状区必须随代码更新,两者混用同一文件时缺少「改完代码回写现状区」的固定动作

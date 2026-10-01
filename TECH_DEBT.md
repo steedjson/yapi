@@ -158,6 +158,7 @@
 ~~**剩余 2 项 moderate**：react-router/react-router-dom@6.30.6 开放重定向~~ → **已清零（2026-09-29）**：router v7 迁移批顺带消除该 advisory；其后新披露的 `fast-uri` moderate（GHSA-hrr3-gc8f-f4qj，CWE-178，ajv 传递依赖）经 `npm audit fix` 升级 3.1.7→3.1.8 归零（2026-09-30 扫尾批，`npm audit` 实测 **0 vulnerabilities**）。注：f465443e 当时的基线「全零」实际 total 残留 2（笔误），已随本批订正为真全零。
 - **观察项**：~~`@scarf/scarf@1.4.0` 随 swagger-client 进入依赖树（install 时上报遥测，可用 `SCARF_ANALYTICS=false` 关闭）——建议在 CI/构建环境禁用~~ → **已在 CI 禁用（低风险扫尾批：ci.yml job 级 `SCARF_ANALYTICS: false`）**；~~`json-schema-faker 0.6` 升级被 ESM-only 阻塞~~ → **已消除（B1 批，2026-09-25）**：全量 ESM 化不做（[docs/server-esm-evaluation.md](docs/server-esm-evaluation.md) 裁决），走惰性 import 窄方案落地——`schemaToJson` 惰性 `import()` + async 化、0.5.9 → 0.6.3、5 调用点 await 适配，探针 14/14（0.5.9 基线 12/12），语义差异已登记（见批次行与 `test/server/schemaToJson-equivalence.test.js` 文件头）。
 - **门禁（已完成）**：`npm run audit:ci` 基线差分（`scripts/audit-check.js`，仅对新增漏洞失败，退出码 0/1/2/3 有离线回归测试）；基线 `scripts/audit-baseline.json` 现为 0/0/0/0/0（真全零）。
+- **2026-10-01 新增漏洞即时处置（零基线门禁按设计生效）**：新披露 `dompurify` low（GHSA-p98j-92pf-mc4p，IN_PLACE 下 afterSanitize 钩子移除节点后残留子树事件处理器仍可触发 DOM XSS），影响 3.4.13–3.4.15，本仓实装 3.4.15 命中。**该包是本仓 XSS 防护的实际执行者**（`client/utils/sanitize.js` 唯一消费方，白名单清洗接口备注等富文本），属生产 `dependencies`。处置：`3.4.15 → 3.4.16`（补丁级，沿用仓库 caret 惯例声明 `^3.4.16`、lock 实装精确 3.4.16）→ `npm audit` 实测归零；行为回归用 8 例探针（script 标签/onerror/onclick/javascript: URL/data-* 属性/iframe 全拦截，白名单 b/a 保留）全通过；因 DOMPurify 打进前端产物，同步 `npm run build-client` 重建 `static/prd`（产物内版本标记实测 3.4.15→3.4.16，仅 t9 chunk + manifest + assets.js 变动，manifest 39 项资产与初始 chunk 清单核对无缺失），并做浏览器实测（首页正常渲染、无 JS 错误、旧 chunk 正确 404）。基线维持 0/0/0/0/0。
 - 推进路径：当前零漏洞，无剩余评估项；新漏洞由 audit:ci 门禁拦截（发现即按「npm audit fix 或 overrides 修复 → 实测归零 → 下调基线」流程处置）。
 
 ### 2. 无 CI（门禁仅本地生效）→ 已完成（commit ff37aebe）
@@ -178,7 +179,7 @@
 
 ### 3. 结构债（god files）→ **已完成**
 
-- 原 7 个 god files（server 4 + client 3）全部拆分：server 侧随功能批次拆 service（见「一、第四阶段」）；client 侧三批次 render 子组件化收官——InterfaceColContent 1304→824、Postman 1222→748、InterfaceEditForm 1121→657，全部脱离 God file 区间。
+- 原 7 个 god files（server 4 + client 3）全部拆分：server 侧随功能批次拆 service（见「一、第四阶段」）；client 侧三批次 render 子组件化收官——InterfaceColContent 1304→824、Postman 1222→748、InterfaceEditForm 1121→657，全部脱离 God file 区间。**2026-10-01 实测现状**（上述为各批交付时点值，此后随 prop-types 清理等批次继续变化）：client 侧 InterfaceColContent 859 / Postman 742 / InterfaceEditForm 630；server 侧 interface 766 / project 588 / interfaceCol 49 / user 418（与交付时点完全一致）。全部仍低于 1000 行 God file 阈值。
 - 剩余为容器本质（hooks/事件/Form 装配），进一步拆分须以容器级快照门禁为前置。**交叉引用订正（2026-10-01）**：原述「InterfaceEditForm 永久门禁仍在册，见『三、遗留观察项』」为悬空引用——§三并无该条目；门禁实为已入库的测试文件 `test/client/containers/InterfaceEditFormContainer.test.js`（容器级 DOM 快照，与 InterfaceColContentContainer / PostmanContainer 互补），后续再拆时直接以它为准。
 
 ### 4. 测试盲区：containers 零覆盖 → **已完成**
@@ -188,8 +189,8 @@
 
 ### 5. exts/ 插件完全未现代化 → **已完成**
 
-- 原状：11 个插件 63 个 JS 文件，0 个 `@ts-check`、7 个类组件。现已类型化（49/63 文件 `@ts-check`，其余为插件入口清单）且类组件清零（7 个全部 Hooks 化，见「一、第四阶段」exts 批）。
-- 剩余：14 个插件入口（`index.js`/`defaultTheme.js` 清单）未纳入类型门禁（见「二、3」推进路径）。
+- 原状：11 个插件 63 个 JS 文件，0 个 `@ts-check`、7 个类组件。**2026-10-01 实测现状**：exts 下 12 个插件目录、63 个 JS 文件，**63/63 全部带 `@ts-check`**（原述「49/63，其余为插件入口清单」已被后续 P8b/J 批补齐），且类组件清零（7 个全部 Hooks 化，见「一、第四阶段」exts 批；全仓仅余 `client/components/ErrorBoundary/ErrorBoundary.js` 一个类组件，系 React 错误边界规范要求）。
+- ~~剩余：14 个插件入口（`index.js`/`defaultTheme.js` 清单）未纳入类型门禁（见「二、3」推进路径）。~~ → **已纳入（J 批）**：14 个入口随「client 4 + exts 14 个入口纳入类型门禁」批次补齐，实测 0 错；白名单条数现状见「二、3」。
 
 ### 6. 请求路径同步 I/O（部分已优化，见第四阶段）
 
@@ -224,7 +225,7 @@
 1. ~~非 major 依赖安全批（swagger-client / qs / sha.js / underscore / @babel/core）+ audit 纳入门禁~~ → **已完成（commit 84cc30a5）**；audit 门禁接入方式待定（见第 1 节门禁建议）；
 2. ~~最小 CI 四步门禁~~ → **已完成（commit ff37aebe）**，含 audit 基线差分门禁；后续跟踪项见第 2 节；
 3. ~~类组件迁移优先 containers 并同步补 containers 测试~~ → **已完成**（client/exts 类组件清零，containers 测试成体系）；
-4. ~~同步 I/O 收口与 god file 拆分随改造进行~~ → **已完成**（同步 I/O 仅剩 interface.js:580 边缘读取；god file 全部拆分）；
+4. ~~同步 I/O 收口与 god file 拆分随改造进行~~ → **已完成**（**同步 I/O 已清零**：`server/controllers/interface.js` 实测 `Sync(` 零命中，downloadCrx 已改异步读盘——原「仅剩 interface.js:580 边缘读取」表述滞后于第 6 节的收尾记录，2026-10-01 订正；god file 全部拆分）；
 5. major 升级：markdown-it/jsondiffpatch/koa-websocket 已完成；~~剩余 react-router v7、antd6、react19 单独排期~~——**react19 已完成迁移（2026-09-27 批次）**：react 19.3.0 + @ant-design/v5-patch-for-react-19 双装载（生产入口 + 测试装载器 setupDom() 之后，根因见 docs/BUGLOG/codex-react19.md）、类型 13 错清零、handleCurrDomain 竞态守卫（附 8 例回归）、四门禁全绿（终审独立复跑 1090/1090）+ 主 Agent 真机 UI 验证 11 页面×三皮肤 0 JS error；评估文档 [docs/react19-upgrade-assessment.md](docs/react19-upgrade-assessment.md)。**antd6 已完成迁移（2026-09-27 批次）**：antd 6.6.5 + cssinjs 2.1.2 + v5-patch 退役；实际破坏面 3 类（Select DOM 重构/Tabs 类更名/Timeline Steps 化），14 测试文件适配 + 8 类新弃用 prop 清扫（deprecated 179→0）+ D-1 指纹基线重登记；四门禁 1096 全绿 + 四皮肤真机验证（css-var 模式 token 映射未破坏）；评估文档 [docs/antd6-upgrade-assessment.md](docs/antd6-upgrade-assessment.md)；遗留 message 静态警告 1 条（清法需 App 上下文批，动 client/index.js + 159 调用点）。**react-router v7 已完成迁移（2026-09-28，6.30.6→7.18.4）**：此前「暂缓」所依据的 32 文件 v6 API 面经实证不构成 v7 障碍（v7 对 SPA 声明式路由完全向后兼容），唯一 DOM 漂移 = Link 新增 data-discover 标记（快照 6 行）+ 异步 vendor 重编号（D-1 重登记）；v6 future flag 警告消失；见 [docs/router-v7-migration.md](docs/router-v7-migration.md)。major 升级至此全部完成（React 19 / antd 6 / router 7 / Node ≥22.12）。
 6. ~~**（2026-10-01 新增）第 8 节两项收尾**：① 清理 tsconfig 4 条失效白名单条目（纯删 4 行，干跑实测 `tsc --showConfig` 的 files 集合与 typecheck 结果均不变）；② 处置 `client/store/addInterfaceStore.js`——确认无生产消费方后连同单测清理，或加入 include 使其真受检（二选一，需一次裁决）。两项均为一行级改动、零行为风险。~~ → **两项均已完成（2026-10-01，本批）**：① 4 条失效条目已删（260→256，失效归零）；② 孤儿 store 取保守方案加入 include 使其真受检（257，试纳入存量错误 0 + 负向对照确认可捕获）。**遗留待裁决**：该 store 及其 111 行单测从未被生产代码消费（全历史检索证实），是否清理留待产品判断。门禁：lint 0/0、typecheck 0 错、**npm test 1209** 全绿。
 
