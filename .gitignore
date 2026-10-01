@@ -54,3 +54,6 @@ init.lock
 # 重构期间的本地数据库备份，不提交到仓库
 backup-before-refactor/
 .zcode/
+
+# QA 本地截图证据（AGENTS.md 约定：仅本地留存、保持未跟踪）
+gui-test-screenshots/
