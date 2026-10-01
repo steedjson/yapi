@@ -1,7 +1,9 @@
 # 技术债台账（TECH_DEBT）
 
 > 2026-09 技术债清理行动的滚动台账：记录已完成项、评估后暂缓项及其理由、后续推进的具体路径，以及全仓扫描新发现待评估项。
-> 分支：`codex/refactor-foundation`。执行流程：主 Agent 划界 → csl-coder 实施 → csl-tester 验证 → csl-reviewer 审查 → 主 Agent 合并提交。
+> 执行流程：主 Agent 划界 → csl-coder 实施 → csl-tester 验证 → csl-reviewer 审查 → 主 Agent 合并提交。
+>
+> **阅读约定**：① 章节分工——「一、第四阶段」与「二」是**批次表**（按时间追加，记录各批交付时点的口径与门禁数，不回溯修改），「三」「四」是**现状描述区**（须随代码更新，2026-10-01 起已系统订正一轮）；② 批次表里的 `commit 本次` 是该批交付时的原始措辞（53 处，其中 8 处另有 hash），**不是可检索的提交信息**——定位某批实际提交请用批次名或表内 hash 走 `git log --grep`；③ 判断条目是否仍有效，以「现状描述区」与最新实测为准。
 
 ## 一、已完成（本轮清理）
 
@@ -233,7 +235,7 @@
 
 - Node：`.nvmrc` 24.21.0（engines `>=22.12`——jsondiffpatch 0.7 require(esm) 的硬性下限，npm `>=8`；**engines 仅告警不拦截**：实测 Node 版本不满足时 npm 仍完成安装，只打 EBADENGINE warn，真正卡点是启动期 ERR_REQUIRE_ESM）。版本锚点：**v2.0.0**（2026-09-26 打标，技术债治理收官基线）。部署文档：[docs/devops/index.md](docs/devops/index.md)（v2.0.0 全新部署全流程）；老版本（v1.x/master）数据迁移指南：[docs/devops/upgrade-migration-guide.md](docs/devops/upgrade-migration-guide.md)（主线=**MongoDB 大版本升级+换库迁移**、次路径=原地升级，均已脚本化：`scripts/migrate-precheck.js` 迁移前检查/清洗；含 schema 兼容实证/密码自动升级/identitycounters 清洗/回滚密码陷阱）。
 - 门禁：`npm run lint`（覆盖全仓含 test/，0 error 0 warning，pre-commit 卡点）、`npm test`（**1209**，2026-09-30 实测口径）、`npm run typecheck`（0 错）、`npm run build-client`（0 error）、`npm run audit`（官方 registry 安全扫描，当前 **0 项**）、`npm run audit:ci`（基线差分门禁 0/0/0/0/0，仅对新增漏洞失败）。
-- CI：`.github/workflows/ci.yml`（push/PR 触发；mongo:7 service + 上述门禁全跑）。**首次真跑全绿：run 35341995159（3m44s）**，可用 `gh run list --repo steedjson/yapi` 查看（注意本仓库有两个 remote，`gh` 需显式 `--repo steedjson/yapi`，否则会解析到 upstream）。本地等价验证方式：`docker run -d --rm -p <空闲端口>:27017 mongo:7` + 按 workflow heredoc 写 config.json（改端口）+ `npm test`。
+- CI：`.github/workflows/ci.yml`（push/PR 触发；mongo:7 service + 上述门禁全跑）。**首次真跑全绿：run 35341995159（3m44s）**，可用 `gh run list --repo steedjson/yapi` 查看（注意本仓库有两个 remote，`gh` 需显式 `--repo steedjson/yapi`，否则会解析到 upstream）。本地等价验证方式：`docker run -d --rm -p <空闲端口>:27017 mongo:7` + 按 workflow heredoc 写 config.json（改端口）+ `npm test`。**零基线门禁实战验证（2026-10-01）**：dompurify 新 advisory 使 run 36805408117 的 audit 门禁按设计变红（`low 0→1 <-- 高于基线`，并打印漏洞明细），修复批 e7384ebd 推送后 run 36806201695 全绿（audit delta 全 0）——「基线为零时任何新增漏洞显式暴露」的机制已获实证。
 - **测试验证必须用冷库**（每轮前 drop `yapi_test`）：温库会掩盖启动期 DB 工作的时序问题（冷库 teardown flake 曾在温库下"通过"、在冷库必现）。
 - **临时替换 config.json 的纪律**：先 `cp config.json /tmp/<name>.bak` 并记录 sha256（原始值 `6dc9b4c27137702233d03a4d1cdb619a622dd4180ab4044b16316114ed4864a9`），结束前恢复并校验；用户容器 27017（mongo:4.4）/27018（mongo:8.0）禁止触碰。
 - 浏览器冒烟（历史轮次）：注册/登录（scrypt + legacy 自动升级）、接口编辑页编辑器、用例表格拖拽持久化、Markdown 双写、Wiki 编辑器、面包屑、路由分包按需加载，全部通过。**最近一轮（antd5 层 C）：4 皮肤 × 5 页面矩阵 92/0 + dev 抽查 23/0（commit a0fd2e41）。**
