@@ -24,7 +24,6 @@
   "include": [
     "common/types/**/*.d.ts",
     "common/mergeJsonSchema.js",
-    "common/formats.js",
     "common/utils.js",
     "common/lib.js",
     "common/mock-extra.js",
@@ -92,7 +91,6 @@
     "client/containers/User/List.js",
     "client/containers/User/Profile.js",
     "client/containers/User/User.js",
-    "client/containers/index.js",
     "client/containers/Project/Project.js",
     "client/containers/Project/Activity/Activity.js",
     "client/containers/Project/Interface/Interface.js",
@@ -243,7 +241,6 @@
     "exts/yapi-plugin-statistics/server.js",
     "exts/yapi-plugin-statistics/controller.js",
     "exts/yapi-plugin-statistics/statisMockModel.js",
-    "exts/yapi-plugin-statistics/test.js",
     "exts/yapi-plugin-statistics/util.js",
     "exts/yapi-plugin-swagger-auto-sync/client.js",
     "exts/yapi-plugin-swagger-auto-sync/server.js",

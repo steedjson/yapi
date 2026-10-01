@@ -104,7 +104,7 @@
 
 ### 3. TypeScript 健全化（持续进行；存量欠账已清零）
 
-- 现状：`tsconfig.json` 按文件白名单 + `checkJs: false`（**仅有 `// @ts-check` 指令的文件被检查**）。白名单 **2026-10-01 实测为 256 个条目**（client/ 118、exts/ 63、server/ 60、common/ 15；含 `common/types/**/*.d.ts` 一条 glob；原述「client/ 133、exts/ 64、server/ 61、common/ 16」系 J 批时点值，此后随文件增删变化，现按 `tsc --showConfig` 实测订正），`npm run typecheck` 0 错误；失效条目已清零、pragma 落空项已随孤儿 store 清理消解（见「四、8」）。此前登记的「开启 checkJs 后 containers 1183 / components 550 错误」基线已随 P7d/P8b 收官清零，不再适用。
+- 现状：`tsconfig.json` 按文件白名单 + `checkJs: false`（**仅有 `// @ts-check` 指令的文件被检查**）。白名单 **2026-10-01 实测为 253 个条目**（client/ 117、exts/ 62、server/ 60、common/ 14；含 `common/types/**/*.d.ts` 一条 glob；原述「client/ 133、exts/ 64、server/ 61、common/ 16」系 J 批时点值，此后随文件增删变化，现按 `tsc --showConfig` 实测订正），`npm run typecheck` 0 错误；失效条目已清零、pragma 落空项已随孤儿 store 清理消解（见「四、8」）。此前登记的「开启 checkJs 后 containers 1183 / components 550 错误」基线已随 P7d/P8b 收官清零，不再适用。
 - 已完成的现代化：Node API 类型改由显式 `@types/node@^24`（与 .nvmrc 一致）提供，删除了 `global.d.ts` 中手写且与真实类型冲突的 Buffer/process/require/crypto 垫片。
 - 推进路径：每次触碰未纳入文件时顺手加 `// @ts-check` + 纳入 include 并清零错误。~~**当前未纳入清单**：client/ 4 个（`constants/variable.js`、`history.js`、`reducer/modules/reducer.js`、`utils/sanitize.js`）、exts/ 14 个插件入口 `index.js`/`defaultTheme.js`（清单/主题数据文件）。~~ → **已全部纳入（J 批）**：18 个文件补 `// @ts-check` 后入白名单，实测 0 错；至此 client/exts/common 下 JS 文件零遗漏。
 - 遗留技术细节：① `json5@2` 自带类型只导出 `{parse, stringify}` 无 default，而项目内 CJS/ESM 两种用法并存，故仍保留等价声明——若统一改命名导入即可删除；② `mockjs` 无自带类型，仍需声明（`json-schema-editor-visual` 已随自研编辑器批次 4 删除，其声明已无消费方）；③ ~~`common/lib.js` 的 `Compare*` 三个函数 `@param {*} flag` 尚可收紧为 `boolean`~~ → **已收紧（K 批：CompareArray/CompareObj 的 flag 改 boolean，调用点均传字面量 true）**。
@@ -220,7 +220,13 @@
 - ~~**tsconfig include 存在 4 条指向已删文件的失效条目**（`tsc --showConfig` 实测，不影响 typecheck 通过，但会让白名单口径失真）：
   `server/utils/initConfig.js`、`client/containers/News/News.js`、`client/containers/News/NewsList/NewsList.js`、`client/containers/News/NewsTimeline/NewsTimeline.js` —— 后三者随孤儿 News 组件群删除（492081ec），前者为更早的孤立文件清理残留。~~ → **已清理（2026-10-01，本批）**：4 条纯删（include 260→256），清理后失效条目归零、`tsc --showConfig` 的 files 集合与 typecheck 结果均不变（干跑与正式各验证一次）。
 - ~~**`client/store/addInterfaceStore.js` 带 `@ts-check` 但实际未受检**~~ → **已彻底清理（2026-10-01，产品裁决：删除）**：该文件有 `// @ts-check` 头、且不在 tsconfig include，负向对照实测**未被捕获**（注入类型错误后 typecheck 仍 0 错）。同目录其余 10 个带 pragma 的 store/工具文件（userStore/projectStore/interfaceColStore/menuStore/mockColStore/followStore/groupStore/activityStore/message-bridge/DocDrawer）经同法实测**均被传递性受检**（各自注入后均报错），仅此一例落空。**根因**：该 store 系「状态管理迁移批次 3」从旧 Redux reducer 1:1 迁来，而旧 reducer 虽注册进根 reducer（`reducer.js` 有 `addInterface` 项）却从未被任何组件消费——全历史检索（`git grep` 迁移前快照 + `git log -S` 全分支）证实容器/组件目录零引用，迁移后同样仅存测试引用（`client/store/addInterfaceStore.test.js` 是唯一引用方）。**处置**：先加入 include 使其真受检（87835e3b），随后经产品裁决删除——`client/store/addInterfaceStore.js`（133 行）+ 其单测（111 行）与 tsconfig 条目一并移除；**删除前做了三重独立验证**：① 全仓任意形式检索（含动态 import/字符串/barrel 导出）仅命中自身与自身测试；② 产物侧交叉验证——该 store 独有的动作名（`pushInterfaceName`/`seqGroup` 等）在 `static/prd` 全量 chunk 中零命中，而同法检索对照组（userStore 的 `changeMenuItem`）可命中，证明检索方法有效且该 store 确实不在任何 import 链上；③ 删除后 typecheck 0 错、测试数 1209→1203（恰为该文件 6 个用例）。
-- **口径订正（已随上述收口）**：`client/exts/common` 下 JS 文件现已全部处于类型门禁之下（`@ts-check` 与 include 一致，无落空项）；白名单条数 256（118/63/60/15）。
+- **口径订正（已随上述收口）**：`client/exts/common` 下 JS 文件现已全部处于类型门禁之下（`@ts-check` 与 include 一致，无落空项）；白名单条数见下条（死文件清理后为 253）。
+- **（2026-10-01 新增）全仓死文件扫描：再清理 3 个零引用模块**（同一方法论：源码引用检索 + 产物侧交叉对照 + 门禁对齐）。起因是处置孤儿 store 时发现「文件名词干出现在语料里」不足以判活（注释/文档提及即命中），改用**真实 import/require 语句构图 + 从入口 BFS 求可达**，再对候选逐个做产物侧交叉对照：
+  - `client/containers/index.js`（barrel 聚合 7 个容器）：全仓零 import（`Application.js` 直接 import 各容器而非走 barrel），产物零命中 → **删除**。
+  - `common/formats.js`（26 项 JSON-Schema format 数据，2018 引入）：全仓零引用、服务端零加载、产物以独有标识（`ipv4 地址`，排除 mockjs 干扰项后）实测零命中；原消费者（`Postman.js`/`interfaceCol.js`/`commons.js`）现均已无引用，当前编辑器 format 下拉走 `constants.MOCK_SOURCE`（两者非同一数据集） → **删除**。
+  - `exts/yapi-plugin-statistics/test.js`（60 行造数脚本，2017 上游 fork 带入）：全仓零引用；且调用 `collection.insert()` —— 该 API 在 mongodb driver 6.x 已移除，实测抛 `TypeError: col.insert is not a function`，即**已被上游 API 变更打坏、无法运行** → **删除**。
+  - **独立佐证**：三者删除后重建 `static/prd`，产物 **0 文件变动**（逐字节一致）——从构建侧独立证明它们不在任何 import 链上。tsconfig 白名单 256→253（117/62/60/14），失效条目保持为零。门禁：lint 0/0、typecheck 0 错、npm test 1203 全绿。
+  - **扫描方法的边界（供后续复用）**：静态构图会漏掉 `path.resolve(...)` 拼接、webpack 别名（`client/`、`common/`）、`requireAny` 等间接加载形式——本轮 `common/lib.js`、`client/plugin-module.js`、`server/utils/ldap.js` 等即因此被误判为不可达，逐个复核后确认均在被使用；故**构图结果只能作为候选，判死必须叠加产物侧对照与人工复核**。
 
 ### 建议优先级（供裁决）
 

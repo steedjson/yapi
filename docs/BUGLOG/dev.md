@@ -2,6 +2,13 @@
 
 条目由 /csl-buglog 或人工维护,供 coder/reviewer 动手前核对
 
+## [2026-10-01][全仓] 死文件扫描:静态构图只出候选,判死须叠产物对照;「文件名词干命中」判据会把注释当引用
+- 现象: 清理孤儿 store 后顺势做全仓死文件扫描。第一版判据是「文件名词干是否出现在全仓语料」——只报出 1 个候选(且是误报:被文档/测试头注释提及即命中),几乎全漏。改用「真实 import/require 语句构图 + 从入口 BFS 求可达」后报出 14 个候选
+- 根因: 两个反向的判据缺陷——① 词干匹配过宽:注释、文档、日志文本里的文件名都算「被引用」,把死文件洗白成活的;② 静态构图过窄:漏掉 `path.resolve(WEBROOT,'common/lib.js')` 拼接、webpack 别名(`client/`/`common/`/`exts/`)、`requireAny` 等间接加载形式,把活文件误判为死。14 个候选里 11 个属后者(lib.js/plugin-module.js/ldap.js/sandbox_child.js/build 侧 shim 等逐个复核后确认都在用)
+- 修法: 确立三段式判定——① 构图出候选(BFS 可达性,允许误报);② **产物侧交叉对照**(用该模块独有字符串在 static/prd 全量 chunk 检索,并配对照组:同法检一个已知可达的同类标识,零命中才算证据);③ 删除后重建产物,看是否 0 文件变动(逐字节一致即从构建侧独立佐证不在 import 链上)。本轮据此删除 3 个真死文件:`client/containers/index.js`(barrel,零 import)、`common/formats.js`(26 项 format 数据,原消费者 Postman/interfaceCol/commons 现均已无引用)、`exts/yapi-plugin-statistics/test.js`(2017 上游遗留造数脚本,且调用 driver 6.x 已移除的 `collection.insert()`,实测抛 TypeError 即已损坏);连带 tsconfig 条目,白名单 256→253,重建产物 0 变动
+- 关联: client/containers/index.js、common/formats.js、exts/yapi-plugin-statistics/test.js(三者已删)、tsconfig.json、TECH_DEBT.md §四.8
+- 复发: 0 次 · 教训: 判死文件必须「构图出候选 + 产物验真身」两步走,单用任一步都会错(词干匹配把注释当引用、静态构图漏别名与路径拼接);产物侧检索一定要带对照组,否则「零命中」可能只是检索本身失效(本轮 `cparagraph` 就差点把 mockjs 第三方代码误当成 formats.js 的踪迹);重建后产物 0 变动是最省事也最硬的旁证
+
 ## [2026-10-01][client/store] 孤儿 store 删除前的验证方法:产物侧交叉对照比全仓 grep 更能定性
 - 现象: 处置 `client/store/addInterfaceStore.js`(带 @ts-check 却未被检查的孤儿 store)时,全仓检索只命中它自己与其单测——但「grep 零命中」不足以定案:该文件若被某条间接 import 链(barrel 导出、动态 import、插件机制)引入,文本检索同样可能漏判
 - 根因: 本次对象是「从未被消费」而非「消费方被删」,故必须排除「有隐藏可达路径」的可能。深层原因是它 1:1 承接自旧 Redux reducer,而那个 reducer 虽注册进 combineReducers 却从无组件读取——迁移把既有孤儿换了实现形态,掩盖了它一直没被用的事实
