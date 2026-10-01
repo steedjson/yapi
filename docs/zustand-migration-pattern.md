@@ -4,6 +4,8 @@
 试点对象：`follow`（`client/reducer/modules/follow.js` → `client/store/followStore.js`）。
 批次2 对象：`menu`（→ `client/store/menuStore.js`）、`mockCol`（→ `client/store/mockColStore.js`）、`news`（→ `client/store/newsStore.js`）。
 批次3 对象：`interfaceCol`（→ `client/store/interfaceColStore.js`）、`addInterface`（→ `client/store/addInterfaceStore.js`）、`group`（→ `client/store/groupStore.js`）。
+
+> **后续变更（2026-10-01）**：`addInterfaceStore.js` 已**删除**。它 1:1 承接自旧 Redux reducer，而该 reducer 虽注册进 `combineReducers` 却从未被任何组件消费（全历史检索 + 产物侧交叉验证证实，见 TECH_DEBT §四.8）——迁移只是把这个既有孤儿换了实现形态，并未使它被使用。其单测（111 行）与 tsconfig 条目一并移除。下文表格中的该行保留为迁移时点的历史记录。
 批次4 对象：`user`（→ `client/store/userStore.js`）、`project`（→ `client/store/projectStore.js`）。combineReducers 仅剩 `inter`（批次 5 可选）。
 
 ## 1. 背景与总体策略

@@ -2,6 +2,13 @@
 
 条目由 /csl-buglog 或人工维护,供 coder/reviewer 动手前核对
 
+## [2026-10-01][client/store] 孤儿 store 删除前的验证方法:产物侧交叉对照比全仓 grep 更能定性
+- 现象: 处置 `client/store/addInterfaceStore.js`(带 @ts-check 却未被检查的孤儿 store)时,全仓检索只命中它自己与其单测——但「grep 零命中」不足以定案:该文件若被某条间接 import 链(barrel 导出、动态 import、插件机制)引入,文本检索同样可能漏判
+- 根因: 本次对象是「从未被消费」而非「消费方被删」,故必须排除「有隐藏可达路径」的可能。深层原因是它 1:1 承接自旧 Redux reducer,而那个 reducer 虽注册进 combineReducers 却从无组件读取——迁移把既有孤儿换了实现形态,掩盖了它一直没被用的事实
+- 修法: 删除前做三重独立验证——① 全仓任意形式检索(含动态 import/字符串/barrel,并确认 client/store 无 index.js 聚合)仅命中自身与自身测试;② **产物侧交叉对照**:该 store 独有的动作名(pushInterfaceName/seqGroup 等)在 static/prd 全量 chunk 中零命中,而同法检索对照组(userStore 的 changeMenuItem)可命中——证明检索方法有效,且该文件确实不在任何 import 链上;③ 删除后 typecheck 0 错、测试数 1209→1203(恰为该文件 6 个用例),数量对齐即交叉印证。文件(133 行)+单测(111 行)+tsconfig 条目一并移除
+- 关联: client/store/addInterfaceStore.js(已删)、test/client/store/addInterfaceStore.test.js(已删)、tsconfig.json、docs/zustand-migration-pattern.md(补后续变更说明)、TECH_DEBT.md §四.8
+- 复发: 0 次 · 教训: 判定「死文件」时,产物侧交叉对照是比源码 grep 更硬的证据——bundle 是真实可达性的物化结果,grep 只证明文本无引用;检索必须配对照组(拿一个已知可达的同类标识去检),否则「零命中」可能只是检索方法本身失效;删除后核对测试数减少量是否等于该文件用例数,是最省事的一致性自检
+
 ## [2026-10-01][依赖安全/dompurify] XSS 防护库命中新 advisory,且修复必须重建前端产物才算落地
 - 现象: 例行跑 `npm run audit` 时发现 1 项 low(GHSA-p98j-92pf-mc4p,DOMPurify IN_PLACE 模式下 afterSanitize 钩子移除节点后残留子树的事件处理器仍armed,可致 DOM XSS),影响 3.4.13–3.4.15,本仓实装恰为 3.4.15;而 `scripts/audit-baseline.json` 是 0/0/0/0/0 的真全零基线——按门禁设计,任何新增漏洞都会让 CI 的 `audit:ci` 变红
 - 根因: 上游新披露 advisory,非本仓改动引入。关键在于影响面判断:`dompurify` 是本仓 XSS 防护的**实际执行者**(`client/utils/sanitize.js` 唯一消费方,白名单清洗接口备注等富文本,属生产 dependencies),不是无关传递依赖;且它被打进前端产物 `static/prd`——只改 package.json 不重建产物,线上跑的仍是含漏洞的旧 bundle
