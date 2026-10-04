@@ -53,6 +53,17 @@ const listedCaseDoc = {
     return { _id: 100, interface_id: 77, uid: '7', name: 'case-list-1' };
   }
 };
+// caseModel.list 返回的「创建者账号已删除」期望文档桩: uid 在 userModel.findById 查无此人;
+// toObject 结果不含 username(username 非期望表字段, 由控制器补全), 钉 uid 失配路径
+const orphanCaseDoc = {
+  _id: 101,
+  interface_id: 77,
+  uid: '404',
+  name: 'case-list-orphan',
+  toObject() {
+    return { _id: 101, interface_id: 77, uid: '404', name: 'case-list-orphan' };
+  }
+};
 // 登录态普通用户(uid=5, 非项目创建者/成员/分组成员/全局管理员)
 const loginMember = { $uid: '5', $user: { _id: 5, role: 'member', username: 'alice' } };
 // token 请求路径 init 写入的系统用户(init 中 tokenUid === '999999' 分支)
@@ -62,7 +73,7 @@ const tokenUser = { $uid: '999999', $user: { _id: '999999', role: 'member', user
  * 构造 advanced-mock 控制器实例与调用记录。
  * 五个 model 均在构造器里经 yapi.getInst 取实例, 先以 getInsts 桩化避免实例化真实 mongoose model;
  * project/group 桩服务于 checkAuth 真实判定链(type='project' 路径)。
- * @param {any} opts $uid/$user/tokenAuth/$tokenProjectId/interfaceData/caseData/caseListData/project/mockData
+ * @param {any} opts $uid/$user/tokenAuth/$tokenProjectId/interfaceData/caseData/caseListData/project/mockData/userFindById
  * @returns {any} { inst, calls }
  */
 function createAdvMockInst(opts) {
@@ -119,9 +130,13 @@ function createAdvMockInst(opts) {
     }
   });
   yapi.getInsts.set(userModel, {
-    // findById 服务 list 端点列表项 username 补全
+    // findById 服务 list 端点列表项 username 补全; 默认命中用户,
+    // opts.userFindById 可覆盖为查无此人(null), 覆盖 uid 失配路径
     findById: async uid => {
       calls.userFindByIds.push(uid);
+      if (opts.userFindById) {
+        return opts.userFindById(uid);
+      }
       return { username: `alice-${uid}` };
     }
   });
@@ -391,6 +406,75 @@ test.serial('advmock list: token 非归属项目经 checkAuth 严格域 406 不�
   // 与 upMock/delCase/hideCase 同语义
   t.deepEqual(calls.checkAuthCalls, [[99, 'project', 'view']]);
   t.is(calls.caseLists.length, 0);
+});
+
+// ---------- list: userinfo 空值守卫回归(uid 失配 → 不得 TypeError 兜 400) ----------
+// 背景: 期望创建者账号被删除后, caseModel.list 仍返回其期望, 而 userModel.findById
+// 查无此人(null); 守卫缺失时 userinfo.username 抛 TypeError, 被 list 外层 catch 兜成
+// 400(Cannot read properties of null)。三条用例(失配/命中/混合)共同钉住:
+// 命中项 username 补全不回归, 失配项跳过补全且整体 errcode 0 放行。
+
+test.serial('advmock list: 创建者账号已删除(uid 失配)errcode 0 放行且该 item 不含 username', async t => {
+  const { inst, calls } = createAdvMockInst({
+    ...loginMember,
+    project: privateDevProject,
+    caseListData: [orphanCaseDoc],
+    // 反恒真: 失配路径必须真实发生过 findById 查询(null 由读取结果驱动, 非 stub 未接线)
+    userFindById: () => null
+  });
+  const ctx = { query: { interface_id: 77 }, body: null };
+
+  await inst.list(ctx);
+
+  t.is(ctx.body.errcode, 0);
+  // 区别于修复前行为: 守卫缺失时 TypeError 落 catch → errcode 400 + TypeError 文案
+  t.not(ctx.body.errcode, 400);
+  t.is(ctx.body.errmsg, '成功！');
+  t.is(ctx.body.data.length, 1);
+  t.is(ctx.body.data[0]._id, 101);
+  t.is(ctx.body.data[0].name, 'case-list-orphan');
+  t.false('username' in ctx.body.data[0], 'uid 失配项不得携带 username 字段');
+  // 反恒真: 确实按 item.uid 查过用户(未查即返回 0 说明 userinfo 补全路径被绕过)
+  t.deepEqual(calls.userFindByIds, ['404']);
+  t.deepEqual(calls.caseLists, [77]);
+});
+
+test.serial('advmock list: uid 命中用户时 username 正常补全(守卫不得吞掉既有补全)', async t => {
+  const { inst, calls } = createAdvMockInst({
+    ...loginMember,
+    project: privateDevProject,
+    caseListData: [listedCaseDoc]
+  });
+  const ctx = { query: { interface_id: 77 }, body: null };
+
+  await inst.list(ctx);
+
+  t.is(ctx.body.errcode, 0);
+  t.is(ctx.body.data[0].username, 'alice-7');
+  t.deepEqual(calls.userFindByIds, ['7']);
+});
+
+test.serial('advmock list: 混合列表逐项独立处理, 失配项无 username 不中断后续补全', async t => {
+  const { inst, calls } = createAdvMockInst({
+    ...loginMember,
+    project: privateDevProject,
+    // 失配项在前: 若守卫缺失或循环被异常中断, 后续命中项断言即红
+    caseListData: [orphanCaseDoc, listedCaseDoc],
+    userFindById: uid => (uid === '404' ? null : { username: `alice-${uid}` })
+  });
+  const ctx = { query: { interface_id: 77 }, body: null };
+
+  await inst.list(ctx);
+
+  t.is(ctx.body.errcode, 0);
+  t.not(ctx.body.errcode, 400);
+  t.is(ctx.body.data.length, 2);
+  t.is(ctx.body.data[0]._id, 101);
+  t.false('username' in ctx.body.data[0], '失配项不得携带 username 字段');
+  t.is(ctx.body.data[1]._id, 100);
+  t.is(ctx.body.data[1].username, 'alice-7');
+  // 反恒真: 两项都真实查过用户, 顺序即循环顺序(证明失配不短路循环)
+  t.deepEqual(calls.userFindByIds, ['404', '7']);
 });
 
 // ---------- saveCase: 登录态 edit 校验 + 落库归属归一 + token 既有守卫 ----------

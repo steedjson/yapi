@@ -2,6 +2,13 @@
 
 条目由 /csl-buglog 或人工维护,供 coder/reviewer 动手前核对
 
+## [2026-10-04][高级Mock] 「守卫被写成注释」的历史 fix 会留隐雷:list 的 userinfo 空值崩溃路径
+- 现象: `exts/yapi-plugin-advanced-mock/controller.js` 的 list 对每条用例执行 `result[i].username = userinfo.username` 且无守卫;用例创建者账号被删除后再访问该接口 → TypeError → 外层 catch 兜 400,整个期望列表不可读
+- 根因: git 史实——2018-06-26 的 `f986eb40`「fix: 用户从用户列表中删除后访问高级mock报错」把守卫写成**注释态**(`// if (userinfo) {` + `// }`)同时加了 try/catch,即以「崩溃转 400」冒充修复;守卫从未以活代码存在过;2026-10 注释清理批删除注释态残留后行为不变(守卫本就未执行),但文件内线索消失、隐雷仍活
+- 修法: 恢复为活守卫 `if (userinfo) { result[i].username = userinfo.username; }`,对齐 `server/controllers/interface.js:287-289` 的同形活口径(同「创建者可能已被删」场景);失配路径由「整请求 400」改为「errcode 0 + 该项无 username」;3 例回归用例(失配/命中/混合 + findById 调用记录反恒真)并以 HEAD 内存编译对照证「修复前必红」(HEAD 实测 400,工作区 0);全量 1262 绿
+- 关联: exts/yapi-plugin-advanced-mock/controller.js、test/server/advmock-auth-scope.test.js、历史 commit f986eb40、TECH_DEBT.md「四、11」
+- 复发: 0 次 · 教训: ①**把守卫写成注释、再用 try/catch 兜崩溃,不是修复**——「整请求失败」比「跳过缺失字段」更糟,且注释里的意图永远不会执行(2018 年那笔 fix 把它当修法,埋了 8 年);②清理注释残留时,凡「注释态 if / 守卫 / 包裹括号」形态要单独判定:它可能是「作者意图未落地」的信号(应恢复为活代码或至少上报),不能当普通残留删;③判定「该恢复成什么形态」的最快依据是找同场景先例(interface.js 的活守卫)
+
 ## [2026-10-04][鉴权] 注释态权限校验是历史欠账的线索:get_env 跨项目越权读(任意登录用户可读任意私有项目 env)
 - 现象: 注释 triage 批的评审随批指出——`server/controllers/project/envTokenMethods.js` 的 getEnv 仅校验 project_id 非空,随后直接 `Model.getByEnv` 返回;任意登录用户凭 project_id 可读任意项目(含私有)的 env,`env[].header` 可能含目标 API 密钥 → 跨项目信息泄露(同资源 project.get 守私有、getEnv 裸奔 = 可见性口径分裂)
 - 根因: 该检查曾被移除、只留注释态痕迹(注释态 checkAuth 与散文「去掉权限判断」);注释批把痕迹删掉后线索才被评审当成「现状线索」上报——本质是「被注释掉的安全校验从未被当作既存暴露面审计过」:读类端点的项目域可见性判定整体缺失

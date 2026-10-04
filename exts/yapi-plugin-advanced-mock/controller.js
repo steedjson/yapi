@@ -111,7 +111,11 @@ class advMockController extends baseController {
       for (let i = 0, len = result.length; i < len; i++) {
         let userinfo = await this.userModel.findById(result[i].uid);
         result[i] = result[i].toObject();
-        result[i].username = userinfo.username;
+        // 用例创建者的账号可能已被删除：只在查到用户时补 username，
+        // 否则跳过（此前守卫被注释掉，uid 失配会 TypeError 并被外层 catch 兜成 400）
+        if (userinfo) {
+          result[i].username = userinfo.username;
+        }
       }
 
       ctx.body = yapi.commons.resReturn(result);
