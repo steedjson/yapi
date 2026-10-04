@@ -14,7 +14,7 @@
     "audit": "npm audit --registry=https://registry.npmjs.org",
     "audit:ci": "node scripts/audit-check.js",
     "lint": "eslint client/ server/ common/ exts/ test/ scripts/",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.build.json",
     "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s",
     "build-client": "npm run build-client:rsbuild",
     "build-client:rsbuild": "NODE_ENV=production node build/rsbuild-standalone.mjs",

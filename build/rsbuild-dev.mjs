@@ -1,3 +1,4 @@
+// @ts-check
 // Rsbuild dev server 编排（阶段二：npm run dev-client 切换，见 docs/rsbuild-migration-plan.md）。
 // 先做插件发现与 client/plugin-module.js 生成（构建前副作用），再 loadConfig
 // 启动 Rsbuild dev server（端口 4000，代理/静态/回退语义见 rsbuild.config.mjs dev 分支与

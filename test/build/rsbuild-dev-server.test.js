@@ -171,6 +171,76 @@ test.serial('末段未知扩展名的请求按旧链口径回退 HTML', async t 
   t.is(res.body, devHtmlStub);
 });
 
+// ---- HTML 读取失败：500 分支（抛出物可为任意值，不得外泄异常或静默吞掉）----
+
+test.serial('读 HTML 抛 Error：显式分支返回 500 与可读原因，且不继续 next()', async t => {
+  const middleware = createDevIndexHtmlMiddleware({
+    readHtml: () => {
+      throw new Error('read failed');
+    }
+  });
+  const res = createRes();
+  const next = nextSpy();
+  await middleware({ method: 'GET', url: '/' }, res, next);
+  await res.finishPromise;
+  t.is(res.statusCode, 500);
+  t.is(res.headers['content-type'], 'text/plain; charset=utf-8');
+  t.is(res.body, 'dev html unavailable: read failed');
+  t.false(next.called);
+});
+
+test.serial('读 HTML 以非 Error 值 reject：500 分支原样拼接抛出物（不假设有 message）', async t => {
+  const middleware = createDevIndexHtmlMiddleware({
+    getHtml: async () => {
+      throw { code: 'E_DEV_HTML' };
+    }
+  });
+  const res = createRes();
+  await middleware({ method: 'GET', url: '/index.html' }, res, nextSpy());
+  await res.finishPromise;
+  t.is(res.statusCode, 500);
+  t.is(res.body, 'dev html unavailable: [object Object]');
+});
+
+test.serial('既无 readHtml 也无 getHtml：缺少读取器时同样收敛为 500，不外抛异常', async t => {
+  const middleware = createDevIndexHtmlMiddleware({});
+  const res = createRes();
+  await middleware({ method: 'GET', url: '/' }, res, nextSpy());
+  await res.finishPromise;
+  t.is(res.statusCode, 500);
+  t.true(res.body.startsWith('dev html unavailable: '));
+  t.true(/is not a function/.test(res.body));
+});
+
+test.serial('回退分支读 HTML 抛 Error：返回 500 与原因，不带 HTML 内容类型', async t => {
+  const middleware = createHtmlFallbackMiddleware({
+    getHtml: async () => {
+      throw new Error('transform failed');
+    }
+  });
+  const res = createRes();
+  const next = nextSpy();
+  await middleware({ method: 'GET', url: '/project/36' }, res, next);
+  await res.finishPromise;
+  t.is(res.statusCode, 500);
+  t.is(res.body, 'dev html unavailable: transform failed');
+  t.is(res.headers['content-type'], 'text/plain; charset=utf-8');
+  t.false(next.called);
+});
+
+test.serial('回退分支以字符串 reject：500 正文原样拼接该值（非 Error 抛出物兜底）', async t => {
+  const middleware = createHtmlFallbackMiddleware({
+    getHtml: async () => {
+      throw 'boom';
+    }
+  });
+  const res = createRes();
+  await middleware({ method: 'GET', url: '/group/14' }, res, nextSpy());
+  await res.finishPromise;
+  t.is(res.statusCode, 500);
+  t.is(res.body, 'dev html unavailable: boom');
+});
+
 // ---- server.setup 装配与整体链路 ----
 
 const fakeHtmlCalls = [];

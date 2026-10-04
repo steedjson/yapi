@@ -2,6 +2,13 @@
 
 条目由 /csl-buglog 或人工维护,供 coder/reviewer 动手前核对
 
+## [2026-10-01][build/类型门禁] 给客户端模块图内的空垫片加 @ts-check 会改产物 manifest 名;纯注解批次必须以「重建零 diff」验收
+- 现象: build/ 目录纳入类型门禁时,给 build/empty-module.js(5 行空垫片,module.exports = {})加 `// @ts-check` 后重建,static/prd 的 manifest chunk 名从 `manifest@08fdc614f9362e05.js` 变为 `manifest@5538fe94…`——内容仅 37 处单字符 c↔f 互换(压缩器局部变量名 swap),语义等价但字节不等价;删除后又复原。该文件经 resolve.fallback(rsbuild.config.mjs 的 https/vm)进入客户端模块图
+- 根因: 未完全定位。实测表明其源码内容参与客户端压缩器的命名 tie-break,且**不可预判**:加 @ts-check 确定性触发(三方独立复现);另加一段多行说明注释触发为第三个名字(f3b7dd8e…);而一行短中性注释未触发(仍 08fdc614…)。对照组:同批 build/shims/setImmediate.js 加 @ts-check + JSDoc 后产物 0 变动——说明敏感性是「文件相关」而非常态,不能推广为「模块图内文件加注解都会漂移」
+- 修法: 该文件裁决为**有意免检**并保持与 HEAD 逐字节一致(它是空垫片、零类型错误,纳入门禁零收益;而守住「注解批次零产物变更」不变量价值更高);豁免理由与实测记录登记在 tsconfig.build.json 的 JSONC 注释;新增 test/build/build-tscheck-coverage.test.js 用「sha256+字节数钉死豁免文件、受检集合≡build/ 下除豁免清单外全部」把不变量锁住(防后人顺手加 marker 再触发漂移)
+- 关联: tsconfig.build.json(豁免注释)、build/empty-module.js、test/build/build-tscheck-coverage.test.js、rsbuild.config.mjs:119-120、TECH_DEBT.md「四、9」
+- 复发: 0 次 · 教训: ①「纯注解/配置类改动不产生产物 diff」是仓库的重要不变量,但**不是免费的**——必须先重建验证(本轮 57 处注解全部零产物变更,唯 empty-module 一例例外,靠逐文件隔离回滚法定位到单文件);②分层判据:先「整体重建是否 clean」,不 clean 时用「除 X 外全部改动」二分定位;③给**模块图内**文件加任何内容(marker/注释都算)前,先想清楚它会不会进产物哈希链——空垫片这类文件宁可免检也不要冒险;④门禁是逐文件 opt-in(`checkJs:false` + marker)时,漏写 marker 会**静默脱检**,必须用测试锁「受检集合」(本轮已落地)
+
 ## [2026-10-01][全仓] 死文件扫描:静态构图只出候选,判死须叠产物对照;「文件名词干命中」判据会把注释当引用
 - 现象: 清理孤儿 store 后顺势做全仓死文件扫描。第一版判据是「文件名词干是否出现在全仓语料」——只报出 1 个候选(且是误报:被文档/测试头注释提及即命中),几乎全漏。改用「真实 import/require 语句构图 + 从入口 BFS 求可达」后报出 14 个候选
 - 根因: 两个反向的判据缺陷——① 词干匹配过宽:注释、文档、日志文本里的文件名都算「被引用」,把死文件洗白成活的;② 静态构图过窄:漏掉 `path.resolve(WEBROOT,'common/lib.js')` 拼接、webpack 别名(`client/`/`common/`/`exts/`)、`requireAny` 等间接加载形式,把活文件误判为死。14 个候选里 11 个属后者(lib.js/plugin-module.js/ldap.js/sandbox_child.js/build 侧 shim 等逐个复核后确认都在用)

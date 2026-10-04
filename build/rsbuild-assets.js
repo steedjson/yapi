@@ -1,3 +1,4 @@
+// @ts-check
 'use strict';
 
 // Rsbuild 产物适配器（阶段一引入，阶段三演进为动态枚举）：把 static/prd 下的 Rsbuild
@@ -67,6 +68,7 @@ const BROTLI_MIN_RATIO = 0.9;
  * @returns {Record<string, {js?: string, css?: string}>}
  */
 function collectChunks(distDir) {
+  /** @type {Record<string, {js?: string, css?: string}>} */
   const chunks = {};
   for (const name of fs.readdirSync(distDir)) {
     const match = CHUNK_FILE_RE.exec(name);
@@ -74,7 +76,8 @@ function collectChunks(distDir) {
       continue;
     }
     const chunkName = match[1];
-    const ext = match[3];
+    // CHUNK_FILE_RE 已把扩展名限定为 js|css，此处按类型层收窄（运行时取值不变）。
+    const ext = /** @type {'js'|'css'} */ (match[3]);
     if (!chunks[chunkName]) {
       chunks[chunkName] = {};
     }
@@ -101,17 +104,31 @@ function toAssetKey(chunkName) {
 }
 
 /**
+ * 构建 stats 的类型锚点：Rsbuild build() 的 stats 可能是 Stats 或 MultiStats。
+ * @typedef {import('@rsbuild/core').Rspack.Stats|import('@rsbuild/core').Rspack.MultiStats} BuildStats
+ */
+
+/**
+ * stats entrypoint 的最小结构契约：files 优先，缺省回退 assets（回退口径下 assets 必然
+ * 存在，缺失时维持原逻辑的 TypeError）；测试可伪造同形状 stats。
+ * @typedef {{ files?: string[], assets: ({name: string}|string)[] }} StatsEntrypointLike
+ */
+
+/**
  * 从构建 stats 提取应用入口的初始 chunk 文件有序清单（entrypoint 执行顺序：
  * runtime 置首、入口 chunk 置尾、vendor 居中；文件名口径）。
  * assets.js 按裸文件名消费，这里只保留 js/css 产物名（css 与 js 同 key 归集，
  * 注入侧经 WEBPACK_ASSETS[key].css 读取，顺序由本清单决定）。
  * 阶段四自 rsbuild-standalone.mjs 迁入：stats 入参可伪造，便于纯函数级测试。
- * @param {import('@rsbuild/core').RspackStats|undefined} stats
+ * @param {BuildStats|undefined} stats 构建 stats（调用方已保证存在）
  * @returns {string[]}
  */
 function extractInitialChunkFiles(stats) {
-  const jsonStats = stats.toJson({ all: false, entrypoints: true });
-  const entrypoint = jsonStats.entrypoints && jsonStats.entrypoints[APP_ENTRY_NAME];
+  // 类型层断言非空：调用方在 hasErrors 判定后才会进入提取，运行时取值不变。
+  const jsonStats = /** @type {BuildStats} */ (stats).toJson({ all: false, entrypoints: true });
+  const entrypoint = /** @type {StatsEntrypointLike|undefined} */ (
+    jsonStats.entrypoints && jsonStats.entrypoints[APP_ENTRY_NAME]
+  );
   if (!entrypoint) {
     throw new Error('构建 stats 缺少入口 entrypoint: ' + APP_ENTRY_NAME);
   }
@@ -133,10 +150,12 @@ function extractInitialChunkFiles(stats) {
  * @returns {{ assets: Record<string, {js: string, css?: string}>, initialChunks: string[] }}
  */
 function buildWebpackAssets(chunks, initialChunkNames) {
+  /** @type {Record<string, {js: string, css?: string}>} */
   const normalized = {};
   for (const chunkName of Object.keys(chunks)) {
     const item = chunks[chunkName];
-    const cleanItem = {};
+    // 断言 js 必填：下方 !item.js 抛错后才写入 normalized，缺 js 的项不会进入清单。
+    const cleanItem = /** @type {{js: string, css?: string}} */ ({});
     if (item.css) {
       cleanItem.css = item.css;
     }
@@ -162,6 +181,7 @@ function buildWebpackAssets(chunks, initialChunkNames) {
   const appended = Object.keys(normalized)
     .filter(key => preferred.indexOf(key) === -1)
     .sort();
+  /** @type {Record<string, {js: string, css?: string}>} */
   const ordered = {};
   for (const key of preferred.concat(appended)) {
     ordered[key] = normalized[key];
@@ -251,7 +271,12 @@ function brotliDistFiles(distDir) {
     if (content.length < BROTLI_THRESHOLD) {
       continue;
     }
-    const br = zlib.brotliCompressSync(content, { level: 11 });
+    // 注意：Node zlib 的 brotli 选项不识别 level（该键在运行时被忽略），保留原样传参仅为
+    // 零行为变更，勿删；如需真正生效须改用 params[zlib.constants.BROTLI_PARAM_QUALITY]（另册登记）。
+    const br = zlib.brotliCompressSync(
+      content,
+      /** @type {import('node:zlib').BrotliOptions & { level: number }} */ ({ level: 11 })
+    );
     if (!shouldBrotli(content.length, br.length)) {
       continue;
     }
@@ -275,6 +300,7 @@ function listArtifactReport(distDir) {
       const size = fs.statSync(path.join(distDir, name)).size;
       // 原始产物行记录其 gz/br 双轨传输量（配对缺失时字段缺省），压缩产物行只报自身
       if (!/\.(gz|br)$/.test(name)) {
+        /** @type {{file: string, size: number, gzSize?: number, brSize?: number}} */
         const row = { file: name, size };
         const gzName = name + '.gz';
         const brName = name + '.br';

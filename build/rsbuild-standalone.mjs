@@ -1,3 +1,4 @@
+// @ts-check
 // Rsbuild 生产构建编排（阶段一）：清理旧产物 -> 生成客户端插件入口（client/plugin-module.js）
 // -> Rsbuild 构建 -> 生成 assets.js（WEBPACK_ASSETS 兼容形状 + WEBPACK_INITIAL_CHUNKS
 // 初始注入清单）-> 补齐 .gz 预压缩 -> 产物报告。
@@ -35,7 +36,7 @@ function cleanOutput() {
  * 从构建 stats 提取应用入口的初始 chunk 文件有序清单。
  * 实现迁于 build/rsbuild-assets.js（阶段四，stats 入参可伪造便于纯函数级测试），
  * 此处保留同名转发以维持本编排模块的调用面不变。
- * @param {import('@rsbuild/core').RspackStats|undefined} stats
+ * @param {import('@rsbuild/core').Rspack.Stats|import('@rsbuild/core').Rspack.MultiStats|undefined} stats
  * @returns {string[]}
  */
 const extractInitialChunkFiles = rsbuildAssets.extractInitialChunkFiles;

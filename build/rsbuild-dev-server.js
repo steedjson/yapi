@@ -1,3 +1,4 @@
+// @ts-check
 'use strict';
 
 // Rsbuild dev server 的语义平移层：承接旧 webpack-dev-standalone.js 手工 http 服务器的
@@ -8,6 +9,14 @@
 
 const fs = require('fs');
 const path = require('path');
+
+// Connect 中间件三元组与 dev HTML 读取配置的类型锚点（Rsbuild 复用 connect-next 类型）。
+/**
+ * @typedef {import('@rsbuild/core').Connect.IncomingMessage} ConnectRequest
+ * @typedef {import('node:http').ServerResponse} HttpResponse
+ * @typedef {import('@rsbuild/core').Connect.NextFunction} ConnectNext
+ * @typedef {{ readHtml?: (() => string)|null, getHtml?: () => Promise<string> }} DevHtmlOptions
+ */
 
 const DEFAULT_STATIC_ROOT = path.resolve(__dirname, '../static');
 const HTML_CONTENT_TYPE = 'text/html; charset=utf-8';
@@ -26,6 +35,11 @@ const fileExtensions = new Set([
 // 仅限 GET/HEAD；API、产物(/prd/)、iconfont/image 静态目录与 HMR 除外；
 // 末段带已知资源扩展名的视为文件请求，保持 404。
 // （自旧 webpack-dev-standalone.js 原样平移，口径与 Rsbuild dev 链路共享。）
+/**
+ * @param {string|undefined} method HTTP 方法
+ * @param {string} reqUrl 已剥离 query 的请求路径
+ * @returns {boolean} 是否应回退为 HTML
+ */
 function isHtmlFallbackCandidate(method, reqUrl) {
   if (method !== 'GET' && method !== 'HEAD') {
     return false;
@@ -48,6 +62,7 @@ function isHtmlFallbackCandidate(method, reqUrl) {
   return !fileExtensions.has(lastSegment.slice(dotIndex + 1).toLowerCase());
 }
 
+/** @type {Record<string, string>} */
 const mimeTypes = {
   '.html': HTML_CONTENT_TYPE,
   '.woff': 'font/woff',
@@ -63,6 +78,10 @@ const mimeTypes = {
 };
 
 // 与旧链一致：非 API 响应统一禁缓存并放开跨域（iconfont 字体/图片会被跨域页面加载）。
+/**
+ * @param {HttpResponse} res 响应对象
+ * @param {string} contentType 已解析的 MIME 类型
+ */
 function applyDevResponseHeaders(res, contentType) {
   if (contentType) {
     res.setHeader('Content-Type', contentType);
@@ -78,6 +97,10 @@ function applyDevResponseHeaders(res, contentType) {
 // 路径做了归一化防穿越（旧链未防，dev-only 收紧，合法路径不变）。
 // /docs/ 为文档站抽屉 iframe（/docs/index.html 与 /docs/assets/**）服务，
 // html 走 mimeTypes 的 text/html，iframe 才能渲染。
+/**
+ * @param {{ staticRoot?: string }} [options] 静态根目录配置
+ * @returns {(req: ConnectRequest, res: HttpResponse, next: ConnectNext) => void}
+ */
 function createDevStaticMiddleware(options) {
   const staticRoot = (options && options.staticRoot) || DEFAULT_STATIC_ROOT;
 
@@ -109,6 +132,10 @@ function createDevStaticMiddleware(options) {
 // 旧链对 / 与 /index.html 的显式分支：无论何种方法都回 dev 页面（语义平移保持）。
 // 提前注册（server.setup 主体），优先于 Rsbuild 内置 html completion，避免其对
 // /index.html 的处理口径与旧链不一致。
+/**
+ * @param {DevHtmlOptions} options dev HTML 读取配置
+ * @returns {(req: ConnectRequest, res: HttpResponse, next: ConnectNext) => Promise<void>}
+ */
 function createDevIndexHtmlMiddleware(options) {
   const readHtml = (options && options.readHtml) || null;
 
@@ -119,10 +146,11 @@ function createDevIndexHtmlMiddleware(options) {
       return;
     }
     try {
-      const html = readHtml ? readHtml() : await options.getHtml();
+      const html = readHtml ? readHtml() : await (/** @type {() => Promise<string>} */ (options.getHtml))();
       applyDevResponseHeaders(res, HTML_CONTENT_TYPE);
       res.end(html);
-    } catch (error) {
+    } catch (/** @type {*} */ error) {
+      // 抛出物可为任意值（含普通对象），此处 any 仅为原样拼接非 Error 抛出物，运行时逻辑不变。
       res.statusCode = 500;
       res.setHeader('Content-Type', 'text/plain; charset=utf-8');
       res.end('dev html unavailable: ' + (error && error.message ? error.message : error));
@@ -133,6 +161,10 @@ function createDevIndexHtmlMiddleware(options) {
 // 前端 history 路由回退：口径即旧链 isHtmlFallbackCandidate——仅 GET/HEAD、排除
 // /api/ /prd/ /iconfont/ /image/ 与 HMR 端点、末段带已知扩展名的文件请求保持 404。
 // 注册在 server.setup 的返回回调里（内置中间件之后、notFound 之前）。
+/**
+ * @param {DevHtmlOptions & { getHtml: () => Promise<string> }} options dev HTML 读取配置（回退场景必须提供 getHtml）
+ * @returns {(req: ConnectRequest, res: HttpResponse, next: ConnectNext) => Promise<void>}
+ */
 function createHtmlFallbackMiddleware(options) {
   const getHtml = options.getHtml;
 
@@ -146,7 +178,7 @@ function createHtmlFallbackMiddleware(options) {
       applyDevResponseHeaders(res, HTML_CONTENT_TYPE);
       res.statusCode = 200;
       res.end(html);
-    } catch (error) {
+    } catch (/** @type {*} */ error) {
       res.statusCode = 500;
       res.setHeader('Content-Type', 'text/plain; charset=utf-8');
       res.end('dev html unavailable: ' + (error && error.message ? error.message : error));
@@ -158,11 +190,18 @@ function createHtmlFallbackMiddleware(options) {
 // 入参是 setup 上下文 { action, server: RsbuildDevServer, environments }，dev server 实例
 // 在 server 键上；其 environments 才是带 getTransformedHtml 的环境 API（rsbuild 上下文里的
 // environments 只是 EnvironmentContext）。环境名缺省 'web'（单环境默认），取不到时回退第一个。
+/**
+ * @param {{ staticRoot?: string, entryName?: string, environmentName?: string }} [options] 装配配置
+ * @returns {(context: { server: import('@rsbuild/core').RsbuildDevServer }) => () => void}
+ */
 function createRsbuildDevServerSetup(options) {
   const staticRoot = (options && options.staticRoot) || DEFAULT_STATIC_ROOT;
   const entryName = (options && options.entryName) || 'index';
   const environmentName = (options && options.environmentName) || 'web';
 
+  /**
+   * @param {import('@rsbuild/core').RsbuildDevServer} server dev server 实例
+   */
   const getEnvironment = server =>
     server.environments[environmentName] || Object.values(server.environments)[0];
 
