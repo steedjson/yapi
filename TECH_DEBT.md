@@ -256,6 +256,14 @@
 - **批二（历史代码 triage，本次提交）**：以三条模式 + POSIX 字符类重扫（**订正：首轮审计「代码面注释掉的语句=0」系假阴性——`git grep -E` 不支持 `\s`/`\b` 却静默失配，见 BUGLOG；改用 `[[:space:]]` 类与 rg 双通道后得真实候选**），112 处候选 / 60 文件逐条 triage → **删 169 行（157 行注释 + 12 空行）涉及 54 文件**、改写为散文 3 行（ProjectCard 关注/取消提示说明、common/debounce 用法说明）、保留散文假阳性 10 处 / 9 文件（rsbuild-assets 形状契约、Header className 说明、ajv/recharts 分包策略、db/mongoose 设计说明、import-swagger 模块语义）。含 6 项安全相关注释态代码（group 角色校验、envToken 注释态 checkAuth、mockServer CORS、casename 校验、advanced-mock `if(userinfo)`、authMethods email 推导），删除时均为注释态（零运行时效果），其旁现状陈述散文保留。验证：54 文件非注释 token 流与 HEAD 全等（tester 独立三通道复算 + AST 全等 + 反向对照）、全量 **1232** 全绿、重建 `static/prd` 聚合哈希逐字节不变。排除面：`test/**`（其注释多为测试维护参考，另行判断）、fixtures、vendored。
 - **本批登记（未处置，供裁决）**：① 3 处「可辩护的 KEEP」（`server/models/group.js:31-38` schema 扩展模板、`common/config.js:31-33` 路由启用提示、`InterfaceEditForm.js:464` 数据形状示例）——示例型注释，建议随触碰渐退；② `exts/yapi-plugin-advanced-mock/controller.js` 的 `userinfo.username` 无空值守卫（uid 失配时 TypeError → 外层 catch 兜 400）——**既有潜在缺陷**，本批删注释后文件内已无该线索，建议单独小批补守卫；③ 冻结夹具目录无字节冻结门禁（未来误删 `test/fixtures/json-schema-editor-visual/utils.js` 不会有门禁报红），可增一条哈希冻结测试（对标 empty-module 的 sha256 钉）。
 
+### 12. get_env 跨项目越权读修复（2026-10-04，已完成；发现于注释 triage 批复审）
+
+- **发现**：注释 triage 批的 reviewer 随批指出 `server/controllers/project/envTokenMethods.js` 的 `getEnv` 无项目级授权——任意登录用户凭 `project_id` 可读任意项目（含私有）的 `env`（`env[].header` 可能含目标 API 密钥）；同资源 `project.get`（queryMethods.js:67-79）守私有、本端点裸奔，属可见性口径分裂。线索来自被删的注释态 checkAuth 与散文「去掉权限判断」。
+- **修法**：对齐既有口径——私有项目需 `checkAuth(project_id,'project','view')`（项目成员，含 guest），否则 406「没有权限」；公开项目维持现状；`project_type` 经 `Model.getBaseInfo(id,'project_type')` 窄投影取得（先例 log.js:132），`Model.getByEnv` 一字未动 → open.js token 域路径零影响；payload 形状不变。
+- **验证**：① tester 24 例负向单测（`test/server/getenv-authz.test.js`）：越权身份 / 高角色但非成员 / 角色矩阵（guest/dev/admin/owner）/ 公开放行且不调用 checkAuth / id 双形态 / 缺参 / 不存在 / 异常路径 / 拒绝态未触达 env 查询 / checkAuth 参数精确钉，并以 HEAD 版本对照证「新断言在修复前必红」（非恒真）；② reviewer 逐入口核对 PASS（六返回分支列全、无旁路返回 env、判定顺序合规、payload 逐字段一致）；③ 主 Agent 对抗性 HTTP 矩阵 **14/14**（真实服务 + 两账号 + 三项目）：未登录 40011 / **A 凭证打 B 私有资源 406** / **非成员打私有 406 且响应体实测无 env** / 成员与 guest 放行 / **禁用账号 401** / **无效凭据 40011** / **token-only 40011（无 token 旁路）** / 缺参 405 / 不存在 0+null / 非数字 id 402 fail-closed / id 双形态一致 / 回归三连。
+- **口径注记**：guest（view 级成员）可读 env 为本次选择（与 `/api/project/get` 返回同一 env 数组的现状一致，非新增暴露面）；若未来收紧到 edit 级，仅改一处 + 同步测试。
+- **遗留（Minor，已登记不改）**：① 存量文档缺 `project_type` 字段时按公开放行——与其余 6 处同型内联判定同口径；② `checkAuth` 首参用请求原值而非闸门解析出的 `_id`（三处查询同 filter，当前无越权，可后续统一硬化）；③ 同型内联门禁已第 7 处，值得后续提炼为单一出处。
+
 ### 建议优先级（供裁决）
 
 1. ~~非 major 依赖安全批（swagger-client / qs / sha.js / underscore / @babel/core）+ audit 纳入门禁~~ → **已完成（commit 84cc30a5）**；audit 门禁接入方式待定（见第 1 节门禁建议）；

@@ -164,7 +164,14 @@ const {getToken} = require('../../utils/token');
         return (ctx.body = yapi.commons.resReturn(null, 405, '项目id不能为空'));
       }
 
-      // 去掉权限判断
+      // env.header 可能含目标 API 密钥，私有项目仅项目成员（view，含 guest）可读；
+      // 可见性口径对齐同资源既有判定 project/get（queryMethods.js）：公开项目放行、私有项目走 checkAuth
+      let projectType = await this.Model.getBaseInfo(project_id, 'project_type');
+      if (projectType && projectType.project_type === 'private') {
+        if ((await this.checkAuth(project_id, 'project', 'view')) !== true) {
+          return (ctx.body = yapi.commons.resReturn(null, 406, '没有权限'));
+        }
+      }
 
       let env = await this.Model.getByEnv(project_id);
 

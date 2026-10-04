@@ -2,6 +2,13 @@
 
 条目由 /csl-buglog 或人工维护,供 coder/reviewer 动手前核对
 
+## [2026-10-04][鉴权] 注释态权限校验是历史欠账的线索:get_env 跨项目越权读(任意登录用户可读任意私有项目 env)
+- 现象: 注释 triage 批的评审随批指出——`server/controllers/project/envTokenMethods.js` 的 getEnv 仅校验 project_id 非空,随后直接 `Model.getByEnv` 返回;任意登录用户凭 project_id 可读任意项目(含私有)的 env,`env[].header` 可能含目标 API 密钥 → 跨项目信息泄露(同资源 project.get 守私有、getEnv 裸奔 = 可见性口径分裂)
+- 根因: 该检查曾被移除、只留注释态痕迹(注释态 checkAuth 与散文「去掉权限判断」);注释批把痕迹删掉后线索才被评审当成「现状线索」上报——本质是「被注释掉的安全校验从未被当作既存暴露面审计过」:读类端点的项目域可见性判定整体缺失
+- 修法: 对齐同资源既有口径(queryMethods.get)——私有项目需 `checkAuth(id,'project','view')`(项目成员,含 guest),否则 406「没有权限」;公开项目维持现状;payload 形状不变;`Model.getByEnv` 未动(open.js token 域路径零影响)。验证:24 例负向单测(HEAD 对照证非恒真、拒绝态未触达 env 查询、id 双形态、角色矩阵)、reviewer 逐入口核对 PASS、主 Agent 对抗性 HTTP 矩阵 **14/14**(真实服务/两账号/三项目:A 凭证打 B 资源 406、禁用账号 401、无效凭据 40011、token 无旁路、回归三连,406 响应体实测无 env 内容)
+- 关联: server/controllers/project/envTokenMethods.js、test/server/getenv-authz.test.js、TECH_DEBT.md「四、12」
+- 复发: 0 次 · 教训: ①读类端点同样要做「项目域可见性判定」——只做登录态不等于授权;同资源的可见性口径必须在全端点对齐(先例:project.get 守私有 vs get_env 裸奔);②被注释掉的安全校验是历史欠账的高危线索——清理注释时凡命中 checkAuth/权限/校验语义的注释态代码,一律先当「既存暴露面」审计再删,不得当普通残留处理;③判定口诀增补:在「白名单放行 ≠ 端点可用」「资源域判定先于全局角色早退」之外,新增「**登录态 ≠ 项目域授权**」
+
 ## [2026-10-04][工具通道/清理] git grep -E 不支持 \s 与 \b 却静默失配:清洁度审计曾据此得出「注释掉的语句=0」假阴性
 - 现象: 清洁度扫尾审计首轮用 `git grep -nE '^[[:space:]]*//[[:space:]]*(const|let|var|...)\b'` 得「注释掉的语句=0」并写入台账;扩大扫样式复核时发现 `// const projectId = this.props...` 明明存在——该模式因 `\b` 未被支持而整体失配(同类先例:上一批 tester 报告 `git grep -E` 不支持 `\s`,单次假阴性 0 命中)
 - 根因: 本机 git 的 ERE 引擎不支持 PCRE 的 `\s`/`\b` 等转义类,不报错、静默失配;审计若只看「零命中」就下「干净」结论,会把「工具不会查」误当「仓库没有」
