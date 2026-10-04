@@ -282,5 +282,9 @@
     "exts/yapi-plugin-swagger-auto-sync/index.js",
     "exts/yapi-plugin-test/index.js",
     "exts/yapi-plugin-wiki/index.js",
+    "scripts/audit-check.js",
+    "scripts/build-docs-site.js",
+    "scripts/migrate-precheck.js",
+    "scripts/antd5-css-lib.cjs",
   ]
 }

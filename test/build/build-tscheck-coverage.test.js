@@ -80,7 +80,7 @@ test('build/ 下除豁免清单外的每个 .js/.mjs 都带 // @ts-check（漏�
 test('tsconfig.build.json 的 include 覆盖 build/ 全部脚本且无 exclude 收窄', t => {
   const config = readBuildTsconfig();
   t.is(config.extends, './tsconfig.json');
-  t.deepEqual(config.include, ['build/**/*.js', 'build/**/*.mjs']);
+  t.deepEqual(config.include, ['build/**/*.js', 'build/**/*.mjs', 'scripts/**/*.mjs']);
   t.false(Object.prototype.hasOwnProperty.call(config, 'exclude'), 'exclude 会静默缩小门禁范围');
 
   // 免检是「文件不带 marker」，不是「不在 glob 内」：豁免文件必须仍被 include 命中。
@@ -131,4 +131,41 @@ test('build/ 已纳入 lint 范围，且四类脚本扩展名均有规则面（�
     );
     t.true(covered, `.${ext} 必须被挂有规则的配置块覆盖`);
   }
+});
+
+// scripts/ 面按同一口径锁死：主 tsconfig.json 以逐文件白名单收口 scripts/ 的 .js/.cjs，
+// tsconfig.build.json 以 scripts/**/*.mjs glob 覆盖 .mjs——两处都继承 checkJs: false，
+// 仍以文件自带 // @ts-check 为唯一开关。scripts/ 无豁免文件，故断言「每个 .js/.mjs/.cjs
+// 都带 marker」，防止后续新增脚本漏写 marker 而静默脱离类型门禁。
+test('scripts/ 下每个 .js/.mjs/.cjs 都带 // @ts-check（无豁免清单；漏写即静默脱检）', t => {
+  const scriptsDir = path.join(ROOT, 'scripts');
+  const files = [];
+  (function walk(dir) {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true }).sort((a, b) =>
+      a.name.localeCompare(b.name)
+    )) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        walk(full);
+      } else if (/\.(js|mjs|cjs)$/.test(entry.name)) {
+        files.push(path.relative(scriptsDir, full));
+      }
+    }
+  })(scriptsDir);
+  // 下限断言防「枚举失效导致清单为空」的假绿（当前 5 个脚本，含 1 个 .cjs 与 1 个 .mjs）。
+  t.true(files.length >= 5, 'scripts/ 应枚举到全部脚本，实际 ' + files.length);
+
+  const unmarked = files.filter(rel => {
+    // 允许 shebang 先行（#!/usr/bin/env node 在 marker 之前仍被 TS 识别），故先剥掉再匹配。
+    const source = fs
+      .readFileSync(path.join(scriptsDir, rel), 'utf8')
+      .replace(/^#![^\n]*\n/, '');
+    return !/^\s*\/\/\s*@ts-check/.test(source);
+  });
+
+  t.deepEqual(
+    unmarked,
+    [],
+    '未标记 @ts-check 的 scripts 文件会脱离类型门禁：' + unmarked.join(', ')
+  );
 });

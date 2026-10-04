@@ -1,6 +1,7 @@
 {
-  // build/ 构建编排脚本的独立类型门禁：主 tsconfig.json 是 module: commonjs，容纳不下
-  // build/rsbuild-*.mjs 的 import.meta（TS1343），故单列一份 nodenext 配置；
+  // 构建/工具链中需要 nodenext 的 .mjs（build/** 与 scripts/**）的独立类型门禁：
+  // 主 tsconfig.json 是 module: commonjs，容纳不下 .mjs 的 import.meta（TS1343），
+  // 故单列一份 nodenext 配置；
   // noEmit/checkJs/strict/types 等均继承主配置，不在此重复。
   "extends": "./tsconfig.json",
   "compilerOptions": {
@@ -8,12 +9,13 @@
     "moduleResolution": "nodenext",
     "target": "ES2022"
   },
-  // glob 覆盖 build/ 下全部 .js/.mjs（含 shims/ 子目录）。
+  // glob 覆盖 build/ 与 scripts/ 下全部 .js/.mjs（含 build/shims/ 子目录）；
+  // scripts/ 的 .js/.cjs 由主 tsconfig.json 逐文件收口（无需 nodenext），此处只补 .mjs。
   // 有意例外：build/empty-module.js 不加 // @ts-check（故不在类型门禁内）——它是空垫片
   // （module.exports = {}，无逻辑、零类型错误），但经 resolve.fallback 进入客户端模块图，
   // 其源码内容会不可预判地改变 static/prd 的 manifest chunk 名（实测：加 @ts-check 确定性
   // 触发 08fdc614→5538fe94；另有一段说明注释曾触发；一行短中性注释未触发——机制未定位）。
   // 为守住「注解批次零产物变更」不变量，该文件必须与 HEAD 逐字节一致、不加任何内容；
   // 详见 TECH_DEBT.md「四、9」与 docs/BUGLOG/dev.md 2026-10-01 条目。
-  "include": ["build/**/*.js", "build/**/*.mjs"]
+  "include": ["build/**/*.js", "build/**/*.mjs", "scripts/**/*.mjs"]
 }

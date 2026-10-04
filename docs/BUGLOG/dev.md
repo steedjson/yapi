@@ -2,6 +2,13 @@
 
 条目由 /csl-buglog 或人工维护,供 coder/reviewer 动手前核对
 
+## [2026-10-04][类型门禁] 「受检 = marker ∧ 在 include 内」:锁单腿必留静默脱检;并发 QA 探针勿落进被枚举的共享目录
+- 现象: 全仓门禁面审计发现 scripts/ 5 个脚本(文档站构建/审计门禁实现/迁移工具/antd5 扫描器)整体不在任何 tsc 工程内,根级构建配置(rsbuild.config.mjs 等 6 个)同样游离;另有 2 处装饰性 marker(scripts/build-docs-site.js、test/client/visual/prdRules.js 带 @ts-check 却不在 program 内)
+- 根因: 门禁为「白名单 + marker」双开关,白名单逐文件维护(scripts/ 从未纳入);而 marker 判定的两条腿(marker 本身 + 在 program 内)此前没有任何测试同时锁住——带 marker 但未入 include 的文件,marker 断言全绿而 tsc 根本不加载它(负向对照实测成立);另发现 TS 对 marker 的位置容差(shebang 后/前导注释块后均识别),测试正则口径想当然会把真实受检文件误报为未受检
+- 修法: scripts/ 5 文件纳入(marker + 114 处纯注解;AST 5/5 等价 + token 流实证除 +5 对断言括号外零 token 变化)+ tsconfig.json 白名单 253→257 + tsconfig.build.json include 增 scripts/**/*.mjs;两条腿各锁一个测试(既有 marker 不变量 + 新增 include 覆盖不变量,含反恒真守卫与负向对照实测);零产物变更实证(static/docs 重建 71 文件 sha256 一致、antd5 扫描输出等价、static/prd 聚合哈希不变);门禁 1215 全绿
+- 关联: scripts/{audit-check,build-docs-site,migrate-precheck,antd5-css-lib.cjs,antd5-candidate-scan.mjs}、tsconfig.json、tsconfig.build.json、test/build/{build-tscheck-coverage,scripts-tscheck-include-coverage}.test.js、TECH_DEBT.md「四、10」
+- 复发: 0 次 · 教训: ①门禁是「逐文件 opt-in(白名单/marker)」结构时,必须同时锁「有 marker」与「在 program 内」两条腿——单腿断言下,删 include 条目或漏加白名单都会静默脱检且测试全绿;②TS pragma 的位置容差(shebang 后、前导注释块后都算)必须实测,测试正则要与 TS 行为对齐;③并行 QA 时负向对照探针不要放进被测试枚举的共享目录——本轮 reviewer 的 AVA 运行曾把 tester 在 scripts/ 里瞬时创建又删除的探针当成真实文件报出(输出与工作区不符),双方独立复核后确认为并发外部残留、非工具伪造;探针应在 /tmp 或 try/finally 保证清理
+
 ## [2026-10-04][build/死文件] 「有人 require」≠「有人消费」:require 本身可能是死导入;lint 枚举目录会让根文件整片游离
 - 现象: 收口 §四.9 尾巴时复核 build/clientBuildConfig.js——唯一存活依据是 rsbuild.config.mjs:31 的 require,而它是**未使用导入**(全仓仅此一处引用 + 一个测试文件)。三个导出逐一溯源全部无消费方:getPluginExclude(webpack 时代 module.rules 排除项,webpack 已退役)、getDefineValues(被 rsbuild.config.mjs:43-49 就地重实现)、normalizeAssets(被 collectChunks/buildWebpackAssets live 重实现)
 - 根因: 三层近似判据叠加——① 迁移期批次记录写的是「因 rsbuild.config require 存活而保留」,只看了 require 存在、未验证该导入是否被使用;② lint 脚本枚举目录(client/ server/ common/ exts/ test/ scripts/…)不含仓库根,rsbuild.config.mjs 等 8 个根文件整片游离,no-unused-vars 对死导入形同虚设;③ eslint 9 平铺配置只给 files 命中的块挂规则,.mjs/.cjs 未显式并入时是「被 lint 但 0 规则」(实测 --print-config 规则数 0→85)

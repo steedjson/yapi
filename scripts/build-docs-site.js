@@ -33,10 +33,42 @@ const ASSETS_DIR = path.join(OUT_DIR, 'assets');
 const SITE_VERSION = require('../package.json').version;
 
 /**
+ * SUMMARY 条目（children 递归为章内锚点子项）
+ * @typedef {{ title: string, file: string, anchor: string, children: SummaryEntry[] }} SummaryEntry
+ */
+/**
+ * SUMMARY 组（组名 + 章节项）
+ * @typedef {{ title: string, items: SummaryEntry[] }} SummaryGroup
+ */
+/**
+ * 渲染用章节（html 于 main 中按源文件存在性填充）
+ * @typedef {{ fileKey: string, title: string, html?: string }} Chapter
+ */
+/**
+ * 书定义（groups/chapters 于 main 中解析填充）
+ * @typedef {{ key: string, label: string, summary: string, srcDir: string, assetPrefix: string, prependGroups: SummaryGroup[], groups: SummaryGroup[], chapters: Chapter[] }} Book
+ */
+/**
+ * markdown-it 渲染规则（common/types/global.d.ts 的 markdown-it 存根未声明 renderer
+ * 与规则表；此处按官方 RendererRule 形态补齐参数，env 为渲染期注入的 book/chapter）
+ * @typedef {(tokens: any[], idx: number, options: any, env: any, self: any) => string} MdRenderRule
+ */
+/**
+ * markdown-it 渲染器（存根缺此成员，按实际 API 补齐规则表）
+ * @typedef {{ rules: Record<string, MdRenderRule> }} MdRenderer
+ */
+/**
+ * markdown-it 实例（存根实例 & 实际存在的 renderer；render 补 env 形参）
+ * @typedef {{ render: (src: string, env?: any) => string, use: (plugin: any, ...args: any[]) => any, renderer: MdRenderer }} MdLike
+ */
+
+/**
  * 书定义：key 即路由中的页签 key。
  * 教程书置顶插入「版本说明」组（version.md 不在 SUMMARY 内，标题带版本号）。
+ * groups/chapters 由 main 解析填充，初始化字面量尚未含这两个字段，故按运行态
+ * Book[] 断言（unknown 桥接为纯类型断言，不改变运行时值）。
  */
-const BOOKS = [
+const BOOKS = /** @type {Book[]} */ (/** @type {unknown} */ ([
   {
     key: '教程',
     label: '教程',
@@ -58,7 +90,7 @@ const BOOKS = [
     assetPrefix: 'devops-',
     prependGroups: []
   }
-];
+]));
 
 // 第三个页签：开放Api（不渲染章节，点击后正文区 iframe 整页加载 /openapi-doc.html）
 const OPENAPI_TAB = { key: 'openapi', label: '开放Api' };
@@ -72,7 +104,7 @@ const assetNameTaken = {};
  * SUMMARY 条目（标题 + 目标 md + 章内锚点）。
  * @param {string} title
  * @param {string} target 形如 `project.md` / `project.md#基本设置` / `index.md#安装`
- * @returns {{title: string, file: string, anchor: string, children: Array<object>}}
+ * @returns {SummaryEntry}
  */
 function parseEntry(title, target) {
   const parts = String(target).split('#');
@@ -93,12 +125,14 @@ function parseEntry(title, target) {
  * 规则：`### X` 开新组；无缩进 `* [t](f#a)` 为章节项；两空格缩进为上一章节项的子锚点；
  * `---` 结束当前组，其后无组名的顶层列表归入无名组（组名空字符串）。
  * @param {string} summaryPath
- * @returns {Array<{title: string, items: Array<object>}>}
+ * @returns {SummaryGroup[]}
  */
 function parseSummary(summaryPath) {
-  /** @type {Array<{title: string, items: Array<object>}>} */
+  /** @type {SummaryGroup[]} */
   const groups = [];
+  /** @type {SummaryGroup|null} */
   let current = null;
+  /** @type {SummaryEntry|null} */
   let lastItem = null;
   const lines = fs.readFileSync(summaryPath, 'utf8').split(/\r?\n/);
   lines.forEach(function (line) {
@@ -135,7 +169,7 @@ function parseSummary(summaryPath) {
 
 /**
  * 从树收集渲染用章节（fileKey 去重、保持树序）。
- * @param {Array<object>} groups
+ * @param {SummaryGroup[]} groups
  * @returns {Array<{fileKey: string, title: string}>}
  */
 function collectChapters(groups) {
@@ -280,10 +314,10 @@ function preprocessMarkdown(md) {
 
 /**
  * 构建 markdown-it 实例并挂载渲染改写规则。
- * @returns {import('markdown-it')}
+ * @returns {MdLike}
  */
 function createRenderer() {
-  const md = new MarkdownIt({ html: false, linkify: false, typographer: false });
+  const md = /** @type {MdLike} */ (new MarkdownIt({ html: false, linkify: false, typographer: false }));
   const defaultLinkOpen =
     md.renderer.rules.link_open ||
     function (tokens, idx, options, env, self) {
@@ -365,7 +399,7 @@ function decodeLinkAnchor(anchor) {
  * md 互链改写规则：`documents/X.md#锚` / `X.md#锚` / `./X.md` → 对应书路由；
  * 本章锚点 `#xxx` → 当前书当前章节路由；外链照旧（含旧外网 openapi 收敛）。
  * @param {string} href
- * @param {object} book 当前章节所属书
+ * @param {Book} book 当前章节所属书
  * @param {string} chapter 当前章节 fileKey
  * @returns {{url: string, external: boolean}}
  */
@@ -411,9 +445,9 @@ function rewriteLink(href, book, chapter) {
 
 /**
  * 渲染单章 HTML。
- * @param {object} book
+ * @param {Book} book
  * @param {string} fileKey
- * @param {import('markdown-it')} md
+ * @param {MdLike} md
  * @returns {string}
  */
 function renderChapter(book, fileKey, md) {
@@ -438,8 +472,8 @@ function escapeHtml(s) {
 
 /**
  * 侧栏单个导航项（章节项或章内锚点子项）。
- * @param {object} book
- * @param {{title: string, file: string, anchor: string}} item
+ * @param {Book} book
+ * @param {SummaryEntry} item
  * @param {boolean} isSub
  * @returns {string}
  */
@@ -462,7 +496,7 @@ function navItemHtml(book, item, isSub) {
 
 /**
  * 单本书的侧栏树（组 → 章节 → 章内锚点）。
- * @param {object} book
+ * @param {Book} book
  * @returns {string}
  */
 function sidebarHtml(book) {
@@ -492,7 +526,7 @@ function sidebarHtml(book) {
  * @returns {string}
  */
 function buildSiteHtml() {
-  const tabs = BOOKS.concat([OPENAPI_TAB])
+  const tabs = BOOKS.concat(/** @type {Book[]} */ ([OPENAPI_TAB]))
     .map(function (tab) {
       return (
         '<a class="site-tab" href="#/' +
@@ -718,7 +752,7 @@ ${sections}
 </div>
 <script>
 (function () {
-  var TABS = ${JSON.stringify(BOOKS.concat([OPENAPI_TAB]).map(function (t) { return t.key; }))};
+  var TABS = ${JSON.stringify(BOOKS.concat(/** @type {Book[]} */ ([OPENAPI_TAB])).map(function (t) { return t.key; }))};
   var chapters = [].slice.call(document.querySelectorAll('.chapter'));
   var navItems = [].slice.call(document.querySelectorAll('.nav-item'));
   var tabs = [].slice.call(document.querySelectorAll('.site-tab'));

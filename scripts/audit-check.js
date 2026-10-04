@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// @ts-check
 'use strict';
 
 /**
@@ -26,17 +27,31 @@ const { spawnSync } = require('child_process');
 const SEVERITIES = ['critical', 'high', 'moderate', 'low'];
 const AUDIT_ARGS = ['audit', '--registry=https://registry.npmjs.org', '--json'];
 const AUDIT_TIMEOUT_MS = 300000;
+/** @type {Record<string, number>} */
 const SEVERITY_ORDER = { critical: 0, high: 1, moderate: 2, low: 3 };
 
+/**
+ * @param {number} code
+ * @param {string} message
+ * @returns {never} 打印错误后直接退出进程
+ */
 function fail(code, message) {
   process.stderr.write(`[audit:ci] ${message}\n`);
   process.exit(code);
 }
 
+/**
+ * @param {string} severity
+ * @returns {number} 未知 severity 排在已知项之后（9）
+ */
 function severityRank(severity) {
   return SEVERITY_ORDER[severity] !== undefined ? SEVERITY_ORDER[severity] : 9;
 }
 
+/**
+ * @param {string[]} argv
+ * @returns {{ baseline: string }}
+ */
 function parseArgs(argv) {
   const opts = { baseline: path.join(__dirname, 'audit-baseline.json') };
   for (let i = 0; i < argv.length; i++) {
@@ -57,18 +72,22 @@ function parseArgs(argv) {
   return opts;
 }
 
+/**
+ * @param {string} baselinePath
+ * @returns {Record<string, number>}
+ */
 function loadBaseline(baselinePath) {
   let raw;
   try {
     raw = fs.readFileSync(baselinePath, 'utf8');
-  } catch (err) {
+  } catch (/** @type {*} */ err) {
     fail(3, `无法读取基线文件 ${baselinePath}：${err.message}`);
   }
 
   let parsed;
   try {
     parsed = JSON.parse(raw);
-  } catch (err) {
+  } catch (/** @type {*} */ err) {
     fail(3, `基线文件 ${baselinePath} 不是合法 JSON：${err.message}`);
   }
 
@@ -76,6 +95,7 @@ function loadBaseline(baselinePath) {
     fail(3, `基线文件 ${baselinePath} 格式非法：应为 JSON 对象，包含 ${SEVERITIES.join('/')} 与 total 计数`);
   }
 
+  /** @type {Record<string, number>} */
   const baseline = {};
   for (const key of SEVERITIES.concat('total')) {
     const value = parsed[key];
@@ -87,6 +107,9 @@ function loadBaseline(baselinePath) {
   return baseline;
 }
 
+/**
+ * @returns {{ audit: any, current: Record<string, number> }}
+ */
 function runNpmAudit() {
   const npmBin = process.platform === 'win32' ? 'npm.cmd' : 'npm';
   const result = spawnSync(npmBin, AUDIT_ARGS, {
@@ -103,7 +126,7 @@ function runNpmAudit() {
   let audit;
   try {
     audit = JSON.parse(result.stdout);
-  } catch (err) {
+  } catch (/** @type {*} */ err) {
     fail(
       2,
       'npm audit 的 stdout 无法解析为 JSON（可能是网络异常或 npm 输出被污染；这与“新增漏洞”失败是不同情况）：\n' +
@@ -128,6 +151,7 @@ function runNpmAudit() {
     fail(2, 'npm audit 输出缺少 metadata.vulnerabilities 计数信息（npm 版本过旧或输出异常）。');
   }
 
+  /** @type {Record<string, number>} */
   const current = {};
   for (const severity of SEVERITIES) {
     current[severity] = Number(metadata[severity]) || 0;
@@ -140,12 +164,20 @@ function runNpmAudit() {
   return { audit, current };
 }
 
+/**
+ * @param {any} via npm audit 的 via 项（字符串或含 title 的对象）
+ * @returns {string}
+ */
 function viaTitle(via) {
   if (typeof via === 'string') return `间接依赖 ${via}`;
   if (via && typeof via === 'object' && typeof via.title === 'string') return via.title;
   return '未知来源';
 }
 
+/**
+ * @param {any} audit npm audit --json 的解析结果
+ * @returns {{ name: string, severity: string, via: string[] }[]}
+ */
 function collectFindings(audit) {
   const vulnerabilities = audit.vulnerabilities || {};
   return Object.keys(vulnerabilities)
@@ -162,6 +194,11 @@ function collectFindings(audit) {
     );
 }
 
+/**
+ * @param {number} value
+ * @param {number} width
+ * @returns {string}
+ */
 function pad(value, width) {
   return String(value).padStart(width);
 }

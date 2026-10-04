@@ -1,3 +1,4 @@
+// @ts-check
 /**
  * antd5 覆盖面视觉巡检 · 共享 CSS 解析/扫描库（CJS）。
  *
@@ -15,6 +16,31 @@
 
 const fs = require('fs');
 const path = require('path');
+
+/**
+ * CSS 声明（prop 已小写；important 为 !important 标记）
+ * @typedef {{ prop: string, value: string, important: boolean }} CssDeclaration
+ */
+/**
+ * 层 A 扫描的规则单元
+ * @typedef {{ selector: string, declarations: CssDeclaration[], media: string, source: string, order: number }} CssRule
+ */
+/**
+ * 规则清单（异常容错时附带 warnings 字段）
+ * @typedef {CssRule[] & { warnings?: string[] }} CssRuleList
+ */
+/**
+ * 单文件统计
+ * @typedef {{ file: string, chunk: string, rules: number, candidates: number }} CssFileStat
+ */
+/**
+ * 层 A 扫描统计
+ * @typedef {{ files: CssFileStat[], totalRules: number, antdOnlyRules: number, noWatchedPropRules: number, noClassRules: number, candidates: number }} CssScanStats
+ */
+/**
+ * 候选规则（层 B 的输入）
+ * @typedef {{ id: string, selector: string, props: CssDeclaration[], allProps: string[], chunk: string, file: string, media: string, order: number, hasAntdRef: boolean, antdClasses: string[], customClasses: string[] }} CssCandidate
+ */
 
 /** 盒模型/排版属性观察名单（前缀匹配，含派生属性如 margin-top / background-color） */
 const WATCHED_PROP_PREFIXES = [
@@ -36,7 +62,10 @@ const WATCHED_PROP_PREFIXES = [
   'overflow'
 ];
 
-/** chunk 名 → 路由页面域（报告可读性用） */
+/**
+ * chunk 名 → 路由页面域（报告可读性用）
+ * @type {Record<string, string>}
+ */
 const CHUNK_PAGES = {
   index: '全局外壳 / login / home / add-project 之外的首屏公共样式',
   'i': 'project interface（接口列表/详情/编辑/运行/用例集合）',
@@ -47,7 +76,11 @@ const CHUNK_PAGES = {
   'add-project': 'add-project（新建项目）'
 };
 
-/** 判断声明属性是否在观察名单内 */
+/**
+ * 判断声明属性是否在观察名单内
+ * @param {string} prop
+ * @returns {boolean}
+ */
 function isWatchedProp(prop) {
   const p = String(prop).toLowerCase();
   return WATCHED_PROP_PREFIXES.some(prefix => p === prefix || p.startsWith(prefix + '-'));
@@ -104,12 +137,14 @@ function splitTopLevel(text, sep) {
  *
  * @param {string} cssText
  * @param {string} sourceName 来源标注（chunk 文件名或 'runtime:<n>'）
- * @returns {any[]}
+ * @returns {CssRuleList}
  */
 function parseCssRules(cssText, sourceName) {
   // 预处理：剥离注释（产物已 minify，仍可能有 license 注释）
   const css = String(cssText).replace(/\/\*[\s\S]*?\*\//g, '');
+  /** @type {CssRuleList} */
   const rules = [];
+  /** @type {string[]} */
   const warnings = [];
   let order = 0;
 
@@ -250,6 +285,7 @@ function parseCssRules(cssText, sourceName) {
    * @param {string} media
    */
   function pushRule(selectorText, declBody, media) {
+    /** @type {CssDeclaration[]} */
     const declarations = [];
     String(declBody).split(';').forEach(decl => {
       const idx = decl.indexOf(':');
@@ -285,14 +321,16 @@ function parseCssRules(cssText, sourceName) {
 /**
  * 全量扫描：对产物目录下所有 .css chunk 执行层 A 规则提取与候选过滤。
  * @param {string} prdDir
- * @returns {{ candidates: any[], stats: any }}
+ * @returns {{ candidates: CssCandidate[], stats: CssScanStats }}
  */
 function scanCandidates(prdDir) {
   const files = fs
     .readdirSync(prdDir)
     .filter(f => f.endsWith('.css'))
     .sort();
+  /** @type {CssCandidate[]} */
   const candidates = [];
+  /** @type {CssScanStats} */
   const stats = {
     files: [],
     totalRules: 0,

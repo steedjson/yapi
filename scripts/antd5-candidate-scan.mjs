@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// @ts-check
 /**
  * antd5 覆盖面视觉巡检 · 层 A：静态冲突候选扫描（CLI）
  * ============================================================
@@ -34,10 +35,18 @@ const { CHUNK_PAGES, scanCandidates } = require('./antd5-css-lib.cjs');
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
+/**
+ * 报告渲染所需的候选字段（scanCandidates 产物的子集）
+ * @typedef {{ prop: string, value: string, important: boolean }} ScannedProp
+ */
+/**
+ * @typedef {{ file: string, selector: string, props: ScannedProp[], hasAntdRef: boolean, media: string }} ScannedCandidate
+ */
+
 // ---------------- 人类可读报告 ----------------
 
 /**
- * @param {any[]} candidates
+ * @param {ScannedCandidate[]} candidates
  * @param {any} stats
  */
 function renderReport(candidates, stats) {
