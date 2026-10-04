@@ -152,16 +152,17 @@
 
 > 来源：对依赖安全、CI、目录结构、同步 I/O 的补充扫描；均未纳入此前各批次范围。优先级建议见本节末。
 
-### 1. 依赖安全（npm audit）→ **已降至 0 项（2026-09-30 扫尾批归零；此前 2026-09-25 低风险扫尾批降至 2 项 moderate）**
+### 1. 依赖安全（npm audit）→ **当前 9 项 high，全部为单条无修复版 advisory 经 dev 链传导并登记入基线（2026-10-04）；生产链 0 项——历史最低 0 项（2026-09-30 扫尾批归零）**
 
 - **扫描方法**：`npm audit --registry=https://registry.npmjs.org`（已固化为 `npm run audit`）。默认 npmmirror 源未实现 audit 接口（`NOT_IMPLEMENTED`），此前安全扫描实际处于盲区。
-- **进展**：45 → 35 → 34 → 23 → 18 → 9 → 5 → 2 → **0 项**（critical 0、high 0、moderate 0、low 0）。
+- **进展**：45 → 35 → 34 → 23 → 18 → 9 → 5 → 2 → **0 项**（2026-09-30）→ **9 项 high**（2026-10-04，braces 无修复版经 dev 链传导，见下「无修复版处置」条；生产链 `--omit=dev` 实测 0 项）。
 - **已消除的关键项（历史口径留档）**：`handlebars@4.7.9`（critical）；`jsrsasign 8→11.1.5`（critical，沙箱仅透传零 API 调用）；`loader-utils`（随 Rsbuild 阶段四删 style-loader 链清零）；`markdown-it 8→15`/`anchor 4→10`/`toc`、`koa-websocket 4→7`、`jsondiffpatch 0.3.11→0.7.6`、`json-schema-faker rc16→0.5.9`；`json-schema-editor-visual` 链（自研编辑器批次 4，消失 9 项 high）；brace-expansion/glob/ini/semver 4 项 high（依赖治理批 overrides）；~~`conventional-changelog-cli@2.1.1` 停更链（`tempfile`→`uuid`）~~ → **已随 conventional-changelog-cli 2→5 major 升级消除（低风险扫尾批）**，v5 链新报的 `@conventional-changelog/git-client` Argument Injection（GHSA-vh25-5764-9wcr）经非破坏 `npm audit fix`（git-raw-commits→5.0.1、git-semver-tags→8.0.1、git-client→2.7.0，仅 lock 层传递依赖）一并消除。
 ~~**剩余 2 项 moderate**：react-router/react-router-dom@6.30.6 开放重定向~~ → **已清零（2026-09-29）**：router v7 迁移批顺带消除该 advisory；其后新披露的 `fast-uri` moderate（GHSA-hrr3-gc8f-f4qj，CWE-178，ajv 传递依赖）经 `npm audit fix` 升级 3.1.7→3.1.8 归零（2026-09-30 扫尾批，`npm audit` 实测 **0 vulnerabilities**）。注：f465443e 当时的基线「全零」实际 total 残留 2（笔误），已随本批订正为真全零。
 - **观察项**：~~`@scarf/scarf@1.4.0` 随 swagger-client 进入依赖树（install 时上报遥测，可用 `SCARF_ANALYTICS=false` 关闭）——建议在 CI/构建环境禁用~~ → **已在 CI 禁用（低风险扫尾批：ci.yml job 级 `SCARF_ANALYTICS: false`）**；~~`json-schema-faker 0.6` 升级被 ESM-only 阻塞~~ → **已消除（B1 批，2026-09-25）**：全量 ESM 化不做（[docs/server-esm-evaluation.md](docs/server-esm-evaluation.md) 裁决），走惰性 import 窄方案落地——`schemaToJson` 惰性 `import()` + async 化、0.5.9 → 0.6.3、5 调用点 await 适配，探针 14/14（0.5.9 基线 12/12），语义差异已登记（见批次行与 `test/server/schemaToJson-equivalence.test.js` 文件头）。
-- **门禁（已完成）**：`npm run audit:ci` 基线差分（`scripts/audit-check.js`，仅对新增漏洞失败，退出码 0/1/2/3 有离线回归测试）；基线 `scripts/audit-baseline.json` 现为 0/0/0/0/0（真全零）。
+- **门禁（已完成）**：`npm run audit:ci` 基线差分（`scripts/audit-check.js`，仅对新增漏洞失败，退出码 0/1/2/3 有离线回归测试）；基线 `scripts/audit-baseline.json` 现为 0/9/0/0/9（2026-10-04 登记，见下条）。
 - **2026-10-01 新增漏洞即时处置（零基线门禁按设计生效）**：新披露 `dompurify` low（GHSA-p98j-92pf-mc4p，IN_PLACE 下 afterSanitize 钩子移除节点后残留子树事件处理器仍可触发 DOM XSS），影响 3.4.13–3.4.15，本仓实装 3.4.15 命中。**该包是本仓 XSS 防护的实际执行者**（`client/utils/sanitize.js` 唯一消费方，白名单清洗接口备注等富文本），属生产 `dependencies`。处置：`3.4.15 → 3.4.16`（补丁级，沿用仓库 caret 惯例声明 `^3.4.16`、lock 实装精确 3.4.16）→ `npm audit` 实测归零；行为回归用 8 例探针（script 标签/onerror/onclick/javascript: URL/data-* 属性/iframe 全拦截，白名单 b/a 保留）全通过；因 DOMPurify 打进前端产物，同步 `npm run build-client` 重建 `static/prd`（产物内版本标记实测 3.4.15→3.4.16，仅 t9 chunk + manifest + assets.js 变动，manifest 39 项资产与初始 chunk 清单核对无缺失），并做浏览器实测（首页正常渲染、无 JS 错误、旧 chunk 正确 404）。基线维持 0/0/0/0/0。
-- 推进路径：当前零漏洞，无剩余评估项；新漏洞由 audit:ci 门禁拦截（发现即按「npm audit fix 或 overrides 修复 → 实测归零 → 下调基线」流程处置）。
+- **2026-10-04 无修复版 advisory 处置（基线登记，非降级修复）**：上游新披露 `braces` 栈耗尽 DoS（GHSA-vfj7-8cjw-p6xm，CWE-674，CVSS 7.5；深嵌套模式致栈溢出，影响 <=3.0.3 即全部已发布版本，advisory 标注无 patched version）。CI audit 门禁按设计报红（run 37179327896，high 0→9 / total 0→9），9 项同源三条 dev 链：ava→globby→fast-glob→micromatch→braces、nodemon→chokidar→braces、patch-package→find-yarn-workspace-root→micromatch→braces。**逃逸核查（全不可行）**：chokidar@4 已移除 braces 但 nodemon 硬依赖 chokidar ^3.5.2；micromatch@4.0.8 仍依赖 braces ^3.0.3；`npm audit fix --force` 仅提议 nodemon 降级至 1.14.10（2017 年版，拒绝）。**风险判定**：三条链均为 devDependencies（测试运行器/文件监听/补丁工具），glob 模式开发者自撰、非攻击者可控，实际暴露可忽略；生产链 `npm audit --omit=dev` 实测 0 项。**处置**：基线由 0/0/0/0/0 登记为 0/9/0/0/9（scripts/audit-baseline.json 附完整核查备注），门禁对新漏洞的拦截能力不变；**复核触发条件**=braces 发布 >3.0.3 修复版（升级实测归零后回落基线）。
+- 推进路径：当前全树 9 项 high（单条 braces 无修复版 advisory，dev 链，已登记基线）、生产链 0 项；新漏洞由 audit:ci 门禁拦截（发现即按「npm audit fix 或 overrides 修复 → 实测归零 → 下调基线」流程处置；经逃逸核查确认无修复版的，走「实测风险面 + 基线登记 + 复核触发条件」出口，先例即 2026-10-04 braces 条）。
 
 ### 2. 无 CI（门禁仅本地生效）→ 已完成（commit ff37aebe）
 

@@ -1,8 +1,8 @@
 {
   "critical": 0,
-  "high": 0,
+  "high": 9,
   "moderate": 0,
   "low": 0,
-  "total": 0,
-  "note": "基线来源：2026-09-30 在本仓库（分支 codex/refactor-foundation）以官方 registry https://registry.npmjs.org 实测 npm audit --json 的 metadata.vulnerabilities 计数，当前为零漏洞。演进：上一基线（moderate 2 / total 2，react-router 开放重定向）随 router v7 迁移清零（f465443e，当时 total 残留 2 系笔误）；其后新披露的 fast-uri moderate（GHSA-hrr3-gc8f-f4qj，ajv 传递依赖）经 npm audit fix 升级 3.1.7→3.1.8 归零。本基线仅作为 CI 基线差分门禁的对比下限；新增漏洞由 audit:ci 门禁拦截。更新方式：本地运行 npm audit --registry=https://registry.npmjs.org --json，以其 metadata.vulnerabilities 的计数替换上述数值（total 应等于四个 severity 之和）；或运行 npm run audit:ci 查看当前计数与基线的对比结果。"
+  "total": 9,
+  "note": "基线来源：2026-10-04 在本仓库（分支 dev）以官方 registry https://registry.npmjs.org 实测 npm audit --json 的 metadata.vulnerabilities 计数：critical 0 / high 9 / moderate 0 / low 0 / total 9。9 项 high 全部同源于单条 advisory——braces 栈耗尽 DoS（GHSA-vfj7-8cjw-p6xm，CWE-674，CVSS 7.5，深嵌套模式致栈溢出，影响 <=3.0.3 即全部已发布版本，advisory 标注 patched_versions 为 None 无修复版），经三条 devDependencies 链传导：ava→globby→fast-glob→micromatch→braces、nodemon→chokidar→braces、patch-package→find-yarn-workspace-root→micromatch→braces。逃逸核查（全部不可行）：chokidar@4 虽已移除 braces 但 nodemon 硬依赖 chokidar ^3.5.2；micromatch@4.0.8 仍依赖 braces ^3.0.3；npm audit fix --force 仅提出把 nodemon 降级到 1.14.10（2017 年版，拒绝）。风险判定：三条链均为开发期工具（测试运行器/文件监听/补丁工具），glob 模式由开发者自撰而非攻击者可控，实际暴露可忽略；生产链 npm audit --omit=dev 实测 0 项。复核触发条件：braces 发布 >3.0.3 的修复版后升级并实测归零，基线回落 0/0/0/0/0，同步更新 TECH_DEBT.md 四.1 与 docs/BUGLOG/dev.md 对应条目。历史演进：上一基线 moderate 2 / total 2（react-router 开放重定向）随 router v7 迁移清零（f465443e，当时 total 残留 2 系笔误）；fast-uri moderate（GHSA-hrr3-gc8f-f4qj，ajv 传递依赖）经 npm audit fix 升级 3.1.7→3.1.8 归零；dompurify low（GHSA-p98j-92pf-mc4p）经 3.4.15→3.4.16 升级归零（2026-10-01）。本基线仅作为 CI 基线差分门禁的对比下限（仅对新增漏洞失败，已登记项不拦截）；更新方式：本地运行 npm audit --registry=https://registry.npmjs.org --json，以其 metadata.vulnerabilities 的计数替换上述数值（total 应等于四个 severity 之和）。"
 }

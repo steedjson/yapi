@@ -2,6 +2,13 @@
 
 条目由 /csl-buglog 或人工维护,供 coder/reviewer 动手前核对
 
+## [2026-10-04][依赖审计] 新 advisory 无修复版:门禁报红不可用 --force 降级换绿,「基线登记+复核触发条件」才是出口
+- 现象: 推送 build/ 类型门禁批次(be582ca4)后 CI 变红,失败步是 audit 基线差分门禁(high 0→9 / total 0→9,run 37179327896);9 项全部同源于单条 advisory——braces 栈耗尽 DoS(GHSA-vfj7-8cjw-p6xm,CWE-674,CVSS 7.5,深嵌套模式致栈溢出),影响 <=3.0.3(全部已发布版本),advisory 标注无 patched version
+- 根因: 上游新披露 advisory,与本批改动无关(上一轮 CI 2026-10-01 绿且 0 漏洞,窗口期新披露)。传导链三条全在 devDependencies:ava→globby→fast-glob→micromatch→braces、nodemon→chokidar→braces、patch-package→find-yarn-workspace-root→micromatch→braces。逃逸核查全灭:chokidar@4 移除 braces 但 nodemon 硬依赖 ^3.5.2;micromatch@4.0.8 仍依赖 braces ^3.0.3;生产链 npm audit --omit=dev 实测 0 项
+- 修法: 仓库既定流程「npm audit fix 或 overrides 修复 → 实测归零 → 下调基线」的前提是上游有修复版;本例无 patch 版本、三条链均无逃逸,故走设计内第二出口:scripts/audit-baseline.json 由 0/0/0/0/0 登记为 0/9/0/0/9(附风险面核查与复核触发条件备注),门禁对新漏洞的拦截能力不变;TECH_DEBT §四.1 同步留痕。拒绝的选项:npm audit fix --force(仅提议 nodemon 降级到 1.14.10,2017 年版)与删除/放宽门禁
+- 关联: scripts/audit-baseline.json、TECH_DEBT.md §四.1、CI run 37179327896、commit be582ca4
+- 复发: 0 次 · 教训: 安全门禁报红先分「有修复版」与「无修复版」两条路——有则升级归零后下调基线;无则做三件事:①实测真实暴露面(生产链 --omit=dev 单独跑、确认传导链是否攻击者可控),②基线登记并写清复核触发条件(如 braces 发布 >3.0.3 后升级回落),③留痕出处(台账+BUGLOG)。绝不用 --force 把工具链降级九年换 CI 变绿——那是负收益交易
+
 ## [2026-10-01][build/类型门禁] 给客户端模块图内的空垫片加 @ts-check 会改产物 manifest 名;纯注解批次必须以「重建零 diff」验收
 - 现象: build/ 目录纳入类型门禁时,给 build/empty-module.js(5 行空垫片,module.exports = {})加 `// @ts-check` 后重建,static/prd 的 manifest chunk 名从 `manifest@08fdc614f9362e05.js` 变为 `manifest@5538fe94…`——内容仅 37 处单字符 c↔f 互换(压缩器局部变量名 swap),语义等价但字节不等价;删除后又复原。该文件经 resolve.fallback(rsbuild.config.mjs 的 https/vm)进入客户端模块图
 - 根因: 未完全定位。实测表明其源码内容参与客户端压缩器的命名 tie-break,且**不可预判**:加 @ts-check 确定性触发(三方独立复现);另加一段多行说明注释触发为第三个名字(f3b7dd8e…);而一行短中性注释未触发(仍 08fdc614…)。对照组:同批 build/shims/setImmediate.js 加 @ts-check + JSDoc 后产物 0 变动——说明敏感性是「文件相关」而非常态,不能推广为「模块图内文件加注解都会漂移」
