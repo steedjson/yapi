@@ -99,7 +99,6 @@ function ProjectMessage(props) {
 
             // 如果如果项目所在的分组位置发生改变
             fetchGroupMsg(group_id);
-            // props.history.push('/group');
             let projectName = htmlFilter(assignValue.name);
             setBreadcrumb([
               {

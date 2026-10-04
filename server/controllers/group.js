@@ -149,10 +149,6 @@ class groupController extends baseController {
 
     // 新版每个人都有权限添加分组
     
-    // if (this.getRole() !== 'admin') {
-    //   return (ctx.body = yapi.commons.resReturn(null, 401, '没有权限'));
-    // }
-
     let owners = [];
 
     if(params.owner_uids.length === 0){

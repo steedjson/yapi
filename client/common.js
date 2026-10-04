@@ -122,10 +122,7 @@ exports.formatTime = timestamp => {
   return dayjs.unix(timestamp).format('YYYY-MM-DD HH:mm:ss');
 };
 
-// 防抖函数，减少高频触发的函数执行的频率
-// 请在 constructor 里使用:
-// import { debounce } from '$/common';
-// this.func = debounce(this.func, 400);
+// 防抖函数，减少高频触发的函数执行的频率；在组件内以 useMemo/useCallback 包装使用
 /**
  * @param {Function} func 目标函数
  * @param {number} wait 等待毫秒数
@@ -366,8 +363,6 @@ exports.safeAssign = (Obj, nextObj) => {
 exports.arrayChangeIndex = (arr, start, end) => {
   // 保持 [].concat(arr) 的原语义（arr 可能被调用方传入非数组），仅补类型断言
   let newArr = /** @type {any[]} */ (([]).concat(/** @type {any} */ (arr)));
-  // newArr[start] = arr[end];
-  // newArr[end] = arr[start];
   let startItem = newArr[start];
   newArr.splice(start, 1);
   // end自动加1

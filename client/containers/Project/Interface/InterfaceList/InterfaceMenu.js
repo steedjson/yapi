@@ -627,7 +627,6 @@ const InterfaceMenu = (/** @type {any} */ props) => {
   });
 
   const matchParams = params;
-  // let menuList = this.state.list;
   const searchBox = (
     <div className="interface-filter">
       <Input onChange={onFilter} value={state.filter} placeholder="搜索接口" />

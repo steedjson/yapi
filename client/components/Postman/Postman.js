@@ -498,7 +498,6 @@ const Run = forwardRef((props, ref) => {
       let oTxt1 = /** @type {any} */ (document.getElementById(`${type}_${index}`));
       cursurPosition = oTxt1.selectionStart;
       inputValue = getInstallValue(val || '', cursurPosition).val;
-      // cursurPosition = {row: 1, column: position}
     }
 
     applyState({

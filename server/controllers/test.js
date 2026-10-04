@@ -101,7 +101,6 @@ class interfaceColController extends baseController {
    */
   async testSingleUpload(ctx) {
     try {
-      // let params = ctx.request.body;
       let req = ctx.req;
 
       let chunks = /** @type {any[]} */ ([]),
@@ -306,8 +305,6 @@ class interfaceColController extends baseController {
    */
   async testResponse(ctx) {
     try {
-      // let result = `<div><h2>12222222</h2></div>`;
-      // let result = `wieieieieiieieie`
       let result = { b: '12', c: '23' };
       ctx.set('Access-Control-Allow-Origin', '*');
       ctx.set('Content-Type', 'text');

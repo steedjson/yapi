@@ -150,7 +150,6 @@ export default function InterfaceColMenu(props) {
         colModalVisible: false
       });
       message.success(colModalType === 'edit' ? '修改集合成功' : '添加集合成功');
-      // await dispatch(fetchInterfaceColList(project_id));
       getList();
     } else {
       message.error(res.data.errmsg);
@@ -267,7 +266,6 @@ export default function InterfaceColMenu(props) {
     }
 
     // 刷新接口列表
-    // await dispatch(fetchInterfaceColList(project_id));
     getList();
     setColData({ isRander: true });
     message.success('克隆测试集成功');
@@ -316,7 +314,6 @@ export default function InterfaceColMenu(props) {
           if (+caseId === +latestRef.current.currCaseId) {
             navigate('/project/' + paramsId + '/interface/col/');
           } else {
-            // dispatch(fetchInterfaceColList(latestRef.current.id));
             setColData({ isRander: true });
           }
         } else {
@@ -357,10 +354,8 @@ export default function InterfaceColMenu(props) {
    * @param {any} colId
    */
   const showImportInterfaceModal = async colId => {
-    // const projectId = this.props.match.params.id;
     const groupId = curProject.group_id;
     await fetchProjectList(groupId);
-    // await dispatch(fetchInterfaceListMenu(projectId))
     patchState({ importInterVisible: true, importColId: colId });
   };
 
@@ -375,7 +370,6 @@ export default function InterfaceColMenu(props) {
     if (!res.data.errcode) {
       patchState({ importInterVisible: false });
       message.success('导入集合成功');
-      // await dispatch(fetchInterfaceColList(project_id));
       getList();
 
       setColData({ isRander: true });
@@ -393,11 +387,9 @@ export default function InterfaceColMenu(props) {
    */
   const filterCol = e => {
     const value = e.target.value;
-    // const newList = produce(interfaceColList, draftList => {})
     patchState({
       filterValue: value,
       list: JSON.parse(JSON.stringify(interfaceColList))
-      // list: newList
     });
   };
 
@@ -405,7 +397,6 @@ export default function InterfaceColMenu(props) {
    * @param {any} e
    */
   const onDrop = async e => {
-    // const projectId = this.props.match.params.id;
     const dropColIndex = e.node.props.pos.split('-')[1];
     const dropColId = interfaceColList[dropColIndex]._id;
     const dragNodeKey = e.dragNode.props.eventKey;
@@ -425,7 +416,6 @@ export default function InterfaceColMenu(props) {
         axios.post('/api/col/up_case_index', changes).then();
       }
       await axios.post('/api/col/up_case', { id: dragNodeKey.split('_')[1], col_id: dropColId });
-      // dispatch(fetchInterfaceColList(id));
       getList();
       setColData({ isRander: true });
     } else {
@@ -446,7 +436,6 @@ export default function InterfaceColMenu(props) {
     patchState({ delIcon: null });
   };
 
-  // const { currColId, currCaseId, isShowCol } = this.props;
   const { colModalType, colModalVisible, importInterVisible } = state;
   const currProjectId = id;
 

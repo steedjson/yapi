@@ -2,7 +2,6 @@
 const baseController = require('controllers/base.js');
 const interfaceModel = require('models/interface.js');
 const projectModel = require('models/project.js');
-// const wikiModel = require('../yapi-plugin-wiki/wikiModel.js');
 const interfaceCatModel = require('models/interfaceCat.js');
 const yapi = require('yapi.js');
 const markdownIt = require('markdown-it');
@@ -16,7 +15,6 @@ const escapeHtml = require('../../server/utils/escapeHtml.js');
 // 引号/尖括号, 造成 <hN id> 与 TOC <a href> 属性位逃逸注入; 统一改用白名单安全 slug(共享实现)
 const anchorSlugify = require('../../server/utils/anchorSlugify.js');
 
-// const htmlToPdf = require("html-pdf");
 class exportController extends baseController {
   /**
    * @param {any} ctx Koa 请求上下文

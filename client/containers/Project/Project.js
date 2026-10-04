@@ -103,23 +103,6 @@ const Project = () => {
     }
   }
 
-  // let subnavData = [{
-  //   name: routers.interface.name,
-  //   path: `/project/${match.params.id}/interface/api`
-  // }, {
-  //   name: routers.activity.name,
-  //   path: `/project/${match.params.id}/activity`
-  // }, {
-  //   name: routers.data.name,
-  //   path: `/project/${match.params.id}/data`
-  // }, {
-  //   name: routers.members.name,
-  //   path: `/project/${match.params.id}/members`
-  // }, {
-  //   name: routers.setting.name,
-  //   path: `/project/${match.params.id}/setting`
-  // }];
-
   /** @type {any[]} */
   let subnavData = [];
   Object.keys(routers).forEach((/** @type {any} */ key) => {

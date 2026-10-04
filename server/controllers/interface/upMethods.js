@@ -26,8 +26,6 @@ const escapeHtml = require('../../utils/escapeHtml.js');
 // diff 通知邮件所需的两个 CSS 内容固定不变，进程内缓存避免每次保存接口都同步读盘。
 /** @type {{ annotatedCss: string, htmlCss: string } | null} */
 let diffCssCache = null;
-// const annotatedCss = require("jsondiffpatch/public/formatters-styles/annotated.css");
-// const htmlCss = require("jsondiffpatch/public/formatters-styles/html.css");
 
   /**
    * 编辑接口
@@ -72,8 +70,6 @@ let diffCssCache = null;
     let id = params.id;
     params.message = params.message || '';
     params.message = params.message.replace(/\n/g, '<br>');
-    // params.res_body_is_json_schema = _.isUndefined (params.res_body_is_json_schema) ? true : params.res_body_is_json_schema;
-    // params.req_body_is_json_schema = _.isUndefined(params.req_body_is_json_schema) ?  true : params.req_body_is_json_schema;
 
     handleHeaders(params)
 

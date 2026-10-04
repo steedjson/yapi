@@ -20,7 +20,6 @@ import 'jsondiffpatch/formatters/styles/html.css';
 import './TimeLine.scss';
 import { timeago } from '../../../common/utils.js';
 
-// const Option = AutoComplete.Option;
 const { Option, OptGroup } = AutoComplete;
 
 /**
@@ -40,8 +39,6 @@ const AddDiffView = props => {
     </div>
   );
 };
-
-// timeago(new Date().getTime() - 40);
 
 /**
  * @param {any} props

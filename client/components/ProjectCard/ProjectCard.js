@@ -103,7 +103,7 @@ export default function ProjectCard(props) {
         doDelFollow(id).then((/** @type {any} */ res) => {
           if (res.data.errcode === 0) {
             cb();
-            // message.success('已取消关注！');  // 星号已做出反馈 无需重复提醒用户
+            // 取消关注不弹提示：星号状态已给出反馈，无需重复提醒用户。
           }
         });
       }, 400),
@@ -125,7 +125,7 @@ export default function ProjectCard(props) {
         doAddFollow(param).then((/** @type {any} */ res) => {
           if (res.data.errcode === 0) {
             cb();
-            // message.success('已添加关注！');  // 星号已做出反馈 无需重复提醒用户
+            // 添加关注不弹提示：星号状态已给出反馈，无需重复提醒用户。
           }
         });
       }, 400),

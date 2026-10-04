@@ -94,7 +94,6 @@ class statisMockController extends baseController {
       let mail = '';
       if (yapi.WEBCONFIG.mail && yapi.WEBCONFIG.mail.enable) {
         mail = await this.checkEmail();
-        // return ctx.body = yapi.commons.resReturn(result);
       } else {
         mail = '未配置';
       }

@@ -219,7 +219,6 @@ const ImportInterface = (/** @type {any} */ props) => {
           return item.status.indexOf(value) === 0;
         });
         return arr.length > 0;
-        // record.status.indexOf(value) === 0
       }
     }
   ];

@@ -188,7 +188,6 @@ exports.log = (msg, type) => {
     else msg = JSON.stringify(msg);
   }
 
-  // let data = (new Date).toLocaleString() + '\t|\t' + type + '\t|\t' + msg + '\n';
   let data = `[ ${new Date().toLocaleString()} ] [ ${type} ] ${msg}\n`;
 
   fs.writeFile(logfile, data, { flag: 'a' }, err => {

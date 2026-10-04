@@ -95,7 +95,6 @@ const ProjectTag = React.forwardRef((/** @type {any} */ props, /** @type {any} *
         <Col span={6} className="item-name">
           <Input
             placeholder={`请输入 ${name} 名称`}
-            // style={{ width: '200px' }}
             value={item.name || ''}
             onChange={(/** @type {any} */ e) => addHeader(e.target.value, index, name, 'name')}
           />

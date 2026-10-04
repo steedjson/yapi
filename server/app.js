@@ -16,7 +16,6 @@ require('./utils/notice')
 
 const Koa = require('koa');
 const koaStatic = require('koa-static');
-// const bodyParser = require('koa-bodyparser');
 const { koaBody } = require('koa-body');
 const router = require('./router.js');
 
@@ -27,7 +26,6 @@ const app = websockify(new Koa());
 app.proxy = true;
 yapi.app = app;
 
-// app.use(bodyParser({multipart: true}));
 // koa-body v8: strict 选项已移除(等价能力为 jsonStrict); parsedMethods 显式覆盖全部可携带 body 的方法以保持 v2 行为
 app.use(
   koaBody({

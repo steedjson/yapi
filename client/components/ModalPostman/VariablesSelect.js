@@ -71,7 +71,6 @@ export default function VariablesSelect(props) {
         const key = isArrayParams ? deleteLastArr(clickValue) : deleteLastObject(clickValue);
         setExpandedKeys([key]);
         setSelectedKeys([CanSelectPathPrefix + clickValue]);
-        // this.props.click(clickValue);
       }
     })();
     return () => {

@@ -9,8 +9,6 @@ const yapi = require('../yapi.js');
  * @returns {Promise<{type: boolean, message: string, info?: any}>} 校验结果
  */
 exports.ldapQuery = (username, password) => {
-  // const deferred = Q.defer();
-
   return new Promise((resolve, reject) => {
     const { ldapLogin } = yapi.WEBCONFIG;
 
@@ -68,13 +66,6 @@ exports.ldapQuery = (username, password) => {
       });
 
       search.on('searchReference', (/** @type {any} */ referral) => {
-        // if (referral) {
-        //   let msg = {
-        //     type: false,
-        //     message: `searchReference: ${referral}`
-        //   };
-        //   reject(msg);
-        // }
         console.log('referral: ' + referral.uris.join());
       });
       // 查询结束

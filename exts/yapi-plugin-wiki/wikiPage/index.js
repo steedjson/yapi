@@ -120,7 +120,6 @@ const WikiPage = () => {
 
   // 点击编辑按钮 发送 websocket 获取数据
   const onEditor = () => {
-    // this.WebSocket.send('editor');
     const sendEditor = () => {
       wsRef.current.send('editor');
     };
@@ -200,7 +199,6 @@ const WikiPage = () => {
       message.error(`更新失败： ${result.data.errmsg}`);
     }
     endWebSocket();
-    // this.WebSocket.send('end');
   };
   // 取消编辑
   const onCancel = () => {

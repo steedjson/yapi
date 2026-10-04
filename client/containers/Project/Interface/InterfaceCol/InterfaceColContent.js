@@ -1,7 +1,6 @@
 // @ts-check
 import React, { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
-//import constants from '../../../../constants/variable.js'
 import { message } from '../../../../utils/message-bridge.js';
 // interfaceCol 切片已迁至 Zustand（批次3）；project/user 切片已迁至 Zustand（批次4）
 import useInterfaceColStore from '../../../../store/interfaceColStore';
@@ -191,7 +190,6 @@ const InterfaceColContent = () => {
     const header = (currDomain && currDomain.header) || [];
     header.forEach((/** @type {any} */ item) => {
       if (!checkNameIsExistInArray(item.name, req_header)) {
-        // item.abled = true;
         item = {
           ...item,
           abled: true
@@ -275,7 +273,6 @@ const InterfaceColContent = () => {
       const colList = result && result.data && result.data.data;
       const firstCol = Array.isArray(colList) && colList.length > 0 ? colList[0] : null;
       currColIdRef.current = +routeActionId || (firstCol ? firstCol._id : 0);
-      // this.props.history.push('/project/' + params.id + '/interface/col/' + currColId);
       if (currColIdRef.current && currColIdRef.current != 0) {
         await handleColIdChange(currColIdRef.current);
       }
@@ -369,7 +366,6 @@ const InterfaceColContent = () => {
         result = e;
       }
 
-      //result.body = result.data;
       reportsRef.current[curitem._id] = result;
       recordsRef.current[curitem._id] = {
         status: result.status,
@@ -667,7 +663,6 @@ const InterfaceColContent = () => {
       [project_id]: envName
     };
     patchState({ currColEnvObj: nextCurrColEnvObj });
-    // this.handleColdata(this.props.currCaseList, envName, project_id);
     handleColdata(currCaseList, nextCurrColEnvObj);
   };
 

@@ -216,9 +216,6 @@ const InterfaceList = () => {
   };
 
   // page change will be processed in handleChange by pagination
-  // changePage = current => {
-  //   if (this.state.current !== current) {
-  //     this.setState(
 
   const tag = curProject.tag;
   const tagFilter = tag.map((/** @type {any} */ item) => {
@@ -350,10 +347,6 @@ const InterfaceList = () => {
       }
     }
   }
-  // const data = this.state.data ? this.state.data.map(item => {
-  //   item.key = item._id;
-  //   return item;
-  // }) : [];
   let data = [];
   let total = 0;
   if (!actionId) {

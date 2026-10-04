@@ -51,10 +51,6 @@ const yapi = requireAny('../../yapi.js');
         return (ctx.body = yapi.commons.resReturn(null, 400, '用例id不能为空'));
       }
 
-      // if (!params.casename) {
-      //   return (ctx.body = yapi.commons.resReturn(null, 400, '用例名称不能为空'));
-      // }
-
       let caseData = await this.caseModel.get(params.id);
       let auth = await this.checkAuth(caseData.project_id, 'project', 'edit');
       if (!auth) {

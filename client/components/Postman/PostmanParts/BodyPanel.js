@@ -93,13 +93,6 @@ const BodyPanel = props => {
                   <span className="eq-symbol">=</span>
                   {item.type === 'file' ? (
                     '因Chrome最新版安全策略限制，不再支持文件上传'
-                    // <Input
-                    //   type="file"
-                    //   id={'file_' + index}
-                    //   onChange={e => changeBody(e.target.value, index, 'value')}
-                    //   multiple
-                    //   className="value"
-                    // />
                   ) : (
                     <Space.Compact className="value">
                       <Input

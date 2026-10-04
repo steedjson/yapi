@@ -387,10 +387,6 @@ const View = () => {
     curData.method ? curData.method.toLowerCase() : 'get'
   ];
 
-  // statusColor = statusColor[curData.status?curData.status.toLowerCase():"undone"];
-  // const aceEditor = <div style={{ display: curData.req_body_other && (curData.req_body_type !== "form") ? "block" : "none" }} className="colBody">
-  //   <AceEditor data={curData.req_body_other} readOnly={true} style={{ minHeight: 300 }} mode={curData.req_body_type === 'json' ? 'javascript' : 'text'} />
-  // </div>
   if (!methodColor) {
     methodColor = 'get';
   }

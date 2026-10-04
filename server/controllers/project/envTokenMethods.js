@@ -160,15 +160,11 @@ const {getToken} = require('../../utils/token');
   async function getEnv(ctx) {
     try {
       let project_id = ctx.request.query.project_id;
-      // let params = ctx.request.body;
       if (!project_id) {
         return (ctx.body = yapi.commons.resReturn(null, 405, '项目id不能为空'));
       }
 
       // 去掉权限判断
-      // if ((await this.checkAuth(project_id, 'project', 'edit')) !== true) {
-      //   return (ctx.body = yapi.commons.resReturn(null, 405, '没有权限'));
-      // }
 
       let env = await this.Model.getByEnv(project_id);
 

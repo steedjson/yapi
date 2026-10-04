@@ -34,7 +34,6 @@ const convert2Decimal = (/** @type {any} */ num) => (num > 9 ? num : `0${num}`)
  */
 
 exports.getDateInterval = (time = 30) => {
-    // const gapTime = time * 24 * 3600 * 1000;
     // 今天
     let endTime = new Date().getTime();
     /** @type {string[]} */

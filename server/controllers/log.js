@@ -153,7 +153,6 @@ class logController extends baseController {
         }
       }
 
-      // let result = await this.Model.listWithCatid(typeid, type, catId);
       ctx.body = yapi.commons.resReturn(list);
     } catch (/** @type {any} */ err) {
       ctx.body = yapi.commons.resReturn(null, 402, err.message);

@@ -245,7 +245,6 @@ function postman(importDataModule) {
           res[item] = handlePath.bind(this)(data[reflect[item]]);
           if (res[item] && res[item].indexOf('/:') > -1) {
             let params = res[item].substr(res[item].indexOf('/:') + 2).split('/:');
-            // res[item] = res[item].substr(0,res[item].indexOf("/:"));
             let arr = [];
             for (let i in params) {
               arr.push({

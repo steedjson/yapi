@@ -138,7 +138,6 @@ const yapi = requireAny('../../yapi.js');
         username: username,
         typeid: params.project_id
       });
-      // this.projectModel.up(params.project_id,{up_time: new Date().getTime()}).then();
       ctx.body = yapi.commons.resReturn(result);
     } catch (/** @type {any} */ e) {
       ctx.body = yapi.commons.resReturn(null, 402, e.message);

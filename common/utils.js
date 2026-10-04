@@ -197,9 +197,6 @@ exports.joinPath = (domain, joinPath) => {
   return domain + joinPath;
 };
 
-// exports.safeArray = arr => {
-//   return Array.isArray(arr) ? arr : [];
-// };
 /**
  * @param {*} arr 待判定值
  * @returns {Array<any>} 原数组或空数组

@@ -10,9 +10,6 @@ import useInterfaceStore from '../../../../../store/interfaceStore';
 import { Postman } from '../../../../../components';
 import AddColModal from './AddColModal';
 
-// import {
-// } from '../../../reducer/modules/group.js'
-
 import './Run.scss';
 
 /**

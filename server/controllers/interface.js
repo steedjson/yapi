@@ -237,7 +237,6 @@ class interfaceController extends baseController {
     }
 
     ctx.body = yapi.commons.resReturn(null);
-    // return ctx.body = yapi.commons.resReturn(null, 400, 'path第一位必需为 /, 只允许由 字母数字-/_:.! 组成');
   }
 
 
@@ -347,7 +346,6 @@ class interfaceController extends baseController {
         }
       }
 
-      // let inter = await this.Model.get(id);
       let result = await this.Model.del(id);
       clearProjectCategoryCache(data.project_id);
       yapi.emitHook('interface_del', id).then();

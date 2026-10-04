@@ -77,11 +77,6 @@ yapi.commons.sendNotice = async function (
         yapi.commons.log('发送' + (noticeItem.title || key) + '失败' + err.message, 'error')
       }
     })
-    // yapi.commons.sendMail({
-    //   to: emails,
-    //   contents: data.content,
-    //   subject: data.title
-    // });
   } catch (e) {
     yapi.commons.log('发送失败：' + e, 'error');
   }

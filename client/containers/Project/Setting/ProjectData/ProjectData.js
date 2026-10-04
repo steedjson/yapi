@@ -51,12 +51,6 @@ function handleExportRouteParams(
   });
 }
 
-// exportDataModule.pdf = {
-//   name: 'Pdf',
-//   route: '/api/interface/download_crx',
-//   desc: '导出项目接口文档为 pdf 文件'
-// }
-
 /**
  * 数据管理（导入 / 导出）。原类组件经 Hooks 现代化迁移，渲染结构与行为保持一致：
  * - 旧 @connect（basePath / swaggerUrlData）改为 useSelector，未在组件体内使用的

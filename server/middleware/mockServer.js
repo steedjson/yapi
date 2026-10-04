@@ -170,9 +170,6 @@ function mockValidator(interfaceData, ctx) {
  * @returns {Promise<any>}
  */
 module.exports = async (ctx, next) => {
-  // no used variable 'hostname' & 'config'
-  // let hostname = ctx.hostname;
-  // let config = yapi.WEBCONFIG;
   let path = ctx.path;
   let header = ctx.request.header;
 
@@ -188,8 +185,6 @@ module.exports = async (ctx, next) => {
 
   ctx.set('Access-Control-Allow-Origin', header.origin);
   ctx.set('Access-Control-Allow-Credentials', true);
-
-  // ctx.set('Access-Control-Allow-Origin', '*');
 
   if (!projectId) {
     return (ctx.body = yapi.commons.resReturn(null, 400, 'projectId不能为空'));
@@ -245,9 +240,6 @@ module.exports = async (ctx, next) => {
           interfaceData = [currentInterfaceData];
           break;
         }
-        // if (i === l - 1) {
-        //   interfaceData = [];
-        // }
 
       }
     }

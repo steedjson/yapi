@@ -63,7 +63,6 @@ function createHtml(reports) {
     mdTemplate += requestHtml(item.url, item.headers, item.data);
     mdTemplate += reponseHtml(item.res_header, item.res_body);
     left += leftHtml(index, item.name, item.code);
-    // left += codeHtml(item.code);
   });
   return createHtml5(left, mdTemplate, reports.message, reports.runTime);
 }

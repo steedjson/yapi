@@ -39,8 +39,6 @@ class followController extends baseController {
   async list(ctx) {
     let uid = this.getUid();
     // 关注列表暂时不分页 page & limit 为分页配置
-    // page = ctx.request.query.page || 1,
-    // limit = ctx.request.query.limit || 10;
 
     if (!uid) {
       return (ctx.body = yapi.commons.resReturn(null, 400, '用户id不能为空'));
