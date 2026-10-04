@@ -1,3 +1,4 @@
+// @ts-check
 /**
  * antd5 覆盖面视觉巡检 · 层 B 级联仿真库（纯函数，无 DOM/IO 依赖）。
  *
@@ -161,6 +162,10 @@ function cmpSpec(a, b) {
 
 // ---------------- 属性家族（shorthand ↔ longhand 竞争关系） ----------------
 
+/**
+ * 简写属性 → 其展开的 longhand 集合（键为 CSS 属性名，故声明索引签名容纳任意属性名查询）
+ * @type {Record<string, string[]>}
+ */
 const SHORTHAND_LONGHANDS = {
   margin: ['margin-top', 'margin-right', 'margin-bottom', 'margin-left'],
   padding: ['padding-top', 'padding-right', 'padding-bottom', 'padding-left'],
@@ -246,7 +251,11 @@ function stripDevHash(selector) {
   return String(selector);
 }
 
-/** print-only 的 media 不适用（jsdom 按 screen 求值），其余一律视为适用并标注 media-dependent */
+/**
+ * print-only 的 media 不适用（jsdom 按 screen 求值），其余一律视为适用并标注 media-dependent
+ * @param {string} media
+ * @returns {boolean}
+ */
 function mediaApplies(media) {
   if (!media) return true;
   const m = media.toLowerCase();
@@ -370,14 +379,18 @@ function rulesForElement(el, index) {
   const cached = index.cache.get(el);
   if (cached) return cached;
   const seen = new Set();
+  /** @type {any[]} */
   const out = [];
+  /** @param {any} rule */
   const push = rule => {
     if (!seen.has(rule.id)) {
       seen.add(rule.id);
       out.push(rule);
     }
   };
-  el.classList.forEach(cls => {
+  // 注：调用来自 any 接收者，TS 7.0.2 不给实参箭头函数提供上下文类型，前导 JSDoc 亦不生效，
+  // 故按仓库既有的「实参位置内联 JSDoc」写法标注（classList 令牌为 class 字符串）
+  el.classList.forEach(/** @param {string} cls */ cls => {
     const list = index.byClass.get(cls);
     if (list) list.forEach(push);
   });
@@ -441,6 +454,7 @@ function cmpKey(a, b) {
 function evaluate(candidate, el, watched, index, mode) {
   const rules = rulesForElement(el, index);
   const winner = resolveWinner(el, watched.prop, rules, mode);
+  /** @param {any} v */
   const normalize = v => String(v).replace(/\s+/g, ' ').trim().toLowerCase();
   if (!winner) {
     return { status: 'not-overridden', reason: 'no-competing-rule' };

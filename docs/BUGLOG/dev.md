@@ -2,6 +2,13 @@
 
 条目由 /csl-buglog 或人工维护,供 coder/reviewer 动手前核对
 
+## [2026-10-04][类型门禁/TS] catch 的类型注解被 TS 硬约束限定 any|unknown;「实测对齐」必须写清对齐的是哪一面
+- 现象: 批 B 吸收上批评审观察项时,P4「`catch (/** @type {Error} */ err)`」被 TS 7.0.2 直接拒绝(**TS1196: catch 子句变量类型注解只能是 any 或 unknown**);另 marker 识别器沿用注释写「与 TS 探针实测逐条对齐」,而实测 TS 还容忍 `///@ts-check`、大小写变体、`// @ts-check:` 等拼写(识别器不认)——方向安全(只响亮误报)但声明强于事实
+- 根因: ① TS 对 catch 子句类型标注面有硬约束,仓库 20+ 处旧写法是 `@type {any}`(合法但关闭检查);② 「探针实测对齐」容易被写成「等价」,而实测只覆盖样本集:位置面(shebang 后/前导注释块后/代码后/块注释内)对齐 ≠ 拼写面等价(TS 匹配器比探针样本宽)
+- 修法: ① catch 落 `@type {unknown}`(TS 7 裸 catch 的默认语义,显式化)+ 使用点 `/** @type {Error} */ (err).message` 断言——探针证实断言承重(去掉即 TS18046),三处抛出源(fs.readFileSync/JSON.parse)均为 Error 系;② 识别器注释改为「位置面逐条对齐、拼写面为 TS 的保守子集(宁窄不宽)」并写明方向安全性,识别器本体按 TS 探针语义重写(唯一识别器 hasTsCheckMarker + 8 正例 9 反例自证);③ 根级配置 6 文件 + visual 工具链 2 文件纳入(marker + 27 处纯注解,AST 6/6 独立等价),全量 1217 全绿、static/docs 沙箱 diff 逐字节一致
+- 关联: scripts/audit-check.js、scripts/build-docs-site.js、test/build/build-tscheck-coverage.test.js、rsbuild.config.mjs、tsconfig.json(264)、TECH_DEBT.md「四、10」
+- 复发: 0 次 · 教训: ①TS 的 catch 类型注解只接受 any|unknown(TS1196)——要收紧 catch 只能靠使用点断言,别在 catch 位置写具体类型;②凡「实测对齐」的声明必须写清覆盖的是哪一面(位置/拼写/语义),把样本集外推成「等价」就是声明失真;保守子集的正确表述是「宁窄不宽 + 方向安全(只误报不漏检)」并附探针证据
+
 ## [2026-10-04][类型门禁] 「受检 = marker ∧ 在 include 内」:锁单腿必留静默脱检;并发 QA 探针勿落进被枚举的共享目录
 - 现象: 全仓门禁面审计发现 scripts/ 5 个脚本(文档站构建/审计门禁实现/迁移工具/antd5 扫描器)整体不在任何 tsc 工程内,根级构建配置(rsbuild.config.mjs 等 6 个)同样游离;另有 2 处装饰性 marker(scripts/build-docs-site.js、test/client/visual/prdRules.js 带 @ts-check 却不在 program 内)
 - 根因: 门禁为「白名单 + marker」双开关,白名单逐文件维护(scripts/ 从未纳入);而 marker 判定的两条腿(marker 本身 + 在 program 内)此前没有任何测试同时锁住——带 marker 但未入 include 的文件,marker 断言全绿而 tsc 根本不加载它(负向对照实测成立);另发现 TS 对 marker 的位置容差(shebang 后/前导注释块后均识别),测试正则口径想当然会把真实受检文件误报为未受检

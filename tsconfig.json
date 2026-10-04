@@ -286,5 +286,17 @@
     "scripts/build-docs-site.js",
     "scripts/migrate-precheck.js",
     "scripts/antd5-css-lib.cjs",
+    // 批 B：根级构建配置 + antd5 视觉巡检工具链纳入类型门禁（显式逐文件白名单，
+    // 与 scripts/ 面同口径）。checkJs 继承 false，仍以文件自带 // @ts-check 为唯一
+    // 开关——marker 与 include 两条腿都由 test/build/build-tscheck-coverage.test.js
+    // 锁死（根级 5 文件 + test/client/visual 的 2 个工具文件）。
+    // rsbuild.config.mjs 是 ESM（import.meta），归 tsconfig.build.json 的 nodenext 项目。
+    "babel.config.js",
+    "eslint.config.js",
+    ".prettierrc.js",
+    "ava.config.cjs",
+    "commitlint.config.cjs",
+    "test/client/visual/prdRules.js",
+    "test/client/visual/antd5Cascade.js"
   ]
 }

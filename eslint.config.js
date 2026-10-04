@@ -1,3 +1,4 @@
+// @ts-check
 // ESLint 9 flat config：取代 .eslintrc.js + .eslintignore。
 // 规则保持宽松（recommended 级别，无风格规则），历史代码仅需通过语法与正确性检查。
 const babelParser = require('@babel/eslint-parser');

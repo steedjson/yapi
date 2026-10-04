@@ -80,15 +80,17 @@ function loadBaseline(baselinePath) {
   let raw;
   try {
     raw = fs.readFileSync(baselinePath, 'utf8');
-  } catch (/** @type {*} */ err) {
-    fail(3, `无法读取基线文件 ${baselinePath}：${err.message}`);
+  // 抛出源均为 Node Error（fs 读失败 / JSON.parse），但 TS1196 限 catch 子句注解只能是
+  // any/unknown，故 catch 处按 unknown 收（真值语义），读 .message 时在使用点断言 Error。
+  } catch (/** @type {unknown} */ err) {
+    fail(3, `无法读取基线文件 ${baselinePath}：${/** @type {Error} */ (err).message}`);
   }
 
   let parsed;
   try {
     parsed = JSON.parse(raw);
-  } catch (/** @type {*} */ err) {
-    fail(3, `基线文件 ${baselinePath} 不是合法 JSON：${err.message}`);
+  } catch (/** @type {unknown} */ err) {
+    fail(3, `基线文件 ${baselinePath} 不是合法 JSON：${/** @type {Error} */ (err).message}`);
   }
 
   if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
@@ -126,11 +128,11 @@ function runNpmAudit() {
   let audit;
   try {
     audit = JSON.parse(result.stdout);
-  } catch (/** @type {*} */ err) {
+  } catch (/** @type {unknown} */ err) {
     fail(
       2,
       'npm audit 的 stdout 无法解析为 JSON（可能是网络异常或 npm 输出被污染；这与“新增漏洞”失败是不同情况）：\n' +
-        `  解析错误：${err.message}\n` +
+        `  解析错误：${/** @type {Error} */ (err).message}\n` +
         `  stdout 前 500 字符：${String(result.stdout || '').slice(0, 500)}\n` +
         `  stderr 前 500 字符：${String(result.stderr || '').slice(0, 500)}`
     );

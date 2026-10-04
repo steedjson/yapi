@@ -1,3 +1,4 @@
+// @ts-check
 // Rsbuild 构建配置（生产 + 开发条件化，见 docs/rsbuild-migration-plan.md）。
 // 生产分支：npm run build-client（NODE_ENV=production，build/rsbuild-standalone.mjs）。
 // 开发分支：npm run dev-client（NODE_ENV=development，build/rsbuild-dev.mjs，阶段二），
@@ -36,9 +37,17 @@ const { createRsbuildDevServerSetup } = require('./build/rsbuild-dev-server.js')
 
 const isProduction = process.env.NODE_ENV === 'production';
 
+/**
+ * dev 代理回调与 rspack 改写的实参类型（node 原生 http 请求/响应）
+ * @typedef {import('node:http').IncomingMessage} IncomingMessage
+ * @typedef {import('node:http').ServerResponse} ServerResponse
+ */
+
 // webpack 侧 getDefineValues 的等价 define 集合；versionNotify 未定义时跳过
 // （当前 client/server 代码均未消费该变量，与 webpack DefinePlugin 收到 undefined
 // 值时的"不生效"结果一致）。
+// 注：versionNotify 为条件追加，初始化字面量不含该键，故按开放索引签名声明。
+/** @type {Record<string, string>} */
 const defineValues = {
   'process.env.version': JSON.stringify(packageInfo.version),
   'process.env.scriptEnable': JSON.stringify(yapi.WEBCONFIG.scriptEnable === true)
@@ -72,9 +81,16 @@ const devServerConfig = {
     {
       target: 'http://127.0.0.1:3000',
       changeOrigin: false,
-      pathFilter: (_path, req) => (req.url || '').split('?')[0].startsWith('/api/'),
+      pathFilter: /** @param {string} _path @param {IncomingMessage} req */ (
+        _path,
+        req
+      ) => (req.url || '').split('?')[0].startsWith('/api/'),
       on: {
-        error: (error, _req, res) => {
+        error: /** @param {Error} error @param {IncomingMessage} _req @param {ServerResponse} res */ (
+          error,
+          _req,
+          res
+        ) => {
           if (!res || typeof res.writeHead !== 'function') {
             return;
           }
@@ -104,6 +120,22 @@ const devBuildConfig = {
 };
 
 // tools.rspack 改写（生产/开发共用，与 webpack 生产配置逐条对齐；body 不得按分支分叉）。
+/**
+ * 实参的最小结构面：Rsbuild 传入的是完整 rspack 配置对象，但 RspackOptions 把
+ * optimization/module/resolve/plugins 均标为可选——直接套用会报 TS18048（possibly
+ * undefined），需可选链兜底，那是运行时改动（本批禁止）。装配期这些字段必然存在，故按
+ * 「必然存在」声明实际读写的字段；rspack 只取 ProvidePlugin 构造签名（本文件仅 new
+ * 一次，不读实例成员）。
+ * @typedef {{
+ *   optimization: { runtimeChunk: { name: string } | string | boolean },
+ *   module: { noParse: RegExp | string | ((content: string, path: string) => boolean) },
+ *   resolve: { fallback: Record<string, string | false> },
+ *   plugins: Array<{ apply: (compiler: any) => void }>
+ * }} RspackConfigFace
+ * @typedef {{ rspack: { ProvidePlugin: new (definitions: Record<string, string | string[]>) => { apply: (compiler: any) => void } } }} RspackToolCtx
+ * @param {RspackConfigFace} config
+ * @param {RspackToolCtx} ctx
+ */
 const rspackTool = (config, { rspack }) => {
   // webpack 生产配置的 runtimeChunk: { name: 'manifest' } 等价物。
   config.optimization.runtimeChunk = { name: 'manifest' };

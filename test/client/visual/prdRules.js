@@ -44,7 +44,14 @@ function loadInitialCss() {
 
 const INITIAL_CSS = loadInitialCss();
 
-/** @param {any[]} rawRules @param {number} orderBase @returns {any[]} */
+/**
+ * @param {any[]} rawRules
+ * @param {'prd'|'runtime'} sourceKind
+ * @param {string} sourceName
+ * @param {number} rank
+ * @param {number} orderBase
+ * @returns {any[]}
+ */
 function toRules(rawRules, sourceKind, sourceName, rank, orderBase) {
   return cascade.buildCascadeRules(rawRules, { sourceKind, sourceName, rank, orderBase });
 }
@@ -58,6 +65,7 @@ function loadPrdRules() {
     .readdirSync(PRD_DIR)
     .filter(f => f.endsWith('.css'))
     .sort();
+  /** @type {any[]} */
   const rules = [];
   let initialIdx = 0;
   files.forEach((file, fileIdx) => {
@@ -75,6 +83,7 @@ function loadPrdRules() {
  * @param {string[]} runtimeStyleTexts
  */
 function buildRuntimeRules(runtimeStyleTexts) {
+  /** @type {any[]} */
   const rules = [];
   runtimeStyleTexts.forEach((text, idx) => {
     const raw = scanLib.parseCssRules(text, 'runtime:' + idx);

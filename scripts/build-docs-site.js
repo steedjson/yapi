@@ -45,8 +45,16 @@ const SITE_VERSION = require('../package.json').version;
  * @typedef {{ fileKey: string, title: string, html?: string }} Chapter
  */
 /**
- * 书定义（groups/chapters 于 main 中解析填充）
- * @typedef {{ key: string, label: string, summary: string, srcDir: string, assetPrefix: string, prependGroups: SummaryGroup[], groups: SummaryGroup[], chapters: Chapter[] }} Book
+ * 书定义（初始化字面量形状：groups/chapters 尚不存在，由 main() 解析填充）。
+ * 拆「初始化态 / 运行态」两型：把初始化字面量直接注解成运行态 Book（必填 groups/chapters）
+ * 是对运行态的提前承诺，故初始化字面量按 BookDef 声明。
+ * @typedef {{ key: string, label: string, summary: string, srcDir: string, assetPrefix: string, prependGroups: SummaryGroup[] }} BookDef
+ */
+/**
+ * 书运行态（main() 解析后：groups = prependGroups + SUMMARY 组，chapters 由 groups 收集）。
+ * 渲染/装配函数只接受运行态；使用点以「BookDef[] → Book[]」JSDoc 断言表达该承诺
+ * （纯类型断言，不改变运行时值）。
+ * @typedef {BookDef & { groups: SummaryGroup[], chapters: Chapter[] }} Book
  */
 /**
  * markdown-it 渲染规则（common/types/global.d.ts 的 markdown-it 存根未声明 renderer
@@ -63,12 +71,11 @@ const SITE_VERSION = require('../package.json').version;
  */
 
 /**
- * 书定义：key 即路由中的页签 key。
+ * 书定义（初始化态 BookDef[]）：key 即路由中的页签 key。
  * 教程书置顶插入「版本说明」组（version.md 不在 SUMMARY 内，标题带版本号）。
- * groups/chapters 由 main 解析填充，初始化字面量尚未含这两个字段，故按运行态
- * Book[] 断言（unknown 桥接为纯类型断言，不改变运行时值）。
+ * groups/chapters 由 main() 解析填充（态转换点与运行态视图见 main）。
  */
-const BOOKS = /** @type {Book[]} */ (/** @type {unknown} */ ([
+const BOOKS = /** @type {BookDef[]} */ ([
   {
     key: '教程',
     label: '教程',
@@ -90,9 +97,10 @@ const BOOKS = /** @type {Book[]} */ (/** @type {unknown} */ ([
     assetPrefix: 'devops-',
     prependGroups: []
   }
-]));
+]);
 
-// 第三个页签：开放Api（不渲染章节，点击后正文区 iframe 整页加载 /openapi-doc.html）
+// 第三个页签：开放Api（不渲染章节，点击后正文区 iframe 整页加载 /openapi-doc.html）。
+// 只贡献 key/label 两个字段（不具备 BookDef 的其余必填字段），页签清单按该结构面消费。
 const OPENAPI_TAB = { key: 'openapi', label: '开放Api' };
 
 /** @type {Record<string, string>} */
@@ -415,7 +423,8 @@ function rewriteLink(href, book, chapter) {
     if (book && book.chapters.some(function (c) { return c.fileKey === targetFile; })) {
       targetBook = book;
     } else {
-      targetBook = BOOKS.find(function (b) {
+      // 运行态视图断言（纯类型）：全局查书需要 chapters（main 解析后才存在）
+      targetBook = /** @type {Book[]} */ (BOOKS).find(function (b) {
         return b.chapters.some(function (c) { return c.fileKey === targetFile; });
       }) || null;
     }
@@ -526,7 +535,10 @@ function sidebarHtml(book) {
  * @returns {string}
  */
 function buildSiteHtml() {
-  const tabs = BOOKS.concat(/** @type {Book[]} */ ([OPENAPI_TAB]))
+  // 页签清单只消费 key/label：接收者按 Pick<BookDef,'key'|'label'> 收窄（对 BOOKS 是合法
+  // 上溯），不再把只含两字段的 OPENAPI_TAB 断言成 Book（缺多数必填字段的假陈述）。
+  const tabs = /** @type {Array<Pick<BookDef, 'key' | 'label'>>} */ (BOOKS)
+    .concat([OPENAPI_TAB])
     .map(function (tab) {
       return (
         '<a class="site-tab" href="#/' +
@@ -540,7 +552,8 @@ function buildSiteHtml() {
     })
     .join('\n');
 
-  const navs = BOOKS.map(function (book) {
+  // 运行态视图断言（纯类型）：本函数只由 main() 在 groups/chapters 填充后调用
+  const navs = /** @type {Book[]} */ (BOOKS).map(function (book) {
     return (
       '<nav class="book-nav" data-book="' +
       escapeHtml(book.key) +
@@ -550,7 +563,8 @@ function buildSiteHtml() {
     );
   }).join('\n');
 
-  const sections = BOOKS.map(function (book) {
+  // 同上：运行态视图断言（纯类型）
+  const sections = /** @type {Book[]} */ (BOOKS).map(function (book) {
     return book.chapters
       .map(function (chapter) {
         return (
@@ -752,7 +766,13 @@ ${sections}
 </div>
 <script>
 (function () {
-  var TABS = ${JSON.stringify(BOOKS.concat(/** @type {Book[]} */ ([OPENAPI_TAB])).map(function (t) { return t.key; }))};
+  var TABS = ${JSON.stringify(
+    /** @type {Array<Pick<BookDef, 'key' | 'label'>>} */ (BOOKS)
+      .concat([OPENAPI_TAB])
+      .map(function (t) {
+        return t.key;
+      })
+  )};
   var chapters = [].slice.call(document.querySelectorAll('.chapter'));
   var navItems = [].slice.call(document.querySelectorAll('.nav-item'));
   var tabs = [].slice.call(document.querySelectorAll('.site-tab'));
@@ -915,8 +935,9 @@ function main() {
   fs.rmSync(OUT_DIR, { recursive: true, force: true });
   fs.mkdirSync(ASSETS_DIR, { recursive: true });
 
-  // 解析两本书的 SUMMARY 树并收集章节
-  BOOKS.forEach(function (book) {
+  // 解析两本书的 SUMMARY 树并收集章节。本语句是初始化态 → 运行态的转换点：
+  // 断言后的视图自此处起 groups/chapters 必已存在（纯类型断言，无运行时影响）。
+  /** @type {Book[]} */ (BOOKS).forEach(function (book) {
     const summaryGroups = parseSummary(book.summary);
     book.groups = book.prependGroups.concat(summaryGroups);
     book.chapters = collectChapters(book.groups);
@@ -925,7 +946,8 @@ function main() {
   const md = createRenderer();
   /** @type {string[]} */
   const missing = [];
-  BOOKS.forEach(function (book) {
+  // 运行态视图断言（纯类型）：紧接转换点之后，groups/chapters 必已填充
+  /** @type {Book[]} */ (BOOKS).forEach(function (book) {
     book.chapters.forEach(function (chapter) {
       const file = path.join(book.srcDir, chapter.fileKey + '.md');
       if (!fs.existsSync(file)) {
@@ -940,8 +962,8 @@ function main() {
   const html = buildSiteHtml();
   fs.writeFileSync(path.join(OUT_DIR, 'index.html'), html);
 
-  // 统计与报告
-  BOOKS.forEach(function (book) {
+  // 统计与报告（运行态视图断言，纯类型）
+  /** @type {Book[]} */ (BOOKS).forEach(function (book) {
     const anchorCount = book.groups.reduce(function (sum, group) {
       return (
         sum +

@@ -1,3 +1,4 @@
+// @ts-check
 module.exports = {
     /**
      * 设置prettier单行输出（不折行）的（最大）长度。
