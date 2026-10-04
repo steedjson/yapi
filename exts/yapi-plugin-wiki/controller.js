@@ -264,6 +264,11 @@ class wikiController extends baseController {
     if (result && result.edit_uid !== 0 && result.edit_uid !== this.getUid()) {
       userInst = yapi.getInst(userModel);
       userinfo = await userInst.findById(result.edit_uid);
+    }
+    // 持锁人账号已删除时 findById 返回 null: 已删账号无法再通过 checkLogin 登录发起保存,
+    // 该锁不再保护任何真实编辑者, 永久滞留会让 wiki 对所有人只读; 故视为锁失效,
+    // 不进入 busy 分支, 落到下方 else 由当前打开者接管(自愈)。
+    if (userinfo) {
       data = {
         errno: result.edit_uid,
         data: { uid: result.edit_uid, username: userinfo.username }

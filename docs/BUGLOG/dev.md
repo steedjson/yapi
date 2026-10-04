@@ -2,6 +2,13 @@
 
 条目由 /csl-buglog 或人工维护,供 coder/reviewer 动手前核对
 
+## [2026-10-04][编辑锁] 持锁人账号被删:websocket 编辑锁崩溃 + 滞留(两处同形隐雷一并收口)
+- 现象: wiki `editorFunc` 与 interface `solveConflict`(两处 websocket 编辑冲突处理器)同形缺陷——持锁人 `edit_uid` 指向的账号被删除后,`findById` 返回 null → `userinfo.username` 崩溃;且锁滞留:interface 侧 TypeError 被 catch 吞掉 → websocket 零发送(前端 3 秒降级为可编辑,锁语义失效)、wiki 侧为**未处理拒绝**(async 消息监听器无内层兜底,Node ≥22 无全局 handler → 进程级风险);wiki 的 close 回调为空实现,锁滞留无自愈
+- 根因: 代码假设「edit_uid 指向的账号必然存在」,而账号删除与编辑锁的生命周期未对齐——已删账号无法通过 checkLogin 发起任何保存(checkLogin 对已删 uid 一律拒绝),其锁不保护任何真实编辑者
+- 修法: 两处同构——busy 判定改以「findById 解出的 userinfo 是否存在」为准;持有者不存在 → 走 else 分支移交锁(`upEditUid(文档id, 当前uid)` + errno 0)自愈;持有者存在/edit_uid=0/本人三态与修复前逐位一致(探针逐字节比对)。验证:10 例常驻回归(两处四态 + wiki null 短路 + 消息链路恰 1 帧断言,findById/upEditUid 调用记录反恒真)+「修复前必红」对照探针(wiki 抛 TypeError、interface 零发送);全量 1272 绿、产物零漂移
+- 关联: exts/yapi-plugin-wiki/controller.js、server/controllers/interface.js、test/exts/wikiEditorLockOrphan.test.js、test/server/interfaceSolveConflictOrphan.test.js、TECH_DEBT.md「四、11」
+- 复发: 0 次 · 教训: ①协作锁的持有者生命周期必须与账号生命周期对齐——「持有者账号已删 = 锁失效」,否则崩溃 + 文档永久只读双重缺陷;②同一隐雷实例成组出现(advanced-mock/list、wiki/editorFunc、interface/solveConflict 三处同形),一处发现后必须全仓扫同形一次清完;③「修复前必红」对照不得做成依赖 git 历史的常驻用例(CI 为浅克隆 fetch-depth 1,`git log/show` 回溯必失效)——以探针完成并留档,常驻套件只钉修复后行为;④websocket 处理链的未处理拒绝面(未知消息、Model.get null、fire-and-forget 写库无 catch)为既有同类面,已登记待专项批
+
 ## [2026-10-04][高级Mock] 「守卫被写成注释」的历史 fix 会留隐雷:list 的 userinfo 空值崩溃路径
 - 现象: `exts/yapi-plugin-advanced-mock/controller.js` 的 list 对每条用例执行 `result[i].username = userinfo.username` 且无守卫;用例创建者账号被删除后再访问该接口 → TypeError → 外层 catch 兜 400,整个期望列表不可读
 - 根因: git 史实——2018-06-26 的 `f986eb40`「fix: 用户从用户列表中删除后访问高级mock报错」把守卫写成**注释态**(`// if (userinfo) {` + `// }`)同时加了 try/catch,即以「崩溃转 400」冒充修复;守卫从未以活代码存在过;2026-10 注释清理批删除注释态残留后行为不变(守卫本就未执行),但文件内线索消失、隐雷仍活
