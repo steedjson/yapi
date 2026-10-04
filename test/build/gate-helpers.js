@@ -8,6 +8,8 @@
 //  listBuildScripts 未抽——改用本文件的 listCodeFiles 会改变既有断言的路径形态。）
 // 注：本文件不在任何 tsconfig 的 include 内（辅助代码不属于受检源码，marker 加在这里
 // tsc 也不会看），由仓库级 `eslint .` 覆盖其语法与正确性。
+// 批 D 加固：readJsonc 重写为单遍状态机（字符串内不剥尾随逗号；未闭合块注释/字符串
+// 响亮报错，不再静默截断），由 test/build/gate-helpers.test.js 直接单测锁死。
 
 const fs = require('fs');
 const path = require('path');
@@ -55,61 +57,89 @@ function hasTsCheckMarker(source) {
   return false;
 }
 
-// JSONC 容忍读取：剥 // 与 /* */ 注释（尊重字符串字面量，如 "build/**/*.js" 里的 `/*`
-// 序列不会被误判为块注释开始）后去掉尾随逗号再解析。
-// 尾随逗号处理是 JSONC 容错（评审 M-3）：当前两份 tsconfig 均无尾随逗号，保留该步骤是
-// 为了将来手写配置出现尾随逗号时不至于解析失败。
+// JSONC 容忍读取：单遍状态机，注释剥离与尾随逗号剥除在同一遍内完成。
+//   - 注释尊重字符串字面量：`"build/**/*.js"` 里的 `/*` 序列不会被误判为块注释开始；
+//   - 尾随逗号只在「字符串外」删除，且要求其后（跳过空白与注释——注释折算为空白后与
+//     纯空白等价）紧邻 `]`/`}`，字符串字面量内一切字符原样保留。旧实现分两步（先整段
+//     剥注释，再用全局正则 /,(\s*[\]}])/ 去尾随逗号），正则会命中字符串字面量：实测
+//     `{"glob": "a,}b"}` 被静默改写为 `{"glob":"a}b"}`（批 C 评审⑦登记的继承性弱点，
+//     本批加固并由 test/build/gate-helpers.test.js 回归钉死）；
+//   - 块注释未闭合、字符串未闭合一律 throw（消息含文件路径），不得静默截断：旧实现在
+//     未闭合块注释后若再无有效文本会丢弃 `/*` 到 EOF，前缀恰可解析时即静默返回残缺
+//     配置（实测 `{"include":["x"]}\n/* unclosed` → `{"include":["x"]}`，门禁读 tsconfig
+//     时存在假绿风险）；
+//   - 只做 JSONC 容错（注释 + 尾随逗号），不做语法扩展：单引号字符串仍由 JSON.parse 拒绝。
 function readJsonc(file) {
   const src = fs.readFileSync(file, 'utf8');
+  const at = '（文件：' + file + '）';
   let out = '';
   let quote = null;
-  let inLine = false;
-  let inBlock = false;
-  for (let i = 0; i < src.length; i++) {
+  // 待定尾随逗号在 out 中的下标（-1 为无）：逗号写出后只再写入空白（注释已折算为空白）
+  // 候选才保持；写入任何非空白字符即作废；遇到 ]/} 时若候选仍在，删掉该逗号。
+  let trailingComma = -1;
+  let i = 0;
+  while (i < src.length) {
     const c = src[i];
     const n = src[i + 1];
-    if (inLine) {
-      if (c === '\n') {
-        inLine = false;
-        out += c;
-      }
-      continue;
-    }
-    if (inBlock) {
-      if (c === '*' && n === '/') {
-        inBlock = false;
-        i++;
-      }
-      continue;
-    }
     if (quote) {
-      out += c;
       if (c === '\\') {
-        out += n;
-        i++;
-      } else if (c === quote) {
-        quote = null;
+        if (i + 1 >= src.length) {
+          throw new Error('readJsonc: 字符串未闭合' + at);
+        }
+        out += c + n;
+        i += 2;
+        continue;
       }
+      out += c;
+      if (c === quote) quote = null;
+      i++;
       continue;
     }
     if (c === '"' || c === "'") {
       quote = c;
       out += c;
-      continue;
-    }
-    if (c === '/' && n === '/') {
-      inLine = true;
+      trailingComma = -1;
       i++;
       continue;
     }
+    if (c === '/' && n === '/') {
+      const eol = src.indexOf('\n', i + 2);
+      if (eol === -1) break; // 行注释直到 EOF：其后已无内容可保留
+      i = eol; // 丢弃注释文本，仅保留换行（等价空白）
+      continue;
+    }
     if (c === '/' && n === '*') {
-      inBlock = true;
+      const end = src.indexOf('*/', i + 2);
+      if (end === -1) {
+        throw new Error('readJsonc: 块注释未闭合' + at);
+      }
+      out += ' '; // 折算为一个空格：分隔相邻 token，且不打断尾随逗号候选
+      i = end + 2;
+      continue;
+    }
+    if (c === ',') {
+      out += c;
+      trailingComma = out.length - 1;
+      i++;
+      continue;
+    }
+    if (c === ']' || c === '}') {
+      if (trailingComma !== -1) {
+        out = out.slice(0, trailingComma) + out.slice(trailingComma + 1);
+        trailingComma = -1;
+      }
+      out += c;
       i++;
       continue;
     }
     out += c;
+    if (c !== ' ' && c !== '\t' && c !== '\n' && c !== '\r') trailingComma = -1;
+    i++;
   }
-  return JSON.parse(out.replace(/,(\s*[\]}])/g, '$1'));
+  if (quote) {
+    throw new Error('readJsonc: 字符串未闭合' + at);
+  }
+  return JSON.parse(out);
 }
 
 // tsconfig include 的 glob → RegExp（只覆盖本仓库用到的形态：**、**/、*；不支持 `?`、
