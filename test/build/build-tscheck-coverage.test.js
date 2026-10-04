@@ -2,6 +2,10 @@ import test from 'ava';
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
+// 共享辅助（test/build/gate-helpers.js）：hasTsCheckMarker 是 marker 腿的唯一识别器，
+// readJsonc 是两份 tsconfig 的 JSONC 读取实现——与 scripts-tscheck-include-coverage.test.js
+// 共用同一份，避免同名不同实现的两套口径漂移。
+const { hasTsCheckMarker, readJsonc } = require('./gate-helpers');
 
 // 类型门禁的覆盖不变量（build/ 面 + scripts/ 面 + 批 B 根级配置面）。
 // 门禁有两条腿，缺一即静默脱检：
@@ -54,45 +58,6 @@ const ROOT_CONFIG_WHITELIST = [
 // tsconfig.build.json（nodenext 面）显式收口的 1 条（rsbuild 配置为 ESM，见该配置注释）：
 const NODENEXT_WHITELIST = ['rsbuild.config.mjs'];
 
-// TS 的 // @ts-check 识别语义（本机 TS 7.0.2 探针实测）：
-//   - 位置面逐条对齐：只认「首个非注释 token 之前」前导 trivia 中的 // 行注释（shebang
-//     可先行）；块注释内的 marker 不认（`/* @ts-check */` 与 jsdoc 式多行块注释均不识别）；
-//     代码（含 'use strict' 指令）之后再写 marker 一律不认——marker 会静默失效；
-//   - 拼写面为 TS 的保守子集（宁窄不宽）：`//@ts-check`、`//   @ts-check  ` 认，
-//     `// note: @ts-check`、`// @ts-check-extra` 不认；TS 另容忍 `///@ts-check` 前缀、
-//     大小写变体、`// @ts-check:` 等拼写，本函数不认——方向安全：所有「本函数认」的
-//     样本 TS 均认（实测 17/17），反向偏差只产生响亮误报，不存在把脱检文件判成
-//     已标记的静默漏洞。
-// 故本函数是唯一识别器，由下方「marker 识别语义自证」用正例/反例样本双向锁死。
-function hasTsCheckMarker(source) {
-  const text = source.replace(/^#![^\n]*\n/, '');
-  let i = 0;
-  while (i < text.length) {
-    const rest = text.slice(i);
-    const ws = /^\s+/.exec(rest);
-    if (ws) {
-      i += ws[0].length;
-      continue;
-    }
-    if (rest.startsWith('//')) {
-      const eol = rest.indexOf('\n');
-      const line = eol === -1 ? rest : rest.slice(0, eol);
-      if (/^\/\/\s*@ts-check(\s|$)/.test(line)) return true;
-      i += line.length;
-      continue;
-    }
-    if (rest.startsWith('/*')) {
-      // 块注释整体跳过：其内部即使含 @ts-check 也不被 TS 识别
-      const end = rest.indexOf('*/');
-      if (end === -1) break;
-      i += end + 2;
-      continue;
-    }
-    break; // 首个非注释 token：代码之后的 marker 不识别
-  }
-  return false;
-}
-
 // 递归枚举 build/ 下的脚本（与 tsconfig.build.json 的 build/**/*.js|*.mjs glob 同口径）。
 function listBuildScripts(dir = BUILD_DIR, acc = []) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true }).sort((a, b) =>
@@ -106,18 +71,6 @@ function listBuildScripts(dir = BUILD_DIR, acc = []) {
     }
   }
   return acc;
-}
-
-// tsconfig.json / tsconfig.build.json 带 JSONC 注释（仓库内只用整行 // 与尾随逗号），
-// 故先剥掉整行 // 注释、去掉尾随逗号再解析。
-function readJsonc(file) {
-  const stripped = fs
-    .readFileSync(file, 'utf8')
-    .split('\n')
-    .filter(line => !/^\s*\/\//.test(line))
-    .join('\n')
-    .replace(/,(\s*[\]}])/g, '$1');
-  return JSON.parse(stripped);
 }
 
 test('build/ 下除豁免清单外的每个 .js/.mjs 都带 // @ts-check（漏写即静默脱检）', t => {
@@ -270,11 +223,20 @@ test('@ts-check marker 识别与 TS 语义对齐（前导 trivia 内 // 注释�
 // 批 B 两条腿锁测：本批纳入门禁的根级配置白名单（7 条显式清单 + rsbuild 的 nodenext 面）
 // 必须同时满足 include ∧ marker——只写 include 会因缺 marker 脱检，只写 marker 会因
 // 不在 program 内脱检（后者见 test/build/scripts-tscheck-include-coverage.test.js 的同源实测）。
+// 说明：下方的 include 断言代理的是「include 列表成员」（对清单条目做字符串级命中），
+// 不是「program 成员」本身（今日 --listFiles 实测二者重合）；根级条目的完备性——未来
+// 新增根级代码文件不被本清单收录而逃逸——由 scripts-tscheck-include-coverage.test.js 的
+// 根级枚举测试兜底（枚举全部根级 .js/.jsx/.mjs/.cjs，不进清单即失败）。
+// 边界：清单内 2 条非根级条目（test/client/visual/prdRules.js 与 antd5Cascade.js）不在根级
+// 枚举覆盖内，其 include ∧ marker 仅由下方断言锁定——单删清单条目或单删 include 条目都会
+// 响亮失败，但「补偿式换血」（同删两处再另补条目凑数）不会被单独察觉；已知边界，登记在案。
 test('批 B 根级配置白名单逐条满足 include ∧ marker（rsbuild.config.mjs 走 nodenext 面）', t => {
   const mainInclude = readJsonc(MAIN_TSCONFIG).include;
   const buildInclude = readJsonc(BUILD_TSCONFIG).include;
 
   // 下限守卫：白名单本身不得为空（否则本断言退化为恒真）。
+  // 该 ≥7 下限的弱点（只锁「清单非空」，不锁「清单完备」——新增根级文件逃逸不在其覆盖
+  // 范围）已被 scripts-tscheck-include-coverage.test.js 的根级枚举测试覆盖，故保留不改。
   t.true(ROOT_CONFIG_WHITELIST.length >= 7, '批 B 白名单不得为空');
 
   for (const rel of [...ROOT_CONFIG_WHITELIST, ...NODENEXT_WHITELIST]) {
