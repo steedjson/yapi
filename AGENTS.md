@@ -24,11 +24,11 @@ Run from the repository root after installing dependencies with `npm install`:
 - `npm start`: start the production server.
 - `npm run install-server`: initialize installation data in the configured database; use only for setup.
 - `npm test`: run AVA tests.
-- `npm run docs`: build documentation with ydoc.
+- `npm run docs`: build the in-repo documentation site (`scripts/build-docs-site.js` → `static/docs/`).
 
 ## Coding Style & Naming Conventions
 
-Follow neighboring code and `.eslintrc.js` / `.prettierrc.js`. Prefer two-space indentation, semicolons, single quotes, and no trailing commas; Prettier specifies a 100-character print width. Use camelCase for JavaScript identifiers and PascalCase for component classes. ESLint includes React rules; no dedicated npm lint or format script exists. Avoid unrelated formatting changes.
+Follow neighboring code and `eslint.config.js` / `.prettierrc.js`. Prefer two-space indentation, semicolons, single quotes, and no trailing commas; Prettier specifies a 100-character print width. Use camelCase for JavaScript identifiers and PascalCase for component classes. ESLint (flat config) includes React rules; run `npm run lint` for the repo-wide check (no format script exists). Avoid unrelated formatting changes.
 
 ## Testing Guidelines
 

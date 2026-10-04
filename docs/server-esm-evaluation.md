@@ -35,7 +35,7 @@
 
 ### 5. 部署面
 
-- `node server/app.js`（start/pm2/devops 文档）、`install.js` 平行入口、nodemon watch——面小；若顶层切 `"type":"module"` 还会波及根目录 CJS 工具（ydoc.js、scripts/audit-check.js 等，需改名 .cjs）。
+- `node server/app.js`（start/pm2/devops 文档）、`install.js` 平行入口、nodemon watch——面小；若顶层切 `"type":"module"` 还会波及根目录 CJS 工具（babel.config.js、scripts/audit-check.js 等，需改名 .cjs）。
 
 ## 三、全量方案（A）的成本收益倒挂说明
 
