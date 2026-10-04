@@ -5,7 +5,7 @@
 // 产物转译为 static/index.html 消费的 window.WEBPACK_ASSETS 形状，补齐 .gz 预压缩，
 // 并写入初始 chunk 注入清单。
 //
-// 形状契约（与 webpack AssetsPlugin + clientBuildConfig.normalizeAssets 输出形状对齐）：
+// 形状契约（沿用 webpack AssetsPlugin 时代的清单形状，键名与裸文件名约定见下）：
 //   window.WEBPACK_ASSETS = {"manifest":{"js":...},"index.js":{"css":...,"js":...},
 //     "<chunk>":{"js":...}, ...}
 //   window.WEBPACK_INITIAL_CHUNKS = ["manifest", "<vendor chunk>", ..., "index.js"]

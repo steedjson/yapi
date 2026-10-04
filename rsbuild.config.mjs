@@ -28,7 +28,6 @@ import { pluginSass } from '@rsbuild/plugin-sass';
 const require = createRequire(import.meta.url);
 
 const paths = require('./build/paths.js');
-const clientBuildConfig = require('./build/clientBuildConfig.js');
 const packageInfo = require('./package.json');
 // 与 webpack 配置同源：define 值需要合并后的 WEBCONFIG（scriptEnable 等）。
 const yapi = require('./server/yapi.js');

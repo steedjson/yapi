@@ -2,6 +2,13 @@
 
 条目由 /csl-buglog 或人工维护,供 coder/reviewer 动手前核对
 
+## [2026-10-04][build/死文件] 「有人 require」≠「有人消费」:require 本身可能是死导入;lint 枚举目录会让根文件整片游离
+- 现象: 收口 §四.9 尾巴时复核 build/clientBuildConfig.js——唯一存活依据是 rsbuild.config.mjs:31 的 require,而它是**未使用导入**(全仓仅此一处引用 + 一个测试文件)。三个导出逐一溯源全部无消费方:getPluginExclude(webpack 时代 module.rules 排除项,webpack 已退役)、getDefineValues(被 rsbuild.config.mjs:43-49 就地重实现)、normalizeAssets(被 collectChunks/buildWebpackAssets live 重实现)
+- 根因: 三层近似判据叠加——① 迁移期批次记录写的是「因 rsbuild.config require 存活而保留」,只看了 require 存在、未验证该导入是否被使用;② lint 脚本枚举目录(client/ server/ common/ exts/ test/ scripts/…)不含仓库根,rsbuild.config.mjs 等 8 个根文件整片游离,no-unused-vars 对死导入形同虚设;③ eslint 9 平铺配置只给 files 命中的块挂规则,.mjs/.cjs 未显式并入时是「被 lint 但 0 规则」(实测 --print-config 规则数 0→85)
+- 修法: ① 删除死模块 + 孤儿测试(static/index.html 页面契约断言迁入 test/build/rsbuild-assets.test.js)+ 去死导入 + 注释去悬挂引用,重建 static/prd 聚合哈希逐字节一致(0 文件变动);② lint 改全仓 `eslint .`(config ignores 收敛),files 扩到 .js/.jsx/.mjs/.cjs,根级 8 文件与 build//scripts/ 的 .mjs/.cjs 一并受检(450 文件 0/0);③ 把「build 必须在 lint 范围、四类扩展名必须有规则、ignores 不得排除 build」锁进 test/build/build-tscheck-coverage.test.js。测试数 1211→1213
+- 关联: build/clientBuildConfig.js(已删)、test/common/clientBuildConfig.test.js(已删)、rsbuild.config.mjs:31、eslint.config.js、package.json(lint 脚本)、TECH_DEBT.md「四、9」与批次表 Rsbuild 阶段四行订正
+- 复发: 0 次 · 教训: 判活模块要看**导出面是否被调用**,而不是「有没有 require 它」——require 可能正是未被使用的死导入(尤其构建配置里 require 纯函数模块无副作用,删了也不报错);门禁广度同理:枚举目录的 lint 范围必然随时间漏掉新目录与根文件,能全仓就别枚举;平铺配置下「文件被 lint」不等于「规则生效」,纳入新扩展名后必须用 --print-config 看规则数,而不是看退出码
+
 ## [2026-10-04][依赖审计] 新 advisory 无修复版:门禁报红不可用 --force 降级换绿,「基线登记+复核触发条件」才是出口
 - 现象: 推送 build/ 类型门禁批次(be582ca4)后 CI 变红,失败步是 audit 基线差分门禁(high 0→9 / total 0→9,run 37179327896);9 项全部同源于单条 advisory——braces 栈耗尽 DoS(GHSA-vfj7-8cjw-p6xm,CWE-674,CVSS 7.5,深嵌套模式致栈溢出),影响 <=3.0.3(全部已发布版本),advisory 标注无 patched version
 - 根因: 上游新披露 advisory,与本批改动无关(上一轮 CI 2026-10-01 绿且 0 漏洞,窗口期新披露)。传导链三条全在 devDependencies:ava→globby→fast-glob→micromatch→braces、nodemon→chokidar→braces、patch-package→find-yarn-workspace-root→micromatch→braces。逃逸核查全灭:chokidar@4 移除 braces 但 nodemon 硬依赖 ^3.5.2;micromatch@4.0.8 仍依赖 braces ^3.0.3;生产链 npm audit --omit=dev 实测 0 项

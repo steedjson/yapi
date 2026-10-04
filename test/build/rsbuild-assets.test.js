@@ -321,3 +321,26 @@ test('extractInitialChunkFiles 正常提取：过滤非 js/css 并兼容 assets 
     ['manifest@a.js', 'index@b.js']
   );
 });
+
+// 生产页契约（自 test/common/clientBuildConfig.test.js 迁入：2026-10-04 该测试文件随零消费方
+// 死模块 build/clientBuildConfig.js 一并解散，页面契约与 assets.js 生产者同处一册）。
+// 页面契约比构建配置更稳定：阶段三分包交还构建工具后，初始 chunk 集合不再静态可知，
+// 生产页改为数据驱动注入（读 assets.js 写入的 WEBPACK_INITIAL_CHUNKS），不得再硬编码
+// 任何 chunk 键（旧契约的 manifest/lib3/lib2/lib/index 五段字面量已删除）。
+test('生产页数据驱动注入：读取初始 chunk 清单，不再硬编码 chunk 键', t => {
+  const html = fs.readFileSync(path.join(__dirname, '../../static/index.html'), 'utf8');
+  t.true(
+    html.indexOf('window.WEBPACK_INITIAL_CHUNKS') > -1,
+    '注入循环必须消费 WEBPACK_INITIAL_CHUNKS'
+  );
+  t.false(
+    /WEBPACK_ASSETS\[(['"])[^'"]+\1\]/.test(html),
+    '不得以字面量键直读 WEBPACK_ASSETS（仅允许 [key] 动态访问）'
+  );
+  for (const legacy of ['lib3', 'lib2', 'lib']) {
+    t.false(
+      new RegExp(`WEBPACK_ASSETS\\['${legacy}'\\]`).test(html),
+      `生产页不得硬编码手工 vendor 键 ${legacy}`
+    );
+  }
+});

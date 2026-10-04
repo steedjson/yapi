@@ -26,7 +26,11 @@ module.exports = [
     ]
   },
   {
-    files: ['**/*.js', '**/*.jsx'],
+    // 规则面显式覆盖四类脚本扩展名：平铺配置不会自动为未命中 files 的文件挂规则
+    // （--print-config 实测 .mjs/.cjs 规则数为 0）。lint 脚本为全仓 `eslint .`，
+    // 根级构建配置（rsbuild.config.mjs 等）与 build//scripts/ 的 .mjs/.cjs 一并受检，
+    // 避免「被 lint 但无规则」与「枚举目录漏掉根文件」两类静默游离。
+    files: ['**/*.js', '**/*.jsx', '**/*.mjs', '**/*.cjs'],
     languageOptions: {
       parser: babelParser,
       parserOptions: {
