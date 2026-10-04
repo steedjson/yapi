@@ -78,7 +78,6 @@ function postman(importDataModule) {
     let obj = {};
     let arr = [];
     for (let item in interData) {
-      // console.log(interData[item].url + "-" + interData[item].method);
       let key = interData[item].request.url + '|' + interData[item].request.method;
       if (!obj[key]) {
         arr.push(interData[item]);

@@ -219,7 +219,6 @@ const MockCol = () => {
       dataIndex: '_id',
       key: '_id',
       render: (/** @type {any} */ _id, /** @type {any} */ recode) => {
-        // console.log(recode)
         return (
           !isGuest && (
             <div>

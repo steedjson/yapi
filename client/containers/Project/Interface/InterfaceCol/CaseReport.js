@@ -5,7 +5,6 @@ import { Row, Col, Tabs } from 'antd';
  * @param {any} json
  */
 function jsonFormat(json) {
-  // console.log('json',json)
   if (json && typeof json === 'object') {
     return JSON.stringify(json, null, '   ');
   }

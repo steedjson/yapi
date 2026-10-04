@@ -250,6 +250,12 @@
 - **批 B 遗留小项（评审登记；① ② 已由批 C 收口，其余不阻塞）**：① ~~两个门禁测试各有一份 `readJsonc` 同名不同实现~~ → **已收口（批 C）**：抽共享 helper 四函数，两测试统一引用（build/ 面枚举因路径基差异刻意保留本地）；② ~~白名单 `>= 7` 下限弱点~~ → **已收口（批 C）**：根级完备性由枚举测试兜底（原下限保留不改，弱点已被覆盖）；③ marker 识别器为 TS 语义的保守子集（`///@ts-check`/大小写变体等 TS 认而识别器不认，方向安全=响亮误报）；④ `RspackConfigFace` 为「实参最小结构面」而非完整 `@rspack/core.Configuration`（注释已写明起因）；⑤ 新增断言代理 include 列表成员而非 program 成员（今日 `--listFiles` 实测重合 8/8）；⑥ 批 B 新增注解含数行 >100 列（仓库无行长门禁，prettier 不重排注释）；⑦ ~~**（批 C 评审新增）`readJsonc` 两处继承性弱点**：尾随逗号正则作用于整段已剥注释文本（字符串字面量内的 `,}`/`,]` 会被静默改写）、块注释未闭合且其后无有效 JSON 时静默截断前缀~~ → **已收口（批 D）**：readJsonc 重写为单遍状态机（逗号剥除仅限字符串外、跳空白/注释；未闭合块注释/字符串显式抛错且消息含路径）+ `test/build/gate-helpers.test.js` 14 例直测（两条旧缺陷回归钉经旧实现复跑确证非恒真）；两份真实 tsconfig 解析 sha256 与 HEAD 一致；已裁决剩余边界：CR-only 行尾文件的行注释仍静默截断（HEAD 继承、两份 tsconfig 实测 0 CR 字节，零现实影响，登记不改）；⑧ **（批 C 评审新增边界）** `test/client/visual/` 两条非根白名单条目的「补偿式换血」（同删清单与 include 再另补条目凑数）不会被单独察觉——单删任一腿均响亮失败，边界说明已写入测试注释。
 - **审计口径（供复用）**：判定「文件是否真受检」= ① 有 marker（TS 识别 shebang 后与前导注释块后的 marker，正则口径须实测对齐）∧ ② 在某个 tsconfig program 内（include 直列或命中 glob——`.mjs` 走 glob 可自动覆盖，`.js/.cjs` 走白名单须逐条维护）；二者缺一都是静默脱检。
 
+### 11. 注释态调试残留清零（2026-10-04，已完成）与「注释掉的历史代码」登记
+
+- **已完成**：全仓清洁度扫尾审计（代码面 TODO/FIXME=0、debugger=0、测试 only/skip=0、注释掉的语句=0）新发现一类残留——注释掉的调试代码：`// console.log(...)` 25 行 + 调试性 IO `// require('fs').writeFileSync('./a.*', ...)` 4 行，共 **29 行 / 16 文件**（client 4 / exts 6 / server 6），已删除（含 2 行紧邻空行连带）。验证：16 文件 AST 与非注释 token 流与 HEAD 全等（28,392 token 零差异，tester 独立复算，并以「复刻误删事故」的负向对照自证手法有效）、全量 **1232** 全绿、重建 `static/prd` 聚合哈希逐字节不变（bundle 零漂移，UI 面无可视变化）、冻结夹具 `test/fixtures/json-schema-editor-visual/utils.js` 的 1 处按纪律保留。**措辞口径：注释态调试残留清零（不含活跃日志——`console.log` 活跃调用如 mockServer:334、wiki:117 等 6 处为既有日志，`no-console: off` 无门禁压力，不在本批范围）**。实施中曾发生一次编辑事故（base.js 误删 `if (yapi.WEBCONFIG.closeRegister) {` 行）当批自查修复，终态 token 零差异，教训已入 BUGLOG。
+- **「注释掉的历史代码」登记（未清理，约 40+ 处）**：启发式初筛出注释态函数调用/赋值/JSX props（`// this.props.history.push(...)`、`// const newList = produce(...)`、`// dispatch(fetchInterfaceColList(...))`、Postman 注释 JSX props、`envTokenMethods.js` 的「去掉权限判断」整块等），混有大量散文假阳性（如 `// ajv(...)` 为说明文字）。处置建议：专项 triage 批逐条判（纯残留删除；带说明价值者改写为散文），或随触碰渐退；**不得按启发式批量删除**（假阳性率高）。
+- **可选补强（评审建议）**：冻结夹具目录仅有 eslint 豁免与行为等价测试兜底，无字节冻结门禁——未来清理若误删 `utils.js:104` 不会有门禁报红；可增一条夹具哈希冻结测试（对标 empty-module 的 sha256 钉）。
+
 ### 建议优先级（供裁决）
 
 1. ~~非 major 依赖安全批（swagger-client / qs / sha.js / underscore / @babel/core）+ audit 纳入门禁~~ → **已完成（commit 84cc30a5）**；audit 门禁接入方式待定（见第 1 节门禁建议）；

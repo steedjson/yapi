@@ -159,7 +159,6 @@ const {getToken} = require('../../utils/token');
    */
   async function getEnv(ctx) {
     try {
-      // console.log(ctx.request.query.project_id)
       let project_id = ctx.request.query.project_id;
       // let params = ctx.request.body;
       if (!project_id) {

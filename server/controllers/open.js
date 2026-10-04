@@ -228,7 +228,6 @@ class openController extends baseController {
     if (!this.$tokenAuth) {
       return (ctx.body = yapi.commons.resReturn(null, 406, '没有权限'));
     }
-    // console.log(1231312)
     const token = ctx.query.token;
 
     const projectId = ctx.params.project_id;
@@ -270,7 +269,6 @@ class openController extends baseController {
       item.after_script = projectData.after_script;
       item.env = projectEvn.env;
       let result;
-      // console.log('item',item.case_env)
       try {
         result = await this.handleTest(item);
       } catch (/** @type {any} */ err) {

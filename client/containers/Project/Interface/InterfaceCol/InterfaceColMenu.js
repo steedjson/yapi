@@ -358,7 +358,6 @@ export default function InterfaceColMenu(props) {
    */
   const showImportInterfaceModal = async colId => {
     // const projectId = this.props.match.params.id;
-    // console.log('project', this.props.curProject)
     const groupId = curProject.group_id;
     await fetchProjectList(groupId);
     // await dispatch(fetchInterfaceListMenu(projectId))
@@ -394,9 +393,7 @@ export default function InterfaceColMenu(props) {
    */
   const filterCol = e => {
     const value = e.target.value;
-    // console.log('list', interfaceColList);
     // const newList = produce(interfaceColList, draftList => {})
-    // console.log('newList',newList);
     patchState({
       filterValue: value,
       list: JSON.parse(JSON.stringify(interfaceColList))
@@ -526,7 +523,6 @@ export default function InterfaceColMenu(props) {
   };
 
   let currentKes = defaultExpandedKeys();
-  // console.log('currentKey', currentKes)
 
   /** @type {any} */
   let list = state.list;
@@ -549,14 +545,10 @@ export default function InterfaceColMenu(props) {
       arr.push('col_' + item._id);
       return true;
     });
-    // console.log('arr', arr);
     if (arr.length > 0) {
       currentKes.expands = arr;
     }
   }
-
-  // console.log('list', list);
-  // console.log('currentKey', currentKes)
 
   return (
     <div>

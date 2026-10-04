@@ -326,7 +326,6 @@ module.exports = async (ctx, next) => {
             body: ctx.request.body,
             params: Object.assign({}, ctx.request.query, ctx.request.body)
           });
-          // console.log('res',res)
         }
 
         try {

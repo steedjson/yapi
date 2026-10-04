@@ -175,11 +175,8 @@ class exportController extends baseController {
         markerPattern: /^\[toc\]/im
       });
 
-      // require('fs').writeFileSync('./a.markdown', md);
       let tp = unescape(markdown.render(md));
-      // require('fs').writeFileSync('./a.html', tp);
       let left;
-      // console.log('tp',tp);
       let content = tp.replace(
         /<div\s+?class="table-of-contents"\s*>[\s\S]*?<\/ul>\s*<\/div>/gi,
         function(match) {

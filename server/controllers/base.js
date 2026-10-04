@@ -196,7 +196,6 @@ class baseController {
    * @returns {Promise<boolean>}
    */
   async checkRegister() {
-    // console.log('config', yapi.WEBCONFIG);
     if (yapi.WEBCONFIG.closeRegister) {
       return false;
     } else {
@@ -209,7 +208,6 @@ class baseController {
    * @returns {Promise<boolean>}
    */
   async checkLDAP() {
-    // console.log('config', yapi.WEBCONFIG);
     if (!yapi.WEBCONFIG.ldapLogin) {
       return false;
     } else {

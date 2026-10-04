@@ -51,7 +51,6 @@ function postman(importDataModule) {
     let obj = {};
     let arr = [];
     for (let item in interData) {
-      // console.log(interData[item].url + "-" + interData[item].method);
       if (!obj[interData[item].url + '-' + interData[item].method + '-' + interData[item].method]) {
         arr.push(interData[item]);
         obj[

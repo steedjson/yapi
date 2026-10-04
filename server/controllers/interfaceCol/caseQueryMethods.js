@@ -275,7 +275,6 @@ const yapi = requireAny('../../yapi.js');
     let hash = {};
     let arr = array.reduce(function(/** @type {any} */ item, /** @type {any} */ next) {
       hash[next[compare]] ? '' : (hash[next[compare]] = item.push(next));
-      // console.log('item',item.project_id)
       return item;
     }, []);
     // 输出去重以后的project_id

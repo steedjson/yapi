@@ -270,7 +270,6 @@ class interfaceController extends baseController {
           return;
         }
       }
-      // console.log('result', result);
       if (!result) {
         return (ctx.body = yapi.commons.resReturn(null, 490, '不存在的'));
       }
@@ -750,7 +749,6 @@ class interfaceController extends baseController {
     let res = await yapi.commons.schemaToJson(schema, {
       alwaysFakeOptionals: required === undefined ? true : required
     });
-    // console.log('res',res)
     return (ctx.body = res);
   }
 

@@ -67,7 +67,6 @@ const WikiPage = () => {
 
   // 处理多人编辑冲突问题
   const handleConflict = () => {
-    // console.log(location)
     let domain = location.hostname + (location.port !== '' ? ':' + location.port : '');
     //因后端 node 仅支持 ws， 暂不支持 wss
     let wsProtocol = location.protocol === 'https:' ? 'wss' : 'ws';

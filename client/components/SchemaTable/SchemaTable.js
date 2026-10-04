@@ -37,7 +37,6 @@ const columns = [
     key: 'type',
     width: 100,
     render: (/** @type {any} */ text, /** @type {any} */ item) => {
-      // console.log('text',item.sub);
       return text === 'array' ? (
         <span>{item.sub ? item.sub.itemType || '' : 'array'} []</span>
       ) : (

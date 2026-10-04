@@ -378,8 +378,6 @@ const InterfaceList = () => {
 
   const isDisabled = catList.length === 0;
 
-  // console.log(curProject.tag)
-
   return (
     <div style={{ padding: '24px' }}>
       <h2 className="interface-title" style={{ display: 'inline-block', margin: 0 }}>
