@@ -2,6 +2,13 @@
 
 条目由 /csl-buglog 或人工维护,供 coder/reviewer 动手前核对
 
+## [2026-10-08][已裁决·勿改] swagger_url 服务端抓取任意 URL(SSRF 面):产品裁定维持现状,仅登记风险
+- 现象: `GET /api/project/swagger_url?url=<任意>` 让服务端 `axios.get(url)` 抓取任意地址（同类面另有 `exts/yapi-plugin-swagger-auto-sync` 的 `getSwaggerContent`）;全仓无 SSRF 防护（无协议白名单/内网黑名单）
+- 根因: 该端点的功能本质就是「用户给地址、服务端代抓 swagger 文档」——内网部署场景下抓内网地址是**功能诉求**而非缺陷;故不存在「漏加校验」的根因,属功能边界与安全边界的权衡
+- 裁决: **用户裁定（2026-10-08）：维持现状、仅登记风险、零代码改动**。依据:本仓库为内网部署形态（`docs/devops/` 部署文档面向内网自建）,端点可达前提是已过登录态鉴权（非匿名可达）,实际暴露面限于「已登录用户探测内网」,风险等级低;加限制会改变功能边界
+- 关联: server/controllers/project.js(swaggerUrl)、exts/yapi-plugin-swagger-auto-sync/interfaceSyncUtils.js(getSwaggerContent)、TECH_DEBT.md「四、13」
+- 复发: 0 次 · 教训: ①**这是已裁决的接受风险,后续审计/评审不得再按缺陷上报或"顺手加固"**——安全审计发现的问题需先区分「缺陷」与「功能边界的权衡」,后者属产品决策;②若未来安全需求升级,候选方案已评估留档（限协议 http/https、内网网段黑名单配置化开关）,届时按新需求重新裁决
+
 ## [2026-10-04][鉴权] 全端点授权面审计:log 两端点越权读(自报 typeid 无域判定),同类漏洞须一次扫净
 - 现象: 承接 get_env 教训做全端点授权面系统审计（router.js 枚举 + 逐控制器核对项目/分组域判定），发现 `server/controllers/log.js` 两端点同型缺陷——`list`(GET /api/log/list) 与 `listByUpdate`(POST /api/log/list_by_update) 均按请求方**自报的 typeid** 直接查询，无任何域判定：任意登录用户可读他人项目/分组的操作日志（含项目名/操作内容/用户名）与接口变更记录（含路径与方法）
 - 根因: 与 get_env 同源——端点被当作「按 id 查数据」的纯查询实现，未把「id 属于谁的域」纳入；且 `listByUpdate` 的窄投影只取 `basepath`，即便想判定也取不到 `project_type`（投影面与判定需求不匹配）
