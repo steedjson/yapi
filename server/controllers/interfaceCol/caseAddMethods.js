@@ -100,7 +100,7 @@ const yapi = requireAny('../../yapi.js');
           typeid: params.project_id
         });
       });
-      this.projectModel.up(params.project_id, { up_time: new Date().getTime() }).then();
+      yapi.commons.fireAndForget(this.projectModel.up(params.project_id, { up_time: new Date().getTime() }), 'project up_time');
 
       ctx.body = yapi.commons.resReturn(result);
     } catch (/** @type {any} */ e) {
@@ -208,7 +208,7 @@ const yapi = requireAny('../../yapi.js');
         });
       }
 
-      this.projectModel.up(params.project_id, { up_time: new Date().getTime() }).then();
+      yapi.commons.fireAndForget(this.projectModel.up(params.project_id, { up_time: new Date().getTime() }), 'project up_time');
 
       ctx.body = yapi.commons.resReturn('ok');
     } catch (/** @type {any} */ e) {
@@ -314,7 +314,7 @@ const yapi = requireAny('../../yapi.js');
         newCaseList.push(newCase._id);
       }
 
-      this.projectModel.up(params.project_id, { up_time: new Date().getTime() }).then();
+      yapi.commons.fireAndForget(this.projectModel.up(params.project_id, { up_time: new Date().getTime() }), 'project up_time');
       ctx.body = yapi.commons.resReturn('ok');
     } catch (/** @type {any} */ e) {
       ctx.body = yapi.commons.resReturn(null, 402, e.message);

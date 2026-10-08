@@ -12,10 +12,16 @@ process.env.NODE_PATH = path.join(__dirname, '../../server');
 Module._initPaths();
 
 const yapi = require('../../server/yapi.js');
+const commons = require('../../server/utils/commons.js');
 const userModel = require('../../server/models/user.js');
 const wikiController = require('../../exts/yapi-plugin-wiki/controller.js');
 
 const MY_UID = 5;
+
+test.before('挂载真实 commons 到 yapi 单例', () => {
+  // wikiConflict 的内层兜底依赖 yapi.commons.log，测试环境手动挂载真实工具模块
+  yapi.commons = commons;
+});
 
 // 持锁人 uid=42 的文档：① 持锁人存在为 busy 态，② 持锁人账号已删（findById→null）为自愈态
 const LOCKED_DOC = { _id: 7, edit_uid: 42, desc: 'wiki-正文' };
@@ -144,4 +150,66 @@ test.serial('wikiConflict 消息链路：持锁人账号已删恰 1 帧 errno 0 
   t.is(h.frames.length, 1, '恰 1 帧');
   t.deepEqual(JSON.parse(h.frames[0]), { errno: 0, data: LOCKED_DOC });
   t.deepEqual(h.calls.upEditUid, [[7, MY_UID]]);
+});
+
+test.serial('websocketMsgMap：未知消息返回 undefined 而非抛 TypeError（协议噪音守卫）', async t => {
+  const calls = { upEditUid: [] };
+  const inst = Object.create(wikiController.prototype);
+  inst.$uid = String(MY_UID);
+  inst.Model = {
+    upEditUid: async (id, uid) => {
+      calls.upEditUid.push([id, uid]);
+    }
+  };
+
+  // 客户端只发 start/end/editor；未知键原实现直接调用 map[msg] 抛 TypeError，
+  // 且抛点在异步 handler 内（未处理拒绝面）——现返回 undefined，由调用方跳过发送。
+  t.is(inst.websocketMsgMap('unknown-msg', LOCKED_DOC), undefined);
+  t.is(inst.websocketMsgMap('__proto__', LOCKED_DOC), undefined, '原型键同样不得命中');
+  t.is(
+    inst.websocketMsgMap('toString', LOCKED_DOC),
+    undefined,
+    '继承属性（Object.prototype.toString 是函数）同样不得命中——须用 hasOwnProperty 判定'
+  );
+  t.deepEqual(calls.upEditUid, [], '未知消息不得触达任何写库');
+
+  // 合法键仍正常路由（end 分支：不查 user 表、仅清锁）
+  await inst.websocketMsgMap('end', { _id: 7, edit_uid: 42 });
+  t.deepEqual(calls.upEditUid, [[7, 0]], 'end 分支清锁语义不变');
+});
+
+test.serial('wikiConflict：handler 内异常被内层兜底吸收（不外泄为未处理拒绝）', async t => {
+  const frames = [];
+  const handlers = {};
+  const logs = [];
+  const realLog = yapi.commons.log;
+  yapi.commons.log = (msg, type) => logs.push([msg, type]);
+  t.teardown(() => {
+    yapi.commons.log = realLog;
+  });
+
+  const inst = Object.create(wikiController.prototype);
+  inst.$uid = String(MY_UID);
+  inst.Model = {
+    // 模拟 DB 异常：外层 try/catch 覆盖不到异步 handler（回调在 try 块返回后才执行）
+    get: async () => {
+      throw new Error('db-down');
+    }
+  };
+  const ctx = {
+    query: { id: '7' },
+    websocket: {
+      on: (event, handler) => {
+        handlers[event] = handler;
+      },
+      send: frame => frames.push(frame)
+    }
+  };
+
+  await inst.wikiConflict(ctx);
+  // 内层兜底：handler 调用本身不得 reject（修复前会以未处理拒绝外泄，Node ≥22 杀进程）
+  await t.notThrowsAsync(() => handlers.message('editor'));
+  t.is(frames.length, 0, '异常路径不发送任何帧');
+  t.is(logs.length, 1, '异常被记录为一条 error 日志');
+  t.is(logs[0][1], 'error');
 });

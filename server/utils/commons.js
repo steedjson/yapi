@@ -689,6 +689,21 @@ exports.validateParams = (schema2, params) => {
 };
 
 /**
+ * 后台副作用（fire-and-forget）统一出口：调用方不等待、也不关心结果，但**失败必须被吸收**。
+ * 全仓约 20 处「操作后顺带写库/触发钩子」属此类：其失败不应影响已完成的请求，
+ * 更不应成为未处理拒绝（Node ≥22 默认直接终止进程，全仓无进程级兜底）。
+ * 语义：不改变调用时序（立即返回），仅把拒绝转为 error 日志。
+ * @param {Promise<any>} promise 待吸收的后台任务
+ * @param {string} [label] 日志前缀，便于定位来源（缺省 'fire-and-forget'）
+ * @returns {void}
+ */
+exports.fireAndForget = (promise, label) => {
+  Promise.resolve(promise).catch((/** @type {any} */ err) => {
+    yapi.commons.log((label || 'fire-and-forget') + ': ' + ((err && err.message) || err), 'error');
+  });
+};
+
+/**
  * 保存操作日志
  * @param {any} logData 日志数据, 含 content / type / uid / username / typeid / data
  * @returns {void}
@@ -705,7 +720,7 @@ exports.saveLog = logData => {
       data: logData.data
     };
 
-    logInst.save(data).then();
+    exports.fireAndForget(logInst.save(data), 'saveLog');
   } catch (e) {
     yapi.commons.log(e, 'error');
   }

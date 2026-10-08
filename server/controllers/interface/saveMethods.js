@@ -132,7 +132,7 @@ const clearProjectCategoryCache = require('./cacheHelper.js');
 
     let result = await this.Model.save(data);
     clearProjectCategoryCache(params.project_id);
-    yapi.emitHook('interface_add', result).then();
+    yapi.commons.fireAndForget(yapi.emitHook('interface_add', result), 'interface_add hook');
     this.catModel.get(params.catid).then((/** @type {any} */ cate) => {
       if (!cate) return;
       let username = this.getUsername();

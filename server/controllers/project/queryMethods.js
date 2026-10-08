@@ -86,7 +86,7 @@ const interfaceCatModel = requireAny('../../models/interfaceCat.js');
     }
     result.role = await this.getProjectRole(params.id, 'project');
 
-    yapi.emitHook('project_get', result).then();
+    yapi.commons.fireAndForget(yapi.emitHook('project_get', result), 'project_get hook');
     ctx.body = yapi.commons.resReturn(result);
   }
 

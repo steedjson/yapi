@@ -89,7 +89,7 @@ const yapi = requireAny('../../yapi.js');
         total: limit === 'all' ? 1 : Math.ceil(count / parseInt(limit, 10)),
         list: result
       });
-      yapi.emitHook('interface_list', result).then();
+      yapi.commons.fireAndForget(yapi.emitHook('interface_list', result), 'interface_list hook');
     } catch (/** @type {any} */ err) {
       ctx.body = yapi.commons.resReturn(null, 402, err.message);
     }

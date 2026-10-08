@@ -251,7 +251,7 @@ class projectController extends baseController {
       username: username,
       typeid: result._id
     });
-    yapi.emitHook('project_add', result).then();
+    yapi.commons.fireAndForget(yapi.emitHook('project_add', result), 'project_add hook');
     ctx.body = yapi.commons.resReturn(result);
   }
 
@@ -407,7 +407,7 @@ class projectController extends baseController {
     await interfaceCaseInst.delByProjectId(id);
     await interfaceColInst.delByProjectId(id);
     await this.followModel.delByProjectId(id);
-    yapi.emitHook('project_del', id).then();
+    yapi.commons.fireAndForget(yapi.emitHook('project_del', id), 'project_del hook');
     let result = await this.Model.del(id);
     ctx.body = yapi.commons.resReturn(result);
   }
@@ -540,7 +540,7 @@ class projectController extends baseController {
         username: username,
         typeid: id
       });
-      yapi.emitHook('project_up', result).then();
+      yapi.commons.fireAndForget(yapi.emitHook('project_up', result), 'project_up hook');
       ctx.body = yapi.commons.resReturn(result);
     } catch (/** @type {any} */ e) {
       ctx.body = yapi.commons.resReturn(null, 402, e.message);

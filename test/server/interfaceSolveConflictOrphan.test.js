@@ -49,6 +49,7 @@ function createHarness(opts) {
   };
   const ctx = {
     // id 以字符串形态下发，钉死 parseInt(ctx.query.id, 10) 归一化后的调用参数
+    // （doc 为 null 的用例需显式传 queryId——不能从 doc._id 推导）
     query: { id: opts.queryId === undefined ? String(opts.doc._id) : opts.queryId },
     websocket: {
       send: frame => calls.sends.push(frame),
@@ -119,4 +120,23 @@ test.serial('solveConflict ④ edit_uid=0（无锁）：走 else，锁写回本�
   t.deepEqual(calls.getInst, []);
   t.deepEqual(calls.findById, []);
   t.deepEqual(calls.upEditUid, [[77, MY_UID]]);
+});
+
+test.serial('solveConflict ⑤ 接口不存在（Model.get→null）：回错误帧而非静默零发送', async t => {
+  const { inst, ctx, calls } = createHarness({
+    uid: MY_UID,
+    doc: null,
+    holder: BUSY_HOLDER,
+    queryId: '77'
+  });
+  await inst.solveConflict(ctx);
+
+  // 修复前：result 为 null → 下行 result.edit_uid 抛错被 catch 吞 → 零发送，
+  // 前端只能等 3 秒超时降级（锁语义失效且无提示）。现回一帧 errno 0 + data null。
+  const frame = parseSingleFrame(t, calls.sends);
+  t.is(frame.errno, 0, 'errno 0 让前端立即进入可编辑态（不再等待超时）');
+  t.is(frame.data, null);
+  t.deepEqual(calls.getInst, [], 'null 文档不查 user 表');
+  t.deepEqual(calls.findById, []);
+  t.deepEqual(calls.upEditUid, [], 'null 文档不写锁');
 });

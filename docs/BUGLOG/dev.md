@@ -2,6 +2,13 @@
 
 条目由 /csl-buglog 或人工维护,供 coder/reviewer 动手前核对
 
+## [2026-10-04][未处理拒绝] 20 处 fire-and-forget 裸 .then() + ws 异步 handler 无内层兜底:全仓无进程级兜底,后台失败即杀进程
+- 现象: 全仓 20 处「操作后顺带写库/触发钩子」写作 `.then();`（无 catch）;`emitHook` 会把插件监听器异常以拒绝形式透出,而全仓无 `unhandledRejection`/`uncaughtException` 兜底——Node ≥22 默认未处理拒绝即终止进程（实测:仅一个被拒绝的 promise 就让进程 exit=1）。另两处 ws 缺陷:interface `solveConflict` 在 `Model.get` 返回 null（接口已删）时 `result.edit_uid` 抛错被 catch 吞掉 → websocket 一帧不发、前端只能等 3 秒超时降级;wiki `wikiConflict` 的异步 message handler 抛错会外泄为未处理拒绝（外层 try 覆盖不到异步回调）
+- 根因: ①「顺带做」的副作用被当作可忽略——作者本意是不阻塞主流程,但用 `.then();` 表达等于把失败升级为进程级事故;②ws 处理器把 try/catch 写在了注册处（同步段）而业务逻辑在异步回调里,防护错位;③`websocketMsgMap` 用 `map[msg]` 直接调用,未知消息 TypeError
+- 修法: ① 新增 `commons.fireAndForget(promise, label)` 单一出处（不改变调用时序、拒绝转 error 日志）,20 处站点全量改造,并加**「server/ 与 exts/ 下无裸 `.then();`」不变量锁测**（含检索面非空反恒真守卫）;②interface null 分支回错误帧 `{errno:0,data:null,errmsg:'接口不存在，已取消编辑锁'}`（前端立即进入可编辑态,不再等超时）;③wiki 异步 handler 补内层 try/catch + 未知消息守卫——**守卫必须用 `Object.prototype.hasOwnProperty.call(map, msg)`**:仅查 `typeof map[msg] !== 'function'` 会被继承属性穿透（`'toString'` 是 Object.prototype 的函数,`map['toString']` 返回函数、`__proto__` 同理）,该缺口由本批测试实测发现并修正
+- 关联: server/utils/commons.js(fireAndForget)、server/controllers/{interface.js,interfaceCol/*,project.js,project/queryMethods.js,interface/*}、exts/yapi-plugin-statistics/server.js、exts/yapi-plugin-wiki/controller.js、test/server/fire-and-forget.test.js、TECH_DEBT.md「四、11」
+- 复发: 0 次 · 教训: ①「后台失败不该影响主流程」的正确表达是**显式吸收**（`.catch` 或统一助手）,不是 `.then();` 裸奔——尤其在全仓无进程级兜底时,一行裸 then 等于一个进程级隐患;②用不变量测试把「不得再出现裸 `.then();`」锁死（比逐处 review 可靠,新增站点即报红）;③ws/异步回调的 try/catch 必须写在**回调内部**,写在注册处等于没写（防护错位）;④对象字面量的成员守卫必须用 `hasOwnProperty` 判定,`typeof obj[key] === 'function'` 会被 `toString`/`__proto__` 等继承键穿透——这是本轮测试抓到、肉眼 review 会漏的真实缺口
+
 ## [2026-10-04][编辑锁] 持锁人账号被删:websocket 编辑锁崩溃 + 滞留(两处同形隐雷一并收口)
 - 现象: wiki `editorFunc` 与 interface `solveConflict`(两处 websocket 编辑冲突处理器)同形缺陷——持锁人 `edit_uid` 指向的账号被删除后,`findById` 返回 null → `userinfo.username` 崩溃;且锁滞留:interface 侧 TypeError 被 catch 吞掉 → websocket 零发送(前端 3 秒降级为可编辑,锁语义失效)、wiki 侧为**未处理拒绝**(async 消息监听器无内层兜底,Node ≥22 无全局 handler → 进程级风险);wiki 的 close 回调为空实现,锁滞留无自愈
 - 根因: 代码假设「edit_uid 指向的账号必然存在」,而账号删除与编辑锁的生命周期未对齐——已删账号无法通过 checkLogin 发起任何保存(checkLogin 对已删 uid 一律拒绝),其锁不保护任何真实编辑者

@@ -258,7 +258,7 @@ let diffCssCache = null;
       });
     }
 
-    yapi.emitHook('interface_update', id).then();
+    yapi.commons.fireAndForget(yapi.emitHook('interface_update', id), 'interface_update hook');
     // 编辑表单不回传 project_id，autoAddTag 依赖它查询项目注册新 tag，须从已查出的接口文档补齐
     await this.autoAddTag(Object.assign({}, params, { project_id: interfaceData.project_id }));
 

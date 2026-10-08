@@ -78,7 +78,7 @@ const yapi = requireAny('../../yapi.js');
         });
       });
 
-      this.projectModel.up(caseData.project_id, { up_time: new Date().getTime() }).then();
+      yapi.commons.fireAndForget(this.projectModel.up(caseData.project_id, { up_time: new Date().getTime() }), 'project up_time');
 
       ctx.body = yapi.commons.resReturn(result);
     } catch (/** @type {any} */ e) {
@@ -171,7 +171,7 @@ const yapi = requireAny('../../yapi.js');
         });
       });
 
-      this.projectModel.up(caseData.project_id, { up_time: new Date().getTime() }).then();
+      yapi.commons.fireAndForget(this.projectModel.up(caseData.project_id, { up_time: new Date().getTime() }), 'project up_time');
       return (ctx.body = yapi.commons.resReturn(result));
     } catch (/** @type {any} */ e) {
       return (ctx.body = yapi.commons.resReturn(null, 400, e.message));

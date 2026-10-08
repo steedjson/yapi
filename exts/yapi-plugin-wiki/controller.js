@@ -204,14 +204,20 @@ class wikiController extends baseController {
     try {
       let result;
       ctx.websocket.on('message', async (/** @type {any} */ message) => {
-        let id = parseInt(ctx.query.id, 10);
-        if (!id) {
-          return ctx.websocket.send('id 参数有误');
-        }
-        result = await this.Model.get(id);
-        let data = await this.websocketMsgMap(message, result);
-        if (data) {
-          ctx.websocket.send(JSON.stringify(data));
+        // 内层兜底：外层 try/catch 覆盖不到异步 handler（回调在 try 块返回后才执行），
+        // 未捕获拒绝在 Node ≥22 会直接终止进程（全仓无进程级兜底）。
+        try {
+          let id = parseInt(ctx.query.id, 10);
+          if (!id) {
+            return ctx.websocket.send('id 参数有误');
+          }
+          result = await this.Model.get(id);
+          let data = await this.websocketMsgMap(message, result);
+          if (data) {
+            ctx.websocket.send(JSON.stringify(data));
+          }
+        } catch (/** @type {any} */ err) {
+          yapi.commons.log(err, 'error');
         }
       });
       ctx.websocket.on('close', async () => {});
@@ -232,6 +238,14 @@ class wikiController extends baseController {
       editor: this.editorFunc.bind(this)
     };
 
+    // 未知消息守卫：原实现直接调用 map[msg] 对未知键抛 TypeError，
+    // 且该抛错发生在异步 handler 内（未处理拒绝面）。客户端仅发
+    // start/end/editor 三种，未知消息视为协议噪音，忽略即可。
+    // 用 hasOwnProperty 判定：map 是对象字面量，'toString'/'__proto__' 等继承键
+    // 同样 typeof === 'function'，仅查 typeof 会被继承属性穿透。
+    if (!Object.prototype.hasOwnProperty.call(map, msg) || typeof map[msg] !== 'function') {
+      return undefined;
+    }
     return map[msg](result);
   }
 

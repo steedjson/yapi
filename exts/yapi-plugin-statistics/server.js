@@ -82,7 +82,7 @@ module.exports = function() {
     let inst = yapi.getInst(statisModel);
 
     try {
-      inst.save(data).then();
+      yapi.commons.fireAndForget(inst.save(data), 'statis_mock save');
     } catch (e) {
       yapi.commons.log('mockStatisError', e);
     }

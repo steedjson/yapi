@@ -282,7 +282,7 @@ class interfaceController extends baseController {
           return (ctx.body = yapi.commons.resReturn(null, 406, '没有权限'));
         }
       }
-      yapi.emitHook('interface_get', result).then();
+      yapi.commons.fireAndForget(yapi.emitHook('interface_get', result), 'interface_get hook');
       result = result.toObject();
       if (userinfo) {
         result.username = userinfo.username;
@@ -348,7 +348,7 @@ class interfaceController extends baseController {
 
       let result = await this.Model.del(id);
       clearProjectCategoryCache(data.project_id);
-      yapi.emitHook('interface_del', id).then();
+      yapi.commons.fireAndForget(yapi.emitHook('interface_del', id), 'interface_del hook');
       await this.caseModel.delByInterfaceId(id);
       let username = this.getUsername();
       this.catModel.get(data.catid).then((/** @type {any} */ cate) => {
@@ -366,7 +366,7 @@ class interfaceController extends baseController {
         // 日志分类读取失败不能影响接口删除结果。
         yapi.commons.log(err, 'error');
       });
-      this.projectModel.up(data.project_id, { up_time: new Date().getTime() }).then();
+      yapi.commons.fireAndForget(this.projectModel.up(data.project_id, { up_time: new Date().getTime() }), 'project up_time');
       ctx.body = yapi.commons.resReturn(result);
     } catch (/** @type {any} */ err) {
       ctx.body = yapi.commons.resReturn(null, 402, err.message);
@@ -388,6 +388,14 @@ class interfaceController extends baseController {
         return ctx.websocket.send('id 参数有误');
       }
       result = await this.Model.get(id);
+      // 接口不存在（已删/非法 id）：原先 result 为 null 会在下行 result.edit_uid 抛错、
+      // 被 catch 吞掉 → websocket 一帧不发，前端只能靠 3 秒超时降级（锁语义失效且无提示）。
+      // 改为回一帧错误帧，让前端立即进入可编辑态。
+      if (!result) {
+        return ctx.websocket.send(
+          JSON.stringify({ errno: 0, data: null, errmsg: '接口不存在，已取消编辑锁' })
+        );
+      }
 
       if (result.edit_uid !== 0 && result.edit_uid !== this.getUid()) {
         userInst = yapi.getInst(userModel);
@@ -402,7 +410,7 @@ class interfaceController extends baseController {
           data: { uid: result.edit_uid, username: userinfo.username }
         };
       } else {
-        this.Model.upEditUid(id, this.getUid()).then();
+        yapi.commons.fireAndForget(this.Model.upEditUid(id, this.getUid()), 'upEditUid acquire');
         data = {
           errno: 0,
           data: result
@@ -410,7 +418,7 @@ class interfaceController extends baseController {
       }
       ctx.websocket.send(JSON.stringify(data));
       ctx.websocket.on('close', () => {
-        this.Model.upEditUid(id, 0).then();
+        yapi.commons.fireAndForget(this.Model.upEditUid(id, 0), 'upEditUid release');
       });
     } catch (/** @type {any} */ err) {
       yapi.commons.log(err, 'error');
@@ -473,7 +481,7 @@ class interfaceController extends baseController {
       }
       clearProjectCategoryCache(catData.project_id);
       for (const item of interfaceData) {
-        yapi.emitHook('interface_del', item._id).then();
+        yapi.commons.fireAndForget(yapi.emitHook('interface_del', item._id), 'interface_del hook');
         await this.caseModel.delByInterfaceId(item._id);
       }
       let r = { deletedCategories: catIds.length, deletedInterfaces: interfaceData.length };
