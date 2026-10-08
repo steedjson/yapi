@@ -66,6 +66,23 @@ class logController extends baseController {
       return (ctx.body = yapi.commons.resReturn(null, 400, 'type不能为空'));
     }
     try {
+      // 项目域可见性判定（对齐 project.get / interface.list 的 view 级口径）：
+      // typeid 是请求方自报的分组/项目 id，此前无任何域判定——任意登录用户可读
+      // 他人项目/分组的操作日志（含项目名、操作内容、用户名）。公开项目放行，
+      // 私有项目/分组需 view 级成员（含 guest）。
+      if (type === 'group') {
+        const groupAuth = await this.checkAuth(typeid, 'group', 'view');
+        if (groupAuth !== true) {
+          return (ctx.body = yapi.commons.resReturn(null, 406, '没有权限'));
+        }
+      } else if (type === 'project') {
+        const projectData = await this.projectModel.getBaseInfo(typeid, 'project_type');
+        if (projectData && projectData.project_type === 'private') {
+          if ((await this.checkAuth(typeid, 'project', 'view')) !== true) {
+            return (ctx.body = yapi.commons.resReturn(null, 406, '没有权限'));
+          }
+        }
+      }
       if (type === 'group') {
         let projectList = await this.projectModel.list(typeid);
         let /** @type {any} */ projectIds = [],
@@ -129,7 +146,14 @@ class logController extends baseController {
       let { typeid, type, apis } = params;
       /** @type {any[]} */
       let list = [];
-      let projectDatas = await this.projectModel.getBaseInfo(typeid, 'basepath');
+      let projectDatas = await this.projectModel.getBaseInfo(typeid, 'basepath project_type');
+      // 项目域可见性判定（同 list）：typeid 为请求方自报，须先过 view 级闸门，
+      // 否则任意登录用户可读他人私有项目的接口变更日志（含路径与方法）。
+      if (projectDatas && projectDatas.project_type === 'private') {
+        if ((await this.checkAuth(typeid, 'project', 'view')) !== true) {
+          return (ctx.body = yapi.commons.resReturn(null, 406, '没有权限'));
+        }
+      }
       let basePath = projectDatas.toObject().basepath;
 
       for (let i = 0; i < apis.length; i++) {

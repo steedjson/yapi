@@ -268,6 +268,12 @@
 - **口径注记**：guest（view 级成员）可读 env 为本次选择（与 `/api/project/get` 返回同一 env 数组的现状一致，非新增暴露面）；若未来收紧到 edit 级，仅改一处 + 同步测试。
 - **遗留（Minor，已登记不改）**：① 存量文档缺 `project_type` 字段时按公开放行——与其余 6 处同型内联判定同口径；② `checkAuth` 首参用请求原值而非闸门解析出的 `_id`（三处查询同 filter，当前无越权，可后续统一硬化）；③ 同型内联门禁已第 7 处，值得后续提炼为单一出处。
 
+### 13. 日志端点越权读修复（2026-10-04，已完成）与 SSRF 面登记
+
+- **越权读（已修复）**：承接 get_env 教训做**全端点授权面系统审计**（按 router.js 枚举 + 逐控制器核对「项目/分组域判定」），发现 `server/controllers/log.js` 两个端点同型缺陷——`list`（`GET /api/log/list`）与 `listByUpdate`（`POST /api/log/list_by_update`）均按请求方自报的 `typeid`（分组/项目 id）直接查询日志，**无任何域判定**：任意登录用户可读他人项目/分组的操作日志（含项目名、操作内容、用户名）与接口变更记录（含路径与方法）。**修法**：对齐同资源既有 view 级口径——分组按 `checkAuth(typeid,'group','view')`、项目按「private → `checkAuth(typeid,'project','view')`，公开放行」（与 `project.get`/`interface.list` 一致）；`listByUpdate` 的窄投影须同时含 `basepath` 与 `project_type`（原仅 `basepath`，取不到类型无法判定）。验证：`test/server/log-authz.test.js` 10 例（项目域/分组域 × 非成员 406 且**不触达日志查询**/公开放行不调 checkAuth/成员放行/缺参回归/反恒真域参数可区分），全量不连库 **1225** 全绿。
+- **同轮审计结论（其余候选逐一核实后判定无需改）**：`group.get` 仅返回分组元信息且附 role 计算（有隐式域判定）；`group.add` 为「新版人人可建组」既有产品口径；`follow.*` 全部按 `this.getUid()` 限定为本人数据；`interface.schema2json` 为纯函数式 schema 转换（无资源访问）；`test.js` 系列为回显型调试端点（无资源访问）。
+- **SSRF 面（登记，待产品裁决）**：`GET /api/project/swagger_url?url=<任意>` 让服务端 `axios.get(url)` 抓取任意地址——登录用户可借此探测内网/云元数据端点（同类面另有 `exts/yapi-plugin-swagger-auto-sync` 的 `getSwaggerContent`）。全仓**无任何 SSRF 防护**（无内网地址黑名单/协议白名单）。**未擅自加固的理由**：抓取内网 swagger 是既有功能诉求（内网部署场景常见），加限制会改变功能边界，属产品决策；建议方案（供裁决）：① 至少限制协议为 http/https 并拒绝 `file:`/`gopher:` 等；② 可选加内网网段黑名单（配置化开关，默认关闭以保兼容）；③ 或维持现状并仅登记风险。当前口径：**登记不改**，如需要请指定方案。
+
 ### 建议优先级（供裁决）
 
 1. ~~非 major 依赖安全批（swagger-client / qs / sha.js / underscore / @babel/core）+ audit 纳入门禁~~ → **已完成（commit 84cc30a5）**；audit 门禁接入方式待定（见第 1 节门禁建议）；

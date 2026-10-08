@@ -2,6 +2,13 @@
 
 条目由 /csl-buglog 或人工维护,供 coder/reviewer 动手前核对
 
+## [2026-10-04][鉴权] 全端点授权面审计:log 两端点越权读(自报 typeid 无域判定),同类漏洞须一次扫净
+- 现象: 承接 get_env 教训做全端点授权面系统审计（router.js 枚举 + 逐控制器核对项目/分组域判定），发现 `server/controllers/log.js` 两端点同型缺陷——`list`(GET /api/log/list) 与 `listByUpdate`(POST /api/log/list_by_update) 均按请求方**自报的 typeid** 直接查询，无任何域判定：任意登录用户可读他人项目/分组的操作日志（含项目名/操作内容/用户名）与接口变更记录（含路径与方法）
+- 根因: 与 get_env 同源——端点被当作「按 id 查数据」的纯查询实现，未把「id 属于谁的域」纳入；且 `listByUpdate` 的窄投影只取 `basepath`，即便想判定也取不到 `project_type`（投影面与判定需求不匹配）
+- 修法: 对齐同资源既有 view 级口径——分组按 `checkAuth(typeid,'group','view')`、项目按「private → `checkAuth(typeid,'project','view')`，公开放行」（与 project.get/interface.list 一致）；`listByUpdate` 投影扩为 `'basepath project_type'`；拒绝态**先判后查**（不触达日志查询，防先查后判的信息泄露窗口）。验证：`test/server/log-authz.test.js` 10 例（项目/分组域 × 非成员 406 且不触达查询/公开放行不调 checkAuth/成员放行/缺参回归/反恒真域参数可区分）
+- 关联: server/controllers/log.js、test/server/log-authz.test.js、TECH_DEBT.md「四、13」
+- 复发: 0 次 · 教训: ①**同类漏洞必须一次扫净**——get_env 是评审旁注偶然命中，本次改为「枚举全部端点 × 逐个核对域判定」的系统审计，同轮又抓到 2 处；②判定「端点是否需要域判定」看它是否**按请求方自报的资源 id 访问数据**（自报 id + 无域判定 = 越权读候选）；③窄投影（`select`）与判定需求必须匹配——`listByUpdate` 只取 basepath 导致即便想判定也拿不到 project_type，扩投影是修复的必要部分；④拒绝必须**先判后查**，先查后判会留下信息泄露窗口（即便最终返回 406，查询本身已发生）
+
 ## [2026-10-08][静默失败] 空 catch 与「只吞不记」:三分法处置(用户可见的错误响应不算静默)
 - 现象: 承接未处理拒绝面收口,换维度扫静默失败——全仓空 catch 2 处（`server/controllers/open.js:108` 兼容层、`server/utils/token.js:84` token 解码）、「catch 内无 log/console/throw」176 处（前端 69 + 服务端 107）
 - 根因: 三类形态性质完全不同,不能一刀切——① **错误响应已回给用户**（`resReturn(null, 4xx, e.message)` 约 80 处）:非静默,用户可见;② **有意的降级**（前端 JSON 解析失败给默认值、`mockEditor` 解析失败返回原文、`sandbox` worker 死亡走崩溃路径）:设计如此,仅缺说明;③ **真静默**（吞掉错误且调用方无从得知）
