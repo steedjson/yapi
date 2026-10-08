@@ -2,6 +2,13 @@
 
 条目由 /csl-buglog 或人工维护,供 coder/reviewer 动手前核对
 
+## [2026-10-08][依赖审计] 新披露 advisory 分两条路:有修复版的 overrides 消除,无修复版的基线登记
+- 现象: 未处理拒绝面批次推送后 CI 的 audit 门禁变红（high 9→10、moderate 0→4、total 9→14）——上批（2026-10-04）登记后新披露 5 项:source-map-js high（事件循环 DoS，1.0.0–1.2.1）+ sprintf-js moderate（无界精度 DoS）+ argparse/js-yaml/supertap（sprintf-js 传递链，均 ava 系）
+- 根因: 上游新披露，与本批改动无关（窗口期新 advisory）。两类性质不同:source-map-js **有修复版**（1.2.2）；sprintf-js 系**无修复版**（npm 给出的唯一 fix 是把 ava 从 6.x 降级到 1.4.1，major 降级，拒绝）
+- 修法: 分两条路处置——① **有修复版即修**：`overrides` 增 `"source-map-js@1": "1.2.2"` → npm install → 实测 high 10→9；该包在 rsbuild/jsdom/sass 的 devDeps 链、不进客户端 bundle，验证含 build-client 产物聚合哈希逐字节不变（cbf3a1e7…）；② **无修复版即登记**：基线由 0/9/0/0/9 更新为 0/9/4/0/13（附完整链传导与逃逸核查备注），audit:ci 实测 delta 全 0 通过，离线回归 8 例全绿
+- 关联: package.json(overrides)、package-lock.json、scripts/audit-baseline.json、TECH_DEBT.md 四.1、CI run 37738161950
+- 复发: 0 次 · 教训: ①CI audit 变红先分类「有无修复版」——有修复版（哪怕在 devDeps 链）就 overrides 精确升级消除，别直接登记基线；无修复版才走登记+复核触发条件；②overrides 升依赖后必须实测「构建产物零漂移」（构建链上的包版本变化可能改产物），本次 cbf3a1e7… 不变即证；③窗口期新披露会让「已登记基线」的批次照样变红——这是门禁按设计工作（对新增项失败），不是回归
+
 ## [2026-10-04][未处理拒绝] 20 处 fire-and-forget 裸 .then() + ws 异步 handler 无内层兜底:全仓无进程级兜底,后台失败即杀进程
 - 现象: 全仓 20 处「操作后顺带写库/触发钩子」写作 `.then();`（无 catch）;`emitHook` 会把插件监听器异常以拒绝形式透出,而全仓无 `unhandledRejection`/`uncaughtException` 兜底——Node ≥22 默认未处理拒绝即终止进程（实测:仅一个被拒绝的 promise 就让进程 exit=1）。另两处 ws 缺陷:interface `solveConflict` 在 `Model.get` 返回 null（接口已删）时 `result.edit_uid` 抛错被 catch 吞掉 → websocket 一帧不发、前端只能等 3 秒超时降级;wiki `wikiConflict` 的异步 message handler 抛错会外泄为未处理拒绝（外层 try 覆盖不到异步回调）
 - 根因: ①「顺带做」的副作用被当作可忽略——作者本意是不阻塞主流程,但用 `.then();` 表达等于把失败升级为进程级事故;②ws 处理器把 try/catch 写在了注册处（同步段）而业务逻辑在异步回调里,防护错位;③`websocketMsgMap` 用 `map[msg]` 直接调用,未知消息 TypeError
