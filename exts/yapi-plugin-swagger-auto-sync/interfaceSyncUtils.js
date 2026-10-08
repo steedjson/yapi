@@ -205,7 +205,11 @@ class syncUtils {
             token = getToken(token, uid);
 
             return token;
-        } catch (err) {
+        } catch (/** @type {any} */ err) {
+            // 取 token 失败（token 表读写异常等）时返回空串——调用方（addSyncJob→syncInterface）
+            // 把它作为 projectToken 传给导入接口，鉴权将失败并在同步日志中体现。
+            // 保留空串返回值（调用方契约），但补日志让失败可见（原实现静默吞错）。
+            yapi.commons.log('获取项目token失败(project_id=' + project_id + '): ' + err.message, 'error');
             return "";
         }
     }

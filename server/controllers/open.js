@@ -105,7 +105,9 @@ class openController extends baseController {
         warnMessage = 'importData Api 已废弃 dataSync 传参，请联系管理员将 dataSync 改为 merge.'
         dataSync = ctx.params.dataSync
       }
-    }catch(/** @type {any} */ e){}
+    }catch(/** @type {any} */ e){
+      // 兼容层：仅为读取旧文档误写的 dataSync 参数并告警，读取失败不影响主流程（有意静默）
+    }
 
     let token = ctx.params.token;
     if (!type || !importDataModule[type]) {

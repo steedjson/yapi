@@ -81,7 +81,10 @@ exports.parseToken = function parseToken(token){
   let tokens;
   try{
     tokens = aseDecode(token, yapi.WEBCONFIG.passsalt)
-  }catch(e){}  
+  }catch(e){
+    // 解码失败（伪造/过期/格式非法 token）即视为无效凭据，落到下方 return false；
+    // 有意静默：解析失败不是异常状态，调用方按 false 处理（fail-closed）。
+  }
   if(tokens && typeof tokens === 'string' && tokens.indexOf('|') > 0){
     const parts = tokens.split('|')
     return {

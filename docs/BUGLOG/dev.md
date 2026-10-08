@@ -2,6 +2,13 @@
 
 条目由 /csl-buglog 或人工维护,供 coder/reviewer 动手前核对
 
+## [2026-10-08][静默失败] 空 catch 与「只吞不记」:三分法处置(用户可见的错误响应不算静默)
+- 现象: 承接未处理拒绝面收口,换维度扫静默失败——全仓空 catch 2 处（`server/controllers/open.js:108` 兼容层、`server/utils/token.js:84` token 解码）、「catch 内无 log/console/throw」176 处（前端 69 + 服务端 107）
+- 根因: 三类形态性质完全不同,不能一刀切——① **错误响应已回给用户**（`resReturn(null, 4xx, e.message)` 约 80 处）:非静默,用户可见;② **有意的降级**（前端 JSON 解析失败给默认值、`mockEditor` 解析失败返回原文、`sandbox` worker 死亡走崩溃路径）:设计如此,仅缺说明;③ **真静默**（吞掉错误且调用方无从得知）
+- 修法: 三分法处置——① 不动（用户可见）;② 补一行说明其「有意」语义（`open.js` 兼容层、`token.js` 的解码失败=无效凭据 fail-closed）;③ **实际修复 1 处**:`exts/yapi-plugin-swagger-auto-sync/interfaceSyncUtils.js` 的 `getProjectToken` catch 原为裸 `return ""`（取 token 失败 → 空 token 传给导入接口鉴权 → 失败无迹可查），改为记录 error 日志后仍返回空串（保持调用方契约、让失败可见）
+- 关联: server/utils/token.js、server/controllers/open.js、exts/yapi-plugin-swagger-auto-sync/interfaceSyncUtils.js
+- 复发: 0 次 · 教训: ①「静默失败」审计必须先做**三分法**再动手——把「错误响应已回给用户」当静默会造出大量假阳性（本轮 176 处里约 80 处属此类）;②空 catch 若确为有意,必须写一行说明其语义（`// 有意静默: …`）,否则下一个读者（或下一个 agent）会把它当缺陷反复上报;③真静默的判据是「失败后调用方无从得知且行为可能出错」——本轮仅 1 处命中,即取 token 失败却继续以空 token 请求
+
 ## [2026-10-08][依赖审计] 新披露 advisory 分两条路:有修复版的 overrides 消除,无修复版的基线登记
 - 现象: 未处理拒绝面批次推送后 CI 的 audit 门禁变红（high 9→10、moderate 0→4、total 9→14）——上批（2026-10-04）登记后新披露 5 项:source-map-js high（事件循环 DoS，1.0.0–1.2.1）+ sprintf-js moderate（无界精度 DoS）+ argparse/js-yaml/supertap（sprintf-js 传递链，均 ava 系）
 - 根因: 上游新披露，与本批改动无关（窗口期新 advisory）。两类性质不同:source-map-js **有修复版**（1.2.2）；sprintf-js 系**无修复版**（npm 给出的唯一 fix 是把 ava 从 6.x 降级到 1.4.1，major 降级，拒绝）
