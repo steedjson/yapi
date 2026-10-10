@@ -4,7 +4,7 @@
 <meta id="cross-request-sign" charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <meta name="keywords" content="yapi接口管理,api管理,接口管理,api,接口,接口文档,api文档,接口管理系统" />
-<meta name="description" content="YApi 是高效、易用、功能强大的 api 管理平台，旨在为开发、产品、测试人员提供更优雅的接口管理服务。可以帮助开发者轻松创建、发布、维护 API，YApi 还为用户提供了优秀的交互体验，开发人员只需利用平台提供的接口数据写入工具以及简单的点击操作就可以实现接口的管理。" />
+<meta name="description" content="YApi 是高效、易用、功能强大的 api 管理平台，旨在为开发、产品、测试人员提供更优雅的接口管理服务。可以帮助开发者轻松创建、发布、维护 API，YApi 还为用户提供了优秀的交互体验，开发人员只需利用平台提供的接口数据写入工具以及简单的点击操作即可实现接口的管理。" />
 <title>YApi-高效、易用、功能强大的可视化接口管理平台</title>
 <link rel="icon" type="image/png" sizes="192x192" href="/image/favicon.png">
 <script>
@@ -29,18 +29,69 @@
         };
     })();
 </script>
-<link rel="stylesheet" href="http://127.0.0.1:4000/prd/index@dev.css?v=cjs6">
+<!--
+  dev 模式入口（后端 dev.html；生产为 index.html）。
+
+  为何不手工写 /prd/*@dev.js：阶段三把分包交还构建工具后，初始 chunk 集合（runtime
+  manifest → 自动 vendor 分包 → index）不再静态可知——历史上这里硬编码的
+  lib3/lib2/lib 三个手工 vendor 名在 rsbuild 迁移后已不存在，导致 3000 端口白屏
+  （三个 vendor 404 → React 无法初始化），且每次分包策略变化都会再次陈旧。
+
+  现改为运行时从 4000（rsbuild dev server）取权威 HTML：那边由 html-rspack-plugin 按
+  entrypoint 实时注入真实 chunk 名（见 build/rsbuild-dev.html 的说明），此处把其中的
+  相对 /prd/* 路径改写为指向 4000 的绝对地址后注入本页。HMR 客户端随 bundle 自带。
+-->
+<script>
+    (function() {
+        var DEV_ORIGIN = 'http://127.0.0.1:4000';
+        function fail(reason) {
+            document.body.innerHTML =
+                '<pre style="padding:24px;font:13px/1.6 monospace;color:#c00;white-space:pre-wrap">' +
+                '[yapi] dev 资源注入失败：' + reason + '\n\n' +
+                '请确认前端 dev server 已启动（npm run dev-client，默认 ' + DEV_ORIGIN + '），' +
+                '然后刷新本页。\n' +
+                '若 dev server 端口有变，请同步修改 static/dev.html 中的 DEV_ORIGIN。' +
+                '</pre>';
+        }
+        try {
+            fetch(DEV_ORIGIN + '/', { cache: 'no-store' })
+                .then(function(res) {
+                    if (!res.ok) throw new Error('dev server 返回 HTTP ' + res.status);
+                    return res.text();
+                })
+                .then(function(html) {
+                    var doc = new DOMParser().parseFromString(html, 'text/html');
+                    function absolutize(url) {
+                        return url.charAt(0) === '/' ? DEV_ORIGIN + url : url;
+                    }
+                    // 注入顺序与 rsbuild 模板一致：CSS 进 head，script 按 entrypoint 顺序进 body
+                    doc.querySelectorAll('link[rel="stylesheet"][href]').forEach(function(link) {
+                        var el = document.createElement('link');
+                        el.rel = 'stylesheet';
+                        el.href = absolutize(link.getAttribute('href'));
+                        document.head.appendChild(el);
+                    });
+                    doc.querySelectorAll('script[src]').forEach(function(script) {
+                        var el = document.createElement('script');
+                        el.src = absolutize(script.getAttribute('src'));
+                        if (script.defer) el.defer = true;
+                        if (script.getAttribute('crossorigin') !== null) el.crossOrigin = 'anonymous';
+                        document.body.appendChild(el);
+                    });
+                    if (!doc.querySelector('script[src]')) {
+                        fail('dev server 未返回任何 bundle 脚本（HTML 模板异常）');
+                    }
+                })
+                .catch(function(err) {
+                    fail(String((err && err.message) || err));
+                });
+        } catch (e) {
+            fail(String((e && e.message) || e));
+        }
+    })();
+</script>
 </head>
 <body>
 <div id="yapi" style="height: 100%;"></div>
-
-<script crossorigin src="http://127.0.0.1:4000/prd/manifest@dev.js?v=cjs6"></script>
-<script crossorigin src="http://127.0.0.1:4000/prd/lib3@dev.js?v=cjs6"></script>
-<script crossorigin src="http://127.0.0.1:4000/prd/lib2@dev.js?v=cjs6"></script>
-<script crossorigin src="http://127.0.0.1:4000/prd/lib@dev.js?v=cjs6"></script>
-<script crossorigin src="http://127.0.0.1:4000/prd/index@dev.js?v=cjs6"></script>
-
-
-
 </body>
 </html>

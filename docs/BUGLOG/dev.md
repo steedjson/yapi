@@ -2,6 +2,13 @@
 
 条目由 /csl-buglog 或人工维护,供 coder/reviewer 动手前核对
 
+## [2026-10-08][开发体验] 3000 端口白屏:static/dev.html 硬编码旧 webpack chunk 名(lib3/lib2/lib 已不存在)
+- 现象: `npm run dev` 后访问 http://127.0.0.1:3000 白屏（页面骨架在、`#yapi` 容器子节点为 0、`window.__YAPI_LAST_ERROR` 为 null 即无 JS 抛错）；4000（rsbuild dev server）正常
+- 根因: `static/dev.html`（后端 dev 模式的入口，koaStatic 按 `process.argv[2]==='dev'` 选它）里**手工硬编码**了 `/prd/manifest@dev.js`、**`lib3|lib2|lib@dev.js`**、`index@dev.js`；而 `lib3/lib2/lib` 是旧 webpack 时代的手工 vendor 分包名，阶段三「分包交还构建工具」后**根本不再产出** → 实测这三个文件在 4000 上均 404（"This page could not be found"）→ React bundle 链缺 vendor → 应用无法初始化 → 白屏。生产入口 `static/index.html` 早就改成数据驱动注入（读 assets.js 的 WEBPACK_INITIAL_CHUNKS）故不受影响；dev.html 从未跟着迁移
+- 修法: `static/dev.html` 改为**运行时从 4000 取权威 HTML 再注入**——`fetch(DEV_ORIGIN + '/')` 拿到 rsbuild 按 entrypoint 实时注入的 HTML（build/rsbuild-dev.html 模板 + html-rspack-plugin 自动注入），用 DOMParser 解析后把 `link[rel=stylesheet]`/`script[src]` 的相对 `/prd/*` 改写为指向 4000 的绝对地址再插入本页；拿不到 dev server 时渲染可读的错误提示（而非白屏）。**根因是「静态写死不可静态知的 chunk 名」，故修法也选数据驱动而非替换成另一组硬编码名**（否则下次分包变化会再次陈旧）
+- 关联: static/dev.html、build/rsbuild-dev.html（正确形态参照）、build/rsbuild-dev-server.js、TECH_DEBT.md「四、14」
+- 复发: 0 次 · 教训: ①**「分包交还构建工具」后，任何手工列 chunk 名的地方都会陈旧**——生产页在阶段三已改数据驱动，dev.html 漏改，属于「同一迁移只做了一半」；迁移类改动收尾时必须全仓搜同类硬编码点（`grep -E "lib3|lib2|@dev\.js"`）；②白屏且无 JS 错误时优先怀疑**资源 404 导致依赖链断裂**（而非运行时异常）——本例 `window.__YAPI_LAST_ERROR` 为 null 正说明没抛错，直接查各 script 的 HTTP 状态即可定位；③入口 HTML 的修复优先选「跟随权威来源」而不是「更新为另一份硬编码」——前者对后续变化免疫
+
 ## [2026-10-08][已裁决·勿改] swagger_url 服务端抓取任意 URL(SSRF 面):产品裁定维持现状,仅登记风险
 - 现象: `GET /api/project/swagger_url?url=<任意>` 让服务端 `axios.get(url)` 抓取任意地址（同类面另有 `exts/yapi-plugin-swagger-auto-sync` 的 `getSwaggerContent`）;全仓无 SSRF 防护（无协议白名单/内网黑名单）
 - 根因: 该端点的功能本质就是「用户给地址、服务端代抓 swagger 文档」——内网部署场景下抓内网地址是**功能诉求**而非缺陷;故不存在「漏加校验」的根因,属功能边界与安全边界的权衡

@@ -274,6 +274,13 @@
 - **同轮审计结论（其余候选逐一核实后判定无需改）**：`group.get` 仅返回分组元信息且附 role 计算（有隐式域判定）；`group.add` 为「新版人人可建组」既有产品口径；`follow.*` 全部按 `this.getUid()` 限定为本人数据；`interface.schema2json` 为纯函数式 schema 转换（无资源访问）；`test.js` 系列为回显型调试端点（无资源访问）。
 - **SSRF 面（产品裁决：维持现状，仅登记风险——2026-10-08 用户裁定，勿再按缺陷上报）**：`GET /api/project/swagger_url?url=<任意>` 让服务端 `axios.get(url)` 抓取任意地址——登录用户可借此探测内网/云元数据端点（同类面另有 `exts/yapi-plugin-swagger-auto-sync` 的 `getSwaggerContent`）。全仓无 SSRF 防护（无内网地址黑名单/协议白名单）。**裁决依据与边界**：抓取内网 swagger 是内网部署场景的既有功能诉求，加限制会改变功能边界；本仓库为内网部署形态（`docs/devops/` 部署文档面向内网自建），端点可达前提是**已通过登录态鉴权**（非匿名可达），故实际暴露面限于「已登录用户探测内网」——风险等级：低（需有效账号）。**若未来安全需求升级**，候选方案（已评估未采纳）：① 限制协议为 http/https 并拒绝 `file:`/`gopher:` 等；② 加内网网段黑名单（配置化开关、默认关闭以保兼容）。**本次已实施的唯一约束**：无（零代码改动，仅登记）。
 
+### 14. dev 模式入口白屏修复与文档口径订正（2026-10-08，已完成）
+
+- **问题（本地开发体感缺陷）**：`static/dev.html` 硬编码了旧 webpack 时代的手工 vendor chunk 名（`lib3`/`lib2`/`lib`），这些名字在阶段三「分包交还构建工具」后已不存在（实测 404）→ React bundle 链缺 vendor → 3000 端口白屏（`#yapi` 空、无 JS 报错）。生产入口 `static/index.html` 早在阶段三改为数据驱动注入，dev.html 漏改，属「同一迁移只做了一半」。
+- **修法**：`static/dev.html` 改为运行时从 4000（rsbuild dev server）取权威 HTML（该 HTML 由 `build/rsbuild-dev.html` 模板 + html-rspack-plugin 按 entrypoint 实时注入真实 chunk），解析后把相对 `/prd/*` 改写为绝对地址注入本页；dev server 不可达时渲染可读错误提示而非白屏。**选数据驱动而非替换为另一组硬编码名**，对后续分包变化免疫。浏览器实测：3000 首页与 `/login` 均正常渲染（表单/版本号在位、无 JS 错误），4000 仍可用（两条入口都活）。
+- **文档口径订正**：`docs/devops/index.md` 原写「4000 是前端开发资源服务，直接访问可能显示目录列表，不是系统页面」——实测 rsbuild 迁移后 4000 返回完整系统页面（HTML 由构建器生成、含 HMR 与 /api 反代），该描述已过时，订正为「3000 与 4000 均可作为开发入口；4000 带 HMR，日常开发推荐」。
+- **关联**：static/dev.html、build/rsbuild-dev.html、docs/devops/index.md、docs/BUGLOG/dev.md（2026-10-08 条目）。
+
 ### 建议优先级（供裁决）
 
 1. ~~非 major 依赖安全批（swagger-client / qs / sha.js / underscore / @babel/core）+ audit 纳入门禁~~ → **已完成（commit 84cc30a5）**；audit 门禁接入方式待定（见第 1 节门禁建议）；
