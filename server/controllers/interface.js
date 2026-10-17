@@ -396,6 +396,12 @@ class interfaceController extends baseController {
           JSON.stringify({ errno: 0, data: null, errmsg: '接口不存在，已取消编辑锁' })
         );
       }
+      // 此连接会写编辑锁；公开可读也不代表拥有编辑权限。
+      if ((await this.checkAuth(result.project_id, 'project', 'edit')) !== true) {
+        return ctx.websocket.send(
+          JSON.stringify({ errno: 406, data: null, errmsg: '没有权限' })
+        );
+      }
 
       if (result.edit_uid !== 0 && result.edit_uid !== this.getUid()) {
         userInst = yapi.getInst(userModel);
@@ -417,9 +423,12 @@ class interfaceController extends baseController {
         };
       }
       ctx.websocket.send(JSON.stringify(data));
-      ctx.websocket.on('close', () => {
-        yapi.commons.fireAndForget(this.Model.upEditUid(id, 0), 'upEditUid release');
-      });
+      // 未取得锁的旁观连接关闭时不能释放他人的锁。
+      if (!userinfo) {
+        ctx.websocket.on('close', () => {
+          yapi.commons.fireAndForget(this.Model.upEditUid(id, 0), 'upEditUid release');
+        });
+      }
     } catch (/** @type {any} */ err) {
       yapi.commons.log(err, 'error');
     }

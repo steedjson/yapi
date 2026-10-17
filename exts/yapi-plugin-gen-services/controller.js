@@ -115,6 +115,15 @@ class exportController extends baseController {
     let tp = '';
     try {
       curProject = await this.projectModel.get(pid);
+      if (!curProject) {
+        return (ctx.body = yapi.commons.resReturn(null, 407, '不存在的项目'));
+      }
+      if (
+        curProject.project_type === 'private' &&
+        (await this.checkAuth(curProject._id, 'project', 'view')) !== true
+      ) {
+        return (ctx.body = yapi.commons.resReturn(null, 406, '没有权限'));
+      }
       const basepath = curProject.basepath;
       if (isWiki === 'true') {
         const wikiModel = require('../yapi-plugin-wiki/wikiModel.js');

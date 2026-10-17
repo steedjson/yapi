@@ -105,6 +105,12 @@ const InterfaceEdit = () => {
             curdata: result.data,
             status: 1
           }));
+        } else if (result.errno === 406 && result.data === null) {
+          setState((/** @type {any} */ prevState) => ({
+            ...prevState,
+            curdata: null,
+            status: 3
+          }));
         } else {
           setState((/** @type {any} */ prevState) => ({
             ...prevState,
@@ -232,6 +238,7 @@ const InterfaceEdit = () => {
           <span>正在编辑该接口，请稍后再试...</span>
         </div>
       ) : null}
+      {state.status === 3 && '没有权限编辑该接口'}
       {state.status === 0 && '正在加载，请耐心等待...'}
 
       <Modal

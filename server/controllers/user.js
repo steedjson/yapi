@@ -345,6 +345,9 @@ class userController extends baseController {
       if (type === 'interface') {
         let interfaceInst = yapi.getInst(interfaceModel);
         let interfaceData = await interfaceInst.get(id);
+        if (!interfaceData) {
+          return (ctx.body = yapi.commons.resReturn(null, 407, '不存在的接口'));
+        }
         result.interface = interfaceData;
         type = 'project';
         id = interfaceData.project_id;
@@ -353,6 +356,16 @@ class userController extends baseController {
       if (type === 'project') {
         let projectInst = yapi.getInst(projectModel);
         let projectData = await projectInst.get(id);
+        if (!projectData) {
+          return (ctx.body = yapi.commons.resReturn(null, 407, '不存在的项目'));
+        }
+        // 路由初始化同样遵循项目可见性，角色标注不能代替资源授权。
+        if (
+          projectData.project_type === 'private' &&
+          (await this.checkAuth(projectData._id, 'project', 'view')) !== true
+        ) {
+          return (ctx.body = yapi.commons.resReturn(null, 406, '没有权限'));
+        }
         result.project = projectData.toObject();
         let ownerAuth = await this.checkAuth(id, 'project', 'danger'),
           devAuth;
@@ -390,7 +403,7 @@ class userController extends baseController {
 
       return (ctx.body = yapi.commons.resReturn(result));
     } catch (/** @type {any} */ e) {
-      return (ctx.body = yapi.commons.resReturn(result, 422, e.message));
+      return (ctx.body = yapi.commons.resReturn(null, 422, e.message));
     }
   }
 

@@ -105,6 +105,10 @@ const INITIAL_GROUP_STATE = {
 };
 const originalAxiosGet = axios.get;
 const originalAxiosPost = axios.post;
+// Edit.js 以裸标识符 WebSocket 建连，解析自 globalThis（jsdom 真实现）；
+// 既有用例只替换 window.WebSocket，onerror 语义恰好与真实连接失败一致而未暴露
+// 差异；帧投递用例必须两处同替，afterEach 一并还原。
+const originalGlobalWebSocket = globalThis.WebSocket;
 
 test.serial.afterEach.always(() => {
   useGroupStore.setState(INITIAL_GROUP_STATE);
@@ -114,6 +118,7 @@ test.serial.afterEach.always(() => {
   cleanupDom();
   axios.get = originalAxiosGet;
   axios.post = originalAxiosPost;
+  globalThis.WebSocket = originalGlobalWebSocket;
   delete window.WebSocket;
 });
 
@@ -143,17 +148,12 @@ const CURRDATA = {
   tag: ['核心']
 };
 
-async function renderEditForm() {
-  // Edit.js 挂载即连 /api/interface/solve_conflict；用「异步触发 onerror」的桩走
-  // 容器既有语义：连接失败 → 用 store curdata 进入编辑态（status 1）
-  window.WebSocket = function StubConflictSocket() {
-    const socket = this;
-    socket.close = function() {};
-    socket.readyState = 0;
-    setTimeout(() => {
-      if (socket.onerror) socket.onerror({});
-    }, 0);
-  };
+async function mountEditWithSocket(makeSocket) {
+  // Edit.js 挂载即连 /api/interface/solve_conflict；调用方注入 socket 桩
+  // （异步触发 onerror / 投递帧）复刻对应容器语义，其余数据链与生产一致。
+  // 两处同替：Edit.js 裸标识符解析 globalThis，其余浏览器 API 经 window。
+  globalThis.WebSocket = makeSocket;
+  window.WebSocket = makeSocket;
   axios.get = () => Promise.resolve({ data: { errcode: 0, data: [] } });
   axios.post = () => Promise.resolve({ data: { errcode: 0, data: [] } });
   const { default: Edit } = require('../../../client/containers/Project/Interface/InterfaceList/Edit.js');
@@ -184,6 +184,33 @@ async function renderEditForm() {
   });
   await flushEffects(400);
   return utils;
+}
+
+async function renderEditForm() {
+  // 用「异步触发 onerror」的桩走容器既有语义：连接失败 → 用 store curdata 进入编辑态（status 1）
+  return mountEditWithSocket(function StubConflictSocket() {
+    const socket = this;
+    socket.close = function() {};
+    socket.readyState = 0;
+    setTimeout(() => {
+      if (socket.onerror) socket.onerror({});
+    }, 0);
+  });
+}
+
+// solve_conflict 帧投递桩：挂载后异步按序投递 solve_conflict 下行帧，
+// 用于钉 Edit.js 对 errno 0 / busy / 406 三类帧的消费者行为。
+async function renderEditWithFrames(frames) {
+  return mountEditWithSocket(function StubFrameSocket() {
+    const socket = this;
+    socket.close = function() {};
+    socket.readyState = 0;
+    setTimeout(() => {
+      frames.forEach(frame => {
+        if (socket.onmessage) socket.onmessage({ data: JSON.stringify(frame) });
+      });
+    }, 0);
+  });
 }
 
 // ---- 基线快照（21964bbc 提交态采集，见文件头基线口径说明）----
@@ -710,6 +737,76 @@ const EXPECTED_EDITFORM_SNAPSHOT = `<div>
                       <button class="ant-btn.CSSHASH.css-var-root.ant-btn-default.ant-btn-color-default.ant-btn-variant-outlined.ant-btn-lg.interface-edit-submit-button" type="submit">
                         <span>
                           "保 存"`;
+
+// ---- solve_conflict 帧消费行为（406 拒绝 / busy 语义 / 取锁进入编辑态）----
+// 后端修复后无编辑权限的 WS 连接收到 {errno:406, data:null}；客户端必须呈现
+// 权限拒绝而非误入 busy 分支（busy 渲染 curdata.uid/username，data=null 时
+// 呈现 /user/profile/undefined 空链）。注意 busy 帧的 errno 即持锁人 uid、
+// 可能恰好为 406——拒绝判定为 errno===406 && data===null 双条件。此组测试
+// 钉死各帧形的消费者行为。
+
+test.serial('Edit 帧消费：errno 406（data null）→ 权限拒绝文本，不进编辑表单不误入 busy', async t => {
+  const utils = await renderEditWithFrames([
+    { errno: 406, data: null, errmsg: '没有权限' }
+  ]);
+
+  const text = utils.container.textContent;
+  t.true(text.indexOf('没有权限编辑该接口') !== -1, '应呈现权限拒绝提示（status 3）');
+  t.false(text.indexOf('正在编辑该接口，请稍后再试...') !== -1, '406 不得误入 busy 分支');
+  t.false(text.indexOf('正在加载，请耐心等待...') !== -1, '帧已到达，不得停留在加载态');
+  t.falsy(utils.container.querySelector('form'), '拒绝态不得渲染编辑表单');
+  t.falsy(
+    utils.container.querySelector('a[href="/user/profile/undefined"]'),
+    'data=null 不得渲染 /user/profile/undefined 空链'
+  );
+});
+
+test.serial('Edit 帧消费：busy errno=uid=406 且 data 为持锁人对象 → 仍按 busy 处理（拒绝判定须 data===null 双条件）', async t => {
+  // 真实边界：busy 帧的 errno 就是持锁人 uid，可能恰好等于 406。拒绝判定若只看
+  // errno===406，会把合法 busy 帧误判为权限拒绝——必须以 data===null 双条件区分。
+  const utils = await renderEditWithFrames([
+    { errno: 406, data: { uid: 406, username: 'eve' } }
+  ]);
+
+  const text = utils.container.textContent;
+  t.true(text.indexOf('正在编辑该接口，请稍后再试...') !== -1, 'errno=406 但携持锁人对象 → busy 提示');
+  t.true(text.indexOf('eve') !== -1, '呈现持锁人用户名 eve');
+  t.truthy(
+    utils.container.querySelector('a[href="/user/profile/406"]'),
+    '持锁人资料链指向 /user/profile/406'
+  );
+  t.false(text.indexOf('没有权限编辑该接口') !== -1, '不得误入权限拒绝态');
+  t.falsy(utils.container.querySelector('form'), 'busy 态不渲染编辑表单');
+});
+
+test.serial('Edit 帧消费：非零 errno busy 帧 → 持锁人提示与资料链（busy 语义保留）', async t => {
+  const utils = await renderEditWithFrames([
+    { errno: 42, data: { uid: 42, username: 'bob' } }
+  ]);
+
+  const text = utils.container.textContent;
+  t.true(text.indexOf('正在编辑该接口，请稍后再试...') !== -1, 'busy 帧保持 busy 提示');
+  t.true(text.indexOf('bob') !== -1, 'busy 帧呈现持锁人用户名');
+  t.truthy(
+    utils.container.querySelector('a[href="/user/profile/42"]'),
+    'busy 帧持锁人资料链指向 /user/profile/42'
+  );
+  t.falsy(utils.container.querySelector('form'), 'busy 态不渲染编辑表单');
+});
+
+test.serial('Edit 帧消费：errno 0（取锁成功，携接口数据）→ 进入编辑态渲染表单', async t => {
+  const utils = await renderEditWithFrames([
+    { errno: 0, data: { ...CURRDATA, title: '锁定后标题' } }
+  ]);
+
+  t.truthy(utils.container.querySelector('form'), '取锁成功应渲染编辑表单（status 1）');
+  t.is(
+    utils.container.querySelector('input[id="title"]').getAttribute('value'),
+    '锁定后标题',
+    '表单回填应取帧内接口数据而非 store 旧值'
+  );
+  t.false(utils.container.textContent.indexOf('没有权限编辑该接口') !== -1, '取锁成功不得出现拒绝提示');
+});
 
 test.serial('InterfaceEditForm 容器快照：整容器 DOM 树与基线逐行等价', async t => {
   const utils = await renderEditForm();

@@ -2,6 +2,14 @@
 
 条目由 /csl-buglog 或人工维护,供 coder/reviewer 动手前核对
 
+## [2026-10-18][鉴权] 路由初始化、完整导出与编辑锁三条旁路缺项目授权
+- 现象: 非成员登录用户可经 `/api/user/project?type=interface`、`/api/open/plugin/export-full` 与 WebSocket `/api/interface/solve_conflict` 读取他人私有接口；WebSocket 还可取得编辑锁。一次性数据库两账号实测修复前均返回私有标记。
+- 根因: 路由初始化只标注角色而不拒绝；完整导出遗漏普通导出已有的 private/view 检查；编辑冲突入口仅验证登录态，没有按接口真实所属项目校验 edit，旁观连接也注册清锁回调。
+- 修法: 私有项目初始化与完整导出要求 view，拒绝返回 null 且异常不回传中间结果；WebSocket 在返回接口及读写锁前要求所属项目 edit，未取得锁的 busy 连接不注册清锁回调。公开项目只读契约不变。
+- 关联: server/controllers/user.js(project)、exts/yapi-plugin-gen-services/controller.js(exportData)、server/controllers/interface.js(solveConflict)。隔离 MongoDB 7 下真实 HTTP/WS 38 项通过，覆盖非成员/guest/owner/dev、禁用与已删账号、无效与过期 Cookie、公开读与 Mock 回归。
+- 客户端契约: 编辑页以 errno 406 且 data:null 识别独立拒绝态，避免将空数据按持锁人渲染；busy 帧 errno 也是持锁人 uid，uid=406 且 data 为用户对象仍须显示持锁人。随源码重建 static/prd，不能仅改服务端后交付旧客户端。
+- 复发: 0 次 · 教训: 登录态不等于资源授权；同一资源的初始化、导出、WebSocket 旁路都要核对真实归属，写编辑锁必须具有 edit 权限。
+
 ## [2026-10-08][开发体验] 3000 端口白屏:static/dev.html 硬编码旧 webpack chunk 名(lib3/lib2/lib 已不存在)
 - 现象: `npm run dev` 后访问 http://127.0.0.1:3000 白屏（页面骨架在、`#yapi` 容器子节点为 0、`window.__YAPI_LAST_ERROR` 为 null 即无 JS 抛错）；4000（rsbuild dev server）正常
 - 根因: `static/dev.html`（后端 dev 模式的入口，koaStatic 按 `process.argv[2]==='dev'` 选它）里**手工硬编码**了 `/prd/manifest@dev.js`、**`lib3|lib2|lib@dev.js`**、`index@dev.js`；而 `lib3/lib2/lib` 是旧 webpack 时代的手工 vendor 分包名，阶段三「分包交还构建工具」后**根本不再产出** → 实测这三个文件在 4000 上均 404（"This page could not be found"）→ React bundle 链缺 vendor → 应用无法初始化 → 白屏。生产入口 `static/index.html` 早就改成数据驱动注入（读 assets.js 的 WEBPACK_INITIAL_CHUNKS）故不受影响；dev.html 从未跟着迁移
