@@ -2,6 +2,13 @@
 
 条目由 /csl-buglog 或人工维护,供 coder/reviewer 动手前核对
 
+## [2026-10-18][鉴权] Wiki HTTP读取缺少项目可见性校验
+- 现象: 任意已登录用户可通过 `GET /api/plugin/wiki_desc/get?project_id=<id>` 读取他人私有项目 Wiki 的 desc、markdown、编辑者和编辑锁信息。
+- 根因: `getWikiDesc` 只有不可达的 token 归属分支，普通登录态直接按 project_id 查询 Wiki，未查询项目类型或执行 view 授权。
+- 修法: 读取 Wiki 前查询项目基础信息；项目不存在返回 400；私有项目要求 `checkAuth(project_id,'project','view') === true`，公开项目保持放行；拒绝态不触达 Wiki 查询，token 归属校验保留。
+- 关联: exts/yapi-plugin-wiki/controller.js、test/server/plugin-open-scope.test.js。隔离 MongoDB 7 真实 HTTP 矩阵通过：非成员私有拒绝、guest 成员放行、公开项目放行、项目不存在拒绝；定向插件测试 18 项通过。
+- 复发: 0 次 · 教训: 登录态不等于项目可见性；插件读接口也必须按资源类型复用 private/view 口径，且拒绝必须先于正文查询。
+
 ## [2026-10-18][鉴权] Wiki WebSocket 编辑锁缺少项目归属校验
 - 现象: 非成员可连接 `/api/ws_plugin/wiki_desc/solve_conflict?id=<项目id>`，通过 `start/editor/end` 读取或影响他人私有项目 Wiki 编辑锁；客户端收到无 data 的拒绝帧时还会按持锁人读取 `data.uid`。
 - 根因: `wikiConflict` 仅凭登录态按请求 id 读取 Wiki，未以 Wiki 文档真实 `project_id` 做 view/edit 判定；`start` 与取得/释放锁动作没有区分权限。客户端冲突分支未处理 `{errno:406,data:null}`。

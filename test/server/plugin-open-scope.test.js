@@ -112,15 +112,24 @@ function createSaveCaseCtx(overrides) {
  * @returns {any} { inst, calls }
  */
 function createWikiInst(opts) {
-  const calls = { wikiModelGets: [] };
+  const calls = { wikiModelGets: [], projectBaseInfoGets: [], checkAuth: [] };
   yapi.getInsts.set(wikiModel, {
     get: async projectId => {
       calls.wikiModelGets.push(projectId);
-      return { project_id: projectId, desc: 'wiki-desc' };
+      return opts.wikiData === undefined ? { project_id: projectId, desc: 'wiki-desc' } : opts.wikiData;
     }
   });
-  yapi.getInsts.set(projectModel, {});
+  yapi.getInsts.set(projectModel, {
+    getBaseInfo: async projectId => {
+      calls.projectBaseInfoGets.push(projectId);
+      return opts.projectData;
+    }
+  });
   const inst = new wikiController({ request: { query: {} } });
+  inst.checkAuth = async (...args) => {
+    calls.checkAuth.push(args);
+    return opts.authz;
+  };
   if (opts.tokenAuth) {
     inst.$tokenAuth = true;
     inst.$tokenProjectId = opts.$tokenProjectId;
@@ -306,11 +315,55 @@ test.serial('advmock saveCase: 非 token 登录态请求走真实权限链, body
   t.is(calls.caseSaves[0].project_id, 12);
 });
 
-// ---------- wiki getWikiDesc: token 归属校验 ----------
+// ---------- wiki getWikiDesc: private/public 项目可见性与 token 归属 ----------
 
 test.serial('wiki getWikiDesc: token 请求读取归属项目的 wiki 放行', async t => {
-  // query 串字符串形态 vs number 型 $tokenProjectId, 钉死 Number() 归一化
+  const { inst, calls } = createWikiInst({
+    tokenAuth: true,
+    $tokenProjectId: 12,
+    projectData: { _id: 12, project_type: 'private' },
+    authz: true
+  });
+  const ctx = { request: { query: { project_id: '12' } }, body: null };
+
+  await inst.getWikiDesc(ctx);
+
+  t.is(ctx.body.errcode, 0);
+  t.is(calls.wikiModelGets.length, 1);
+  t.deepEqual(calls.checkAuth, [[12, 'project', 'view']]);
+});
+
+test.serial('wiki getWikiDesc: token 请求打其它项目返回 406, 不触达项目或 wiki 读取', async t => {
   const { inst, calls } = createWikiInst({ tokenAuth: true, $tokenProjectId: 12 });
+  const ctx = { request: { query: { project_id: '99' } }, body: null };
+
+  await inst.getWikiDesc(ctx);
+
+  t.is(ctx.body.errcode, 406);
+  t.is(calls.projectBaseInfoGets.length, 0);
+  t.is(calls.wikiModelGets.length, 0);
+});
+
+test.serial('wiki getWikiDesc: 私有项目非成员返回 406, 不触达 wiki 读取', async t => {
+  const { inst, calls } = createWikiInst({
+    projectData: { _id: 12, project_type: 'private' },
+    authz: false
+  });
+  const ctx = { request: { query: { project_id: '12' } }, body: null };
+
+  await inst.getWikiDesc(ctx);
+
+  t.is(ctx.body.errcode, 406);
+  t.is(calls.projectBaseInfoGets.length, 1);
+  t.is(calls.wikiModelGets.length, 0);
+  t.deepEqual(calls.checkAuth, [[12, 'project', 'view']]);
+});
+
+test.serial('wiki getWikiDesc: 私有项目成员 view 放行', async t => {
+  const { inst, calls } = createWikiInst({
+    projectData: { _id: 12, project_type: 'private' },
+    authz: true
+  });
   const ctx = { request: { query: { project_id: '12' } }, body: null };
 
   await inst.getWikiDesc(ctx);
@@ -319,25 +372,28 @@ test.serial('wiki getWikiDesc: token 请求读取归属项目的 wiki 放行', a
   t.is(calls.wikiModelGets.length, 1);
 });
 
-test.serial('wiki getWikiDesc: token 请求打其它项目的 project_id 返回 406, 不触达读取', async t => {
-  const { inst, calls } = createWikiInst({ tokenAuth: true, $tokenProjectId: 12 });
-  const ctx = { request: { query: { project_id: '99' } }, body: null };
-
-  await inst.getWikiDesc(ctx);
-
-  t.is(ctx.body.errcode, 406);
-  t.is(ctx.body.errmsg, '没有权限');
-  t.is(calls.wikiModelGets.length, 0);
-});
-
-test.serial('wiki getWikiDesc: 非 token 请求不受新守卫影响, 维持原读取链放行', async t => {
-  const { inst, calls } = createWikiInst({ tokenAuth: false });
-  const ctx = { request: { query: { project_id: '99' } }, body: null };
+test.serial('wiki getWikiDesc: 公开项目非成员放行且不触发 checkAuth', async t => {
+  const { inst, calls } = createWikiInst({
+    projectData: { _id: 12, project_type: 'public' },
+    authz: false
+  });
+  const ctx = { request: { query: { project_id: '12' } }, body: null };
 
   await inst.getWikiDesc(ctx);
 
   t.is(ctx.body.errcode, 0);
   t.is(calls.wikiModelGets.length, 1);
+  t.deepEqual(calls.checkAuth, []);
+});
+
+test.serial('wiki getWikiDesc: 项目不存在返回 400, 不触达 wiki 读取', async t => {
+  const { inst, calls } = createWikiInst({ projectData: null, authz: true });
+  const ctx = { request: { query: { project_id: '404' } }, body: null };
+
+  await inst.getWikiDesc(ctx);
+
+  t.is(ctx.body.errcode, 400);
+  t.is(calls.wikiModelGets.length, 0);
 });
 
 // ---------- swagger-auto-sync getSync: token 归属校验 ----------

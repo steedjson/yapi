@@ -42,8 +42,18 @@ class wikiController extends baseController {
       if (!project_id) {
         return (ctx.body = yapi.commons.resReturn(null, 400, '项目id不能为空'));
       }
-      // token 请求仅允许读取归属项目的 wiki
+      // 登录态与 token 均须先按项目可见性校验，再读取 wiki 正文。
       if (this.$tokenAuth && Number(project_id) !== Number(this.$tokenProjectId)) {
+        return (ctx.body = yapi.commons.resReturn(null, 406, '没有权限'));
+      }
+      const projectData = await this.projectModel.getBaseInfo(project_id);
+      if (!projectData) {
+        return (ctx.body = yapi.commons.resReturn(null, 400, '不存在的项目'));
+      }
+      if (
+        projectData.project_type === 'private' &&
+        (await this.checkAuth(projectData._id, 'project', 'view')) !== true
+      ) {
         return (ctx.body = yapi.commons.resReturn(null, 406, '没有权限'));
       }
       let result = await this.Model.get(project_id);
