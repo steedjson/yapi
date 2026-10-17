@@ -202,17 +202,26 @@ class wikiController extends baseController {
    */
   async wikiConflict(ctx) {
     try {
-      let result;
       ctx.websocket.on('message', async (/** @type {any} */ message) => {
-        // 内层兜底：外层 try/catch 覆盖不到异步 handler（回调在 try 块返回后才执行），
-        // 未捕获拒绝在 Node ≥22 会直接终止进程（全仓无进程级兜底）。
+        // 内层兜底：外层 try/catch 覆盖不到异步 handler（回调在 try 块返回后才执行）。
         try {
           let id = parseInt(ctx.query.id, 10);
           if (!id) {
             return ctx.websocket.send('id 参数有误');
           }
-          result = await this.Model.get(id);
-          let data = await this.websocketMsgMap(message, result);
+
+          const result = await this.Model.get(id);
+          const projectId = result ? result.project_id : id;
+          const messageType = String(message);
+          const action = messageType === 'start' ? 'view' : 'edit';
+          // Wiki 不存在是首次创建的正常状态；先按项目 id 鉴权，再让 editorFunc(null) 进入创建流程。
+          if ((await this.checkAuth(projectId, 'project', action)) !== true) {
+            return ctx.websocket.send(
+              JSON.stringify({ errno: 406, data: null, errmsg: '没有权限' })
+            );
+          }
+
+          const data = await this.websocketMsgMap(messageType, result);
           if (data) {
             ctx.websocket.send(JSON.stringify(data));
           }

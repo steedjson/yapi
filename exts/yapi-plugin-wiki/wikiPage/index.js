@@ -101,7 +101,10 @@ const WikiPage = () => {
           isEditor: !prevState.isEditor,
           status: 'CLOSE'
         }));
-      } else {
+      } else if (result.errno === 406 && result.data === null) {
+        // 无编辑权限时服务端不返回持锁人数据，不能按冲突对象读取 data.uid。
+        patchState({ status: 'DENIED', editUid: '', editName: '' });
+      } else if (result.data) {
         patchState({
           editUid: result.data.uid,
           editName: result.data.username,
@@ -232,6 +235,7 @@ const WikiPage = () => {
   }, []);
 
   const { isEditor, username, editorTime, notice, uid, status, editUid, editName } = state;
+  const isPermissionDenied = status === 'DENIED';
   const editorEable =
     projectMsg.role === 'admin' ||
     projectMsg.role === 'owner' ||
@@ -250,6 +254,7 @@ const WikiPage = () => {
               <span>正在编辑该wiki，请稍后再试...</span>
             </div>
           )}
+          {isPermissionDenied && <div className="wiki-conflict">没有权限编辑该wiki</div>}
         </div>
         {!isEditor ? (
           <WikiView

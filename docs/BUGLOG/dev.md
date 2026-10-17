@@ -2,6 +2,13 @@
 
 条目由 /csl-buglog 或人工维护,供 coder/reviewer 动手前核对
 
+## [2026-10-18][鉴权] Wiki WebSocket 编辑锁缺少项目归属校验
+- 现象: 非成员可连接 `/api/ws_plugin/wiki_desc/solve_conflict?id=<项目id>`，通过 `start/editor/end` 读取或影响他人私有项目 Wiki 编辑锁；客户端收到无 data 的拒绝帧时还会按持锁人读取 `data.uid`。
+- 根因: `wikiConflict` 仅凭登录态按请求 id 读取 Wiki，未以 Wiki 文档真实 `project_id` 做 view/edit 判定；`start` 与取得/释放锁动作没有区分权限。客户端冲突分支未处理 `{errno:406,data:null}`。
+- 修法: 先取 Wiki；存在时按真实 `project_id` 对 `start` 要求 view、`editor/end` 要求 edit；不存在时按请求项目 id 做同样鉴权，允许有权限用户通过 `editor` 返回 `{errno:0,data:null}` 首次创建；拒绝不派发消息或写锁；客户端增加 DENIED 与空 data 创建态，保持 uid=406 的真实 busy 帧兼容。
+- 关联: exts/yapi-plugin-wiki/controller.js、exts/yapi-plugin-wiki/wikiPage/index.js、test/exts/wikiEditorLockOrphan.test.js、test/exts/wikiPageAuthz.test.js。隔离 MongoDB 7 真实 WebSocket 9 项通过；定向 Wiki/客户端 20 项通过，typecheck/lint 通过。
+- 复发: 0 次 · 教训: WebSocket 不能只复用登录态；读取锁状态和修改锁状态都必须按资源真实归属分别校验 view/edit；首次创建的空文档是正常状态，拒绝帧不得携带会被客户端解引用的空数据。
+
 ## [2026-10-18][鉴权] 路由初始化、完整导出与编辑锁三条旁路缺项目授权
 - 现象: 非成员登录用户可经 `/api/user/project?type=interface`、`/api/open/plugin/export-full` 与 WebSocket `/api/interface/solve_conflict` 读取他人私有接口；WebSocket 还可取得编辑锁。一次性数据库两账号实测修复前均返回私有标记。
 - 根因: 路由初始化只标注角色而不拒绝；完整导出遗漏普通导出已有的 private/view 检查；编辑冲突入口仅验证登录态，没有按接口真实所属项目校验 edit，旁观连接也注册清锁回调。
