@@ -12,6 +12,10 @@ proxy_set_header Upgrade $http_upgrade;
 proxy_set_header Connection "upgrade";
 ```
 
+## Docker 部署（可选）
+
+不想准备 Node.js / MongoDB 环境时，可用仓库自带的 `Dockerfile` 与 `docker-compose.yml` 一条命令起全套（应用 + 数据库，含空库自动初始化与数据持久化）：[Docker 部署指南](docker-deploy.md)。本文余下章节面向裸机 / pm2 部署。
+
 ## 环境要求
 
 * Node.js（**>= 22.12 硬性下限**：插件 wiki 启动期 `require('jsondiffpatch')`，该包 0.7 起为 ESM-only，低于此版本 Node 无法 require(esm)，启动即报 `ERR_REQUIRE_ESM`。本项目开发环境使用 24.21.0 LTS）
@@ -116,6 +120,8 @@ pm2 logs yapi                          # 查看日志
 ```
 
 进阶用法见 [PM2 官网文档](https://pm2.keymetrics.io/docs/usage/quick-start/)。
+
+容器部署不叠加 pm2，服务管理（logs / restart / 升级）见 [Docker 部署指南](docker-deploy.md)。
 
 ## 升级与迁移
 

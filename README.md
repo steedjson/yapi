@@ -3,7 +3,7 @@
 当前版本 **v2.0.0**（基于 [YMFE/yapi](https://github.com/YMFE/yapi) 的内网维护版，技术栈与安全基线已全面升级，详见 [版本说明](docs/documents/version.md)、[CHANGELOG.md](CHANGELOG.md)）
 
 * 使用文档：仓库内 [docs/documents/](docs/documents/SUMMARY.md)，部署后页脚「使用文档」站内可直接查看，也可 `npm run docs` 本地构建文档站
-* 内网部署：[docs/devops/index.md](docs/devops/index.md)（含初始化、pm2 常驻、部署验证与全部配置项）
+* 内网部署：[docs/devops/index.md](docs/devops/index.md)（含初始化、pm2 常驻、部署验证与全部配置项）；Docker Compose 一键起全套见 [docker-deploy.md](docs/devops/docker-deploy.md)
 * 上游演示站：[http://yapi.smart-xwork.cn/](http://yapi.smart-xwork.cn/) · 上游原版文档：[hellosean1025.github.io/yapi](https://hellosean1025.github.io/yapi)
 
 ### 平台介绍
@@ -34,7 +34,7 @@ YApi 是<strong>高效</strong>、<strong>易用</strong>、<strong>功能强大
 * mongodb（4.2+，推荐 4.4+）
 * git
 #### 安装
-本仓是根目录 npm 工程，把代码放到部署目录即可部署，完整步骤（初始化、pm2 常驻、部署验证、配置项）见 [内网部署文档](docs/devops/index.md)。
+本仓是根目录 npm 工程，把代码放到部署目录即可部署，完整步骤（初始化、pm2 常驻、部署验证、配置项）见 [内网部署文档](docs/devops/index.md)；不想装 Node.js / MongoDB 环境时可用 `docker compose up -d` 一条命令起全套，见 [Docker 部署指南](docs/devops/docker-deploy.md)。
 
     git clone --depth=1 <仓库地址> yapi && cd yapi
     cp config_example.json config.json   # 修改 db 与 adminAccount

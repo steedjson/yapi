@@ -1,0 +1,70 @@
+# YApi v2.0.0 Docker Compose 部署：应用 + MongoDB 一条命令起全套。
+# 使用说明与环境变量清单见 docs/devops/docker-deploy.md；
+# 覆盖默认值（端口、口令、管理员账号）可在本文件同目录放 .env 文件。
+# 裸机 / pm2 部署见 docs/devops/index.md。
+
+services:
+  yapi:
+    build:
+      context: .
+    image: yapi:2.0.0
+    restart: unless-stopped
+    ports:
+      # 宿主机与应用端口保持同值（生成 config.json 与健康检查都用 YAPI_PORT）
+      - '${YAPI_PORT:-3000}:${YAPI_PORT:-3000}'
+    environment:
+      TZ: ${TZ:-Asia/Shanghai}
+      YAPI_PORT: ${YAPI_PORT:-3000}
+      YAPI_ADMIN_ACCOUNT: ${YAPI_ADMIN_ACCOUNT:-admin@admin.com}
+      # 首次启动空库自动初始化管理员账号；接入已有数据的老库必须置 0
+      YAPI_AUTO_INSTALL: ${YAPI_AUTO_INSTALL:-1}
+      YAPI_DB_SERVERNAME: mongo
+      YAPI_DB_PORT: 27017
+      YAPI_DB_DATABASE: ${YAPI_DB_DATABASE:-yapi}
+      YAPI_DB_USER: ${YAPI_DB_USER:-yapi}
+      YAPI_DB_PASS: ${YAPI_DB_PASS:-yapi_app_pass}
+      # 应用账号建在业务库中，authSource 与库名一致
+      YAPI_DB_AUTH_SOURCE: ${YAPI_DB_DATABASE:-yapi}
+      # 邮箱 / LDAP / 集群等完整配置：改挂载 config.json（见文档），或用
+      # YAPI_EXTRA_CONFIG_JSON 合并（如 '{"closeRegister":true,"mail":{...}}'）
+    volumes:
+      # init.lock 持久化目录，容器重建后不会重复初始化
+      - yapi-persist:/yapi/persist
+      - yapi-log:/yapi/log
+      # 运行时上传目录（首次挂载会从镜像带入基线文件）
+      - yapi-attachment:/yapi/static/attachment
+      - yapi-image:/yapi/static/image
+      # 需要完整 config.json（邮箱/LDAP）时取消下行注释；挂载后上方 DB 环境变量不再生效
+      # - ./config.json:/yapi/config.json:ro
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  mongo:
+    image: mongo:8.0
+    restart: unless-stopped
+    # 不对宿主机发布端口；需要本机直连调试时再自行添加 ports 映射（务必限定 127.0.0.1）
+    environment:
+      TZ: ${TZ:-Asia/Shanghai}
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USER:-root}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASS:-yapi_root_pass}
+      # init 脚本在 MONGO_INITDB_DATABASE 库中创建应用账号
+      MONGO_INITDB_DATABASE: ${YAPI_DB_DATABASE:-yapi}
+      YAPI_DB_USER: ${YAPI_DB_USER:-yapi}
+      YAPI_DB_PASS: ${YAPI_DB_PASS:-yapi_app_pass}
+    volumes:
+      - mongo-data:/data/db
+      - ./docker/mongo-init.js:/docker-entrypoint-initdb.d/init-user.js:ro
+    healthcheck:
+      test: ['CMD', 'mongosh', '--quiet', '--eval', 'try { db.adminCommand({ ping: 1 }).ok } catch (e) { 0 }']
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 15s
+
+volumes:
+  mongo-data:
+  yapi-persist:
+  yapi-log:
+  yapi-attachment:
+  yapi-image:

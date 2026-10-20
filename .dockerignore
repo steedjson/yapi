@@ -1,0 +1,28 @@
+# 依赖与构建产物：镜像内重新安装/构建，不进构建上下文
+.git
+node_modules
+log
+runtime
+persist
+
+# 本机环境文件与初始化标记（config.json 由容器内环境变量生成或运行时挂载）
+config.json
+init.lock
+.env
+
+# 开发与测试资产，运行时不需要
+test
+docs
+build
+scripts
+gui-test-screenshots
+backup-before-refactor
+client/*
+# client/constants 被服务端运行时 require（mockServer / postmanLib），必须保留
+!client/constants
+
+# 本机杂项
+*.log
+.DS_Store
+.claude
+.zcode
