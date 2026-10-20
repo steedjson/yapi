@@ -8,7 +8,10 @@
     "port": 27017,
     "user": "test1",
     "pass": "test1",
-    "authSource": ""
+    "authSource": "",
+    "options": {
+      "maxIdleTimeMS": 240000
+    }
   },
   "mail": {
     "enable": true,

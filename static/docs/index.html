@@ -2396,8 +2396,9 @@ cp config_example.json config.json
 </code></pre>
 <p>开发模式下：</p>
 <ul>
-<li><code>3000</code> 是 YApi 后端和系统页面入口；</li>
-<li><code>4000</code> 是前端开发资源服务，直接访问可能显示目录列表，不是系统页面。</li>
+<li><code>3000</code> 是 YApi 后端和系统页面入口（dev 入口页 <code>static/dev.html</code> 在运行时从 4000 取实时 bundle 注入，两条入口页面一致）；</li>
+<li><code>4000</code> 是前端开发资源服务，同样返回完整系统页面并<strong>带 HMR（热更新）与 <code>/api</code> 反代</strong>——<strong>日常开发推荐直接访问 <code>http://127.0.0.1:4000</code></strong>，前端改动即时生效；</li>
+<li>若只访问 3000，前端改动需手动刷新（无 HMR）；dev server 未启动时 3000 会给出可读的提示页而非白屏。</li>
 </ul>
 <p>也可以分别启动前后端：</p>
 <pre><code class="language-bash">npm run dev-server
@@ -2480,6 +2481,20 @@ npm run dev-client
 
 </code></pre>
 <p>详细配置参考： <a href="https://mongoosejs.com/docs/connections.html#multiple_connections" target="_blank" rel="noopener noreferrer">wiki</a></p>
+<h3 id="内网部署-index-db-高级连接参数-db-options">db 高级连接参数（db.options）</h3>
+<p><code>db.options</code> 的内容会原样合并进 mongoose 连接参数，键名与 <a href="https://mongoose.github.io/node-mongodb-native/6.20/interfaces/MongoClientOptions.html" target="_blank" rel="noopener noreferrer">MongoDB Node.js 驱动</a>一致，用于不改代码调整连接池行为：</p>
+<pre><code class="language-json">{
+  &quot;db&quot;: {
+    &quot;servername&quot;: &quot;127.0.0.1&quot;,
+    &quot;DATABASE&quot;: &quot;yapi&quot;,
+    &quot;port&quot;: 27017,
+    &quot;options&quot;: {
+      &quot;maxIdleTimeMS&quot;: 240000
+    }
+  }
+}
+</code></pre>
+<p><code>maxIdleTimeMS</code> 让连接池主动回收空闲超过该时长的连接（毫秒）。适用于中间网络设备（NAT、负载均衡、防火墙）会静默回收空闲 TCP 连接的环境：把该值设为低于中间设备的空闲超时（常见为 5 分钟，示例即 4 分钟），可避免请求撞上已被掐断的连接。驱动默认已开启 TCP keepalive（30 秒）与 10 秒心跳，普通部署无需额外配置；其他常用键还有 <code>connectTimeoutMS</code>、<code>socketTimeoutMS</code> 等。</p>
 </section>
 <section class="chapter" data-book="内网部署" data-file="upgrade-migration-guide" hidden><h1 id="内网部署-upgrade-migration-guide-v1-x-老版本-v2-0-0-数据迁移指南">v1.x（老版本）→ v2.0.0 数据迁移指南</h1>
 <blockquote>

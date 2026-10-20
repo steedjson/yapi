@@ -322,3 +322,22 @@ npm run dev-client
 ```
 
 详细配置参考： [wiki](https://mongoosejs.com/docs/connections.html#multiple_connections)
+
+### db 高级连接参数（db.options）
+
+`db.options` 的内容会原样合并进 mongoose 连接参数，键名与 [MongoDB Node.js 驱动](https://mongoose.github.io/node-mongodb-native/6.20/interfaces/MongoClientOptions.html)一致，用于不改代码调整连接池行为：
+
+```json
+{
+  "db": {
+    "servername": "127.0.0.1",
+    "DATABASE": "yapi",
+    "port": 27017,
+    "options": {
+      "maxIdleTimeMS": 240000
+    }
+  }
+}
+```
+
+`maxIdleTimeMS` 让连接池主动回收空闲超过该时长的连接（毫秒）。适用于中间网络设备（NAT、负载均衡、防火墙）会静默回收空闲 TCP 连接的环境：把该值设为低于中间设备的空闲超时（常见为 5 分钟，示例即 4 分钟），可避免请求撞上已被掐断的连接。驱动默认已开启 TCP keepalive（30 秒）与 10 秒心跳，普通部署无需额外配置；其他常用键还有 `connectTimeoutMS`、`socketTimeoutMS` 等。
